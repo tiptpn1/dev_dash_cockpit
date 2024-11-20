@@ -1,0 +1,87 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+/* Step 2: CSS to Style the Sidebar and Main Content */
+body, html {
+    margin: 0;
+    padding: 0.7%;
+    height: 100%;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    background-color: #00072D;
+}
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    background-color: #333;
+    overflow-x: hidden;
+    transition: width 0.3s;
+    z-index: 99;
+}
+
+.sidebar.open {
+    width: 200px;
+}
+
+.sidebar .menu {
+    display: none;
+    padding-top: 20px;
+}
+
+.sidebar.open .menu {
+    display: block;
+}
+
+.sidebar a {
+    display: block;
+    padding: 15px;
+    text-decoration: none;
+    color: white;
+    text-align: center;
+    transition: background-color 0.3s;
+}
+
+.sidebar a:hover {
+    background-color: #575757;
+}
+
+.main-content {
+    margin-left: 0;
+    padding: 20px;
+    transition: margin-left 0.3s;
+}
+
+.sidebar.open ~ .main-content {
+    margin-left: 200px;
+}
+
+.icon {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    cursor: pointer;
+    z-index: 1000;
+}
+
+.icon img {
+    width: 30px;
+    height: 30px;
+}
+.submenu {
+    display: none;
+    background-color: #444;
+}
+
+.submenu a {
+    padding-left: 30px;
+}
+
+.sidebar a.active + .submenu {
+    display: block;
+}
