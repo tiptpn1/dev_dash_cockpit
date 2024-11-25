@@ -19,27 +19,35 @@
             </div>
             <a href="{{url('')}}/onfarmkopi">Kopi</a>
         </div>
-        <a href="#finansial" id="finansial" class="parent">Finansial <span class="toggle-icon">&#9654;</span></a>
-        <div class="submenu" id="finansialSubmenu">
-            <a href="{{url('')}}/fin_parent">Parent Only</a>
-            <a href="{{url('')}}/fin_sub">Subsidiary</a>
-        </div>
-        <a href="#hrsdm" id="hrsdm" class="parent">Human Resource<span class="toggle-icon">&#9654;</span></a>
-        <div class="submenu" id="hrSubmenu">
-            <a href="{{url('')}}/hr_demographics">HR Demographics</a>
-            <a href="{{url('')}}/hr_dev">HR Learning & Development</a>
-            <a href="{{url('')}}/hr_revenue">HR Revenue & Cost</a>
-        </div>
-        <a href="#aset" id="aset" class="parent">Legal & Agraria <span class="toggle-icon">&#9654;</span></a>
-        <div class="submenu" id="asetSubmenu">
-            <a href="{{url('')}}/agraria_tax">Tax Relaxation BPHTP 0%</a>
-            <a href="{{url('')}}/agraria">Agraria</a>
-        </div>
         <a href="#aset" id="aset" class="parent">Asset <span class="toggle-icon">&#9654;</span></a>
         <div class="submenu" id="asetSubmenu">
             <a href="{{url('')}}/asset_recovery">Recovery</a>
             <a href="{{url('')}}/asset_optimalisasi">Optimalisasi</a>
             <a href="{{url('')}}/asset_divestasi">Divestasi</a>
         </div>
+        <a href="#finansial" id="finansial" class="parent">Finansial <span class="toggle-icon">&#9654;</span></a>
+        <div class="submenu" id="finansialSubmenu">
+            <a href="{{url('')}}/fin_console">Consolidate</a>
+            <a href="{{url('')}}/fin_parent">Parent Only</a>
+            <a href="{{url('')}}/fin_sub">Subsidiary</a>
+        </div>
+        
+        <a href="#hrsdm" id="hrsdm" class="parent">Human Resource<span class="toggle-icon">&#9654;</span></a>
+        <div class="submenu" id="hrSubmenu">
+            <a href="{{url('')}}/hr_demographics">HR Demographics</a>
+            <a href="{{url('')}}/hr_dev">HR Learning & Development</a>
+            <a href="{{url('')}}/hr_revenue">HR Revenue & Cost</a>
+        </div>
+        <a href="#sales" id="sales" class="parent">Sales<span class="toggle-icon">&#9654;</span></a>
+        <div class="submenu" id="salesSubmenu">
+            <a href="{{url('')}}/sales_comodities">Comodities Sales</a>
+        </div>
+        <a href="#aset" id="aset" class="parent">Legal & Agraria <span class="toggle-icon">&#9654;</span></a>
+        <div class="submenu" id="asetSubmenu">
+            <a href="{{url('')}}/agraria_tax">Tax Relaxation BPHTP 0%</a>
+            <a href="{{url('')}}/agraria">Agraria</a>
+        </div>
+        
+        <a href="{{url('')}}/portalaplikasi" class="menu-item" id="portalaplikasi">Portal Aplikasi</a>
     </div>
 </div>

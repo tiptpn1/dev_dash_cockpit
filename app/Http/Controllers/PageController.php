@@ -46,6 +46,11 @@ class PageController extends Controller
         return view('pages/overview_page', compact('linkiframe'));
     }
 
+    public function fin_console()
+    {
+        $linkiframe = 'https://lookerstudio.google.com/embed/reporting/2195aff4-6f81-4d0c-a245-74f9f3e7a981/page/oPLPE';
+        return view('pages/overview_page', compact('linkiframe'));
+    }
     public function fin_parent()
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/0cbe6f0b-4ccd-4a52-9fef-ca04b1646d76/page/oPLPE';
@@ -73,6 +78,12 @@ class PageController extends Controller
         return view('pages/overview_page', compact('linkiframe'));
     }
 
+    public function sales_comodities()
+    {
+        $linkiframe = 'https://lookerstudio.google.com/embed/reporting/8cd897b7-1bfc-4a2a-a6ae-19c1cd2d0cb2/page/06RUE';
+        return view('pages/overview_page', compact('linkiframe'));
+    }
+
     public function agraria_tax()
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/5fed7d89-b764-4a87-b5da-6fada9560516/page/joCQE';
@@ -87,6 +98,22 @@ class PageController extends Controller
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/f61c7bcb-c5e4-4f98-ac6d-1c28c30de378/page/joCQE';
         return view('pages/overview_page', compact('linkiframe'));
+    }
+    public function asset_optimalisasi()
+    {
+        $linkiframe = 'https://aset.ptpn1.co.id/C_dashboard_katalog?username=tamu_1&token=aWaKWj2S8jnawejkjwkjekajwkejakww';
+        return view('pages/overview_page', compact('linkiframe'));
+    }
+    public function asset_divestasi()
+    {
+        $linkiframe = 'https://lookerstudio.google.com/embed/reporting/9e0d8865-4fb9-48bf-946e-08a8ff1e45f5/page/NrNUE';
+        return view('pages/overview_page', compact('linkiframe'));
+    }
+    
+    public function portalaplikasi()
+    {
+        // $linkiframe = 'https://portal.ptpn1.co.id/ ';
+        return view('pages/portalaplikasi');
     }
 
     

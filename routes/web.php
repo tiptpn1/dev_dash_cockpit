@@ -33,6 +33,7 @@ Route::middleware('auth:custom')->group(function () {
         Route::get('/offfarmteh', [PageController::class, 'offfarmteh'])->name('offfarmteh');
         Route::get('/offfarmkopi', [PageController::class, 'offfarmkopi'])->name('offfarmkopi');
 
+        Route::get('/fin_console', [PageController::class, 'fin_console'])->name('fin_console');
         Route::get('/fin_parent', [PageController::class, 'fin_parent'])->name('fin_parent');
         Route::get('/fin_sub', [PageController::class, 'fin_sub'])->name('fin_sub');
         
@@ -43,7 +44,11 @@ Route::middleware('auth:custom')->group(function () {
         Route::get('/agraria_tax', [PageController::class, 'agraria_tax'])->name('agraria_tax');
         Route::get('/agraria', [PageController::class, 'agraria'])->name('agraria');
 
+        Route::get('/sales_comodities', [PageController::class, 'sales_comodities'])->name('sales_comodities');
+
         Route::get('/asset_recovery', [PageController::class, 'asset_recovery'])->name('asset_recovery');
         Route::get('/asset_optimalisasi', [PageController::class, 'asset_optimalisasi'])->name('asset_optimalisasi');
         Route::get('/asset_divestasi', [PageController::class, 'asset_divestasi'])->name('asset_divestasi');
+
+        Route::get('/portalaplikasi', [PageController::class, 'portalaplikasi'])->name('portalaplikasi');
 });

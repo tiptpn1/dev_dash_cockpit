@@ -10,6 +10,7 @@
     <link rel="shortcut icon" href="https://nadine.ptpn1.co.id/assets/logosupco.png">
     <title>Dashboard PTPN I</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Droid+Sans:wght@400;700&display=swap">
     <style>
         /* Step 2: CSS to Style the Sidebar and Main Content */
         body, html {
@@ -18,7 +19,7 @@
             height: 100%;
             overflow: hidden;
             /* font-family: Arial, sans-serif; */
-            font-family: 'Roboto', sans-serif;
+            font-family: 'Droid Sans', sans-serif;
         }
 
         .sidebar {
@@ -53,7 +54,7 @@
             color: #e8e8e8;
             text-align: left;
             transition: background-color 0.3s;
-            font-size: 0.8em;
+            font-size: 0.9em;
         }
 
         .sidebar a:hover {
