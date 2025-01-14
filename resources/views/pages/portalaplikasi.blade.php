@@ -14,14 +14,14 @@
     <link rel="shortcut icon" href="https://nadine.ptpn1.co.id/assets/logosupco.png" />
 
     <!-- Vendor css -->
-    <link href="http://portal.ptpn1.co.id/public/assets/vendors/@mdi/font/css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="{{url('')}}/assets/css/materialdesignicons.min.css" rel="stylesheet">
     <!-- Base css with customised bootstrap included -->
-    <link href="http://portal.ptpn1.co.id/public/css/miri-ui-kit-free.css" rel="stylesheet">
-    <link href="http://portal.ptpn1.co.id/public/css/customptpn.css" rel="stylesheet">
-    <link href="http://portal.ptpn1.co.id/public/css/customsearchbar.css" rel="stylesheet">
+    <link href="{{url('')}}/assets/css/miri-ui-kit-free.css" rel="stylesheet">
+    <link href="{{url('')}}/assets/css/customptpn.css" rel="stylesheet">
+    <link href="{{url('')}}/assets/css/customsearchbar.css" rel="stylesheet">
     <!-- Stylesheet for demo page specific css -->
-    <link href="http://portal.ptpn1.co.id/public/assets/css/demo.css" rel="stylesheet">
-    <script src="https://kit.fontawesome.com/65eeb291f3.js" crossorigin="anonymous"></script>
+    <link href="{{url('')}}/assets/css/demo.css" rel="stylesheet">
+    <script src="{{url('')}}/assets/js/65eeb291f3.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Droid+Sans:wght@400;700&display=swap">
 </head>
 <style>
@@ -142,64 +142,15 @@
     </div>
     @include('layouts.sidebar')
     <div class=" fixed-on-scroll" style="text-align:center;">
-        <img src="{{url('')}}/asset/images/portal.png" class="header" style="width:95%;" >
+        <img src="{{url('')}}/asset/images/portalappjudul.png" class="header" style="width:95%;" >
                 
     </div>
-        
-    <!-- <section class="miri-ui-kit-section">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6 d-flex flex-column justify-content-center">
-                        <h2 class="h1 font-weight-semibold">Portal Aplikasi SuppCo</h2>
-                </div>
-                
-                </div>
-        </div>
-    </section> -->
-    <!-- Kolom Cari -->
-    <!-- <section class="miri-ui-kit-section">
-        <div class="wrap">
-            <form method="GET" action="">
-                <div class="search">
-                    <input type="text" class="searchTerm" name="cari" placeholder="Cari Daftar Aplikasi?">
-                    <button type="submit" class="searchButton">
-                        <i class="fa fa-search"></i>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </section> -->
     <div style="clear:both"></div>
     <Section class="miri-ui-kit-section team-members-section" >
         <div class="container">
             <!-- <h2 class="pb-2 mb-5" align="center">Daftar Aplikasi</h2> -->
             <div class="row">
                 
-                <div class="col-md-3" style="margin: 15px 0 !important;">
-                    <div class="team-card card border-0 raise-on-hover">
-                        <div align="center">
-                            <a href='https://nadine.ptpn1.co.id/'>
-                                <img src="{{url('')}}/asset/images/letter.png" alt="Gambar" class="card-img-top" style="border-radius: 55px; max-height:150px;">
-                            </a>
-                        </div>
-                        <div class="card-body px-0">
-                            <h5 class="card-title mb-0" align="center">NADINE</h5>
-                            <!-- <p class=" font-weight-medium designation">Team IT PTPN</p> -->
-                            <div align="center">Naskah Dinas Online</div>
-                            <br>
-                            <!-- <p class="social-links"> -->
-                            <div align="center">
-                                                        <a href="https://eoffice.ptpn1.co.id/">
-                                <span class="buttonview">
-                                <i class="fas fa-sign-in-alt"></i>
-                                    Masuk
-                                </span>
-                            </a>
-                           
-                            </div>
-                        </div>
-                    </div>
-                </div>
                 <div class="col-md-3" style="margin: 15px 0 !important;">
                     <div class="team-card card border-0 raise-on-hover">
                         <div align="center">
@@ -219,6 +170,37 @@
                                 <i class='fas fa-download'></i>
                                     Download
                                 </span></a> &nbsp;                            <a href="https://digital-farming-karet.holding-perkebunan.com/">
+                                <span class="buttonview">
+                                <i class="fas fa-sign-in-alt"></i>
+                                    Masuk
+                                </span>
+                            </a>
+                           
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3" style="margin: 15px 0 !important;">
+                    <div class="team-card card border-0 raise-on-hover">
+                        <div align="center">
+                                                <a href='https://digital-farming-karet.holding-perkebunan.com/'>
+                            <img src="{{url('')}}/asset/images/dfarm.png" alt="Gambar" class="card-img-top" style="border-radius: 55px; max-height:150px;">
+                        </a>
+                                                </div>
+                        <div class="card-body px-0">
+                            <h5 class="card-title mb-0" align="center">DFARM TEH</h5>
+                            <!-- <p class=" font-weight-medium designation">Team IT PTPN</p> -->
+                            <div align="center">Digital Farming Teh</div>
+                            <br>
+                            <!-- <p class="social-links"> -->
+                            <div align="center">
+                            <a href='https://play.google.com/store/apps/details?id=com.ptpn.dfarmkarets&hl=id'>
+                                <span class='buttonview'>
+                                <i class='fas fa-download'></i>
+                                    Download
+                                </span>
+                            </a> &nbsp;                            
+                            <a href="http://ptpn1regional2.co.id/dfarmamco/">
                                 <span class="buttonview">
                                 <i class="fas fa-sign-in-alt"></i>
                                     Masuk
@@ -257,6 +239,60 @@
                 <div class="col-md-3" style="margin: 15px 0 !important;">
                     <div class="team-card card border-0 raise-on-hover">
                         <div align="center">
+                                                <a href='https://amanah.ptpn1.co.id/'>
+                            <img src="{{url('')}}/asset/images/note.png" alt="Gambar" class="card-img-top" style="border-radius: 55px; max-height:150px;">
+                        </a>
+                                                </div>
+                        <div class="card-body px-0">
+                            <h5 class="card-title mb-0" align="center">AMANAH</h5>
+                            <!-- <p class=" font-weight-medium designation">Team IT PTPN</p> -->
+                            <div align="center">Aplikasi Monitoring Kepatuhan SOP</div>
+                            <br>
+                            <!-- <p class="social-links"> -->
+                            <div align="center">
+                            <a href='https://drive.google.com/file/d/1KBE3z2XeVwRVRt8qr3a2c_oYCMa5uNpy/view?usp=sharing'>
+                                <span class='buttonview'>
+                                <i class='fas fa-download'></i>
+                                    Download
+                                </span></a> &nbsp;                            <a href="https://amanah.ptpn1.co.id/">
+                                <span class="buttonview">
+                                <i class="fas fa-sign-in-alt"></i>
+                                    Masuk
+                                </span>
+                            </a>
+                           
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3" style="margin: 15px 0 !important;">
+                    <div class="team-card card border-0 raise-on-hover">
+                        <div align="center">
+                                                <a href='{{url("")}}/portallm'>
+                            <img src="{{url('')}}/asset/images/block.png" alt="Gambar" class="card-img-top" style="border-radius: 55px; max-height:150px;">
+                        </a>
+                                                </div>
+                        <div class="card-body px-0">
+                            <h5 class="card-title mb-0" align="center">Dashboard LM</h5>
+                            <!-- <p class=" font-weight-medium designation">Team IT PTPN</p> -->
+                            <div align="center">Dashboard Laporan Manajemen</div>
+                            <br>
+                            <!-- <p class="social-links"> -->
+                            <div align="center">
+                                                        <a href="{{url('')}}/portallm">
+                                <span class="buttonview">
+                                <i class="fas fa-sign-in-alt"></i>
+                                    Masuk
+                                </span>
+                            </a>
+                           
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3" style="margin: 15px 0 !important;">
+                    <div class="team-card card border-0 raise-on-hover">
+                        <div align="center">
                                                 <a href='https://dms.ptpn1.co.id/'>
                             <img src="{{url('')}}/asset/images/sertifikasi.png" alt="Gambar" class="card-img-top" style="border-radius: 55px; max-height:150px;">
                         </a>
@@ -282,6 +318,31 @@
                 <div class="col-md-3" style="margin: 15px 0 !important;">
                     <div class="team-card card border-0 raise-on-hover">
                         <div align="center">
+                            <a href='https://nadine.ptpn1.co.id/'>
+                                <img src="{{url('')}}/asset/images/letter.png" alt="Gambar" class="card-img-top" style="border-radius: 55px; max-height:150px;">
+                            </a>
+                        </div>
+                        <div class="card-body px-0">
+                            <h5 class="card-title mb-0" align="center">NADINE</h5>
+                            <!-- <p class=" font-weight-medium designation">Team IT PTPN</p> -->
+                            <div align="center">Naskah Dinas Online</div>
+                            <br>
+                            <!-- <p class="social-links"> -->
+                            <div align="center">
+                                                        <a href="https://eoffice.ptpn1.co.id/">
+                                <span class="buttonview">
+                                <i class="fas fa-sign-in-alt"></i>
+                                    Masuk
+                                </span>
+                            </a>
+                           
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3" style="margin: 15px 0 !important;">
+                    <div class="team-card card border-0 raise-on-hover">
+                        <div align="center">
                                                 <a href='https://stakeholder.ptpn1.co.id/'>
                             <img src="{{url('')}}/asset/images/people.png" alt="Gambar" class="card-img-top" style="border-radius: 55px; max-height:150px;">
                         </a>
@@ -289,7 +350,7 @@
                         <div class="card-body px-0">
                             <h5 class="card-title mb-0" align="center">Dashboard Stakeholder</h5>
                             <!-- <p class=" font-weight-medium designation">Team IT PTPN</p> -->
-                            <div align="center">Aplikasi Monitoring Stakeholder Perusahaan</div>
+                            <div align="center">Monitoring Stakeholder Perusahaan</div>
                             <br>
                             <!-- <p class="social-links"> -->
                             <div align="center">
@@ -407,35 +468,6 @@
                 <div class="col-md-3" style="margin: 15px 0 !important;">
                     <div class="team-card card border-0 raise-on-hover">
                         <div align="center">
-                                                <a href='https://amanah.ptpn1.co.id/'>
-                            <img src="{{url('')}}/asset/images/note.png" alt="Gambar" class="card-img-top" style="border-radius: 55px; max-height:150px;">
-                        </a>
-                                                </div>
-                        <div class="card-body px-0">
-                            <h5 class="card-title mb-0" align="center">AMANAH</h5>
-                            <!-- <p class=" font-weight-medium designation">Team IT PTPN</p> -->
-                            <div align="center">Aplikasi Monitoring Kepatuhan Terhadap SOP</div>
-                            <br>
-                            <!-- <p class="social-links"> -->
-                            <div align="center">
-                            <a href='https://drive.google.com/file/d/1KBE3z2XeVwRVRt8qr3a2c_oYCMa5uNpy/view?usp=sharing'>
-                                <span class='buttonview'>
-                                <i class='fas fa-download'></i>
-                                    Download
-                                </span></a> &nbsp;                            <a href="https://amanah.ptpn1.co.id/">
-                                <span class="buttonview">
-                                <i class="fas fa-sign-in-alt"></i>
-                                    Masuk
-                                </span>
-                            </a>
-                           
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3" style="margin: 15px 0 !important;">
-                    <div class="team-card card border-0 raise-on-hover">
-                        <div align="center">
                             <a href='https://support.ptpn1.co.id/'>
                                 <img src="{{url('')}}/asset/images/jam.png" alt="Gambar" class="card-img-top" style="border-radius: 55px; max-height:150px;">
                             </a>
@@ -443,7 +475,7 @@
                         <div class="card-body px-0">
                             <h5 class="card-title mb-0" align="center">Support TI</h5>
                             <!-- <p class=" font-weight-medium designation">Team IT PTPN</p> -->
-                            <div align="center">Aplikasi Support TI PT Perkebunan Nusantara I.</div>
+                            <div align="center">Aplikasi Support TI PTPN I.</div>
                             <br>
                             <!-- <p class="social-links"> -->
                             <div align="center">
@@ -508,6 +540,32 @@
                         </div>
                     </div>
                 </div>
+                <div class="col-md-3" style="margin: 15px 0 !important;">
+                    <div class="team-card card border-0 raise-on-hover">
+                        <div align="center">
+                                                <a href='sla.ptpn1.co.id'>
+                            <img src="{{url('')}}/asset/images/sla.png" alt="Gambar" class="card-img-top" style="border-radius: 55px; max-height:150px;">
+                        </a>
+                                                </div>
+                        <div class="card-body px-0">
+                            <h5 class="card-title mb-0" align="center">Aplikasi SLA</h5>
+                            <!-- <p class=" font-weight-medium designation">Team IT PTPN</p> -->
+                            <div align="center">Service Level Aggreement</div>
+                            <br>
+                            <!-- <p class="social-links"> -->
+                            <div align="center">
+                                                        <a href="sla.ptpn1.co.id">
+                                <span class="buttonview">
+                                <i class="fas fa-sign-in-alt"></i>
+                                    Masuk
+                                </span>
+                            </a>
+                           
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
             
             </div>
         </div>
@@ -525,20 +583,6 @@
         </div>
     </footer>
     
-    <div id="demoVideoLightbox" class="lightbox" onclick="hideVideo('video','youtube')">
-        <div class="lightbox-container">  
-          <div class="lightbox-content">
-            
-            <button data-close="lightbox" class="lightbox-close">
-              Close | ✕
-            </button>
-            <div class="video-container">
-                <iframe width="560" height="315" src="https://www.youtube.com/embed/eTlZLNws6zc" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-            </div>      
-            
-          </div>
-        </div>
-      </div>
       <script>
         $(document).ready(function() {
             console.log('lalalala');

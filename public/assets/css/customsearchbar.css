@@ -1,0 +1,131 @@
+/* .search-bar {
+	height: 54px;
+	width: 500px;
+	border-radius: 40px;
+	display: flex;
+	align-items: center;
+	padding: 0 0 0 20px;
+	position: relative;
+	background: #fff;
+  }
+  
+  .input {
+	border: none;
+	height: 25px;
+	width: 430px;
+	color: #1b1b1b;
+	font-size: 15px;
+	outline: none;
+  }
+  
+  .input:not(:placeholder-shown) + .label {
+	font-size: 9px;
+	top: 3px;
+	color: #00c853;
+  }
+  
+  .input:focus ~ .label {
+	font-size: 9px;
+	top: 3px;
+	color: #4279a3;
+	transition: all 0.5s ease;
+  }
+  
+  .label {
+	color: #aaaaaa;
+	position: absolute;
+	top: 13px;
+	pointer-events: none;
+	transition: all 0.5s ease;
+  }
+  
+  .search-btn {
+	background: #4279a3;
+	border-radius: 20px;
+	height: 40px;
+	min-width: 40px;
+	display: flex;
+	align-items: center;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+	justify-content: center;
+	cursor: pointer;
+	right: 2px;
+	position: absolute;
+	transition: all 1s ease;
+  }
+  
+  .icon {
+	display: inline-flex;
+  }
+  
+  .icon-18 {
+	width: 18px;
+	height: 18px;
+  }
+  
+  .highlight {
+	width: 0px;
+	height: 1px;
+	background: #4279a3;
+	position: absolute;
+	bottom: 8px;
+	transition: all 1s ease;
+  }
+  
+  .input:focus ~ .highlight {
+	width: 430px;
+	transition: all 1s ease;
+	} */
+	
+	@import url(https://fonts.googleapis.com/css?family=Open+Sans);
+
+	body{
+		font-family: 'Open Sans', sans-serif;
+	}
+	
+	.search {
+		width: 100%;
+		position: relative;
+		display: flex;
+	}
+	
+	.searchTerm {
+		width: 100%;
+		border: 3px solid #00B4CC;
+		border-right: none;
+		padding: 5px;
+		height: 36px;
+		border-radius: 5px 0 0 5px;
+		outline: none;
+		color: #9DBFAF;
+	}
+	
+	.searchTerm:focus{
+		color: rgb(8, 8, 8);
+	}
+	
+	.searchButton {
+		width: 50px;
+		height: 36px;
+		border: 1px solid #00B4CC;
+		background: #00B4CC;
+		text-align: center;
+		color: #fff;
+		border-radius: 0 5px 5px 0;
+		cursor: pointer;
+		font-size: 20px;
+	}
+	
+	/*Resize the wrap to see the search bar change!*/
+	.wrap{
+		width: 30%;
+		position: absolute;
+		/* top: 30%; */
+		left: 70%;
+		transform: translate(-50%, -50%);
+	}
+	.buttonview {
+    border: 1px solid #0275d8;
+    padding: 7px 15px;
+    border-radius: 15px;
+}

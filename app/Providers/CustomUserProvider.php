@@ -20,6 +20,11 @@ class CustomUserProvider implements UserProvider
             'username' => 'superadmin',
             'password' => 'Nusantara@1',
         ],
+        [
+            'id' => 3,
+            'username' => 'mrc',
+            'password' => 'Nusantara@1',
+        ],
     ];
 
     public function retrieveById($identifier)

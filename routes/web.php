@@ -24,14 +24,24 @@ Route::get('/login', function () {
 Route::post('/login', [LoginController::class, 'login'])->name('login');
 Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
 
+Route::get('/portalaplikasi', [PageController::class, 'portalaplikasi'])->name('portalaplikasi');
+Route::get('/portallm', [PageController::class, 'portallm'])->name('portallm');
+
 Route::middleware('auth:custom')->group(function () {
         Route::get('/', [PageController::class, 'overview'])->name('overview');
+        Route::get('/mrc', [PageController::class, 'mrc'])->name('mrc');
         Route::get('/onfarmkaret', [PageController::class, 'onfarmkaret'])->name('onfarmkaret');
         Route::get('/onfarmteh', [PageController::class, 'onfarmteh'])->name('onfarmteh');
         Route::get('/onfarmkopi', [PageController::class, 'onfarmkopi'])->name('onfarmkopi');
         Route::get('/offfarmkaret', [PageController::class, 'offfarmkaret'])->name('offfarmkaret');
         Route::get('/offfarmteh', [PageController::class, 'offfarmteh'])->name('offfarmteh');
         Route::get('/offfarmkopi', [PageController::class, 'offfarmkopi'])->name('offfarmkopi');
+
+        Route::get('/picaonfarm', [PageController::class, 'picaonfarm'])->name('picaonfarm');
+        Route::get('/picaofffarm', [PageController::class, 'picaofffarm'])->name('picaofffarm');
+
+        Route::get('/dfarmkaret', [PageController::class, 'dfarmkaret'])->name('dfarmkaret');
+        Route::get('/dfarmteh', [PageController::class, 'dfarmteh'])->name('dfarmteh');
 
         Route::get('/fin_console', [PageController::class, 'fin_console'])->name('fin_console');
         Route::get('/fin_parent', [PageController::class, 'fin_parent'])->name('fin_parent');
@@ -46,9 +56,18 @@ Route::middleware('auth:custom')->group(function () {
 
         Route::get('/sales_comodities', [PageController::class, 'sales_comodities'])->name('sales_comodities');
 
+        Route::get('/asset_peta', [PageController::class, 'asset_peta'])->name('asset_peta');
         Route::get('/asset_recovery', [PageController::class, 'asset_recovery'])->name('asset_recovery');
         Route::get('/asset_optimalisasi', [PageController::class, 'asset_optimalisasi'])->name('asset_optimalisasi');
         Route::get('/asset_divestasi', [PageController::class, 'asset_divestasi'])->name('asset_divestasi');
 
-        Route::get('/portalaplikasi', [PageController::class, 'portalaplikasi'])->name('portalaplikasi');
+        Route::get('/sla', [PageController::class, 'sla'])->name('sla');
+        Route::get('/pengadaan', [PageController::class, 'pengadaan'])->name('pengadaaan');
+        Route::get('/amanah', [PageController::class, 'amanah'])->name('amanah');
+        Route::get('/iot', [PageController::class, 'iot'])->name('iot');
+        Route::get('/prapengadaan', [PageController::class, 'prapengadaan'])->name('prapengadaan');
+        Route::get('/prosespengadaan', [PageController::class, 'prosespengadaan'])->name('prosespengadaan');
+        Route::get('/kontrakpengadaan', [PageController::class, 'kontrakpengadaan'])->name('kontrakpengadaan');
+        Route::get('/dashboardemisi', [PageController::class, 'dashboardemisi'])->name('dashboardemisi');
+        Route::get('/soptea', [PageController::class, 'soptea'])->name('soptea');
 });
