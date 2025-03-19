@@ -2,6 +2,37 @@
     <img src="{{ asset('logo_aigri.png') }}" alt="Chat Icon" class="chat-icon" id="chatIcon">
 </div>
 
+<div class="chat-container" id="chatContainer">
+    <div class="chat-header">
+        <div class="chat-title">AI Assistant</div>
+        <button class="close-btn" id="closeChat">&times;</button>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+        <div class="message assistant">
+            <div class="message-content">
+                Hello! How can I help you today?
+            </div>
+        </div>
+    </div>
+    <div class="chat-input-container">
+        <textarea class="chat-input" id="chatInput" placeholder="Type your message..." rows="1"></textarea>
+        <button class="mic-button" id="micButton">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="23"/>
+                <line x1="8" y1="23" x2="16" y2="23"/>
+            </svg>
+        </button>
+        <button class="send-button" id="sendMessage">
+            <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+        </button>
+    </div>
+</div>
+
 <style>
 .chat-icon-container {
     position: fixed;
@@ -22,11 +53,251 @@
 .chat-icon:hover {
     transform: scale(1.1);
 }
+
+.chat-container {
+    display: none;
+    position: fixed;
+    bottom: 100px;
+    right: 20px;
+    width: 350px;
+    height: 600px;
+    background: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-header {
+    padding: 15px;
+    background: #202123;
+    color: white;
+    border-radius: 15px 15px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chat-title {
+    font-weight: bold;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+}
+
+.chat-messages {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.message {
+    display: flex;
+    margin-bottom: 10px;
+}
+
+.message.user {
+    justify-content: flex-end;
+}
+
+.message-content {
+    max-width: 80%;
+    padding: 10px 15px;
+    border-radius: 15px;
+    background: #f7f7f8;
+}
+
+.message.user .message-content {
+    background: #0084ff;
+    color: white;
+}
+
+.chat-input-container {
+    padding: 15px;
+    border-top: 1px solid #e5e5e5;
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+.chat-input {
+    flex-grow: 1;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    padding: 8px 12px;
+    resize: none;
+    max-height: 200px;
+    font-family: inherit;
+}
+
+.mic-button {
+    background: none;
+    border: none;
+    color: #0084ff;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mic-button:hover {
+    background: #f0f0f0;
+    border-radius: 8px;
+}
+
+.mic-button.recording {
+    color: #ff0000;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.send-button {
+    background: none;
+    border: none;
+    color: #0084ff;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.send-button:hover {
+    background: #f0f0f0;
+    border-radius: 8px;
+}
 </style>
 
 <script>
-document.getElementById('chatIcon').addEventListener('click', function() {
-    // Add your chatbot trigger logic here
-    console.log('Chat icon clicked');
+document.addEventListener('DOMContentLoaded', function() {
+    const chatIcon = document.getElementById('chatIcon');
+    const chatContainer = document.getElementById('chatContainer');
+    const closeChat = document.getElementById('closeChat');
+    const chatInput = document.getElementById('chatInput');
+    const sendMessage = document.getElementById('sendMessage');
+    const chatMessages = document.getElementById('chatMessages');
+    const micButton = document.getElementById('micButton');
+    let recognition = null;
+
+    // Initially hide the chat container
+    chatContainer.style.display = 'none';
+
+    // Toggle chat container when clicking the icon
+    chatIcon.addEventListener('click', function() {
+        chatContainer.style.display = 'flex';
+    });
+
+    // Close chat when clicking the close button
+    closeChat.addEventListener('click', function() {
+        chatContainer.style.display = 'none';
+    });
+
+    // Check if browser supports speech recognition
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        recognition = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'id-ID'; // Set to Indonesian language
+
+        recognition.onstart = function() {
+            micButton.classList.add('recording');
+            chatInput.placeholder = 'Listening...';
+        };
+
+        recognition.onend = function() {
+            micButton.classList.remove('recording');
+            chatInput.placeholder = 'Type your message...';
+        };
+
+        recognition.onresult = function(event) {
+            const transcript = event.results[0][0].transcript;
+            chatInput.value = transcript;
+            // Auto send message after speech recognition
+            sendUserMessage();
+        };
+
+        recognition.onerror = function(event) {
+            console.error('Speech recognition error:', event.error);
+            micButton.classList.remove('recording');
+            chatInput.placeholder = 'Type your message...';
+        };
+
+        // Toggle speech recognition on mic button click
+        micButton.addEventListener('click', function() {
+            if (micButton.classList.contains('recording')) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        });
+    } else {
+        micButton.style.display = 'none';
+        console.log('Speech recognition not supported');
+    }
+
+    // Handle sending messages
+    function sendUserMessage() {
+        const message = chatInput.value.trim();
+        if (message) {
+            // Add user message
+            const userMessageDiv = document.createElement('div');
+            userMessageDiv.className = 'message user';
+            userMessageDiv.innerHTML = `
+                <div class="message-content">${message}</div>
+            `;
+            chatMessages.appendChild(userMessageDiv);
+
+            // Clear input
+            chatInput.value = '';
+
+            // Auto scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // Here you would typically make an API call to your backend
+            // For now, we'll just simulate a response
+            setTimeout(() => {
+                const assistantMessageDiv = document.createElement('div');
+                assistantMessageDiv.className = 'message assistant';
+                assistantMessageDiv.innerHTML = `
+                    <div class="message-content">I received your message: "${message}"</div>
+                `;
+                chatMessages.appendChild(assistantMessageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, 1000);
+        }
+    }
+
+    // Send message on button click
+    sendMessage.addEventListener('click', sendUserMessage);
+
+    // Send message on Enter key (Shift+Enter for new line)
+    chatInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendUserMessage();
+        }
+    });
+
+    // Auto-resize textarea
+    chatInput.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+    });
 });
 </script> 
