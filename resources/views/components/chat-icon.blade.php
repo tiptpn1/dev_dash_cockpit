@@ -4,7 +4,7 @@
 
 <div class="chat-container" id="chatContainer">
     <div class="chat-header">
-        <div class="chat-title">AI Assistant</div>
+        <div class="chat-title">AIGR1 Assistant</div>
         <button class="close-btn" id="closeChat">&times;</button>
     </div>
     <div class="chat-messages" id="chatMessages">
@@ -140,7 +140,7 @@
     font-family: inherit;
 }
 
-.mic-button {
+.mic-button, .send-button {
     background: none;
     border: none;
     color: #0084ff;
@@ -149,9 +149,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 40px;
+    height: 40px;
 }
 
-.mic-button:hover {
+.mic-button:hover, .send-button:hover {
     background: #f0f0f0;
     border-radius: 8px;
 }
@@ -165,22 +167,6 @@
     0% { transform: scale(1); }
     50% { transform: scale(1.1); }
     100% { transform: scale(1); }
-}
-
-.send-button {
-    background: none;
-    border: none;
-    color: #0084ff;
-    cursor: pointer;
-    padding: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.send-button:hover {
-    background: #f0f0f0;
-    border-radius: 8px;
 }
 </style>
 
