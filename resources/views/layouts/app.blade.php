@@ -181,5 +181,6 @@
             $icon.toggleClass('open');
         });
     </script>
+    @include('components.chat-icon')
 </body>
 </html>

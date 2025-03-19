@@ -17,15 +17,9 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
-        // dd($request->input('g-recaptcha-response'));
-        // 6LdawH8qAAAAAPj8NAU8pUZbU5BEzRbqYfkNozAu
         $credentials = $request->only('username', 'password');
-        if($request->input('g-recaptcha-response')==""){
-            return back()->withErrors([
-             'username' => 'reCaptcha untuk di isi'
-             ]);
-        }
-        if (Auth::guard('custom')->attempt($credentials) ) {
+        
+        if (Auth::guard('custom')->attempt($credentials)) {
             return redirect()->intended('/');
         }
 
