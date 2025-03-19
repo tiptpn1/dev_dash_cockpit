@@ -68,6 +68,7 @@ Route::middleware('auth:custom')->group(function () {
         Route::get('/prapengadaan', [PageController::class, 'prapengadaan'])->name('prapengadaan');
         Route::get('/prosespengadaan', [PageController::class, 'prosespengadaan'])->name('prosespengadaan');
         Route::get('/kontrakpengadaan', [PageController::class, 'kontrakpengadaan'])->name('kontrakpengadaan');
+        Route::get('/stokpengadaan', [PageController::class, 'stokpengadaan'])->name('stokpengadaan');
         Route::get('/dashboardemisi', [PageController::class, 'dashboardemisi'])->name('dashboardemisi');
         Route::get('/soptea', [PageController::class, 'soptea'])->name('soptea');
 });

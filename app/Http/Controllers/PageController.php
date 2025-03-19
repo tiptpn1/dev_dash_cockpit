@@ -198,6 +198,11 @@ class PageController extends Controller
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/08f3056b-3989-4cda-8656-4b358839af74/page/p_a1szvbcrnd';
             return view('pages/overview_page', compact('linkiframe'));     
     }
+    public function stokpengadaan()
+    {
+        $linkiframe = 'https://lookerstudio.google.com/embed/reporting/08f3056b-3989-4cda-8656-4b358839af74/page/p_00v9nkxjod';
+            return view('pages/overview_page', compact('linkiframe'));     
+    }
     public function dashboardemisi()
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/ef192397-646a-4137-b30a-0eabc62a9930/page/d0pYE';
@@ -208,4 +213,6 @@ class PageController extends Controller
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/b34767d5-a81e-499e-98de-367b7e8ccf46/page/p_9v3x2qkknd';
             return view('pages/overview_page', compact('linkiframe'));     
     }
+
+    
 }

@@ -14,6 +14,12 @@
         @if($username!='mrc')
         <a href="{{url('')}}" class="menu-item" id="overview">Overview</a>
         @endif
+        <a href="#gis" id="gis" class="parent">GIS <span class="toggle-icon">&#9654;</span></a>
+        <div class="submenu" id="gisSubmenu">
+            <a href="http://gis.ptpn1.co.id/mbtiles/tree4.php?id=0&token=eofkp4456432oewkf465oew" target='_blank' class="menu-item" id="gis">AREAL</a>
+            <a href="http://gis.ptpn1.co.id/mbtiles/tree5.php?id=0&token=eofkp4456432oewkf465oew" target='_blank' class="menu-item" id="gis">NDVI</a>
+            <a href="http://aset-dives-dev.ptpn1.co.id/weather?token=234kjjlksflk8y98ksafdklj23" target='_blank' class="menu-item" id="gis">CUACA</a>
+        </div>
         <a href="{{url('')}}/mrc" class="menu-item" id="overview">MRC</a>
         @if($username!='mrc')
         <a href="#operasional" id="operasional" class="parent">Operasional <span class="toggle-icon">&#9654;</span></a>
@@ -75,6 +81,7 @@
             <a href="{{url('')}}/prapengadaan">Pra Pengadaan</a>
             <a href="{{url('')}}/prosespengadaan">Proses Pengadaan</a>
             <a href="{{url('')}}/kontrakpengadaan">Kontrak Pengadaan</a>
+            <a href="{{url('')}}/stokpengadaan">Stok Pengadaan</a>
         </div>
         <a href="#carbontrading" id="carbontrading" class="parent">Carbon Trading<span class="toggle-icon">&#9654;</span></a>
         <div class="submenu" id="asetSubmenu">
