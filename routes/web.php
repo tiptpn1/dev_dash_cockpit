@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\AiResponseController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -72,3 +73,5 @@ Route::middleware('auth:custom')->group(function () {
         Route::get('/dashboardemisi', [PageController::class, 'dashboardemisi'])->name('dashboardemisi');
         Route::get('/soptea', [PageController::class, 'soptea'])->name('soptea');
 });
+
+Route::post('/ai/response', [AiResponseController::class, 'aiResponse'])->name('ai.response');

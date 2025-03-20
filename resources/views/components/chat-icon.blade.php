@@ -237,11 +237,13 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Speech recognition not supported');
     }
 
-    // Handle sending messages
-    function sendUserMessage() {
+    // Get CSRF token from meta tag
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    async function sendUserMessage() {
         const message = chatInput.value.trim();
         if (message) {
-            // Add user message
+            // Add user message to chat
             const userMessageDiv = document.createElement('div');
             userMessageDiv.className = 'message user';
             userMessageDiv.innerHTML = `
@@ -249,23 +251,59 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
             chatMessages.appendChild(userMessageDiv);
 
-            // Clear input
+            // Clear input and scroll to bottom
             chatInput.value = '';
-
-            // Auto scroll to bottom
             chatMessages.scrollTop = chatMessages.scrollHeight;
 
-            // Here you would typically make an API call to your backend
-            // For now, we'll just simulate a response
-            setTimeout(() => {
+            try {
+                // Show loading message
+                const loadingDiv = document.createElement('div');
+                loadingDiv.className = 'message assistant';
+                loadingDiv.innerHTML = `
+                    <div class="message-content">Thinking...</div>
+                `;
+                chatMessages.appendChild(loadingDiv);
+
+                // Make API call to local endpoint
+                const response = await fetch('/ai/response', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json();
+
+                // Remove loading message
+                chatMessages.removeChild(loadingDiv);
+
+                // Add AI response
                 const assistantMessageDiv = document.createElement('div');
                 assistantMessageDiv.className = 'message assistant';
                 assistantMessageDiv.innerHTML = `
-                    <div class="message-content">I received your message: "${message}"</div>
+                    <div class="message-content">${data.response}</div>
                 `;
                 chatMessages.appendChild(assistantMessageDiv);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }, 1000);
+            } catch (error) {
+                console.error('Error:', error);
+                // Show error message
+                const errorMessageDiv = document.createElement('div');
+                errorMessageDiv.className = 'message assistant';
+                errorMessageDiv.innerHTML = `
+                    <div class="message-content">Sorry, there was an error processing your request. Please try again.</div>
+                `;
+                chatMessages.appendChild(errorMessageDiv);
+            }
+
+            // Scroll to bottom after adding new message
+            chatMessages.scrollTop = chatMessages.scrollHeight;
         }
     }
 

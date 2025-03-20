@@ -7,6 +7,7 @@
     <meta content="width=device-width, initial-scale=1" name="viewport"/>
     <meta content="" name="description"/>
     <meta content="" name="author"/>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="shortcut icon" href="https://nadine.ptpn1.co.id/assets/logosupco.png">
     <title>Dashboard PTPN I</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
