@@ -9,48 +9,44 @@ class AiResponseController extends Controller
 {
     public function aiResponse(Request $request)
     {
+        $message = $request->input('message');
         try {
-            // Validate the incoming request
-            $validated = $request->validate([
-                'message' => 'required|string|max:1000',
-            ]);
 
-            // Make the API call to the external service
-            $response = Http::timeout(180)  // 3 minutes timeout
-                ->withOptions([
-                    'verify' => false,  // Jika ada masalah SSL
-                ])
-                ->post('https://aset-dives-dev.ptpn1.co.id/weather/ai_response', [
-                    'tanya' => $validated['message']
+            $url = "https://aset-dives-dev.ptpn1.co.id/weather/ai_response"; // API endpoint
+            $data = ['tanya' => $message];
+            
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+            curl_setopt($ch, CURLOPT_VERBOSE, true); // Debug mode
+            
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $error = curl_error($ch);
+            curl_close($ch);
+            
+            $response = json_decode($response,false);
+            
+            if ($response->status=="success") {
+                return response()->json([
+                    'status' => 'success',
+                    'data' => $response
                 ]);
-
-            // Check if the API response is successful
-            if (!$response->successful()) {
+            } else {
                 return response()->json([
-                    'error' => 'External API error',
-                    'status' => $response->status(),
-                    'message' => $response->body() ?: 'No response from external API'
-                ], $response->status());
+                    'status' => 'error',
+                    'message' => 'Gagal mendapatkan respons dari API eksternal.',
+                    'status_code' => $httpCode,
+                    'response' => $response
+                ]);
             }
-
-            // Decode and simplify the response
-            $responseBody = json_decode($response->body());
-            if (json_last_error() !== JSON_ERROR_NONE || empty($response->body())) {
-                return response()->json([
-                    'error' => 'Invalid response format',
-                    'message' => 'The API returned an empty or invalid response'
-                ], 500);
-            }
-
+        } catch (Exception $e) {
             return response()->json([
-                'status' => 'success',
-                'response' => $responseBody->response ?? $responseBody->data->data[0]->content[0]->text->value ?? 'No response content'
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'An error occurred while processing your request.',
-                'message' => $e->getMessage()
+                'status' => 'error',
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
             ], 500);
         }
     }

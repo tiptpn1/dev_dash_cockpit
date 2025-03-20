@@ -264,22 +264,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
                 chatMessages.appendChild(loadingDiv);
 
-                // Make API call to local endpoint
                 const response = await fetch('/ai/response', {
-                    method: 'POST',
+                    method: 'POST', 
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': csrfToken,
                         'Accept': 'application/json',
                     },
-                    body: JSON.stringify({ message: message })
+                    body: JSON.stringify({ message: message }) // Kirim data dalam JSON
                 });
 
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
 
-                const data = await response.json();
+                const response_data = await response.json();
+                const data = response_data.data;
 
                 // Remove loading message
                 chatMessages.removeChild(loadingDiv);

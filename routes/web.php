@@ -74,4 +74,4 @@ Route::middleware('auth:custom')->group(function () {
         Route::get('/soptea', [PageController::class, 'soptea'])->name('soptea');
 });
 
-Route::post('/ai/response', [AiResponseController::class, 'aiResponse'])->name('ai.response');
+Route::post('/ai/response', [AiResponseController::class, 'aiResponse']);
