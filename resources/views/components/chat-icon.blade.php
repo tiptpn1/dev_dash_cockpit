@@ -1,5 +1,5 @@
 <div class="chat-icon-container">
-    <img src="{{ asset('logo_aigri.png') }}" alt="Chat Icon" class="chat-icon" id="chatIcon">
+    <img src="{{ asset('evo.gif') }}" alt="Chat Icon" class="chat-icon" id="chatIcon" style="width: 100px; height: 100px;">
 </div>
 
 <div class="chat-container" id="chatContainer">
@@ -43,8 +43,8 @@
 }
 
 .chat-icon {
-    width: 60px;
-    height: 60px;
+    width: 100px;
+    height: 100px;
     border-radius: 50%;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
     transition: transform 0.3s ease;
@@ -61,7 +61,7 @@
     right: 20px;
     width: 350px;
     height: 600px;
-    background: #ffffff;
+    background: #0A1929;
     border-radius: 15px;
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
     z-index: 1000;
@@ -114,7 +114,8 @@
     max-width: 80%;
     padding: 10px 15px;
     border-radius: 15px;
-    background: #f7f7f8;
+    background: #132F4C;
+    color: #ffffff;
 }
 
 .message.user .message-content {
@@ -124,7 +125,7 @@
 
 .chat-input-container {
     padding: 15px;
-    border-top: 1px solid #e5e5e5;
+    border-top: 1px solid #1E4976;
     display: flex;
     gap: 10px;
     align-items: flex-end;
@@ -132,12 +133,14 @@
 
 .chat-input {
     flex-grow: 1;
-    border: 1px solid #e5e5e5;
+    border: 1px solid #1E4976;
     border-radius: 8px;
     padding: 8px 12px;
     resize: none;
     max-height: 200px;
     font-family: inherit;
+    background: #132F4C;
+    color: #ffffff;
 }
 
 .mic-button, .send-button {

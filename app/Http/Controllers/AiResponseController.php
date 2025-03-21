@@ -11,10 +11,10 @@ class AiResponseController extends Controller
     {
         $message = $request->input('message');
         try {
-
+            $message = $request->input('message');
             $url = "https://aset-dives-dev.ptpn1.co.id/weather/ai_response"; // API endpoint
             $data = ['tanya' => $message];
-            
+
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -22,17 +22,17 @@ class AiResponseController extends Controller
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
             curl_setopt($ch, CURLOPT_VERBOSE, true); // Debug mode
-            
+
             $response = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $error = curl_error($ch);
             curl_close($ch);
-            
+
             $response = json_decode($response,false);
-            
+
             if ($response->status=="success") {
                 return response()->json([
-                    'status' => 'success',
+                'status' => 'success',
                     'data' => $response
                 ]);
             } else {
