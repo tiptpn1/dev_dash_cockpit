@@ -5,12 +5,19 @@
 <div class="chat-container" id="chatContainer">
     <div class="chat-header">
         <div class="chat-title">AIGR1 Assistant</div>
-        <button class="close-btn" id="closeChat">&times;</button>
+        <div class="chat-controls">
+            <button class="expand-btn" id="expandChat">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+                </svg>
+            </button>
+            <button class="close-btn" id="closeChat">&times;</button>
+        </div>
     </div>
     <div class="chat-messages" id="chatMessages">
         <div class="message assistant">
             <div class="message-content">
-                Hello! How can I help you today?
+                Halo Saya Evo! Ada yang bisa saya bantu hari ini?
             </div>
         </div>
     </div>
@@ -81,6 +88,12 @@
 
 .chat-title {
     font-weight: bold;
+}
+
+.chat-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
 }
 
 .close-btn {
@@ -171,6 +184,28 @@
     50% { transform: scale(1.1); }
     100% { transform: scale(1); }
 }
+
+.expand-btn {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+}
+
+.expand-btn:hover {
+    color: #0084ff;
+}
+
+.chat-container.fullscreen {
+    width: 90vw;
+    height: 90vh;
+    bottom: 5vh;
+    right: 5vw;
+    transition: all 0.3s ease;
+}
 </style>
 
 <script>
@@ -182,6 +217,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const sendMessage = document.getElementById('sendMessage');
     const chatMessages = document.getElementById('chatMessages');
     const micButton = document.getElementById('micButton');
+    const expandChat = document.getElementById('expandChat');
     let recognition = null;
 
     // Initially hide the chat container
@@ -325,6 +361,17 @@ document.addEventListener('DOMContentLoaded', function() {
     chatInput.addEventListener('input', function() {
         this.style.height = 'auto';
         this.style.height = (this.scrollHeight) + 'px';
+    });
+
+    // Add expand/collapse functionality
+    expandChat.addEventListener('click', function() {
+        chatContainer.classList.toggle('fullscreen');
+        const isFullscreen = chatContainer.classList.contains('fullscreen');
+        
+        // Update expand button icon based on state
+        expandChat.innerHTML = isFullscreen 
+            ? '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>'
+            : '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>';
     });
 });
 </script> 
