@@ -31,6 +31,7 @@ Route::get('/portallm', [PageController::class, 'portallm'])->name('portallm');
 Route::middleware('auth:custom')->group(function () {
         Route::get('/', [PageController::class, 'overview'])->name('overview');
         Route::get('/mrc', [PageController::class, 'mrc'])->name('mrc');
+        Route::get('/aigri', [PageController::class, 'aigri'])->name('aigri');
         Route::get('/onfarmkaret', [PageController::class, 'onfarmkaret'])->name('onfarmkaret');
         Route::get('/onfarmteh', [PageController::class, 'onfarmteh'])->name('onfarmteh');
         Route::get('/onfarmkopi', [PageController::class, 'onfarmkopi'])->name('onfarmkopi');

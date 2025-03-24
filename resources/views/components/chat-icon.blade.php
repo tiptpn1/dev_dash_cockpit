@@ -326,8 +326,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Add AI response
                 const assistantMessageDiv = document.createElement('div');
                 assistantMessageDiv.className = 'message assistant';
+                // Clean the response text and format it properly
+                const cleanResponse = data.response
+                    .replace(/【\d+:\d+†source】/g, '')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\n/g, '<br>');
                 assistantMessageDiv.innerHTML = `
-                    <div class="message-content">${data.response}</div>
+                    <div class="message-content">${cleanResponse}</div>
                 `;
                 chatMessages.appendChild(assistantMessageDiv);
             } catch (error) {

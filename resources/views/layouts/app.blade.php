@@ -9,9 +9,15 @@
     <meta content="" name="author"/>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="shortcut icon" href="https://nadine.ptpn1.co.id/assets/logosupco.png">
-    <title>Dashboard PTPN I</title>
+    <title>@yield('title', 'WhatsApp Web')</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Droid+Sans:wght@400;700&display=swap">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">    
+    <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+    @yield('styles')
     <style>
         /* Step 2: CSS to Style the Sidebar and Main Content */
         body, html {
@@ -128,7 +134,7 @@
     </style>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
-<body>
+<body class="h-screen bg-gray-100">
     <!-- Step 3: Icon Outside Sidebar -->
     <div class="icon" id="menuIcon">
         <img src="{{url('')}}/asset/images/menu.png" alt="Menu Icon">
@@ -183,5 +189,6 @@
         });
     </script>
     @include('components.chat-icon')
+    @yield('scripts')
 </body>
 </html>
