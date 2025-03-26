@@ -66,7 +66,7 @@
     position: fixed;
     bottom: 100px;
     right: 20px;
-    width: 350px;
+    width: 400px;
     height: 600px;
     background: #0A1929;
     border-radius: 15px;
@@ -326,7 +326,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Add AI response
                 const assistantMessageDiv = document.createElement('div');
                 assistantMessageDiv.className = 'message assistant';
-                // Clean the response text and format it properly
                 const cleanResponse = data.response
                     .replace(/【\d+:\d+†source】/g, '')
                     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -335,6 +334,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="message-content">${cleanResponse}</div>
                 `;
                 chatMessages.appendChild(assistantMessageDiv);
+
+                // Automatically speak the response
+                speakText(cleanResponse);
             } catch (error) {
                 console.error('Error:', error);
                 // Show error message
@@ -349,6 +351,47 @@ document.addEventListener('DOMContentLoaded', function() {
             // Scroll to bottom after adding new message
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
+    }
+
+    // Modified speak text function
+    function speakText(text) {
+        // Cancel any ongoing speech
+        window.speechSynthesis.cancel();
+        
+        // Clean the text from HTML tags
+        const cleanText = text.replace(/<[^>]*>/g, '');
+        
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.lang = 'id-ID'; // Set to Indonesian language
+        utterance.rate = 1.3;  // Slightly slower rate for better clarity
+        utterance.pitch = 1.0; // Speech pitch
+        
+        // Resume speaking if browser pauses it
+        let isPlaying = true;
+        
+        utterance.onend = () => {
+            isPlaying = false;
+        };
+        
+        utterance.onerror = (event) => {
+            console.error('SpeechSynthesis Error:', event);
+            isPlaying = false;
+        };
+        
+        // Keep checking and resume if needed
+        const resumeInfinity = setInterval(() => {
+            if (!isPlaying) {
+                clearInterval(resumeInfinity);
+                return;
+            }
+            
+            if (speechSynthesis.paused) {
+                speechSynthesis.resume();
+            }
+        }, 100);
+        
+        // Speak the text
+        window.speechSynthesis.speak(utterance);
     }
 
     // Send message on button click

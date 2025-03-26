@@ -5,8 +5,9 @@
         <div id="imagePopup" class="popup">
             <img src="{{ asset('halo_evo.gif') }}" alt="Hello" class="popup-image">
             <div id="typing-text" class="typing"></div>
+            <button id="playButton" class="btn btn-light mt-3" style="display: none;">Play Greeting</button>
         </div>
-        <audio id="greeting" autoplay>
+        <audio id="greeting">
             <source src="{{ asset('greeting.mp3') }}" type="audio/mpeg">
         </audio>
     </div>
@@ -104,6 +105,20 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const audio = document.getElementById('greeting');
+    const playButton = document.getElementById('playButton');
+
+    // Automatically trigger click after a short delay
+    setTimeout(function() {
+        playButton.click();
+    }, 1000);
+
+    playButton.addEventListener('click', function() {
+        audio.play().catch(function(error) {
+            console.log("Audio playback failed:", error);
+        });
+    });
+
     // Typing effect
     const text = "Hallo, Selamat datang di AGRINAV PTPN I. Saya EVO siap membantu Anda!";
     const typingElement = document.getElementById('typing-text');
@@ -112,7 +127,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Hide popup after delay
     setTimeout(function() {
         document.getElementById('imagePopup').style.display = 'none';
-    }, 6000); // Increased to 6 seconds to allow for typing animation
+    }, 6000);
 });
 </script>
 
