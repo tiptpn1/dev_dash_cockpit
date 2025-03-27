@@ -87,7 +87,9 @@
         <div class="submenu" id="asetSubmenu">
             <a href="{{url('')}}/dashemisi">Dashboard Emisi</a>
         </div>
+        <a href="{{url('')}}/aigri" class="menu-item" id="aigr1">AIGR1</a>
         <a href="{{url('')}}/portalaplikasi" class="menu-item" id="portalaplikasi">Portal Aplikasi</a>
+        
         @endif
         <a href="{{url('')}}/logout" class="menu-item" id="logout">Logout</a>
     </div>

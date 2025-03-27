@@ -214,5 +214,11 @@ class PageController extends Controller
             return view('pages/overview_page', compact('linkiframe'));     
     }
 
+    public function aigri()
+    {
+        
+            return view('pages/aigr1');     
+    }
+
     
 }

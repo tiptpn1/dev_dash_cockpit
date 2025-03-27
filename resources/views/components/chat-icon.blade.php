@@ -1,16 +1,23 @@
 <div class="chat-icon-container">
-    <img src="{{ asset('logo_aigri.png') }}" alt="Chat Icon" class="chat-icon" id="chatIcon">
+    <img src="{{ asset('evo.gif') }}" alt="Chat Icon" class="chat-icon" id="chatIcon" style="width: 100px; height: 100px;">
 </div>
 
 <div class="chat-container" id="chatContainer">
     <div class="chat-header">
         <div class="chat-title">AIGR1 Assistant</div>
-        <button class="close-btn" id="closeChat">&times;</button>
+        <div class="chat-controls">
+            <button class="expand-btn" id="expandChat">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+                </svg>
+            </button>
+            <button class="close-btn" id="closeChat">&times;</button>
+        </div>
     </div>
     <div class="chat-messages" id="chatMessages">
         <div class="message assistant">
             <div class="message-content">
-                Hello! How can I help you today?
+                Halo Saya Evo! Ada yang bisa saya bantu hari ini?
             </div>
         </div>
     </div>
@@ -43,8 +50,8 @@
 }
 
 .chat-icon {
-    width: 60px;
-    height: 60px;
+    width: 100px;
+    height: 100px;
     border-radius: 50%;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
     transition: transform 0.3s ease;
@@ -59,9 +66,9 @@
     position: fixed;
     bottom: 100px;
     right: 20px;
-    width: 350px;
+    width: 400px;
     height: 600px;
-    background: #ffffff;
+    background: #0A1929;
     border-radius: 15px;
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
     z-index: 1000;
@@ -81,6 +88,12 @@
 
 .chat-title {
     font-weight: bold;
+}
+
+.chat-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
 }
 
 .close-btn {
@@ -114,7 +127,8 @@
     max-width: 80%;
     padding: 10px 15px;
     border-radius: 15px;
-    background: #f7f7f8;
+    background: #132F4C;
+    color: #ffffff;
 }
 
 .message.user .message-content {
@@ -124,7 +138,7 @@
 
 .chat-input-container {
     padding: 15px;
-    border-top: 1px solid #e5e5e5;
+    border-top: 1px solid #1E4976;
     display: flex;
     gap: 10px;
     align-items: flex-end;
@@ -132,12 +146,14 @@
 
 .chat-input {
     flex-grow: 1;
-    border: 1px solid #e5e5e5;
+    border: 1px solid #1E4976;
     border-radius: 8px;
     padding: 8px 12px;
     resize: none;
     max-height: 200px;
     font-family: inherit;
+    background: #132F4C;
+    color: #ffffff;
 }
 
 .mic-button, .send-button {
@@ -168,6 +184,28 @@
     50% { transform: scale(1.1); }
     100% { transform: scale(1); }
 }
+
+.expand-btn {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+}
+
+.expand-btn:hover {
+    color: #0084ff;
+}
+
+.chat-container.fullscreen {
+    width: 90vw;
+    height: 90vh;
+    bottom: 5vh;
+    right: 5vw;
+    transition: all 0.3s ease;
+}
 </style>
 
 <script>
@@ -179,6 +217,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const sendMessage = document.getElementById('sendMessage');
     const chatMessages = document.getElementById('chatMessages');
     const micButton = document.getElementById('micButton');
+    const expandChat = document.getElementById('expandChat');
     let recognition = null;
 
     // Initially hide the chat container
@@ -264,22 +303,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
                 chatMessages.appendChild(loadingDiv);
 
-                // Make API call to local endpoint
                 const response = await fetch('/ai/response', {
-                    method: 'POST',
+                    method: 'POST', 
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': csrfToken,
                         'Accept': 'application/json',
                     },
-                    body: JSON.stringify({ message: message })
+                    body: JSON.stringify({ message: message }) // Kirim data dalam JSON
                 });
 
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
 
-                const data = await response.json();
+                const response_data = await response.json();
+                const data = response_data.data;
 
                 // Remove loading message
                 chatMessages.removeChild(loadingDiv);
@@ -287,10 +326,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Add AI response
                 const assistantMessageDiv = document.createElement('div');
                 assistantMessageDiv.className = 'message assistant';
+                const cleanResponse = data.response
+                    .replace(/【\d+:\d+†source】/g, '')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\n/g, '<br>');
                 assistantMessageDiv.innerHTML = `
-                    <div class="message-content">${data.response}</div>
+                    <div class="message-content">${cleanResponse}</div>
                 `;
                 chatMessages.appendChild(assistantMessageDiv);
+
+                // Automatically speak the response
+                speakText(cleanResponse);
             } catch (error) {
                 console.error('Error:', error);
                 // Show error message
@@ -305,6 +351,47 @@ document.addEventListener('DOMContentLoaded', function() {
             // Scroll to bottom after adding new message
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
+    }
+
+    // Modified speak text function
+    function speakText(text) {
+        // Cancel any ongoing speech
+        window.speechSynthesis.cancel();
+        
+        // Clean the text from HTML tags
+        const cleanText = text.replace(/<[^>]*>/g, '');
+        
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.lang = 'id-ID'; // Set to Indonesian language
+        utterance.rate = 1.3;  // Slightly slower rate for better clarity
+        utterance.pitch = 1.0; // Speech pitch
+        
+        // Resume speaking if browser pauses it
+        let isPlaying = true;
+        
+        utterance.onend = () => {
+            isPlaying = false;
+        };
+        
+        utterance.onerror = (event) => {
+            console.error('SpeechSynthesis Error:', event);
+            isPlaying = false;
+        };
+        
+        // Keep checking and resume if needed
+        const resumeInfinity = setInterval(() => {
+            if (!isPlaying) {
+                clearInterval(resumeInfinity);
+                return;
+            }
+            
+            if (speechSynthesis.paused) {
+                speechSynthesis.resume();
+            }
+        }, 100);
+        
+        // Speak the text
+        window.speechSynthesis.speak(utterance);
     }
 
     // Send message on button click
@@ -322,6 +409,17 @@ document.addEventListener('DOMContentLoaded', function() {
     chatInput.addEventListener('input', function() {
         this.style.height = 'auto';
         this.style.height = (this.scrollHeight) + 'px';
+    });
+
+    // Add expand/collapse functionality
+    expandChat.addEventListener('click', function() {
+        chatContainer.classList.toggle('fullscreen');
+        const isFullscreen = chatContainer.classList.contains('fullscreen');
+        
+        // Update expand button icon based on state
+        expandChat.innerHTML = isFullscreen 
+            ? '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>'
+            : '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>';
     });
 });
 </script> 
