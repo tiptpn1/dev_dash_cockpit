@@ -6,6 +6,7 @@ use App\Http\Requests\ProfileUpdateRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 
@@ -212,6 +213,262 @@ class PageController extends Controller
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/b34767d5-a81e-499e-98de-367b7e8ccf46/page/p_9v3x2qkknd';
             return view('pages/overview_page', compact('linkiframe'));     
+    }
+
+    public function gudangutilisasi()
+    {
+        $linkiframe = 'https://lookerstudio.google.com/embed/reporting/8dde5a31-7f44-4128-a71d-33586cf872ed/page/78vkF';
+        $pinLocations = $this->fetchGudangPinFromSpreadsheet();
+        $kapasitasMap = $this->fetchKapasitasFromNewSpreadsheet();
+        $realStockUtilisasiMap = $this->fetchRealStockUtilisasiFromSpreadsheet();
+        foreach ($pinLocations as &$pin) {
+            $norm = preg_replace('/\s+/', '', mb_strtolower(trim((string) ($pin['unit_kebun'] ?? ''))));
+            $pin['kapasitas'] = $kapasitasMap[$norm] ?? null;
+            if (isset($realStockUtilisasiMap[$norm])) {
+                $pin['real_stock'] = $realStockUtilisasiMap[$norm]['real_stock'] ?? null;
+                $pin['utilisasi'] = $realStockUtilisasiMap[$norm]['utilisasi'] ?? null;
+            } else {
+                $pin['real_stock'] = null;
+                $pin['utilisasi'] = null;
+            }
+        }
+        unset($pin);
+        $regionals = $this->uniqueSortedFromPins($pinLocations, 'regional');
+        $unitKebuns = $this->uniqueSortedFromPins($pinLocations, 'unit_kebun');
+        $jenisGudangs = $this->uniqueSortedFromPins($pinLocations, 'jenis_gudang');
+        return view('pages/gudang_utilisasi', compact('linkiframe', 'pinLocations', 'regionals', 'unitKebuns', 'jenisGudangs'));
+    }
+
+    /**
+     * Ambil data kapasitas dari spreadsheet baru (kolom Unit, Kapasitas/Kapsitas).
+     * Return map: normalized_unit -> kapasitas (string), untuk sinkron dengan pin lama (unit kebun).
+     */
+    private function fetchKapasitasFromNewSpreadsheet(): array
+    {
+        $url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS2r2LriHQZJLBvJt-_deCyqxlaw7gk3uc0txIXh_LUTbicR8ergKXxsoAdqFBTP1lTORXl6DBLUUVg/pub?gid=0&single=true&output=csv';
+        $map = [];
+        try {
+            $response = Http::timeout(10)->get($url);
+            if (!$response->successful()) {
+                return $map;
+            }
+            $csv = $response->body();
+            $csv = preg_replace('/^\xEF\xBB\xBF/', '', $csv);
+            $csv = str_replace(["\r\n", "\r"], "\n", $csv);
+            $lines = array_filter(array_map('trim', explode("\n", $csv)));
+            if (count($lines) < 2) {
+                return $map;
+            }
+            $headers = str_getcsv(array_shift($lines));
+            $headers = array_map(function ($h) {
+                return trim(strtolower((string) $h));
+            }, $headers);
+            $colUnit = null;
+            $colKapasitas = null;
+            foreach ($headers as $i => $h) {
+                if ($h === 'unit') {
+                    $colUnit = $i;
+                }
+                if ($h === 'kapasitas' || $h === 'kapsitas') {
+                    $colKapasitas = $i;
+                }
+            }
+            if ($colUnit === null || $colKapasitas === null) {
+                return $map;
+            }
+            foreach ($lines as $line) {
+                if ($line === '') {
+                    continue;
+                }
+                $row = str_getcsv($line);
+                $unit = isset($row[$colUnit]) ? trim((string) $row[$colUnit]) : '';
+                $kapasitas = isset($row[$colKapasitas]) ? trim((string) $row[$colKapasitas]) : '';
+                if ($unit !== '') {
+                    $norm = preg_replace('/\s+/', '', mb_strtolower($unit));
+                    $map[$norm] = $kapasitas !== '' ? $kapasitas : null;
+                }
+            }
+        } catch (\Throwable $e) {
+        }
+        return $map;
+    }
+
+    /**
+     * Ambil Real Stock dan Utilisasi dari spreadsheet (gid=1027423961).
+     * Kolom: Unit, SUM of Stock Quantity on Period End, Utilisasi (%).
+     * Return map: normalized_unit -> ['real_stock' => ..., 'utilisasi' => ...].
+     */
+    private function fetchRealStockUtilisasiFromSpreadsheet(): array
+    {
+        $url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS2r2LriHQZJLBvJt-_deCyqxlaw7gk3uc0txIXh_LUTbicR8ergKXxsoAdqFBTP1lTORXl6DBLUUVg/pub?gid=1027423961&single=true&output=csv';
+        $map = [];
+        try {
+            $response = Http::timeout(10)->get($url);
+            if (! $response->successful()) {
+                return $map;
+            }
+            $csv = $response->body();
+            $csv = preg_replace('/^\xEF\xBB\xBF/', '', $csv);
+            $csv = str_replace(["\r\n", "\r"], "\n", $csv);
+            $lines = array_filter(array_map('trim', explode("\n", $csv)));
+            if (count($lines) < 2) {
+                return $map;
+            }
+            $headers = str_getcsv(array_shift($lines));
+            $colUnit = null;
+            $colStock = null;
+            $colUtilisasi = null;
+            foreach ($headers as $i => $h) {
+                $hLower = trim(strtolower((string) $h));
+                if ($hLower === 'unit') {
+                    $colUnit = $i;
+                }
+                if (strpos($hLower, 'stock quantity') !== false) {
+                    $colStock = $i;
+                }
+                if (strpos($hLower, 'utilisasi') !== false) {
+                    $colUtilisasi = $i;
+                }
+            }
+            if ($colUnit === null) {
+                return $map;
+            }
+            foreach ($lines as $line) {
+                if ($line === '') {
+                    continue;
+                }
+                $row = str_getcsv($line);
+                $unit = isset($row[$colUnit]) ? trim((string) $row[$colUnit]) : '';
+                if ($unit === '') {
+                    continue;
+                }
+                $norm = preg_replace('/\s+/', '', mb_strtolower($unit));
+                $realStock = ($colStock !== null && isset($row[$colStock])) ? trim((string) $row[$colStock]) : null;
+                $utilisasi = ($colUtilisasi !== null && isset($row[$colUtilisasi])) ? trim((string) $row[$colUtilisasi]) : null;
+                $map[$norm] = ['real_stock' => $realStock !== '' ? $realStock : null, 'utilisasi' => $utilisasi !== '' ? $utilisasi : null];
+            }
+        } catch (\Throwable $e) {
+        }
+        return $map;
+    }
+
+    /**
+     * Ambil nilai unik dari pin (regional, unit_kebun, atau jenis_gudang), trim, merge yang kembar (case-insensitive), urutkan.
+     */
+    private function uniqueSortedFromPins(array $pinLocations, string $key): array
+    {
+        $allowed = ['regional', 'unit_kebun', 'jenis_gudang'];
+        $key = in_array($key, $allowed) ? $key : 'regional';
+        $values = [];
+        foreach ($pinLocations as $pin) {
+            $v = isset($pin[$key]) ? trim((string) $pin[$key]) : '';
+            if ($v !== '') {
+                $k = mb_strtolower($v);
+                if (! isset($values[$k])) {
+                    $values[$k] = $v;
+                }
+            }
+        }
+        $list = array_values($values);
+        sort($list, SORT_STRING);
+        return $list;
+    }
+
+    /**
+     * Ambil data lokasi gudang dari Google Spreadsheet (Lokasi Gudang PTPN I)
+     * Kolom: regional, unit kebun, jenis gudang, latitude, longitude
+     */
+    private function fetchGudangPinFromSpreadsheet(): array
+    {
+        $url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT_BJjcONi0mkCMtW738XZ65GtljUO8S2kzxbf59pjZb5WY8nV_2Qwvd9mN-fQ53ZRQLb8FSgL2gR9D/pub?gid=0&single=true&output=csv';
+        $pinLocations = [];
+
+        try {
+            $response = Http::timeout(10)->get($url);
+            if (!$response->successful()) {
+                return $pinLocations;
+            }
+            $csv = $response->body();
+            $csv = preg_replace('/^\xEF\xBB\xBF/', '', $csv); // hapus UTF-8 BOM
+            $csv = str_replace(["\r\n", "\r"], "\n", $csv);
+            $lines = array_filter(array_map('trim', explode("\n", $csv)));
+            if (count($lines) < 2) {
+                return $pinLocations;
+            }
+            $headers = str_getcsv(array_shift($lines));
+            $headers = array_map(function ($h) {
+                return trim(strtolower((string) $h));
+            }, $headers);
+            $colIdx = [
+                'regional' => null,
+                'unit kebun' => null,
+                'jenis gudang' => null,
+                'latitude' => null,
+                'longitude' => null,
+            ];
+            $aliases = [
+                'lat' => 'latitude',
+                'lng' => 'longitude',
+                'long' => 'longitude',
+                'unit' => 'unit kebun',
+                'jenis' => 'jenis gudang',
+            ];
+            foreach ($headers as $i => $h) {
+                if (isset($colIdx[$h])) {
+                    $colIdx[$h] = $i;
+                } elseif (isset($aliases[$h])) {
+                    $colIdx[$aliases[$h]] = $i;
+                }
+            }
+            // Fallback: urutan kolom standar (Regional, Unit Kebun, Jenis Gudang, Latitude, Longitude)
+            if ($colIdx['latitude'] === null || $colIdx['longitude'] === null) {
+                $n = count($headers);
+                if ($n >= 5) {
+                    $colIdx['regional'] = 0;
+                    $colIdx['unit kebun'] = 1;
+                    $colIdx['jenis gudang'] = 2;
+                    $colIdx['latitude'] = 3;
+                    $colIdx['longitude'] = 4;
+                }
+            }
+            $hasRequired = ($colIdx['latitude'] !== null && $colIdx['longitude'] !== null);
+            if (!$hasRequired) {
+                return $pinLocations;
+            }
+            foreach ($lines as $line) {
+                if ($line === '') {
+                    continue;
+                }
+                $row = str_getcsv($line);
+                $latRaw = isset($row[$colIdx['latitude']]) ? trim($row[$colIdx['latitude']]) : '';
+                $lngRaw = isset($row[$colIdx['longitude']]) ? trim($row[$colIdx['longitude']]) : '';
+                // Normalisasi: koma sebagai pemisah desimal (format Indonesia) -> titik
+                $lat = $latRaw === '' ? null : str_replace(',', '.', $latRaw);
+                $lng = $lngRaw === '' ? null : str_replace(',', '.', $lngRaw);
+                if ($lat === null || $lng === null || !is_numeric($lat) || !is_numeric($lng)) {
+                    continue;
+                }
+                $lat = (float) $lat;
+                $lng = (float) $lng;
+                if ($lat < -90 || $lat > 90 || $lng < -180 || $lng > 180) {
+                    continue;
+                }
+                // Abaikan koordinat di luar wilayah Indonesia (kurang lebih)
+                if ($lat < -11 || $lat > 7 || $lng < 90 || $lng > 145) {
+                    continue;
+                }
+                $pinLocations[] = [
+                    'lat' => $lat,
+                    'lng' => $lng,
+                    'regional' => $colIdx['regional'] !== null && isset($row[$colIdx['regional']]) ? trim($row[$colIdx['regional']]) : '-',
+                    'unit_kebun' => $colIdx['unit kebun'] !== null && isset($row[$colIdx['unit kebun']]) ? trim($row[$colIdx['unit kebun']]) : '-',
+                    'jenis_gudang' => $colIdx['jenis gudang'] !== null && isset($row[$colIdx['jenis gudang']]) ? trim($row[$colIdx['jenis gudang']]) : '-',
+                ];
+            }
+        } catch (\Throwable $e) {
+            // tetap return array kosong jika gagal
+        }
+        return $pinLocations;
     }
 
     public function aigri()

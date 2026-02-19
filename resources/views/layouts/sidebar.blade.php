@@ -41,6 +41,7 @@
             <a href="{{url('')}}/picaofffarm">PICA Off Farm</a>
             <a href="{{url('')}}/dfarmkaret">DFarm Karet</a>
             <a href="{{url('')}}/dfarmteh">DFarm Teh</a>
+            <a href="{{url('')}}/gudangutilisasi">Dashboard Utilisasi Gudang</a>
         </div>
         <a href="#aset" id="aset" class="parent">Asset <span class="toggle-icon">&#9654;</span></a>
         <div class="submenu" id="asetSubmenu">

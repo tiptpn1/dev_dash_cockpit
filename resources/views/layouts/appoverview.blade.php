@@ -10,7 +10,19 @@
     <link rel="shortcut icon" href="https://nadine.ptpn1.co.id/assets/logosupco.png">
     <link rel="stylesheet" href="{{url('')}}/assets/css/app.css">
     <title>Dashboard PTPN I</title>
-        
+    
+    <!-- Text to Speech Script -->
+    <script>
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'id-ID'; // Set bahasa Indonesia
+                window.speechSynthesis.speak(utterance);
+            } else {
+                console.log('Text to speech tidak didukung di browser ini');
+            }
+        }
+    </script>
 </head>
 <body>
     <!-- Step 4: Sidebar Menu -->

@@ -13,10 +13,16 @@ class AiResponseController extends Controller
     {
         $message = $request->input('message');
         try {
-            $url = "https://aset-dives-dev.ptpn1.co.id/weather/ai_response";
+            $url = "https://aset-dives-dev.ptpn1.co.id/map_ai/ai_response";
+            if ($request->input('thread_id')) {
+                $thread_id = $request->input('thread_id');
+            } else {
+                $thread_id = "";
+            }
             
             $response = Http::asForm()->post($url, [
-                'tanya' => $message
+                'tanya' => $message,
+                'thread_id' => $thread_id
             ]);
 
             $data = $response->object();
@@ -24,7 +30,8 @@ class AiResponseController extends Controller
             if ($response->successful() && isset($data->status) && $data->status == "success") {
                 return response()->json([
                     'status' => 'success',
-                    'data' => $data
+                    'data' => $data,
+                    'thread_id' => $thread_id
                 ]);
             } else {
                 return response()->json([

@@ -206,6 +206,14 @@
     right: 5vw;
     transition: all 0.3s ease;
 }
+
+.thread-id {
+    font-size: 12px;
+    color: #b0b0b0;
+    margin-top: 2px;
+    text-align: right;
+    display: none;
+}
 </style>
 
 <script>
@@ -219,6 +227,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const micButton = document.getElementById('micButton');
     const expandChat = document.getElementById('expandChat');
     let recognition = null;
+    let currentThreadId = ''; // Variabel global untuk menyimpan thread_id
 
     // Initially hide the chat container
     chatContainer.style.display = 'none';
@@ -310,7 +319,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         'X-CSRF-TOKEN': csrfToken,
                         'Accept': 'application/json',
                     },
-                    body: JSON.stringify({ message: message }) // Kirim data dalam JSON
+                    body: JSON.stringify({ 
+                        message: message,
+                        thread_id: currentThreadId // Mengirim thread_id yang tersimpan
+                    })
                 });
 
                 if (!response.ok) {
@@ -320,8 +332,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 const response_data = await response.json();
                 const data = response_data.data;
 
+                // Update thread_id jika ada di response
+                if (data.thread_id) {
+                    currentThreadId = data.thread_id;
+                }
+
                 // Remove loading message
                 chatMessages.removeChild(loadingDiv);
+
+                // Tambahkan thread_id di bawah pesan user
+                if (data.thread_id) {
+                    const threadIdDiv = document.createElement('div');
+                    threadIdDiv.className = 'thread-id';
+                    threadIdDiv.textContent = `Thread ID: ${data.thread_id}`;
+                    userMessageDiv.appendChild(threadIdDiv);
+                }
 
                 // Add AI response
                 const assistantMessageDiv = document.createElement('div');
