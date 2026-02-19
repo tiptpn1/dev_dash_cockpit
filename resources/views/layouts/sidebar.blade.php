@@ -2,7 +2,7 @@
     <img src="{{url('')}}/asset/images/menu.png" alt="Menu Icon">
 </div>
 <div class="sidebar" id="sidebar">
-        <?php 
+        <?php
             $user = Auth::guard('custom')->user();
             $username="";
             if(isset($user)){
@@ -13,15 +13,6 @@
         <!-- <a href="#home">Home</a> -->
         @if($username!='mrc')
         <a href="{{url('')}}" class="menu-item" id="overview">Overview</a>
-        @endif
-        <a href="#gis" id="gis" class="parent">GIS <span class="toggle-icon">&#9654;</span></a>
-        <div class="submenu" id="gisSubmenu">
-            <a href="http://gis.ptpn1.co.id/mbtiles/tree4.php?id=0&token=eofkp4456432oewkf465oew" target='_blank' class="menu-item" id="gis">AREAL</a>
-            <a href="http://gis.ptpn1.co.id/mbtiles/tree5.php?id=0&token=eofkp4456432oewkf465oew" target='_blank' class="menu-item" id="gis">NDVI</a>
-            <a href="http://aset-dives-dev.ptpn1.co.id/weather?token=234kjjlksflk8y98ksafdklj23" target='_blank' class="menu-item" id="gis">CUACA</a>
-        </div>
-        <a href="{{url('')}}/mrc" class="menu-item" id="overview">MRC</a>
-        @if($username!='mrc')
         <a href="#operasional" id="operasional" class="parent">Operasional <span class="toggle-icon">&#9654;</span></a>
         <div class="submenu" id="operasionalSubmenu">
             <a href="#" id="karetSubmenu" class="parents">Karet<span class="toggle-icon">&#9654;</span></a>
@@ -41,7 +32,13 @@
             <a href="{{url('')}}/picaofffarm">PICA Off Farm</a>
             <a href="{{url('')}}/dfarmkaret">DFarm Karet</a>
             <a href="{{url('')}}/dfarmteh">DFarm Teh</a>
-            <a href="{{url('')}}/gudangutilisasi">Dashboard Utilisasi Gudang</a>
+            <!-- <a href="{{url('')}}/gudangutilisasi">Dashboard Utilisasi Gudang</a> -->
+        </div>
+        <a href="{{url('')}}/gudangutilisasi" class="menu-item">Warehouse</a>
+        <a href="#sales" id="sales" class="parent">Sales<span class="toggle-icon">&#9654;</span></a>
+        <div class="submenu" id="salesSubmenu">
+            <a href="{{url('')}}/sales_comodities">Comodities Sales</a>
+            <a href="{{url('')}}/soptea">S&OP Tea</a>
         </div>
         <a href="#aset" id="aset" class="parent">Asset <span class="toggle-icon">&#9654;</span></a>
         <div class="submenu" id="asetSubmenu">
@@ -61,11 +58,6 @@
             <a href="{{url('')}}/hr_demographics">HR Demographics</a>
             <a href="{{url('')}}/hr_dev">HR Learning & Development</a>
             <a href="{{url('')}}/hr_revenue">HR Revenue & Cost</a>
-        </div>
-        <a href="#sales" id="sales" class="parent">Sales<span class="toggle-icon">&#9654;</span></a>
-        <div class="submenu" id="salesSubmenu">
-            <a href="{{url('')}}/sales_comodities">Comodities Sales</a>
-            <a href="{{url('')}}/soptea">S&OP Tea</a>
         </div>
         <a href="#agraria" id="aset" class="parent">Legal & Agraria <span class="toggle-icon">&#9654;</span></a>
         <div class="submenu" id="asetSubmenu">
@@ -88,9 +80,19 @@
         <div class="submenu" id="asetSubmenu">
             <a href="{{url('')}}/dashemisi">Dashboard Emisi</a>
         </div>
+        <a href="#gis" id="gis" class="parent">GIS <span class="toggle-icon">&#9654;</span></a>
+        <div class="submenu" id="gisSubmenu">
+            <a href="http://gis.ptpn1.co.id/mbtiles/tree4.php?id=0&token=eofkp4456432oewkf465oew" target='_blank' class="menu-item" id="gis">AREAL</a>
+            <a href="http://gis.ptpn1.co.id/mbtiles/tree5.php?id=0&token=eofkp4456432oewkf465oew" target='_blank' class="menu-item" id="gis">NDVI</a>
+            <a href="http://aset-dives-dev.ptpn1.co.id/weather?token=234kjjlksflk8y98ksafdklj23" target='_blank' class="menu-item" id="gis">CUACA</a>
+        </div>
+        @endif
+
+        <a href="{{url('')}}/mrc" class="menu-item" id="overview">MRC</a>
+        @if($username!='mrc')
         <a href="{{url('')}}/aigri" class="menu-item" id="aigr1">AIGR1</a>
         <a href="{{url('')}}/portalaplikasi" class="menu-item" id="portalaplikasi">Portal Aplikasi</a>
-        
+
         @endif
         <a href="{{url('')}}/logout" class="menu-item" id="logout">Logout</a>
     </div>
