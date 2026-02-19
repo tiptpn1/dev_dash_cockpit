@@ -19,10 +19,10 @@
         flex-direction: column;
         min-height: min-content;
     }
-    /* Peta 1/2 halaman; Looker di bawah; scroll = peta bergeser ke atas */
+    /* Peta 3/4 halaman; Looker di bawah; scroll = peta bergeser ke atas */
     .gudang-map-section {
-        flex: 0 0 50vh;
-        min-height: 50vh;
+        flex: 0 0 75vh;
+        min-height: 75vh;
         border: 3px solid #166534;
         border-radius: 8px;
         background: #f8fafc;
@@ -80,7 +80,16 @@
     }
     .gudang-popup { min-width: 180px; max-width: 320px; line-height: 1.5; }
     .gudang-popup-address { display: inline-block; max-width: 100%; word-break: break-word; }
-    .gudang-popup img.gudang-popup-photo { max-width: 100%; height: auto; margin-top: 8px; border-radius: 6px; display: block; cursor: pointer; }
+    .gudang-popup img.gudang-popup-photo {
+        max-width: 100%;
+        width: 100%;
+        height: 160px;
+        object-fit: cover;
+        margin-top: 8px;
+        border-radius: 6px;
+        display: block;
+        cursor: pointer;
+    }
     .gudang-popup-cctv {
         display: block;
         margin-top: 8px;
@@ -107,6 +116,30 @@
     .gudang-pin-orange svg path { fill: #ffc107; }
     .gudang-pin-green svg path { fill: #2e7d32; }
     .gudang-pin-default svg path { fill: #78909c; }
+    /* Animasi pin berjatuhan ke lokasi saat filter dipilih */
+    .gudang-pin-drop {
+        display: block;
+        animation: gudang-pin-fall 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        transform: translateY(-100px);
+        opacity: 0;
+    }
+    @keyframes gudang-pin-fall {
+        0% {
+            transform: translateY(-100px);
+            opacity: 0;
+        }
+        70% {
+            transform: translateY(6px);
+            opacity: 1;
+        }
+        85% {
+            transform: translateY(-3px);
+        }
+        100% {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
     /* Modal foto hampir full screen saat foto di popup diklik */
     .gudang-photo-modal {
         display: none;
@@ -180,8 +213,37 @@
     .gudang-utilisasi-wrapper.peta-hidden .gudang-map-filter {
         display: none;
     }
+    .gudang-utilisasi-wrapper.peta-hidden .btn-toggle-filter {
+        top: 12px;
+    }
 
-    /* Filter pin: Regional, Unit Kebun, tombol Search — di bawah tombol Hide peta */
+    /* Tombol toggle filter: di sebelah kiri tombol Hide peta */
+    .btn-toggle-filter {
+        position: fixed;
+        top: 85px;
+        right: 120px;
+        z-index: 1001;
+        padding: 6px 14px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: #1f2937;
+        background: #fff;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        transition: background 0.2s, border-color 0.2s;
+    }
+    .btn-toggle-filter:hover {
+        background: #f3f4f6;
+        border-color: #9ca3af;
+    }
+    /* Filter disembunyikan saat class filter-hidden ada di wrapper */
+    .gudang-utilisasi-wrapper.filter-hidden .gudang-map-filter {
+        display: none !important;
+    }
+
+    /* Filter pin: Regional, Unit Kebun, tombol Search */
     .gudang-map-filter {
         position: fixed;
         top: 130px;
@@ -315,7 +377,7 @@
 @endsection
 
 @section('content')
-<div class="gudang-utilisasi-wrapper main-content" id="gudangUtilisasiWrapper">
+<div class="gudang-utilisasi-wrapper main-content filter-hidden" id="gudangUtilisasiWrapper">
     {{-- Header di atas peta: Danantara | Dashboard Utilisasi Gudang | ptpn1 + Hide peta --}}
     <header class="gudang-header">
         <div class="gudang-header-left">
@@ -327,7 +389,7 @@
             <svg class="gudang-header-title-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3C19 20 22 3 22 3c-1 2-8 2.09-13 3.08S3 12 3 12s5.5-1.5 8.5-1.5 5 1.5 5 1.5-2.5-4.5-2.5-4.5 2.5 4.5 2.5 4.5-4.5 2.5-4.5c0 0 1.5 2.5 1.5 5.5s-1.5 5.5-1.5 5.5c0 0 2.5-2.5 2.5-5.5S17 8 17 8z"/>
             </svg>
-            <h1 class="gudang-header-title" style="font-size: 2.7rem;">Dashboard Utilisasi</h1>
+            <h1 class="gudang-header-title" style="font-size: 2.7rem;">Dashboard Utilisasi Gudang Teh</h1>
         </div>
         <div class="gudang-header-right">
             <div class="gudang-header-ptpn">
@@ -335,8 +397,9 @@
             </div>
         </div>
     </header>
+    <button type="button" class="btn-toggle-filter" id="btnToggleFilter" aria-label="Tampilkan filter">Tampilkan filter</button>
     <button type="button" class="btn-toggle-peta" id="btnTogglePeta" aria-label="Hide peta">Hide peta</button>
-    {{-- Filter pin: Regional, Unit Kebun, Search — di bawah tombol Hide peta --}}
+    {{-- Filter pin: Regional, Unit Kebun, Search — bisa di-toggle dengan tombol --}}
     <div class="gudang-map-filter" id="gudangMapFilter">
         <label for="filterRegional">Regional</label>
         <select id="filterRegional">
@@ -352,11 +415,11 @@
         </select>
         <button type="button" class="btn-search-pin" id="btnSearchPin">Search</button>
     </div>
-    {{-- 1/2 layar atas: Peta Indonesia --}}
+    {{-- 3/4 layar atas: Peta Indonesia --}}
     <div class="gudang-map-section">
         <div id="indonesia-map"></div>
     </div>
-    {{-- 1/2 layar bawah: Dashboard Looker Studio --}}
+    {{-- 1/4 layar bawah: Dashboard Looker Studio --}}
     <div class="gudang-iframe-section">
         <div class="iframe-container">
             <div class="iframe-scaled">
@@ -393,9 +456,9 @@ document.addEventListener('DOMContentLoaded', function() {
     var imagePasirmalangGudangPupuk = "{{ asset('pasirmalang_gudangpupuk.jpg') }}";
     var imagePurbasariGudangProduksi = "{{ asset('purbasari_gudangproduksi.jpg') }}";
 
-    function addPinsToMap(pins) {
+    function addPinsToMap(pins, animate) {
         pinsLayer.clearLayers();
-        pins.forEach(function(pin) {
+        pins.forEach(function(pin, index) {
             var uk = (pin.unit_kebun || '').toString().trim().toLowerCase();
             var jg = (pin.jenis_gudang || '').toString().trim().toLowerCase();
             var isPasirmalangBakuPelengkap = (uk === 'pasirmalang' && jg.indexOf('gudang bahan baku pelengkap') !== -1);
@@ -421,16 +484,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (isNaN(num)) return 'gudang-pin-default';
                 return num > 100 ? 'gudang-pin-red' : (num >= 80 ? 'gudang-pin-orange' : 'gudang-pin-green');
             }
+            var pinSvg = '<svg viewBox="0 0 25 41" xmlns="http://www.w3.org/2000/svg"><path d="M12.5 0C5.6 0 0 5.6 0 12.5c0 9.4 12.5 28.5 12.5 28.5S25 21.9 25 12.5C25 5.6 19.4 0 12.5 0z"/><circle cx="12.5" cy="14" r="6" fill="#fff"/></svg>';
+            var pinHtml = animate
+                ? '<span class="gudang-pin-drop" style="animation-delay: ' + (index * 0.07) + 's">' + pinSvg + '</span>'
+                : pinSvg;
             var pinIcon = L.divIcon({
                 className: 'gudang-pin ' + getUtilisasiPinClass(),
-                html: '<svg viewBox="0 0 25 41" xmlns="http://www.w3.org/2000/svg"><path d="M12.5 0C5.6 0 0 5.6 0 12.5c0 9.4 12.5 28.5 12.5 28.5S25 21.9 25 12.5C25 5.6 19.4 0 12.5 0z"/><circle cx="12.5" cy="14" r="6" fill="#fff"/></svg>',
+                html: pinHtml,
                 iconSize: [25, 41],
                 iconAnchor: [12.5, 41]
             });
+            var jenisGudangRaw = (pin.jenis_gudang || '').toString().trim();
+            var jenisGudangDisplay = jenisGudangRaw ? jenisGudangRaw.replace(/\bgudang\b/gi, '').replace(/\s+/g, ' ').trim() || '-' : '-';
             var popupContent = '<div class="gudang-popup">' +
                 '<strong>Regional:</strong> ' + (pin.regional || '-') + '<br>' +
                 '<strong>Unit Kebun:</strong> ' + (pin.unit_kebun || '-') + '<br>' +
-                '<strong>Jenis Gudang:</strong> ' + (pin.jenis_gudang || '-') + '<br>' +
+                '<strong>Jenis Gudang:</strong> ' + jenisGudangDisplay + '<br>' +
                 '<strong>Alamat:</strong> <span class="gudang-popup-address" data-lat="' + pin.lat + '" data-lng="' + pin.lng + '">Memuat...</span><br>' +
                 '<strong>Kapasitas:</strong> ' + kapasitasTxt;
             if (jgContainsProduksi) {
@@ -456,8 +525,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 .bindPopup(popupContent);
         });
         if (pins.length > 0) {
-            var bounds = L.latLngBounds(pins.map(function(p) { return [p.lat, p.lng]; }));
-            map.fitBounds(bounds, { padding: [30, 30], maxZoom: 6 });
+            if (animate) {
+                var zoomDuration = 1.8;
+                if (pins.length === 1) {
+                    map.flyTo([pins[0].lat, pins[0].lng], 14, { duration: zoomDuration });
+                } else {
+                    var bounds = L.latLngBounds(pins.map(function(p) { return [p.lat, p.lng]; }));
+                    map.fitBounds(bounds, { padding: [40, 40], maxZoom: 12, animate: true, duration: zoomDuration });
+                }
+            } else {
+                var bounds = L.latLngBounds(pins.map(function(p) { return [p.lat, p.lng]; }));
+                map.fitBounds(bounds, { padding: [30, 30], maxZoom: 6 });
+            }
         }
     }
 
@@ -547,7 +626,7 @@ document.addEventListener('DOMContentLoaded', function() {
             var matchJ = !jenisGudang || (pJenis === jenisGudang.toLowerCase());
             return matchR && matchU && matchJ;
         });
-        addPinsToMap(filtered);
+        addPinsToMap(filtered, true);
     });
 
     // Modal foto hampir full screen: buka saat foto di popup diklik, tutup dengan tombol atau klik backdrop
@@ -622,6 +701,21 @@ document.addEventListener('DOMContentLoaded', function() {
             wrapper.classList.toggle('peta-hidden');
             btnTogglePeta.textContent = wrapper.classList.contains('peta-hidden') ? 'Show peta' : 'Hide peta';
             btnTogglePeta.setAttribute('aria-label', wrapper.classList.contains('peta-hidden') ? 'Show peta' : 'Hide peta');
+        });
+    }
+
+    // Tombol toggle filter: tampilkan/sembunyikan panel filter (Regional, Unit Kebun, Jenis Gudang)
+    var btnToggleFilter = document.getElementById('btnToggleFilter');
+    if (wrapper && btnToggleFilter) {
+        function updateFilterButtonText() {
+            var isHidden = wrapper.classList.contains('filter-hidden');
+            btnToggleFilter.textContent = isHidden ? 'Tampilkan filter' : 'Sembunyikan filter';
+            btnToggleFilter.setAttribute('aria-label', isHidden ? 'Tampilkan filter' : 'Sembunyikan filter');
+        }
+        updateFilterButtonText();
+        btnToggleFilter.addEventListener('click', function() {
+            wrapper.classList.toggle('filter-hidden');
+            updateFilterButtonText();
         });
     }
 });

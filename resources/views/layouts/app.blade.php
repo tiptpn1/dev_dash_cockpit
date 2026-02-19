@@ -8,8 +8,8 @@
     <meta content="" name="description"/>
     <meta content="" name="author"/>
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="shortcut icon" href="https://nadine.ptpn1.co.id/assets/logosupco.png">
-    <title>@yield('title', 'WhatsApp Web')</title>
+    <link rel="shortcut icon" href="{{ asset('ptpn.png') }}" type="image/png">
+    <title>@yield('title', 'AGRINAV')</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Droid+Sans:wght@400;700&display=swap">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
