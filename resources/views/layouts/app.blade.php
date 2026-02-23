@@ -8,7 +8,7 @@
     <meta content="" name="description"/>
     <meta content="" name="author"/>
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="shortcut icon" href="{{ asset('ptpn.png') }}" type="image/png">
+    <link rel="shortcut icon" href="{{ asset('ptpn1.png') }}" type="image/png">
     <title>@yield('title', 'AGRINAV')</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Droid+Sans:wght@400;700&display=swap">
@@ -55,17 +55,39 @@
         }
 
         .sidebar a {
-            display: block;
-            padding: 10px;
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
             text-decoration: none;
             color: #e8e8e8;
             text-align: left;
             transition: background-color 0.3s;
             font-size: 0.9em;
+            min-height: 40px;
         }
 
         .sidebar a:hover {
             background-color: #575757;
+        }
+
+        .sidebar .menu-icon {
+            flex-shrink: 0;
+            width: 1.15em;
+            margin-right: 10px;
+            text-align: center;
+            color: #e8e8e8;
+        }
+
+        .sidebar a .toggle-icon {
+            margin-left: auto;
+            flex-shrink: 0;
+            font-size: 0.7em;
+        }
+
+        .sidebar .menu-item-desc {
+            font-size: 0.75em;
+            color: #9aa0a6;
+            margin-left: 4px;
         }
 
         .main-content {
@@ -111,7 +133,7 @@
         }
 
         .submenu a {
-            padding-left: 30px;
+            padding-left: 36px;
         }
 
         .sidebar a.active + .submenu {

@@ -113,6 +113,18 @@
     .gudang-pin { display: block; line-height: 0; }
     .gudang-pin svg { display: block; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.35)); }
     .gudang-pin-red svg path { fill: #c62828; }
+    /* Pin merah: sinar/glow berkedip seperti alert (utilisasi > 100%) */
+    .gudang-pin-red {
+        animation: gudang-pin-glow 1.5s ease-in-out infinite;
+    }
+    @keyframes gudang-pin-glow {
+        0%, 100% {
+            filter: drop-shadow(0 0 4px rgba(198, 40, 40, 0.9)) drop-shadow(0 0 12px rgba(198, 40, 40, 0.6));
+        }
+        50% {
+            filter: drop-shadow(0 0 12px rgba(198, 40, 40, 1)) drop-shadow(0 0 24px rgba(198, 40, 40, 0.8)) drop-shadow(0 0 36px rgba(198, 40, 40, 0.4));
+        }
+    }
     .gudang-pin-orange svg path { fill: #ffc107; }
     .gudang-pin-green svg path { fill: #2e7d32; }
     .gudang-pin-default svg path { fill: #78909c; }
@@ -393,7 +405,7 @@
         </div>
         <div class="gudang-header-right">
             <div class="gudang-header-ptpn">
-                <img src="{{ asset('ptpn.png') }}" alt="PTPN 1">
+                <img src="{{ asset('ptpn1.png') }}" alt="PTPN 1">
             </div>
         </div>
     </header>
@@ -540,7 +552,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    addPinsToMap(pinLocations);
+    // Pin awal akan di-render setelah dropdown siap dengan filter default "Gudang Produksi" (lihat di bawah)
 
     // Reverse geocoding: isi alamat dari Nominatim saat popup dibuka
     var addressCache = {};
@@ -584,6 +596,23 @@ document.addEventListener('DOMContentLoaded', function() {
         opt.textContent = j;
         selJenisGudang.appendChild(opt);
     });
+
+    // Default filter: Jenis Gudang = Gudang Produksi (saat halaman pertama tampil)
+    var defaultJenisProduksi = '';
+    for (var i = 0; i < jenisGudangs.length; i++) {
+        if ((jenisGudangs[i] || '').toString().trim().toLowerCase().indexOf('gudang produksi') !== -1) {
+            defaultJenisProduksi = jenisGudangs[i];
+            break;
+        }
+    }
+    if (defaultJenisProduksi) {
+        selJenisGudang.value = defaultJenisProduksi;
+    }
+    var initialFiltered = pinLocations.filter(function(p) {
+        var jg = (p.jenis_gudang || '').toString().trim().toLowerCase();
+        return jg.indexOf('gudang produksi') !== -1;
+    });
+    addPinsToMap(initialFiltered.length > 0 ? initialFiltered : pinLocations, initialFiltered.length > 0);
 
     // Isi Unit Kebun berdasarkan Regional yang dipilih: hanya unit kebun di regional tersebut
     function isiUnitKebunByRegional() {
@@ -667,7 +696,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     fillOpacity: 0.2
                 }
             }).addTo(map);
-            if (pinLocations.length > 0) {
+            var layerBounds = pinsLayer.getBounds();
+            if (layerBounds.isValid()) {
+                map.fitBounds(layerBounds, { padding: [30, 30], maxZoom: 12 });
+            } else if (pinLocations.length > 0) {
                 var bounds = L.latLngBounds(pinLocations.map(function(p) { return [p.lat, p.lng]; }));
                 map.fitBounds(bounds, { padding: [30, 30], maxZoom: 6 });
             } else {
@@ -675,7 +707,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(function() {
-            if (pinLocations.length > 0) {
+            var layerBounds = pinsLayer.getBounds();
+            if (layerBounds.isValid()) {
+                map.fitBounds(layerBounds, { padding: [30, 30] });
+            } else if (pinLocations.length > 0) {
                 var bounds = L.latLngBounds(pinLocations.map(function(p) { return [p.lat, p.lng]; }));
                 map.fitBounds(bounds, { padding: [30, 30] });
             } else {
