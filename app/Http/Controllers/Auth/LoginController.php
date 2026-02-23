@@ -17,8 +17,19 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
+        $rules = [
+            'username' => 'required',
+            'password' => 'required',
+        ];
+        if (config('captcha.disable') !== true) {
+            $rules['captcha'] = 'required|captcha';
+        }
+        $request->validate($rules, [
+            'captcha.captcha' => 'Captcha salah. Silakan coba lagi.',
+        ]);
+
         $credentials = $request->only('username', 'password');
-        
+
         if (Auth::guard('custom')->attempt($credentials)) {
             return redirect()->intended('/');
         }
