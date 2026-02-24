@@ -115,8 +115,10 @@
 
         .main-content {
             margin-left: 0;
-            padding: 20px;
+            padding: 20px 0 20px 20px;
             transition: margin-left 0.3s;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .iframe-container {
@@ -125,13 +127,17 @@
             height: 100%;
         }
 
+        .iframe-container.main-content {
+            padding: 0;
+        }
+
         .iframe-container iframe {
             position: absolute;
             top: 0;
-            left: -1%;
-            width: 99%;
+            left: 0;
+            width: 100%;
             height: 100%;
-            border: none; /* Optional: Remove the border */
+            border: none;
         }
 
         .sidebar.open ~ .main-content {
