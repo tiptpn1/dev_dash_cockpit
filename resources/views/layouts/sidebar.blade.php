@@ -9,6 +9,10 @@
                 $username = $user->username;
             }
         ?>
+        <div class="sidebar-header">
+            <img src="{{ asset('ptpn1.png') }}" alt="PTPN 1" class="sidebar-logo">
+            <span class="sidebar-title">AGRINAV</span>
+        </div>
         <div class="menu">
         <!-- <a href="#home">Home</a> -->
         
@@ -92,6 +96,7 @@
         
         @if($username!='mrc')
         <a href="{{url('')}}/aigri" class="menu-item" id="aigr1"><i class="fa-solid fa-robot menu-icon"></i>AIGR1</a>
+        <a href="{{url('')}}/gardai" class="menu-item" id="gardai"><i class="fa-solid fa-fire-flame-curved menu-icon"></i>Garda AI</a>
         <a href="{{url('')}}/portalaplikasi" class="menu-item" id="portalaplikasi"><i class="fa-solid fa-th-large menu-icon"></i>Portal Aplikasi</a>
 
         @endif

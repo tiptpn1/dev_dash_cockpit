@@ -45,9 +45,32 @@
             width: 200px;
         }
 
+        .sidebar-header {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(0, 0, 0, 0.15);
+        }
+        .sidebar.open .sidebar-header {
+            display: flex;
+        }
+        .sidebar-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: #e8eaed;
+        }
+        .sidebar-logo {
+            height: 32px;
+            width: auto;
+            object-fit: contain;
+        }
+
         .sidebar .menu {
             display: none;
-            padding-top: 30%;
+            padding-top: 12px;
         }
 
         .sidebar.open .menu {

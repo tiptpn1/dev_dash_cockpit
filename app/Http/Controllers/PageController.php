@@ -112,8 +112,7 @@ class PageController extends Controller
     }
     public function asset_peta()
     {
-        $linkiframe = 'https://aset.ptpn1.co.id/C_peta_aset?username=tamu_1&token=aWaKWj2S8jnawejkjwkjekajwkejakww';
-        return view('pages/overview_page', compact('linkiframe'));
+        return view('pages/asset_peta');
     }
     public function asset_recovery()
     {
@@ -473,9 +472,15 @@ class PageController extends Controller
 
     public function aigri()
     {
-        
-            return view('pages/aigr1');     
+
+            return view('pages/aigr1');
     }
 
-    
+    public function gardai()
+    {
+        $linkiframe = 'https://stg-garda.ptpn1.co.id/monitoring/Y9ueuIO5YP2Tyy19xuL7';
+        return view('pages/overview_page', compact('linkiframe'));
+    }
+
+
 }

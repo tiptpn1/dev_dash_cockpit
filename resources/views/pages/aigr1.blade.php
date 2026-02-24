@@ -52,7 +52,7 @@
         <main class="main-content">
             <div id="chat-container">
                 <div style="text-align: center; padding: 1rem;">
-                    <img src="https://ptpn1.co.id/wp-content/themes/logistic_new/asset_apn/logo/aset_2.png" alt="PTPN 1 Logo" style="max-width: 100px;">
+                    <img src="{{ asset('ptpn1.png') }}" alt="PTPN 1 Logo" style="max-width: 100px;">
                 </div>
                 <div class="chat-header">
                     <h1>Artificial Intelligence for Agribusiness PTPN 1</h1>

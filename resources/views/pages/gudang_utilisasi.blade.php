@@ -36,6 +36,11 @@
         min-height: 200px;
         border-radius: 6px;
     }
+    /* Tombol zoom peta di kanan, di bawah tombol Hide peta agar tidak tertutup */
+    #indonesia-map .leaflet-top.leaflet-right {
+        margin-top: 140px;
+        margin-right: 10px;
+    }
     /* Tanpa scroll; panjang sampai menembus bawah layar */
     .gudang-iframe-section {
         flex: 0 0 150vh;
@@ -451,8 +456,9 @@
 <script src="{{ asset('assets/libs/leaflet/leaflet.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Peta Indonesia: center sekitar Indonesia, zoom 5
-    var map = L.map('indonesia-map').setView([-2.5, 118], 5);
+    // Peta Indonesia: center sekitar Indonesia, zoom 5 (zoom control dipindah ke kanan agar tidak tumpang tindih dengan sidebar)
+    var map = L.map('indonesia-map', { zoomControl: false }).setView([-2.5, 118], 5);
+    L.control.zoom({ position: 'topright' }).addTo(map);
 
     // OpenStreetMap tile (gratis, tidak perlu API key)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
