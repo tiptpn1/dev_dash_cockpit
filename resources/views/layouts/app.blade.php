@@ -42,7 +42,7 @@
         }
 
         .sidebar.open {
-            width: 200px;
+            width: 230px;
         }
 
         .sidebar-header {
@@ -57,7 +57,7 @@
             display: flex;
         }
         .sidebar-title {
-            font-size: 1.25rem;
+            font-size: 1.35rem;
             font-weight: 700;
             letter-spacing: 0.05em;
             color: #e8eaed;
@@ -85,7 +85,7 @@
             color: #e8e8e8;
             text-align: left;
             transition: background-color 0.3s;
-            font-size: 0.9em;
+            font-size: 1em;
             min-height: 40px;
         }
 
@@ -104,11 +104,11 @@
         .sidebar a .toggle-icon {
             margin-left: auto;
             flex-shrink: 0;
-            font-size: 0.7em;
+            font-size: 0.78em;
         }
 
         .sidebar .menu-item-desc {
-            font-size: 0.75em;
+            font-size: 0.85em;
             color: #9aa0a6;
             margin-left: 4px;
         }
@@ -141,7 +141,7 @@
         }
 
         .sidebar.open ~ .main-content {
-            margin-left: 200px;
+            margin-left: 230px;
         }
 
         .icon {

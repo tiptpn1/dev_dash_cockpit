@@ -83,7 +83,7 @@
         display: block;
         pointer-events: auto;
     }
-    .gudang-popup { min-width: 180px; max-width: 320px; line-height: 1.5; }
+    .gudang-popup { min-width: 200px; max-width: 360px; line-height: 1.55; font-size: 1.05rem; }
     .gudang-popup-address { display: inline-block; max-width: 100%; word-break: break-word; }
     .gudang-popup img.gudang-popup-photo {
         max-width: 100%;
@@ -99,7 +99,7 @@
         display: block;
         margin-top: 8px;
         text-align: right;
-        font-size: 0.85rem;
+        font-size: 0.95rem;
     }
     .gudang-popup-cctv a {
         color: #166534;
@@ -109,7 +109,7 @@
         gap: 4px;
     }
     .gudang-popup-cctv a:hover { text-decoration: underline; }
-    .gudang-popup-cctv svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .gudang-popup-cctv svg { width: 20px; height: 20px; flex-shrink: 0; }
     /* Warna utilisasi: >100% merah, 80-100% oranye, <80% hijau */
     .gudang-popup .utilisasi-red { font-weight: bold; color: #c62828; }
     .gudang-popup .utilisasi-orange { font-weight: bold; color: #e65100; }

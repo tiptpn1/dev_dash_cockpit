@@ -16,18 +16,20 @@
             overflow: hidden;
         }
         .login-page {
-            display: flex;
+            position: relative;
             width: 100%;
             height: 100vh;
             min-height: 100vh;
-        }
-        /* Foto kiri: 3/4 lebar */
-        .login-photo {
-            width: 75%;
-            flex: 0 0 75%;
-            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             overflow: hidden;
-            background: #0f172a;
+        }
+        /* Background foto full layar */
+        .login-photo {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
         }
         .login-photo img {
             width: 100%;
@@ -39,28 +41,30 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(90deg, rgba(0,0,0,0.4) 0%, transparent 50%);
+            background: rgba(0, 0, 0, 0.45);
             pointer-events: none;
         }
-        /* Form kanan: 1/4 lebar — tema biru seperti home */
+        /* Form di tengah, mengambang di atas foto */
         .login-form-wrap {
-            width: 25%;
-            flex: 0 0 25%;
+            position: relative;
+            z-index: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 40px;
-            background: linear-gradient(180deg, #1e3a5f 0%, #152942 100%);
+            padding: 24px 48px;
+            width: 100%;
         }
         .login-form-box {
             width: 100%;
-            max-width: 340px;
+            max-width: 480px;
             text-align: center;
-            background: rgba(255, 255, 255, 0.06);
-            padding: 32px 28px;
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            background: rgba(30, 58, 95, 0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 36px 40px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
         }
         .login-form-box h1 {
             margin: 0 0 8px;
@@ -218,18 +222,13 @@
             font-weight: 600;
             color: #8ab4f8;
         }
-        @media (max-width: 900px) {
-            .login-page {
-                flex-direction: column;
-            }
-            .login-photo {
-                width: 100%;
-                flex: 0 0 45%;
-                min-height: 40vh;
-            }
+        @media (max-width: 480px) {
             .login-form-wrap {
-                width: 100%;
-                flex: 1;
+                padding: 16px;
+            }
+            .login-form-box {
+                padding: 28px 24px;
+                max-width: 100%;
             }
         }
     </style>

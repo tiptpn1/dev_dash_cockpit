@@ -26,7 +26,7 @@ body, html {
 }
 
 .sidebar.open {
-    width: 200px;
+    width: 230px;
 }
 
 .sidebar .menu {
@@ -58,7 +58,7 @@ body, html {
 }
 
 .sidebar.open ~ .main-content {
-    margin-left: 200px;
+    margin-left: 230px;
 }
 
 .icon {
