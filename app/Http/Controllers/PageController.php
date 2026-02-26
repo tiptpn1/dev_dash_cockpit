@@ -375,7 +375,7 @@ class PageController extends Controller
 
     /**
      * Ambil data lokasi gudang dari Google Spreadsheet (Lokasi Gudang PTPN I)
-     * Kolom: regional, unit kebun, jenis gudang, latitude, longitude
+     * Kolom: regional, unit kebun, jenis gudang, latitude, longitude, LinkCCTV (opsional)
      */
     private function fetchGudangPinFromSpreadsheet(): array
     {
@@ -404,6 +404,7 @@ class PageController extends Controller
                 'jenis gudang' => null,
                 'latitude' => null,
                 'longitude' => null,
+                'linkcctv' => null,
             ];
             $aliases = [
                 'lat' => 'latitude',
@@ -411,12 +412,15 @@ class PageController extends Controller
                 'long' => 'longitude',
                 'unit' => 'unit kebun',
                 'jenis' => 'jenis gudang',
+                'link cctv' => 'linkcctv',
             ];
             foreach ($headers as $i => $h) {
                 if (isset($colIdx[$h])) {
                     $colIdx[$h] = $i;
                 } elseif (isset($aliases[$h])) {
                     $colIdx[$aliases[$h]] = $i;
+                } elseif (preg_match('/^link\s*cctv$/i', $h)) {
+                    $colIdx['linkcctv'] = $i;
                 }
             }
             // Fallback: urutan kolom standar (Regional, Unit Kebun, Jenis Gudang, Latitude, Longitude)
@@ -462,6 +466,7 @@ class PageController extends Controller
                     'regional' => $colIdx['regional'] !== null && isset($row[$colIdx['regional']]) ? trim($row[$colIdx['regional']]) : '-',
                     'unit_kebun' => $colIdx['unit kebun'] !== null && isset($row[$colIdx['unit kebun']]) ? trim($row[$colIdx['unit kebun']]) : '-',
                     'jenis_gudang' => $colIdx['jenis gudang'] !== null && isset($row[$colIdx['jenis gudang']]) ? trim($row[$colIdx['jenis gudang']]) : '-',
+                    'link_cctv' => $colIdx['linkcctv'] !== null && isset($row[$colIdx['linkcctv']]) ? trim($row[$colIdx['linkcctv']]) : '',
                 ];
             }
         } catch (\Throwable $e) {

@@ -535,8 +535,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (isPurbasariGudangProduksi) {
                 popupContent += '<img src="' + imagePurbasariGudangProduksi + '" alt="Gudang Purbasari Produksi" class="gudang-popup-photo" data-photo-src="' + imagePurbasariGudangProduksi + '">';
             }
-            popupContent += '<div class="gudang-popup-cctv"><a href="https://stg-garda.ptpn1.co.id/monitoring/Y9ueuIO5YP2Tyy19xuL7" target="_blank" rel="noopener noreferrer">' +
-                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18 10.5V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v4.5c0 .83.67 1.5 1.5 1.5h1.5l2 2.5h3l2-2.5h1.5c.83 0 1.5-.67 1.5-1.5zm-7 7.5c2.76 0 5-2.24 5-5H6c0 2.76 2.24 5 5 5zm0-8c1.65 0 3 1.35 3 3H9c0-1.65 1.35-3 3-3z"/></svg> CCTV</a></div>';
+            var linkCctv = (pin.link_cctv || '').toString().trim();
+            if (linkCctv) {
+                var cctvHref = linkCctv.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+                popupContent += '<div class="gudang-popup-cctv"><a href="' + cctvHref + '" target="_blank" rel="noopener noreferrer">' +
+                    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18 10.5V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v4.5c0 .83.67 1.5 1.5 1.5h1.5l2 2.5h3l2-2.5h1.5c.83 0 1.5-.67 1.5-1.5zm-7 7.5c2.76 0 5-2.24 5-5H6c0 2.76 2.24 5 5 5zm0-8c1.65 0 3 1.35 3 3H9c0-1.65 1.35-3 3-3z"/></svg> CCTV</a></div>';
+            }
             popupContent += '</div>';
             L.marker([pin.lat, pin.lng], { icon: pinIcon })
                 .addTo(pinsLayer)
