@@ -523,17 +523,22 @@ document.addEventListener('DOMContentLoaded', function() {
             if (jgContainsProduksi) {
                 popupContent += '<br><strong>Real Stock:</strong> ' + realStockTxt + '<br><strong>Utilisasi:</strong> ' + formatUtilisasi(utilisasiTxt);
             }
-            if (isPasirmalangBakuPelengkap) {
-                popupContent += '<img src="' + imagePasirmalangBakuPelengkap + '" alt="Gudang Pasirmalang Bahan Baku Pelengkap" class="gudang-popup-photo" data-photo-src="' + imagePasirmalangBakuPelengkap + '">';
-            }
-            if (isPasirmalangGudangProduksi) {
-                popupContent += '<img src="' + imagePasirmalangGudangProduksi + '" alt="Gudang Pasirmalang Produksi" class="gudang-popup-photo" data-photo-src="' + imagePasirmalangGudangProduksi + '">';
-            }
-            if (isPasirmalangGudangPupuk) {
-                popupContent += '<img src="' + imagePasirmalangGudangPupuk + '" alt="Gudang Pasirmalang Pupuk" class="gudang-popup-photo" data-photo-src="' + imagePasirmalangGudangPupuk + '">';
-            }
-            if (isPurbasariGudangProduksi) {
-                popupContent += '<img src="' + imagePurbasariGudangProduksi + '" alt="Gudang Purbasari Produksi" class="gudang-popup-photo" data-photo-src="' + imagePurbasariGudangProduksi + '">';
+            var photoUrl = (pin.photo_url || '').toString().trim();
+            if (photoUrl) {
+                popupContent += '<img src="' + photoUrl + '" alt="Foto ' + (pin.unit_kebun || 'gudang') + '" class="gudang-popup-photo" data-photo-src="' + photoUrl + '">';
+            } else {
+                if (isPasirmalangBakuPelengkap) {
+                    popupContent += '<img src="' + imagePasirmalangBakuPelengkap + '" alt="Gudang Pasirmalang Bahan Baku Pelengkap" class="gudang-popup-photo" data-photo-src="' + imagePasirmalangBakuPelengkap + '">';
+                }
+                if (isPasirmalangGudangProduksi) {
+                    popupContent += '<img src="' + imagePasirmalangGudangProduksi + '" alt="Gudang Pasirmalang Produksi" class="gudang-popup-photo" data-photo-src="' + imagePasirmalangGudangProduksi + '">';
+                }
+                if (isPasirmalangGudangPupuk) {
+                    popupContent += '<img src="' + imagePasirmalangGudangPupuk + '" alt="Gudang Pasirmalang Pupuk" class="gudang-popup-photo" data-photo-src="' + imagePasirmalangGudangPupuk + '">';
+                }
+                if (isPurbasariGudangProduksi) {
+                    popupContent += '<img src="' + imagePurbasariGudangProduksi + '" alt="Gudang Purbasari Produksi" class="gudang-popup-photo" data-photo-src="' + imagePurbasariGudangProduksi + '">';
+                }
             }
             var linkCctv = (pin.link_cctv || '').toString().trim();
             if (linkCctv) {

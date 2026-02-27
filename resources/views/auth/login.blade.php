@@ -51,17 +51,17 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 24px 48px;
+            padding: 24px 56px;
             width: 100%;
         }
         .login-form-box {
             width: 100%;
-            max-width: 480px;
+            max-width: 560px;
             text-align: center;
             background: rgba(30, 58, 95, 0.92);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            padding: 36px 40px;
+            padding: 36px 48px;
             border-radius: 20px;
             border: 1px solid rgba(255, 255, 255, 0.15);
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
@@ -206,7 +206,7 @@
             justify-content: center;
         }
         .login-logo img {
-            height: 44px;
+            height: 80px;
             width: auto;
         }
         .login-app-title {

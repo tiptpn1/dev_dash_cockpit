@@ -460,13 +460,77 @@ class PageController extends Controller
                 if ($lat < -11 || $lat > 7 || $lng < 90 || $lng > 145) {
                     continue;
                 }
+                $regional = $colIdx['regional'] !== null && isset($row[$colIdx['regional']]) ? trim($row[$colIdx['regional']]) : '-';
+                $unitKebun = $colIdx['unit kebun'] !== null && isset($row[$colIdx['unit kebun']]) ? trim($row[$colIdx['unit kebun']]) : '-';
+                $jenisGudang = $colIdx['jenis gudang'] !== null && isset($row[$colIdx['jenis gudang']]) ? trim($row[$colIdx['jenis gudang']]) : '-';
+                $linkCctv = $colIdx['linkcctv'] !== null && isset($row[$colIdx['linkcctv']]) ? trim($row[$colIdx['linkcctv']]) : '';
+
+                // Cari foto kebun berdasarkan nama unit kebun di folder public/fotokebun/...
+                $photoUrl = '';
+                if ($unitKebun !== '-' && $unitKebun !== '') {
+                    $unitNameRaw = trim($unitKebun);
+                    $baseRoot = public_path('fotokebun');
+                    if (is_dir($baseRoot)) {
+                        $candidateDirs = [];
+                        // 1) Langsung folder dengan nama persis unit kebun
+                        $directDir = $baseRoot . DIRECTORY_SEPARATOR . $unitNameRaw;
+                        if (is_dir($directDir)) {
+                            $candidateDirs[] = $directDir;
+                        }
+                        // 2) Pola "Kebun_{UnitKebun}" (contoh: Kebun_cisaruni)
+                        if (empty($candidateDirs)) {
+                            $kebunDir1 = $baseRoot . DIRECTORY_SEPARATOR . ('Kebun_' . $unitNameRaw);
+                            $kebunDir2 = $baseRoot . DIRECTORY_SEPARATOR . ('Kebun_' . ucfirst(strtolower($unitNameRaw)));
+                            if (is_dir($kebunDir1)) {
+                                $candidateDirs[] = $kebunDir1;
+                            } elseif (is_dir($kebunDir2)) {
+                                $candidateDirs[] = $kebunDir2;
+                            }
+                        }
+                        // 3) Fallback: cari subfolder yang namanya mengandung unit kebun (di-normalisasi)
+                        if (empty($candidateDirs)) {
+                            $normalizedUnit = strtolower(preg_replace('/\s+/', '', $unitNameRaw));
+                            $subdirs = glob($baseRoot . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR);
+                            if ($subdirs !== false) {
+                                foreach ($subdirs as $dir) {
+                                    $name = strtolower(basename($dir));
+                                    $normalizedName = str_replace([' ', '_', '-'], '', $name);
+                                    if (strpos($normalizedName, $normalizedUnit) !== false) {
+                                        $candidateDirs[] = $dir;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (!empty($candidateDirs)) {
+                            $baseDir = $candidateDirs[0];
+                            $patterns = ['*.jpg', '*.jpeg', '*.png', '*.webp', '*.JPG', '*.JPEG', '*.PNG', '*.WEBP'];
+                            $files = [];
+                            foreach ($patterns as $pattern) {
+                                $found = glob($baseDir . DIRECTORY_SEPARATOR . $pattern);
+                                if ($found !== false) {
+                                    $files = array_merge($files, $found);
+                                }
+                            }
+                            if (!empty($files)) {
+                                $first = $files[0];
+                                // Buat path relatif dari public path agar URL benar
+                                $relative = str_replace(public_path() . DIRECTORY_SEPARATOR, '', $first);
+                                $relative = str_replace(DIRECTORY_SEPARATOR, '/', $relative);
+                                $photoUrl = asset($relative);
+                            }
+                        }
+                    }
+                }
+
                 $pinLocations[] = [
                     'lat' => $lat,
                     'lng' => $lng,
-                    'regional' => $colIdx['regional'] !== null && isset($row[$colIdx['regional']]) ? trim($row[$colIdx['regional']]) : '-',
-                    'unit_kebun' => $colIdx['unit kebun'] !== null && isset($row[$colIdx['unit kebun']]) ? trim($row[$colIdx['unit kebun']]) : '-',
-                    'jenis_gudang' => $colIdx['jenis gudang'] !== null && isset($row[$colIdx['jenis gudang']]) ? trim($row[$colIdx['jenis gudang']]) : '-',
-                    'link_cctv' => $colIdx['linkcctv'] !== null && isset($row[$colIdx['linkcctv']]) ? trim($row[$colIdx['linkcctv']]) : '',
+                    'regional' => $regional,
+                    'unit_kebun' => $unitKebun,
+                    'jenis_gudang' => $jenisGudang,
+                    'link_cctv' => $linkCctv,
+                    'photo_url' => $photoUrl,
                 ];
             }
         } catch (\Throwable $e) {
