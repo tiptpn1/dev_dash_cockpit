@@ -65,9 +65,10 @@ class AiResponseController extends Controller
                 "id_user_chat" => "04071993"
             ]);
 
-            $data = $response->object();
+            $response = $response->object();
+            $data= $response->data;
 
-            if ($response->successful() && isset($data->status) && $data->status == "success") {
+            if ($response->success) {
                 return response()->json([
                     'status' => 'success',
                     'data' => $data,
