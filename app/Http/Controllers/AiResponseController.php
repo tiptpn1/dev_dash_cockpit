@@ -9,7 +9,7 @@ error_reporting(0);
 
 class AiResponseController extends Controller
 {
-    public function aiResponse(Request $request)
+    public function aiResponse_old(Request $request)
     {
         $message = $request->input('message');
         try {
@@ -23,6 +23,46 @@ class AiResponseController extends Controller
             $response = Http::asForm()->post($url, [
                 'tanya' => $message,
                 'thread_id' => $thread_id
+            ]);
+
+            $data = $response->object();
+
+            if ($response->successful() && isset($data->status) && $data->status == "success") {
+                return response()->json([
+                    'status' => 'success',
+                    'data' => $data,
+                    'thread_id' => $thread_id
+                ]);
+            } else {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Gagal mendapatkan respons dari API eksternal.',
+                    'status_code' => $response->status(),
+                    'response' => $data
+                ]);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function aiResponse(Request $request)
+    {
+        $message = $request->input('message');
+        try {
+            $url = "https://ai.ptpn1.co.id/api/chat/response";
+            // if ($request->input('thread_id')) {
+            //     $thread_id = $request->input('thread_id');
+            // } else {
+            //     $thread_id = "";
+            // }
+            
+            $response = Http::asForm()->post($url, [
+                'message' => $message,
+                "id_user_chat" => "04071993"
             ]);
 
             $data = $response->object();
