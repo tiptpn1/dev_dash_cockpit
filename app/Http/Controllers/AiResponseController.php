@@ -60,7 +60,7 @@ class AiResponseController extends Controller
             //     $thread_id = "";
             // }
             
-            $response = Http::asForm()->post($url, [
+            $response = Http::timeout(60)->asForm()->post($url, [
                 'message' => $message,
                 "id_user_chat" => "04071993"
             ]);
