@@ -286,11 +286,25 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Get CSRF token from meta tag
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    function getCsrfToken() {
+        const metaTag = document.querySelector('meta[name="csrf-token"]');
+        if (!metaTag) {
+            console.error('CSRF token meta tag not found!');
+            return null;
+        }
+        return metaTag.getAttribute('content');
+    }
 
     async function sendUserMessage() {
         const message = chatInput.value.trim();
         if (message) {
+            // Get CSRF token
+            const csrfToken = getCsrfToken();
+            if (!csrfToken) {
+                alert('CSRF token not found. Please refresh the page.');
+                return;
+            }
+
             // Add user message to chat
             const userMessageDiv = document.createElement('div');
             userMessageDiv.className = 'message user';
@@ -447,4 +461,44 @@ document.addEventListener('DOMContentLoaded', function() {
             : '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>';
     });
 });
-</script> 
+
+// --- WEBSOCKET CHAT FEATURE (DISABLED) ---
+/*
+// Ganti ws://localhost:6001 dengan endpoint WebSocket server Anda
+const ws = new WebSocket('ws://localhost:6001');
+
+ws.onopen = function() {
+    console.log('WebSocket connected');
+};
+
+ws.onmessage = function(event) {
+    try {
+        const wsData = JSON.parse(event.data);
+        if (wsData.type === 'chat-message') {
+            // Tampilkan pesan baru dari server
+            const assistantMessageDiv = document.createElement('div');
+            assistantMessageDiv.className = 'message assistant';
+            assistantMessageDiv.innerHTML = `
+                <div class="message-content">${wsData.message}</div>
+            `;
+            chatMessages.appendChild(assistantMessageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            speakText(wsData.message);
+        }
+    } catch (e) {
+        console.error('WebSocket message error:', e);
+    }
+};
+
+ws.onerror = function(error) {
+    console.error('WebSocket error:', error);
+};
+
+// Kirim pesan ke server via WebSocket (opsional, jika backend support)
+function sendUserMessageWS(message) {
+    if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'chat-message', message: message, thread_id: currentThreadId }));
+    }
+}
+*/
+</script>
