@@ -53,15 +53,22 @@ class AiResponseController extends Controller
     {
         $message = $request->input('message');
         try {
-            $url = "https://ai.ptpn1.co.id/api/chat/response";
+            //$url = "https://ai.ptpn1.co.id/api/chat/response";
             // if ($request->input('thread_id')) {
             //     $thread_id = $request->input('thread_id');
             // } else {
             //     $thread_id = "";
             // }
+
+            // $response = Http::timeout(60)->asForm()->post($url, [
+            //     'message' => $message,
+            //     "id_user_chat" => "04071993"
+            // ]);
+
+            $url = "https://workflow.ptpn1.co.id/webhook/77f88cbe-c38e-4ca4-8ad2-fe069dd76252";
             
             $response = Http::timeout(60)->asForm()->post($url, [
-                'message' => $message,
+                'query' => $message,
                 "id_user_chat" => "04071993"
             ]);
 
