@@ -54,11 +54,13 @@ class AiResponseController extends Controller
         $message = $request->input('message');
         try {
             //$url = "https://ai.ptpn1.co.id/api/chat/response";
-            // if ($request->input('thread_id')) {
-            //     $thread_id = $request->input('thread_id');
-            // } else {
-            //     $thread_id = "";
-            // }
+            
+            // Get thread_id if exists
+            if ($request->input('thread_id')) {
+                $thread_id = $request->input('thread_id');
+            } else {
+                $thread_id = "";
+            }
 
             // $response = Http::timeout(60)->asForm()->post($url, [
             //     'message' => $message,
