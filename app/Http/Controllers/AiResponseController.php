@@ -86,8 +86,12 @@ class AiResponseController extends Controller
 
             $responseData = $httpResponse->object();
             
-            // Check if response has expected structure
-            if (!isset($responseData->data)) {
+            // Check if response has expected structure (output or data)
+            if (isset($responseData->output)) {
+                $responseText = $responseData->output;
+            } elseif (isset($responseData->data)) {
+                $responseText = $responseData->data;
+            } else {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Format respons tidak valid dari API eksternal.',
@@ -95,11 +99,12 @@ class AiResponseController extends Controller
                 ], 500);
             }
 
-            $data = $responseData->data;
-
             return response()->json([
                 'status' => 'success',
-                'data' => $data,
+                'data' => [
+                    'response' => $responseText,
+                    'thread_id' => $thread_id
+                ],
                 'thread_id' => $thread_id
             ]);
 
