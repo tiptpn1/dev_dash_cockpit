@@ -388,11 +388,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 speakText(cleanResponse);
             } catch (error) {
                 console.error('Error:', error);
+                
+                // Remove loading message if it exists
+                if (loadingDiv && loadingDiv.parentNode) {
+                    chatMessages.removeChild(loadingDiv);
+                }
+                
                 // Show error message
                 const errorMessageDiv = document.createElement('div');
                 errorMessageDiv.className = 'message assistant';
                 errorMessageDiv.innerHTML = `
-                    <div class="message-content">Sorry, there was an error processing your request. Please try again.</div>
+                    <div class="message-content">Maaf, terjadi kesalahan saat memproses permintaan Anda. Silakan coba lagi.</div>
                 `;
                 chatMessages.appendChild(errorMessageDiv);
             }
