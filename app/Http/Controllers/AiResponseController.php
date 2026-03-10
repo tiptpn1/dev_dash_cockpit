@@ -69,28 +69,40 @@ class AiResponseController extends Controller
 
             $url = "https://workflow.ptpn1.co.id/webhook/77f88cbe-c38e-4ca4-8ad2-fe069dd76252";
             
-            $response = Http::timeout(60)->asForm()->post($url, [
+            $httpResponse = Http::timeout(60)->asForm()->post($url, [
                 'query' => $message,
                 "id_user_chat" => "04071993"
             ]);
 
-            $response = $response->object();
-            $data= $response->data;
-
-            if ($response->success) {
-                return response()->json([
-                    'status' => 'success',
-                    'data' => $data,
-                    'thread_id' => $thread_id
-                ]);
-            } else {
+            // Check if HTTP request was successful
+            if (!$httpResponse->successful()) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Gagal mendapatkan respons dari API eksternal.',
-                    'status_code' => $response->status(),
-                    'response' => $data
-                ]);
+                    'status_code' => $httpResponse->status(),
+                    'response' => $httpResponse->body()
+                ], 500);
             }
+
+            $responseData = $httpResponse->object();
+            
+            // Check if response has expected structure
+            if (!isset($responseData->data)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Format respons tidak valid dari API eksternal.',
+                    'response' => $responseData
+                ], 500);
+            }
+
+            $data = $responseData->data;
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $data,
+                'thread_id' => $thread_id
+            ]);
+
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',

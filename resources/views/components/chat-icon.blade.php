@@ -339,20 +339,30 @@ document.addEventListener('DOMContentLoaded', function() {
                     })
                 });
 
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                const response_data = await response.json();
+
+                // Remove loading message
+                chatMessages.removeChild(loadingDiv);
+
+                // Check if response status is error
+                if (response_data.status === 'error' || !response.ok) {
+                    const errorMessage = response_data.message || 'Terjadi kesalahan saat memproses permintaan Anda.';
+                    const errorMessageDiv = document.createElement('div');
+                    errorMessageDiv.className = 'message assistant';
+                    errorMessageDiv.innerHTML = `
+                        <div class="message-content">${errorMessage}</div>
+                    `;
+                    chatMessages.appendChild(errorMessageDiv);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    return;
                 }
 
-                const response_data = await response.json();
                 const data = response_data.data;
 
                 // Update thread_id jika ada di response
                 if (data.thread_id) {
                     currentThreadId = data.thread_id;
                 }
-
-                // Remove loading message
-                chatMessages.removeChild(loadingDiv);
 
                 // Tambahkan thread_id di bawah pesan user
                 if (data.thread_id) {
