@@ -251,7 +251,6 @@ document.addEventListener('DOMContentLoaded', function() {
     let recognition = null;
     let currentThreadId = ''; // Variabel global untuk menyimpan thread_id
     let isSpeaking = false; // Track if AI is speaking
-    let isSpeaking = false; // Track if AI is speaking
 
     // Initially hide the chat container
     chatContainer.style.display = 'none';
