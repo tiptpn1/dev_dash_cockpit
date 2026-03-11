@@ -374,8 +374,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
                 chatMessages.appendChild(assistantMessageDiv);
 
-                // Automatically speak the response
-                speakText(cleanResponse);
+                // Automatically speak the response with natural number conversion
+                speakTextLebihNatural(cleanResponse);
             } catch (error) {
                 console.error('Error:', error);
                 // Show error message
@@ -431,6 +431,217 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Speak the text
         window.speechSynthesis.speak(utterance);
+    }
+
+    // Convert numbers to Indonesian words
+    function numberToIndonesian(num) {
+        if (num === 0) return 'nol';
+        
+        const ones = ['', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'delapan', 'sembilan'];
+        const teens = ['sepuluh', 'sebelas', 'dua belas', 'tiga belas', 'empat belas', 'lima belas', 
+                       'enam belas', 'tujuh belas', 'delapan belas', 'sembilan belas'];
+        
+        function convertLessThanThousand(n) {
+            if (n === 0) return '';
+            if (n < 10) return ones[n];
+            if (n < 20) return teens[n - 10];
+            if (n < 100) {
+                const tens = Math.floor(n / 10);
+                const remainder = n % 10;
+                return ones[tens] + ' puluh' + (remainder > 0 ? ' ' + ones[remainder] : '');
+            }
+            if (n < 1000) {
+                const hundreds = Math.floor(n / 100);
+                const remainder = n % 100;
+                const hundredWord = hundreds === 1 ? 'seratus' : ones[hundreds] + ' ratus';
+                return hundredWord + (remainder > 0 ? ' ' + convertLessThanThousand(remainder) : '');
+            }
+            return '';
+        }
+        
+        if (num < 1000) {
+            return convertLessThanThousand(num);
+        }
+        
+        if (num < 1000000) {
+            const thousands = Math.floor(num / 1000);
+            const remainder = num % 1000;
+            const thousandWord = thousands === 1 ? 'seribu' : convertLessThanThousand(thousands) + ' ribu';
+            return thousandWord + (remainder > 0 ? ' ' + convertLessThanThousand(remainder) : '');
+        }
+        
+        if (num < 1000000000) {
+            const millions = Math.floor(num / 1000000);
+            const remainder = num % 1000000;
+            const millionWord = convertLessThanThousand(millions) + ' juta';
+            if (remainder === 0) return millionWord;
+            
+            const thousands = Math.floor(remainder / 1000);
+            const ones = remainder % 1000;
+            let result = millionWord;
+            
+            if (thousands > 0) {
+                const thousandWord = thousands === 1 ? 'seribu' : convertLessThanThousand(thousands) + ' ribu';
+                result += ' ' + thousandWord;
+            }
+            if (ones > 0) {
+                result += ' ' + convertLessThanThousand(ones);
+            }
+            return result;
+        }
+        
+        if (num < 1000000000000) {
+            const billions = Math.floor(num / 1000000000);
+            const remainder = num % 1000000000;
+            const billionWord = convertLessThanThousand(billions) + ' miliar';
+            
+            if (remainder === 0) return billionWord;
+            
+            const millions = Math.floor(remainder / 1000000);
+            const rest = remainder % 1000000;
+            let result = billionWord;
+            
+            if (millions > 0) {
+                result += ' ' + convertLessThanThousand(millions) + ' juta';
+            }
+            
+            const thousands = Math.floor(rest / 1000);
+            const ones = rest % 1000;
+            
+            if (thousands > 0) {
+                const thousandWord = thousands === 1 ? 'seribu' : convertLessThanThousand(thousands) + ' ribu';
+                result += ' ' + thousandWord;
+            }
+            if (ones > 0) {
+                result += ' ' + convertLessThanThousand(ones);
+            }
+            return result;
+        }
+        
+        return num.toString();
+    }
+
+    // Convert all numbers in text to Indonesian words
+    function convertNumbersToWords(text) {
+        // Handle numbers with thousand separators (dots or commas)
+        text = text.replace(/(\d{1,3}(?:[.,]\d{3})+)/g, function(match) {
+            const cleanNumber = match.replace(/[.,]/g, '');
+            const num = parseInt(cleanNumber);
+            if (!isNaN(num)) {
+                return numberToIndonesian(num);
+            }
+            return match;
+        });
+        
+        // Handle regular numbers
+        text = text.replace(/\b(\d+)\b/g, function(match) {
+            const num = parseInt(match);
+            if (!isNaN(num)) {
+                return numberToIndonesian(num);
+            }
+            return match;
+        });
+        
+        return text;
+    }
+
+    // Speak text with more natural voice settings
+    function speakTextLebihNatural(text) {
+        // Cancel any ongoing speech
+        window.speechSynthesis.cancel();
+        
+        // Clean the text from HTML tags
+        let cleanText = text.replace(/<[^>]*>/g, '');
+        
+        // Convert numbers to Indonesian words
+        cleanText = convertNumbersToWords(cleanText);
+        
+        // Add natural pauses for better pronunciation
+        cleanText = cleanText
+            .replace(/\./g, '. ') // Add pause after period
+            .replace(/,/g, ', ')  // Add pause after comma
+            .replace(/:/g, ': ')  // Add pause after colon
+            .replace(/;/g, '; ')  // Add pause after semicolon
+            .replace(/\s+/g, ' ') // Normalize whitespace
+            .trim();
+        
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        
+        // Get available voices
+        let voices = window.speechSynthesis.getVoices();
+        
+        // Try to find Indonesian voice
+        let selectedVoice = voices.find(voice => 
+            voice.lang === 'id-ID' || voice.lang === 'id_ID'
+        );
+        
+        // If no Indonesian voice, try to find a natural-sounding voice
+        if (!selectedVoice) {
+            selectedVoice = voices.find(voice => 
+                voice.name.includes('Natural') || 
+                voice.name.includes('Premium') ||
+                voice.name.includes('Enhanced')
+            );
+        }
+        
+        // Set the voice if found
+        if (selectedVoice) {
+            utterance.voice = selectedVoice;
+        }
+        
+        // Natural speech settings
+        utterance.lang = 'id-ID';
+        utterance.rate = 0.95;  // Slower, more natural pace
+        utterance.pitch = 1.0;  // Normal pitch
+        utterance.volume = 1.0; // Full volume
+        
+        // Resume speaking if browser pauses it
+        let isPlaying = true;
+        
+        utterance.onstart = () => {
+            console.log('Speech started');
+        };
+        
+        utterance.onend = () => {
+            isPlaying = false;
+            console.log('Speech ended');
+        };
+        
+        utterance.onerror = (event) => {
+            console.error('SpeechSynthesis Error:', event);
+            isPlaying = false;
+        };
+        
+        utterance.onpause = () => {
+            console.log('Speech paused');
+        };
+        
+        utterance.onresume = () => {
+            console.log('Speech resumed');
+        };
+        
+        // Keep checking and resume if needed
+        const resumeInfinity = setInterval(() => {
+            if (!isPlaying) {
+                clearInterval(resumeInfinity);
+                return;
+            }
+            
+            if (speechSynthesis.paused) {
+                speechSynthesis.resume();
+            }
+        }, 100);
+        
+        // Speak the text
+        window.speechSynthesis.speak(utterance);
+    }
+
+    // Load voices when they become available
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+        window.speechSynthesis.onvoiceschanged = function() {
+            const voices = window.speechSynthesis.getVoices();
+            console.log('Available voices:', voices.map(v => `${v.name} (${v.lang})`));
+        };
     }
 
     // Send message on button click
