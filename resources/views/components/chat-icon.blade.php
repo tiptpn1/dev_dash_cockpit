@@ -6,6 +6,12 @@
     <div class="chat-header">
         <div class="chat-title">AIGR1 Assistant</div>
         <div class="chat-controls">
+            <button class="stop-speech-btn" id="stopSpeech" title="Stop Speech" style="display: none;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <rect x="9" y="9" width="6" height="6"/>
+                </svg>
+            </button>
             <button class="expand-btn" id="expandChat">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
@@ -185,7 +191,7 @@
     100% { transform: scale(1); }
 }
 
-.expand-btn {
+.expand-btn, .stop-speech-btn {
     background: none;
     border: none;
     color: white;
@@ -197,6 +203,21 @@
 
 .expand-btn:hover {
     color: #0084ff;
+}
+
+.stop-speech-btn {
+    color: #ff4444;
+    animation: pulseRed 1.5s infinite;
+}
+
+.stop-speech-btn:hover {
+    color: #ff0000;
+}
+
+@keyframes pulseRed {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
 }
 
 .chat-container.fullscreen {
@@ -226,8 +247,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const chatMessages = document.getElementById('chatMessages');
     const micButton = document.getElementById('micButton');
     const expandChat = document.getElementById('expandChat');
+    const stopSpeechBtn = document.getElementById('stopSpeech');
     let recognition = null;
     let currentThreadId = ''; // Variabel global untuk menyimpan thread_id
+    let isSpeaking = false; // Track if AI is speaking
+    let isSpeaking = false; // Track if AI is speaking
 
     // Initially hide the chat container
     chatContainer.style.display = 'none';
@@ -600,16 +624,22 @@ document.addEventListener('DOMContentLoaded', function() {
         
         utterance.onstart = () => {
             console.log('Speech started');
+            isSpeaking = true;
+            stopSpeechBtn.style.display = 'flex';
         };
         
         utterance.onend = () => {
             isPlaying = false;
+            isSpeaking = false;
+            stopSpeechBtn.style.display = 'none';
             console.log('Speech ended');
         };
         
         utterance.onerror = (event) => {
             console.error('SpeechSynthesis Error:', event);
             isPlaying = false;
+            isSpeaking = false;
+            stopSpeechBtn.style.display = 'none';
         };
         
         utterance.onpause = () => {
@@ -643,6 +673,14 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Available voices:', voices.map(v => `${v.name} (${v.lang})`));
         };
     }
+
+    // Stop speech button click handler
+    stopSpeechBtn.addEventListener('click', function() {
+        window.speechSynthesis.cancel();
+        isSpeaking = false;
+        stopSpeechBtn.style.display = 'none';
+        console.log('Speech stopped by user');
+    });
 
     // Send message on button click
     sendMessage.addEventListener('click', sendUserMessage);
