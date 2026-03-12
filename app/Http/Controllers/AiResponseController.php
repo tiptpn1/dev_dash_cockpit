@@ -9,7 +9,7 @@ error_reporting(0);
 
 class AiResponseController extends Controller
 {
-    public function aiResponse(Request $request)
+    public function aiResponse_old(Request $request)
     {
         $message = $request->input('message');
         try {
@@ -41,6 +41,73 @@ class AiResponseController extends Controller
                     'response' => $data
                 ]);
             }
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function aiResponse(Request $request)
+    {
+        $message = $request->input('message');
+        try {
+            //$url = "https://ai.ptpn1.co.id/api/chat/response";
+            
+            // Get thread_id if exists
+            if ($request->input('thread_id')) {
+                $thread_id = $request->input('thread_id');
+            } else {
+                $thread_id = "";
+            }
+
+            // $response = Http::timeout(60)->asForm()->post($url, [
+            //     'message' => $message,
+            //     "id_user_chat" => "04071993"
+            // ]);
+
+            $url = "https://workflow.ptpn1.co.id/webhook/77f88cbe-c38e-4ca4-8ad2-fe069dd76252";
+            
+            $httpResponse = Http::timeout(60)->asForm()->post($url, [
+                'query' => $message,
+                "id_user_chat" => "04071993"
+            ]);
+
+            // Check if HTTP request was successful
+            if (!$httpResponse->successful()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Gagal mendapatkan respons dari API eksternal.',
+                    'status_code' => $httpResponse->status(),
+                    'response' => $httpResponse->body()
+                ], 500);
+            }
+
+            $responseData = $httpResponse->object();
+            
+            // Check if response has expected structure (output or data)
+            if (isset($responseData->output)) {
+                $responseText = $responseData->output;
+            } elseif (isset($responseData->data)) {
+                $responseText = $responseData->data;
+            } else {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Format respons tidak valid dari API eksternal.',
+                    'response' => $responseData
+                ], 500);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'response' => $responseText,
+                    'thread_id' => $thread_id
+                ],
+                'thread_id' => $thread_id
+            ]);
+
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',

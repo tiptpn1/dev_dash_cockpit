@@ -75,6 +75,7 @@ Route::middleware('auth:custom')->group(function () {
         Route::get('/stokpengadaan', [PageController::class, 'stokpengadaan'])->name('stokpengadaan');
         Route::get('/dashboardemisi', [PageController::class, 'dashboardemisi'])->name('dashboardemisi');
         Route::get('/soptea', [PageController::class, 'soptea'])->name('soptea');
+        
+        // AI Response Route
+        Route::post('/ai/response', [AiResponseController::class, 'aiResponse']);
 });
-
-Route::post('/ai/response', [AiResponseController::class, 'aiResponse']);

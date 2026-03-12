@@ -286,11 +286,25 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Get CSRF token from meta tag
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    function getCsrfToken() {
+        const metaTag = document.querySelector('meta[name="csrf-token"]');
+        if (!metaTag) {
+            console.error('CSRF token meta tag not found!');
+            return null;
+        }
+        return metaTag.getAttribute('content');
+    }
 
     async function sendUserMessage() {
         const message = chatInput.value.trim();
         if (message) {
+            // Get CSRF token
+            const csrfToken = getCsrfToken();
+            if (!csrfToken) {
+                alert('CSRF token not found. Please refresh the page.');
+                return;
+            }
+
             // Add user message to chat
             const userMessageDiv = document.createElement('div');
             userMessageDiv.className = 'message user';
@@ -325,20 +339,30 @@ document.addEventListener('DOMContentLoaded', function() {
                     })
                 });
 
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                const response_data = await response.json();
+
+                // Remove loading message
+                chatMessages.removeChild(loadingDiv);
+
+                // Check if response status is error
+                if (response_data.status === 'error' || !response.ok) {
+                    const errorMessage = response_data.message || 'Terjadi kesalahan saat memproses permintaan Anda.';
+                    const errorMessageDiv = document.createElement('div');
+                    errorMessageDiv.className = 'message assistant';
+                    errorMessageDiv.innerHTML = `
+                        <div class="message-content">${errorMessage}</div>
+                    `;
+                    chatMessages.appendChild(errorMessageDiv);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    return;
                 }
 
-                const response_data = await response.json();
                 const data = response_data.data;
 
                 // Update thread_id jika ada di response
                 if (data.thread_id) {
                     currentThreadId = data.thread_id;
                 }
-
-                // Remove loading message
-                chatMessages.removeChild(loadingDiv);
 
                 // Tambahkan thread_id di bawah pesan user
                 if (data.thread_id) {
@@ -364,11 +388,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 speakText(cleanResponse);
             } catch (error) {
                 console.error('Error:', error);
+                
+                // Remove loading message if it exists
+                if (loadingDiv && loadingDiv.parentNode) {
+                    chatMessages.removeChild(loadingDiv);
+                }
+                
                 // Show error message
                 const errorMessageDiv = document.createElement('div');
                 errorMessageDiv.className = 'message assistant';
                 errorMessageDiv.innerHTML = `
-                    <div class="message-content">Sorry, there was an error processing your request. Please try again.</div>
+                    <div class="message-content">Maaf, terjadi kesalahan saat memproses permintaan Anda. Silakan coba lagi.</div>
                 `;
                 chatMessages.appendChild(errorMessageDiv);
             }
@@ -447,4 +477,44 @@ document.addEventListener('DOMContentLoaded', function() {
             : '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>';
     });
 });
-</script> 
+
+// --- WEBSOCKET CHAT FEATURE (DISABLED) ---
+/*
+// Ganti ws://localhost:6001 dengan endpoint WebSocket server Anda
+const ws = new WebSocket('ws://localhost:6001');
+
+ws.onopen = function() {
+    console.log('WebSocket connected');
+};
+
+ws.onmessage = function(event) {
+    try {
+        const wsData = JSON.parse(event.data);
+        if (wsData.type === 'chat-message') {
+            // Tampilkan pesan baru dari server
+            const assistantMessageDiv = document.createElement('div');
+            assistantMessageDiv.className = 'message assistant';
+            assistantMessageDiv.innerHTML = `
+                <div class="message-content">${wsData.message}</div>
+            `;
+            chatMessages.appendChild(assistantMessageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            speakText(wsData.message);
+        }
+    } catch (e) {
+        console.error('WebSocket message error:', e);
+    }
+};
+
+ws.onerror = function(error) {
+    console.error('WebSocket error:', error);
+};
+
+// Kirim pesan ke server via WebSocket (opsional, jika backend support)
+function sendUserMessageWS(message) {
+    if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'chat-message', message: message, thread_id: currentThreadId }));
+    }
+}
+*/
+</script>
