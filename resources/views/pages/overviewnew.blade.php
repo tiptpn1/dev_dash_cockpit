@@ -124,10 +124,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const typingElement = document.getElementById('typing-text');
     typingElement.innerHTML = `<span class="typing-animation">${text}</span>`;
 
-    // Hide popup after delay
+    // Hide popup after delay (perpanjang durasi sebelum overview penuh tampil)
     setTimeout(function() {
         document.getElementById('imagePopup').style.display = 'none';
-    }, 6000);
+    }, 10000);
 });
 </script>
 

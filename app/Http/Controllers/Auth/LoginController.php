@@ -6,7 +6,6 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\CustomUser;
 
 class LoginController extends Controller
 {
@@ -17,15 +16,9 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
-        $rules = [
+        $request->validate([
             'username' => 'required',
             'password' => 'required',
-        ];
-        if (config('captcha.disable') !== true) {
-            $rules['captcha'] = 'required|captcha';
-        }
-        $request->validate($rules, [
-            'captcha.captcha' => 'Captcha salah. Silakan coba lagi.',
         ]);
 
         $credentials = $request->only('username', 'password');
@@ -36,7 +29,7 @@ class LoginController extends Controller
 
         return back()->withErrors([
             'username' => 'Username dan Password Salah',
-        ]);
+        ])->withInput($request->only('username'));
     }
 
     public function logout(Request $request)
