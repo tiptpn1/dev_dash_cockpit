@@ -116,11 +116,13 @@
 
 .message {
     display: flex;
+    flex-direction: column;
+    align-items: flex-start;
     margin-bottom: 10px;
 }
 
 .message.user {
-    justify-content: flex-end;
+    align-items: flex-end;
 }
 
 .message-content {
@@ -219,7 +221,6 @@
     font-size: 11px;
     color: #9fb3c8;
     margin-top: 4px;
-    text-align: right;
     opacity: 0.85;
 }
 </style>
@@ -307,6 +308,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return new Date().toLocaleTimeString('id-ID', {
             hour: '2-digit',
             minute: '2-digit',
+            second: '2-digit',
             hour12: false
         });
     }
