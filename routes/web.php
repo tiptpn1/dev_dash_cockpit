@@ -23,6 +23,7 @@ Route::get('/login', function () {
 });
 
 Route::post('/login', [LoginController::class, 'login'])->name('login');
+Route::get('/svg-captcha', [LoginController::class, 'svgCaptcha'])->name('svg.captcha');
 Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
 
 Route::get('/portalaplikasi', [PageController::class, 'portalaplikasi'])->name('portalaplikasi');
@@ -75,6 +76,7 @@ Route::middleware('auth:custom')->group(function () {
         Route::get('/stokpengadaan', [PageController::class, 'stokpengadaan'])->name('stokpengadaan');
         Route::get('/dashboardemisi', [PageController::class, 'dashboardemisi'])->name('dashboardemisi');
         Route::get('/soptea', [PageController::class, 'soptea'])->name('soptea');
+        
+        // AI Response Route
+        Route::post('/ai/response', [AiResponseController::class, 'aiResponse']);
 });
-
-Route::post('/ai/response', [AiResponseController::class, 'aiResponse']);

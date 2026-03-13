@@ -6,12 +6,6 @@
     <div class="chat-header">
         <div class="chat-title">AIGR1 Assistant</div>
         <div class="chat-controls">
-            <button class="stop-speech-btn" id="stopSpeech" title="Stop Speech" style="display: none;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <rect x="9" y="9" width="6" height="6"/>
-                </svg>
-            </button>
             <button class="expand-btn" id="expandChat">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
@@ -191,7 +185,7 @@
     100% { transform: scale(1); }
 }
 
-.expand-btn, .stop-speech-btn {
+.expand-btn {
     background: none;
     border: none;
     color: white;
@@ -203,21 +197,6 @@
 
 .expand-btn:hover {
     color: #0084ff;
-}
-
-.stop-speech-btn {
-    color: #ff4444;
-    animation: pulseRed 1.5s infinite;
-}
-
-.stop-speech-btn:hover {
-    color: #ff0000;
-}
-
-@keyframes pulseRed {
-    0% { opacity: 1; }
-    50% { opacity: 0.6; }
-    100% { opacity: 1; }
 }
 
 .chat-container.fullscreen {
@@ -255,10 +234,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const chatMessages = document.getElementById('chatMessages');
     const micButton = document.getElementById('micButton');
     const expandChat = document.getElementById('expandChat');
-    const stopSpeechBtn = document.getElementById('stopSpeech');
     let recognition = null;
     let currentThreadId = ''; // Variabel global untuk menyimpan thread_id
-    let isSpeaking = false; // Track if AI is speaking
 
     // Initially hide the chat container
     chatContainer.style.display = 'none';
@@ -380,20 +357,30 @@ document.addEventListener('DOMContentLoaded', function() {
                     })
                 });
 
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                const response_data = await response.json();
+
+                // Remove loading message
+                chatMessages.removeChild(loadingDiv);
+
+                // Check if response status is error
+                if (response_data.status === 'error' || !response.ok) {
+                    const errorMessage = response_data.message || 'Terjadi kesalahan saat memproses permintaan Anda.';
+                    const errorMessageDiv = document.createElement('div');
+                    errorMessageDiv.className = 'message assistant';
+                    errorMessageDiv.innerHTML = `
+                        <div class="message-content">${errorMessage}</div>
+                    `;
+                    chatMessages.appendChild(errorMessageDiv);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    return;
                 }
 
-                const response_data = await response.json();
                 const data = response_data.data;
 
                 // Update thread_id jika ada di response
                 if (data.thread_id) {
                     currentThreadId = data.thread_id;
                 }
-
-                // Remove loading message
-                chatMessages.removeChild(loadingDiv);
 
                 // Tambahkan thread_id di bawah pesan user
                 if (data.thread_id) {
@@ -417,18 +404,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
                 chatMessages.appendChild(assistantMessageDiv);
 
-                // Automatically speak the response with natural number conversion
-                speakTextLebihNatural(cleanResponse);
+                // Automatically speak the response
+                speakText(cleanResponse);
             } catch (error) {
                 console.error('Error:', error);
+                
+                // Remove loading message if it exists
+                if (loadingDiv && loadingDiv.parentNode) {
+                    chatMessages.removeChild(loadingDiv);
+                }
+                
                 // Show error message
                 const errorMessageDiv = document.createElement('div');
                 errorMessageDiv.className = 'message assistant';
                 const errorTime = getCurrentTimeLabel();
                 errorMessageDiv.innerHTML = `
-                    <div class="message-content">Sorry, there was an error processing your request. Please try again.</div>
-                    <div class="message-time">${errorTime}</div>
-                `;
+                    <div class="message-content">Maaf, terjadi kesalahan saat memproses permintaan Anda. Silakan coba lagi.</div>
+                    <div class="message-time">${errorTime}</div>`;
                 chatMessages.appendChild(errorMessageDiv);
             }
 
@@ -477,231 +469,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Speak the text
         window.speechSynthesis.speak(utterance);
     }
-
-    // Convert numbers to Indonesian words
-    function numberToIndonesian(num) {
-        if (num === 0) return 'nol';
-        
-        const ones = ['', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'delapan', 'sembilan'];
-        const teens = ['sepuluh', 'sebelas', 'dua belas', 'tiga belas', 'empat belas', 'lima belas', 
-                       'enam belas', 'tujuh belas', 'delapan belas', 'sembilan belas'];
-        
-        function convertLessThanThousand(n) {
-            if (n === 0) return '';
-            if (n < 10) return ones[n];
-            if (n < 20) return teens[n - 10];
-            if (n < 100) {
-                const tens = Math.floor(n / 10);
-                const remainder = n % 10;
-                return ones[tens] + ' puluh' + (remainder > 0 ? ' ' + ones[remainder] : '');
-            }
-            if (n < 1000) {
-                const hundreds = Math.floor(n / 100);
-                const remainder = n % 100;
-                const hundredWord = hundreds === 1 ? 'seratus' : ones[hundreds] + ' ratus';
-                return hundredWord + (remainder > 0 ? ' ' + convertLessThanThousand(remainder) : '');
-            }
-            return '';
-        }
-        
-        if (num < 1000) {
-            return convertLessThanThousand(num);
-        }
-        
-        if (num < 1000000) {
-            const thousands = Math.floor(num / 1000);
-            const remainder = num % 1000;
-            const thousandWord = thousands === 1 ? 'seribu' : convertLessThanThousand(thousands) + ' ribu';
-            return thousandWord + (remainder > 0 ? ' ' + convertLessThanThousand(remainder) : '');
-        }
-        
-        if (num < 1000000000) {
-            const millions = Math.floor(num / 1000000);
-            const remainder = num % 1000000;
-            const millionWord = convertLessThanThousand(millions) + ' juta';
-            if (remainder === 0) return millionWord;
-            
-            const thousands = Math.floor(remainder / 1000);
-            const ones = remainder % 1000;
-            let result = millionWord;
-            
-            if (thousands > 0) {
-                const thousandWord = thousands === 1 ? 'seribu' : convertLessThanThousand(thousands) + ' ribu';
-                result += ' ' + thousandWord;
-            }
-            if (ones > 0) {
-                result += ' ' + convertLessThanThousand(ones);
-            }
-            return result;
-        }
-        
-        if (num < 1000000000000) {
-            const billions = Math.floor(num / 1000000000);
-            const remainder = num % 1000000000;
-            const billionWord = convertLessThanThousand(billions) + ' miliar';
-            
-            if (remainder === 0) return billionWord;
-            
-            const millions = Math.floor(remainder / 1000000);
-            const rest = remainder % 1000000;
-            let result = billionWord;
-            
-            if (millions > 0) {
-                result += ' ' + convertLessThanThousand(millions) + ' juta';
-            }
-            
-            const thousands = Math.floor(rest / 1000);
-            const ones = rest % 1000;
-            
-            if (thousands > 0) {
-                const thousandWord = thousands === 1 ? 'seribu' : convertLessThanThousand(thousands) + ' ribu';
-                result += ' ' + thousandWord;
-            }
-            if (ones > 0) {
-                result += ' ' + convertLessThanThousand(ones);
-            }
-            return result;
-        }
-        
-        return num.toString();
-    }
-
-    // Convert all numbers in text to Indonesian words
-    function convertNumbersToWords(text) {
-        // Handle numbers with thousand separators (dots or commas)
-        text = text.replace(/(\d{1,3}(?:[.,]\d{3})+)/g, function(match) {
-            const cleanNumber = match.replace(/[.,]/g, '');
-            const num = parseInt(cleanNumber);
-            if (!isNaN(num)) {
-                return numberToIndonesian(num);
-            }
-            return match;
-        });
-        
-        // Handle regular numbers
-        text = text.replace(/\b(\d+)\b/g, function(match) {
-            const num = parseInt(match);
-            if (!isNaN(num)) {
-                return numberToIndonesian(num);
-            }
-            return match;
-        });
-        
-        return text;
-    }
-
-    // Speak text with more natural voice settings
-    function speakTextLebihNatural(text) {
-        // Cancel any ongoing speech
-        window.speechSynthesis.cancel();
-        
-        // Clean the text from HTML tags
-        let cleanText = text.replace(/<[^>]*>/g, '');
-        
-        // Convert numbers to Indonesian words
-        cleanText = convertNumbersToWords(cleanText);
-        
-        // Add natural pauses for better pronunciation
-        cleanText = cleanText
-            .replace(/\./g, '. ') // Add pause after period
-            .replace(/,/g, ', ')  // Add pause after comma
-            .replace(/:/g, ': ')  // Add pause after colon
-            .replace(/;/g, '; ')  // Add pause after semicolon
-            .replace(/\s+/g, ' ') // Normalize whitespace
-            .trim();
-        
-        const utterance = new SpeechSynthesisUtterance(cleanText);
-        
-        // Get available voices
-        let voices = window.speechSynthesis.getVoices();
-        
-        // Try to find Indonesian voice
-        let selectedVoice = voices.find(voice => 
-            voice.lang === 'id-ID' || voice.lang === 'id_ID'
-        );
-        
-        // If no Indonesian voice, try to find a natural-sounding voice
-        if (!selectedVoice) {
-            selectedVoice = voices.find(voice => 
-                voice.name.includes('Natural') || 
-                voice.name.includes('Premium') ||
-                voice.name.includes('Enhanced')
-            );
-        }
-        
-        // Set the voice if found
-        if (selectedVoice) {
-            utterance.voice = selectedVoice;
-        }
-        
-        // Natural speech settings
-        utterance.lang = 'id-ID';
-        utterance.rate = 0.95;  // Slower, more natural pace
-        utterance.pitch = 1.0;  // Normal pitch
-        utterance.volume = 1.0; // Full volume
-        
-        // Resume speaking if browser pauses it
-        let isPlaying = true;
-        
-        utterance.onstart = () => {
-            console.log('Speech started');
-            isSpeaking = true;
-            stopSpeechBtn.style.display = 'flex';
-        };
-        
-        utterance.onend = () => {
-            isPlaying = false;
-            isSpeaking = false;
-            stopSpeechBtn.style.display = 'none';
-            console.log('Speech ended');
-        };
-        
-        utterance.onerror = (event) => {
-            console.error('SpeechSynthesis Error:', event);
-            isPlaying = false;
-            isSpeaking = false;
-            stopSpeechBtn.style.display = 'none';
-        };
-        
-        utterance.onpause = () => {
-            console.log('Speech paused');
-        };
-        
-        utterance.onresume = () => {
-            console.log('Speech resumed');
-        };
-        
-        // Keep checking and resume if needed
-        const resumeInfinity = setInterval(() => {
-            if (!isPlaying) {
-                clearInterval(resumeInfinity);
-                return;
-            }
-            
-            if (speechSynthesis.paused) {
-                speechSynthesis.resume();
-            }
-        }, 100);
-        
-        // Speak the text
-        window.speechSynthesis.speak(utterance);
-    }
-
-    // Load voices when they become available
-    if (window.speechSynthesis.onvoiceschanged !== undefined) {
-        window.speechSynthesis.onvoiceschanged = function() {
-            const voices = window.speechSynthesis.getVoices();
-            console.log('Available voices:', voices.map(v => `${v.name} (${v.lang})`));
-        };
-    }
-
-    // Stop speech button click handler
-    stopSpeechBtn.addEventListener('click', function() {
-        window.speechSynthesis.cancel();
-        isSpeaking = false;
-        stopSpeechBtn.style.display = 'none';
-        console.log('Speech stopped by user');
-    });
 
     // Send message on button click
     sendMessage.addEventListener('click', sendUserMessage);
