@@ -23,6 +23,7 @@ Route::get('/login', function () {
 });
 
 Route::post('/login', [LoginController::class, 'login'])->name('login');
+Route::get('/svg-captcha', [LoginController::class, 'svgCaptcha'])->name('svg.captcha');
 Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
 
 Route::get('/portalaplikasi', [PageController::class, 'portalaplikasi'])->name('portalaplikasi');

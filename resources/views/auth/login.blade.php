@@ -162,6 +162,40 @@
             font-size: 0.85rem;
             color: #f28b82;
         }
+        .login-captcha-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+        }
+        .login-captcha-wrap .login-captcha-img img {
+            display: block;
+            height: 44px;
+            width: auto;
+            border-radius: 6px;
+        }
+        .login-captcha-refresh {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            cursor: pointer;
+            color: #9aa0a6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s, background 0.2s;
+        }
+        .login-captcha-refresh:hover {
+            color: #e8eaed;
+            background: rgba(255, 255, 255, 0.12);
+        }
+        .login-captcha-input {
+            flex: 1;
+            min-width: 100px;
+        }
         .login-logo {
             margin-bottom: 24px;
             display: flex;
@@ -221,6 +255,16 @@
                             <svg class="icon-eye-off" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/></svg>
                         </button>
                     </div>
+                    <label for="captcha">Kode Keamanan</label>
+                    <div class="login-captcha-wrap">
+                        <span class="login-captcha-img">
+                            <img src="{{ route('svg.captcha') }}?t={{ time() }}" alt="Captcha" id="captchaImage">
+                        </span>
+                        <button type="button" class="login-captcha-refresh" id="btnRefreshCaptcha" title="Refresh captcha" aria-label="Refresh captcha">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                        </button>
+                        <input type="text" id="captcha" name="captcha" placeholder="Masukkan kode" required autocomplete="off" maxlength="6" class="login-captcha-input">
+                    </div>
                     <button type="submit">Login</button>
                     @if ($errors->any())
                         <div class="login-errors">
@@ -252,6 +296,16 @@
                 this.setAttribute('title', 'Tampilkan password');
             }
         });
+        var btnRefreshCaptcha = document.getElementById('btnRefreshCaptcha');
+        if (btnRefreshCaptcha) {
+            btnRefreshCaptcha.addEventListener('click', function() {
+                var img = document.getElementById('captchaImage');
+                if (img) {
+                    var base = "{{ route('svg.captcha') }}";
+                    img.src = base + '?t=' + Date.now();
+                }
+            });
+        }
     </script>
 </body>
 </html>
