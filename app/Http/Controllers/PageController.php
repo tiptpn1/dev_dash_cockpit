@@ -147,10 +147,15 @@ class PageController extends Controller
         return view('pages/overview_page', compact('linkiframe'));
     }
 
-    public function dfarmkaret()
+    public function dfarmkaretold()
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/719192ff-2e4c-4680-a6f1-ad1591eac05c/page/p_wsn4ogdumd';
         return view('pages/overview_page', compact('linkiframe'));
+    }
+    public function dfarmkaret()
+    {
+        $linkiframe = '';
+        return view('pages/dfarm_karet');
     }
     public function dfarmteh()
     {
