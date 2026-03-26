@@ -26,7 +26,7 @@ class PageController extends Controller
     public function mrc()
     {
         return view('pages/overview');
-       
+
         // $linkiframe = 'https://lookerstudio.google.com/embed/reporting/0c40fa91-90ba-474a-becc-f1b48ccd7553/page/p_fjvzqqpxmd';
         // return view('pages/overview_page', compact('linkiframe'));
 
@@ -177,7 +177,7 @@ class PageController extends Controller
         $linkiframe = '';
         return view('pages/dfarm/dfarm_kopi');
     }
-    
+
     public function portalaplikasi()
     {
         // $linkiframe = 'https://portal.ptpn1.co.id/ ';
@@ -191,47 +191,47 @@ class PageController extends Controller
     public function pengadaan()
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/bbcf4582-ca61-4b4d-854f-530a830761dc/page/vJvXE';
-            return view('pages/overview_page', compact('linkiframe'));     
+            return view('pages/overview_page', compact('linkiframe'));
     }
     public function amanah()
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/e16183ff-54b1-4bc8-a0ff-49fc33a2e03e/page/ihnUE';
-            return view('pages/overview_page', compact('linkiframe'));     
+            return view('pages/overview_page', compact('linkiframe'));
     }
     public function iot()
     {
         $linkiframe = 'http://iot-ptpn1.kotadigital.id/';
-            return view('pages/overview_page', compact('linkiframe'));     
+            return view('pages/overview_page', compact('linkiframe'));
     }
     public function prapengadaan()
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/08f3056b-3989-4cda-8656-4b358839af74/page/p_nipa3c6qnd';
-            return view('pages/overview_page', compact('linkiframe'));     
+            return view('pages/overview_page', compact('linkiframe'));
     }
     public function prosespengadaan()
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/08f3056b-3989-4cda-8656-4b358839af74/page/jK0YE';
-            return view('pages/overview_page', compact('linkiframe'));     
+            return view('pages/overview_page', compact('linkiframe'));
     }
     public function kontrakpengadaan()
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/08f3056b-3989-4cda-8656-4b358839af74/page/p_a1szvbcrnd';
-            return view('pages/overview_page', compact('linkiframe'));     
+            return view('pages/overview_page', compact('linkiframe'));
     }
     public function stokpengadaan()
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/08f3056b-3989-4cda-8656-4b358839af74/page/p_00v9nkxjod';
-            return view('pages/overview_page', compact('linkiframe'));     
+            return view('pages/overview_page', compact('linkiframe'));
     }
     public function dashboardemisi()
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/ef192397-646a-4137-b30a-0eabc62a9930/page/d0pYE';
-            return view('pages/overview_page', compact('linkiframe'));     
+            return view('pages/overview_page', compact('linkiframe'));
     }
     public function soptea()
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/b34767d5-a81e-499e-98de-367b7e8ccf46/page/p_9v3x2qkknd';
-            return view('pages/overview_page', compact('linkiframe'));     
+            return view('pages/overview_page', compact('linkiframe'));
     }
 
     public function gudangutilisasi()
@@ -571,5 +571,15 @@ class PageController extends Controller
         return view('pages/overview_page', compact('linkiframe'));
     }
 
+    public function lm13()
+    {
+        return view('pages/lm13');
+    }
+
+    public function lm14()
+    {
+        $linkiframe = 'https://lookerstudio.google.com/embed/reporting/0c40fa91-90ba-474a-becc-f1b48ccd7553/page/p_fjvzqqpxmd';
+        return view('pages/overview_page', compact('linkiframe'));
+    }
 
 }
