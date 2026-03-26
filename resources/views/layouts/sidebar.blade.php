@@ -15,7 +15,7 @@
         </div>
         <div class="menu">
         <!-- <a href="#home">Home</a> -->
-        
+
         <a href="{{url('')}}" class="menu-item" id="overview"><i class="fa-solid fa-house menu-icon"></i>Overview</a>
         <a href="{{url('')}}/mrc" class="menu-item" id="mrc"><i class="fa-solid fa-calendar-days menu-icon"></i>MRC</a>
         @if($username!='mrc')
@@ -91,9 +91,16 @@
             <a href="http://gis.ptpn1.co.id/mbtiles/tree5.php?id=0&token=eofkp4456432oewkf465oew" target='_blank' class="menu-item" id="gis"><i class="fa-solid fa-satellite-dish menu-icon"></i>NDVI</a>
             <a href="http://aset-dives-dev.ptpn1.co.id/weather?token=234kjjlksflk8y98ksafdklj23" target='_blank' class="menu-item" id="gis"><i class="fa-solid fa-cloud-sun menu-icon"></i>CUACA</a>
         </div>
+        </div>
+        <a href="#lm" id="lm" class="parent"><i class="fa-solid fa-map-location-dot menu-icon"></i>LM <span class="toggle-icon">&#9654;</span></a>
+        <div class="submenu" id="lmSubmenu">
+            <a href="{{url('')}}/lm13"><i class="fa-solid fa-percent menu-icon"></i>LM13</a>
+            <a href="{{url('')}}/lm14"><i class="fa-solid fa-satellite-dish menu-icon"></i>LM14</a>
+        </div>
+
         @endif
 
-        
+
         @if($username!='mrc')
         <a href="{{url('')}}/aigri" class="menu-item" id="aigr1"><i class="fa-solid fa-robot menu-icon"></i>AIGR1</a>
         <a href="{{url('')}}/gardai" class="menu-item" id="gardai"><i class="fa-solid fa-fire-flame-curved menu-icon"></i>Garda AI</a>

@@ -116,13 +116,11 @@
 
 .message {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
     margin-bottom: 10px;
 }
 
 .message.user {
-    align-items: flex-end;
+    justify-content: flex-end;
 }
 
 .message-content {
@@ -216,13 +214,6 @@
     text-align: right;
     display: none;
 }
-
-.message-time {
-    font-size: 11px;
-    color: #9fb3c8;
-    margin-top: 4px;
-    opacity: 0.85;
-}
 </style>
 
 <script>
@@ -304,15 +295,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return metaTag.getAttribute('content');
     }
 
-    function getCurrentTimeLabel() {
-        return new Date().toLocaleTimeString('id-ID', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false
-        });
-    }
-
     async function sendUserMessage() {
         const message = chatInput.value.trim();
         if (message) {
@@ -326,10 +308,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Add user message to chat
             const userMessageDiv = document.createElement('div');
             userMessageDiv.className = 'message user';
-            const userTime = getCurrentTimeLabel();
             userMessageDiv.innerHTML = `
                 <div class="message-content">${message}</div>
-                <div class="message-time">${userTime}</div>
             `;
             chatMessages.appendChild(userMessageDiv);
 
@@ -395,14 +375,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Add AI response
                 const assistantMessageDiv = document.createElement('div');
                 assistantMessageDiv.className = 'message assistant';
-                const assistantTime = getCurrentTimeLabel();
                 const cleanResponse = data.response
                     .replace(/【\d+:\d+†source】/g, '')
                     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                     .replace(/\n/g, '<br>');
                 assistantMessageDiv.innerHTML = `
                     <div class="message-content">${cleanResponse}</div>
-                    <div class="message-time">${assistantTime}</div>
                 `;
                 chatMessages.appendChild(assistantMessageDiv);
 
@@ -419,10 +397,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Show error message
                 const errorMessageDiv = document.createElement('div');
                 errorMessageDiv.className = 'message assistant';
-                const errorTime = getCurrentTimeLabel();
                 errorMessageDiv.innerHTML = `
                     <div class="message-content">Maaf, terjadi kesalahan saat memproses permintaan Anda. Silakan coba lagi.</div>
-                    <div class="message-time">${errorTime}</div>`;
+                `;
                 chatMessages.appendChild(errorMessageDiv);
             }
 

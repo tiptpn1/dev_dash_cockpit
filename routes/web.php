@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-// 
+//
 
 Route::get('/login', function () {
     return view('auth/login');
@@ -51,7 +51,7 @@ Route::middleware('auth:custom')->group(function () {
         Route::get('/fin_console', [PageController::class, 'fin_console'])->name('fin_console');
         Route::get('/fin_parent', [PageController::class, 'fin_parent'])->name('fin_parent');
         Route::get('/fin_sub', [PageController::class, 'fin_sub'])->name('fin_sub');
-        
+
         Route::get('/hr_demographics', [PageController::class, 'hr_demographics'])->name('hr_demographics');
         Route::get('/hr_dev', [PageController::class, 'hr_dev'])->name('hr_dev');
         Route::get('/hr_revenue', [PageController::class, 'hr_revenue'])->name('hr_revenue');
@@ -76,7 +76,10 @@ Route::middleware('auth:custom')->group(function () {
         Route::get('/stokpengadaan', [PageController::class, 'stokpengadaan'])->name('stokpengadaan');
         Route::get('/dashboardemisi', [PageController::class, 'dashboardemisi'])->name('dashboardemisi');
         Route::get('/soptea', [PageController::class, 'soptea'])->name('soptea');
-        
+
+        Route::get('/lm13', [PageController::class, 'lm13'])->name('lm13');
+        Route::get('/lm14', [PageController::class, 'lm14'])->name('lm14');
+
         // AI Response Route
         Route::post('/ai/response', [AiResponseController::class, 'aiResponse']);
 });
