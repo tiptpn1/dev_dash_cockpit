@@ -582,8 +582,7 @@ class PageController extends Controller
 
     public function lm14()
     {
-        $linkiframe = 'https://lookerstudio.google.com/embed/reporting/0c40fa91-90ba-474a-becc-f1b48ccd7553/page/p_fjvzqqpxmd';
-        return view('pages/overview_page', compact('linkiframe'));
+        return view('pages/lm14');
     }
 
     public function under_construction()
