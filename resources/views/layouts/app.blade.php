@@ -35,14 +35,19 @@
             left: 0;
             width: 0;
             height: 100%;
-            background-color: #202124;
+            background-color: transparent;
             overflow-x: hidden;
             transition: width 0.3s;
             z-index: 998;
+            visibility: hidden;
+
         }
 
         .sidebar.open {
             width: 230px;
+            padding: 1rem;
+            visibility: visible;
+            background-color: #202124;
         }
 
         .sidebar-header {

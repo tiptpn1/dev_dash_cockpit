@@ -40,9 +40,9 @@
           <label class="block text-white text-xs md:text-sm font-medium mb-1">Regional</label>
           <select class="w-full px-3 py-2 text-sm rounded-lg bg-slate-700 bg-opacity-50 text-white border border-slate-600 focus:outline-none focus:border-blue-400">
             <option value="">REGIONAL</option>
-            <option value="regional-1">REGIONAL 1</option>
-            <option value="regional-2">REGIONAL 2</option>
-            <option value="regional-3">REGIONAL 3</option>
+            <option value="regional-1">REGIONAL 2</option>
+            <option value="regional-2">REGIONAL 3</option>
+            <option value="regional-3">REGIONAL 5</option>
             <option value="regional-7">REGIONAL 7</option>
             <option value="regional-8">REGIONAL 8</option>
           </select>
@@ -53,9 +53,11 @@
           <label class="block text-white text-xs md:text-sm font-medium mb-1">Nama Kebun</label>
           <select class="w-full px-3 py-2 text-sm rounded-lg bg-slate-700 bg-opacity-50 text-white border border-slate-600 focus:outline-none focus:border-blue-400">
             <option value="">NAMA KEBUN</option>
-            <option value="kebun-1">Kebun A</option>
-            <option value="kebun-2">Kebun B</option>
-            <option value="kebun-3">Kebun C</option>
+            <?php
+              foreach ($allDatakebun as $key) {
+                echo '<option value="' . $key->id . '">' . $key->nama_kebun . '</option>';
+              } 
+            ?>
           </select>
         </div>
       </div>

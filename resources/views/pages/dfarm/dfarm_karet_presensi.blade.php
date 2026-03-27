@@ -21,7 +21,7 @@
     <div class="max-w-7xl mx-auto px-4 py-6">
       
       <!-- Filters Section -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
         <!-- Date Range Filter -->
         <div>
           <label class="block text-white text-xs md:text-sm font-medium mb-1">Periode</label>
@@ -30,33 +30,61 @@
               type="text" 
               id="dateRange"
               placeholder="Nov 5, 2024 - Nov 6, 2024" 
-              class="w-full px-3 py-2 text-sm rounded-lg bg-slate-700 bg-opacity-50 text-white placeholder-gray-400 border border-slate-600 focus:outline-none focus:border-blue-400"
+              readonly
+              class="w-full px-3 py-2 text-sm rounded-lg bg-slate-700 bg-opacity-50 text-black placeholder-gray-400 border border-slate-600 focus:outline-none focus:border-blue-400 cursor-pointer font-medium"
             />
+            <div id="datePickerPopup" class="hidden absolute top-full left-0 mt-2 bg-gray-900 rounded-lg border border-slate-600 shadow-lg p-4 z-50 min-w-max">
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="text-white text-xs mb-2 block">Dari Tanggal</label>
+                  <input type="date" id="datePickerStart" class="w-full px-2 py-1 text-sm rounded bg-slate-700 text-black border border-slate-600 font-medium">
+                </div>
+                <div>
+                  <label class="text-white text-xs mb-2 block">Sampai Tanggal</label>
+                  <input type="date" id="datePickerEnd" class="w-full px-2 py-1 text-sm rounded bg-slate-700 text-black border border-slate-600 font-medium">
+                </div>
+              </div>
+              <div class="flex gap-2 mt-3">
+                <button id="datePickerApply" class="flex-1 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-black text-xs rounded transition-colors">Terapkan</button>
+                <button id="datePickerCancel" class="flex-1 px-3 py-1 bg-slate-600 hover:bg-slate-700 text-black text-xs rounded transition-colors">Batal</button>
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- Regional Filter -->
         <div>
           <label class="block text-white text-xs md:text-sm font-medium mb-1">Regional</label>
-          <select class="w-full px-3 py-2 text-sm rounded-lg bg-slate-700 bg-opacity-50 text-white border border-slate-600 focus:outline-none focus:border-blue-400">
-            <option value="">REGIONAL</option>
-            <option value="regional-1">REGIONAL 1</option>
-            <option value="regional-2">REGIONAL 2</option>
-            <option value="regional-3">REGIONAL 3</option>
-            <option value="regional-7">REGIONAL 7</option>
-            <option value="regional-8">REGIONAL 8</option>
+          <select class="w-full px-3 py-2 text-sm rounded-lg bg-slate-700 bg-opacity-50 text-black border border-slate-600 focus:outline-none focus:border-blue-400 font-medium">
+            <option value="">Pilih</option>
+            <option value="2" <?php if ($selectedRegional == '2') echo 'selected'; ?>>REGIONAL 2</option>
+            <option value="3" <?php if ($selectedRegional == '3') echo 'selected'; ?>>REGIONAL 3</option>
+            <option value="5" <?php if ($selectedRegional == '5') echo 'selected'; ?>>REGIONAL 5</option>
+            <option value="7" <?php if ($selectedRegional == '7') echo 'selected'; ?>>REGIONAL 7</option>
+            <option value="8" <?php if ($selectedRegional == '8') echo 'selected'; ?>>REGIONAL 8</option>
           </select>
         </div>
 
         <!-- Nama Kebun Filter -->
-        <div>
+        <div class="flex flex-col">
           <label class="block text-white text-xs md:text-sm font-medium mb-1">Nama Kebun</label>
-          <select class="w-full px-3 py-2 text-sm rounded-lg bg-slate-700 bg-opacity-50 text-white border border-slate-600 focus:outline-none focus:border-blue-400">
-            <option value="">NAMA KEBUN</option>
-            <option value="kebun-1">Kebun A</option>
-            <option value="kebun-2">Kebun B</option>
-            <option value="kebun-3">Kebun C</option>
-          </select>
+          <div class="flex gap-2 h-full">
+            <select class="flex-1 px-3 py-2 text-sm rounded-lg bg-slate-700 bg-opacity-50 text-black border border-slate-600 focus:outline-none focus:border-blue-400 font-medium">
+              <option value="">Pilih</option>
+              <?php
+                foreach ($allDatakebun as $key) {
+                  echo '<option value="' . $key->kebun_id . '">' . $key->nama_kebun . '</option>';
+                } 
+              ?>
+            </select>
+            <!-- Filter Button -->
+            <button class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap">
+              <i class="fa-solid fa-filter" style="margin-right: 6px;"></i>Filter
+            </button>
+            <button class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap">
+              <i class="fa-solid fa-rotate-right" style="margin-right: 6px;"></i>Reset
+            </button>
+          </div>
         </div>
       </div>
 
@@ -439,6 +467,79 @@
         },
       },
     },
+  });
+</script>
+
+<!-- Date Range Picker Script -->
+<script>
+  // Format tanggal ke "MMM D, YYYY" format
+  function formatDate(date) {
+    return new Date(date).toLocaleDateString('id-ID', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  }
+
+  // Date Range Picker Elements
+  const dateRangeInput = document.getElementById('dateRange');
+  const datePickerPopup = document.getElementById('datePickerPopup');
+  const datePickerStart = document.getElementById('datePickerStart');
+  const datePickerEnd = document.getElementById('datePickerEnd');
+  const datePickerApply = document.getElementById('datePickerApply');
+  const datePickerCancel = document.getElementById('datePickerCancel');
+
+  // Set default dates (today dan 7 hari lalu)
+  const today = new Date();
+  const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+  
+  datePickerStart.value = sevenDaysAgo.toISOString().split('T')[0];
+  datePickerEnd.value = today.toISOString().split('T')[0];
+  
+  // Update display
+  function updateDateDisplay() {
+    if (datePickerStart.value && datePickerEnd.value) {
+      dateRangeInput.value = `${formatDate(datePickerStart.value)} - ${formatDate(datePickerEnd.value)}`;
+    }
+  }
+  updateDateDisplay();
+
+  // Toggle popup
+  dateRangeInput.addEventListener('click', () => {
+    datePickerPopup.classList.toggle('hidden');
+  });
+
+  // Apply button
+  datePickerApply.addEventListener('click', () => {
+    if (datePickerStart.value && datePickerEnd.value) {
+      if (new Date(datePickerStart.value) <= new Date(datePickerEnd.value)) {
+        updateDateDisplay();
+        datePickerPopup.classList.add('hidden');
+        console.log('Range terpilih:', datePickerStart.value, 'hingga', datePickerEnd.value);
+        // TODO: Trigger API call atau filter dengan tanggal terpilih
+      } else {
+        alert('Tanggal awal harus lebih kecil dari tanggal akhir');
+      }
+    }
+  });
+
+  // Cancel button
+  datePickerCancel.addEventListener('click', () => {
+    datePickerPopup.classList.add('hidden');
+  });
+
+  // Close popup when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.relative')) {
+      datePickerPopup.classList.add('hidden');
+    }
+  });
+
+  // Allow Enter key to apply
+  document.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && !datePickerPopup.classList.contains('hidden')) {
+      datePickerApply.click();
+    }
   });
 </script>
 
