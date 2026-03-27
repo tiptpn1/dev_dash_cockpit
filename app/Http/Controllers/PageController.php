@@ -16,10 +16,9 @@ class PageController extends Controller
     {
         $user = Auth::guard('custom')->user();
         $username = $user->username;
-        if($username!='mrc'){
+        if ($username != 'mrc') {
             return view('pages/overviewnew');
-        }
-        else{
+        } else {
             return view('pages/overview');
         }
     }
@@ -191,47 +190,47 @@ class PageController extends Controller
     public function pengadaan()
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/bbcf4582-ca61-4b4d-854f-530a830761dc/page/vJvXE';
-            return view('pages/overview_page', compact('linkiframe'));
+        return view('pages/overview_page', compact('linkiframe'));
     }
     public function amanah()
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/e16183ff-54b1-4bc8-a0ff-49fc33a2e03e/page/ihnUE';
-            return view('pages/overview_page', compact('linkiframe'));
+        return view('pages/overview_page', compact('linkiframe'));
     }
     public function iot()
     {
         $linkiframe = 'http://iot-ptpn1.kotadigital.id/';
-            return view('pages/overview_page', compact('linkiframe'));
+        return view('pages/overview_page', compact('linkiframe'));
     }
     public function prapengadaan()
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/08f3056b-3989-4cda-8656-4b358839af74/page/p_nipa3c6qnd';
-            return view('pages/overview_page', compact('linkiframe'));
+        return view('pages/overview_page', compact('linkiframe'));
     }
     public function prosespengadaan()
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/08f3056b-3989-4cda-8656-4b358839af74/page/jK0YE';
-            return view('pages/overview_page', compact('linkiframe'));
+        return view('pages/overview_page', compact('linkiframe'));
     }
     public function kontrakpengadaan()
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/08f3056b-3989-4cda-8656-4b358839af74/page/p_a1szvbcrnd';
-            return view('pages/overview_page', compact('linkiframe'));
+        return view('pages/overview_page', compact('linkiframe'));
     }
     public function stokpengadaan()
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/08f3056b-3989-4cda-8656-4b358839af74/page/p_00v9nkxjod';
-            return view('pages/overview_page', compact('linkiframe'));
+        return view('pages/overview_page', compact('linkiframe'));
     }
     public function dashboardemisi()
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/ef192397-646a-4137-b30a-0eabc62a9930/page/d0pYE';
-            return view('pages/overview_page', compact('linkiframe'));
+        return view('pages/overview_page', compact('linkiframe'));
     }
     public function soptea()
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/b34767d5-a81e-499e-98de-367b7e8ccf46/page/p_9v3x2qkknd';
-            return view('pages/overview_page', compact('linkiframe'));
+        return view('pages/overview_page', compact('linkiframe'));
     }
 
     public function gudangutilisasi()
@@ -323,7 +322,7 @@ class PageController extends Controller
         $map = [];
         try {
             $response = Http::timeout(10)->get($url);
-            if (! $response->successful()) {
+            if (!$response->successful()) {
                 return $map;
             }
             $csv = $response->body();
@@ -383,7 +382,7 @@ class PageController extends Controller
             $v = isset($pin[$key]) ? trim((string) $pin[$key]) : '';
             if ($v !== '') {
                 $k = mb_strtolower($v);
-                if (! isset($values[$k])) {
+                if (!isset($values[$k])) {
                     $values[$k] = $v;
                 }
             }
@@ -562,7 +561,7 @@ class PageController extends Controller
     public function aigri()
     {
 
-            return view('pages/aigr1');
+        return view('pages/aigr1');
     }
 
     public function gardai()
@@ -580,6 +579,11 @@ class PageController extends Controller
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/0c40fa91-90ba-474a-becc-f1b48ccd7553/page/p_fjvzqqpxmd';
         return view('pages/overview_page', compact('linkiframe'));
+    }
+
+    public function under_construction()
+    {
+        return view('pages/under-construction');
     }
 
 }
