@@ -151,15 +151,15 @@ class PageController extends Controller
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/719192ff-2e4c-4680-a6f1-ad1591eac05c/page/p_wsn4ogdumd';
         return view('pages/overview_page', compact('linkiframe'));
     }
-    public function dfarmkaret()
+    public function dfarmkaretpresensi()
     {
         $linkiframe = '';
-        return view('pages/dfarm/dfarm_karet');
+        return view('pages/dfarm/dfarm_karet_presensi');
     }
-    public function dfarmpresensi()
+    public function dfarmkaretproduksi()
     {
         $linkiframe = '';
-        return view('pages/dfarm/dfarm_presensi');
+        return view('pages/dfarm/dfarm_karet_produksi');
     }
     public function dfarmtehold()
     {
@@ -169,7 +169,12 @@ class PageController extends Controller
     public function dfarmteh()
     {
         $linkiframe = '';
-        return view('pages/dfarm/dfarm_teh');
+        return view('pages/dfarm/dfarm_teh_presensi');
+    }
+    public function dfarmtehproduksi()
+    {
+        $linkiframe = '';
+        return view('pages/dfarm/dfarm_teh_produksi');
     }
     public function dfarmkopi()
     {

@@ -168,6 +168,9 @@
             align-items: center;
             gap: 10px;
         }
+        #captcha {
+            text-transform: uppercase;
+        }
         .login-captcha-wrap .login-captcha-img img {
             display: block;
             height: 44px;

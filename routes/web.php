@@ -45,8 +45,10 @@ Route::middleware('auth:custom')->group(function () {
     Route::get('/picaonfarm', [PageController::class, 'picaonfarm'])->name('picaonfarm');
     Route::get('/picaofffarm', [PageController::class, 'picaofffarm'])->name('picaofffarm');
 
-    Route::get('/dfarmkaret', [PageController::class, 'dfarmkaret'])->name('dfarmkaret');
-    Route::get('/dfarmteh', [PageController::class, 'dfarmteh'])->name('dfarmteh');
+    Route::get('/dfarmkaret', [PageController::class, 'dfarmkaretpresensi'])->name('dfarmkaretpresensi');
+    Route::get('/dfarmkaretproduksi', [PageController::class, 'dfarmkaretproduksi'])->name('dfarmkaretproduksi');
+    Route::get('/dfarmteh', [PageController::class, 'dfarmtehpresensi'])->name('dfarmtehpresensi');
+    Route::get('/dfarmtehproduksi', [PageController::class, 'dfarmtehproduksi'])->name('dfarmtehproduksi');
 
     Route::get('/fin_console', [PageController::class, 'fin_console'])->name('fin_console');
     Route::get('/fin_parent', [PageController::class, 'fin_parent'])->name('fin_parent');
