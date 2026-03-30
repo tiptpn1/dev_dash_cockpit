@@ -16,10 +16,10 @@
           <i class="fa-solid fa-clipboard-check" style="width: 14px;"></i>
           Data Presensi
         </a>
-        <a class="dropdown-menu-item" href="#">
+        {{-- <a class="dropdown-menu-item" href="#">
           <i class="fa-solid fa-chart-bar" style="width: 14px;"></i>
           Laporan
-        </a>
+        </a> --}}
       </div>
     </div>
 
@@ -38,10 +38,10 @@
           <i class="fa-solid fa-leaf" style="width: 14px;"></i>
           Produksi Karet
         </a>
-        <a class="dropdown-menu-item" href="#">
+        {{-- <a class="dropdown-menu-item" href="#">
           <i class="fa-solid fa-chart-line" style="width: 14px;"></i>
           Analisis
-        </a>
+        </a> --}}
       </div>
     </div>
   </div>

@@ -11,7 +11,7 @@
   <div class="bg-gradient-to-r from-blue-700 to-blue-500 text-white py-4 px-6 shadow-lg flex-shrink-0">
     <div class="max-w-7xl mx-auto">
       <h1 class="text-2xl md:text-3xl font-bold">
-        <span class="font-light">Presensi</span> <span class="italic">Regional</span>
+        <span class="font-light">Presensi</span> <span class="italic">DFARM PTPN I</span>
       </h1>
     </div>
   </div>
@@ -55,7 +55,7 @@
         <!-- Regional Filter -->
         <div>
           <label class="block text-white text-xs md:text-sm font-medium mb-1">Regional</label>
-          <select class="w-full px-3 py-2 text-sm rounded-lg bg-slate-700 bg-opacity-50 text-black border border-slate-600 focus:outline-none focus:border-blue-400 font-medium">
+          <select id="selectRegional" class="w-full px-3 py-2 text-sm rounded-lg bg-slate-700 bg-opacity-50 text-black border border-slate-600 focus:outline-none focus:border-blue-400 font-medium">
             <option value="">Pilih</option>
             <option value="2" <?php if ($selectedRegional == '2') echo 'selected'; ?>>REGIONAL 2</option>
             <option value="3" <?php if ($selectedRegional == '3') echo 'selected'; ?>>REGIONAL 3</option>
@@ -69,19 +69,21 @@
         <div class="flex flex-col">
           <label class="block text-white text-xs md:text-sm font-medium mb-1">Nama Kebun</label>
           <div class="flex gap-2 h-full">
-            <select class="flex-1 px-3 py-2 text-sm rounded-lg bg-slate-700 bg-opacity-50 text-black border border-slate-600 focus:outline-none focus:border-blue-400 font-medium">
+            <select id="selectKebun" class="flex-1 px-3 py-2 text-sm rounded-lg bg-slate-700 bg-opacity-50 text-black border border-slate-600 focus:outline-none focus:border-blue-400 font-medium">
               <option value="">Pilih</option>
               <?php
                 foreach ($allDatakebun as $key) {
-                  echo '<option value="' . $key->kebun_id . '">' . $key->nama_kebun . '</option>';
+                  echo '<option value="' . $key->kebun_id . '"';
+                  if ($selectedKebun == $key->kebun_id) echo ' selected';
+                  echo '>' . $key->nama_kebun . '</option>';
                 } 
               ?>
             </select>
             <!-- Filter Button -->
-            <button class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap">
+            <button id="btnFilter" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap">
               <i class="fa-solid fa-filter" style="margin-right: 6px;"></i>Filter
             </button>
-            <button class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap">
+            <button id="btnReset" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap">
               <i class="fa-solid fa-rotate-right" style="margin-right: 6px;"></i>Reset
             </button>
           </div>
@@ -93,45 +95,45 @@
         <!-- Presensi Hadir -->
         <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
           <h3 class="text-gray-300 text-xs font-medium mb-1">Presensi Hadir</h3>
-          <p class="text-2xl md:text-3xl font-bold text-white">9.4K</p>
+          <p class="text-2xl md:text-3xl font-bold text-white">{{$totalData['kehadiran']}} Org</p>
         </div>
 
         <!-- Jumlah Input Presensi -->
         <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
           <h3 class="text-gray-300 text-xs font-medium mb-1">Jumlah Input Presensi</h3>
-          <p class="text-2xl md:text-3xl font-bold text-white">10.4K</p>
+          <p class="text-2xl md:text-3xl font-bold text-white">{{$totalData['total_pegawai']-$totalData['belum_hadir']}} Org</p>
         </div>
 
-        <!-- Jumlah Karyawan (1) -->
+        <!-- Jumlah Pemanen -->
         <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
-          <h3 class="text-gray-300 text-xs font-medium mb-1">Jumlah Karyawan</h3>
-          <p class="text-2xl md:text-3xl font-bold text-white">14.0K</p>
+          <h3 class="text-gray-300 text-xs font-medium mb-1">Jumlah Pemanen</h3>
+          <p class="text-2xl md:text-3xl font-bold text-white">{{$totalData['total_pegawai']}} Org</p>
         </div>
 
-        <!-- Jumlah Karyawan (2) -->
+        <!-- Persentase Kehadiran -->
         <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
-          <h3 class="text-gray-300 text-xs font-medium mb-1">Jumlah Karyawan</h3>
-          <p class="text-2xl md:text-3xl font-bold text-white">14.0K</p>
+          <h3 class="text-gray-300 text-xs font-medium mb-1">Persentase Kehadiran</h3>
+          <p class="text-2xl md:text-3xl font-bold text-white">{{$totalData['prosentase_kehadiran']}}%</p>
         </div>
 
         <!-- Presentase Presensi -->
         <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
-          <h3 class="text-gray-300 text-xs font-medium mb-1">Presentase Presensi</h3>
-          <p class="text-2xl md:text-3xl font-bold text-white">67.00%</p>
+          <h3 class="text-gray-300 text-xs font-medium mb-1">Presentase Input Presensi</h3>
+          <p class="text-2xl md:text-3xl font-bold text-white">{{$totalData['prosentase']}}%</p>
         </div>
 
         <!-- Presentase Input Presensi -->
         <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
-          <h3 class="text-gray-300 text-xs font-medium mb-1">Presentase Input Presensi</h3>
-          <p class="text-2xl md:text-3xl font-bold text-white">74.28%</p>
+          <h3 class="text-gray-300 text-xs font-medium mb-1">Presentase Tidak Input</h3>
+          <p class="text-2xl md:text-3xl font-bold text-white">{{100-$totalData['prosentase']}}%</p>
         </div>
       </div>
-
+      @if($selectedRegional =="")
       <!-- Charts Section - By Regional -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         <!-- Presensi Chart -->
         <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
-          <h2 class="text-white text-xs md:text-sm font-bold mb-3 text-center">Presensi</h2>
+          <h2 class="text-white text-xs md:text-sm font-bold mb-3 text-center">Presentase Input Presensi</h2>
           <div class="relative h-56 md:h-64">
             <canvas id="presensiChart"></canvas>
           </div>
@@ -147,13 +149,14 @@
 
         <!-- Presentase Input Chart -->
         <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm lg:col-span-2">
-          <h2 class="text-white text-xs md:text-sm font-bold mb-3 text-center">Presentase Input</h2>
+          <h2 class="text-white text-xs md:text-sm font-bold mb-3 text-center">Perbandingan Input Presensi & Jumlah Pemanen</h2>
           <div class="relative h-56 md:h-64">
             <canvas id="presentaseInputChart"></canvas>
           </div>
         </div>
       </div>
-
+      @endif
+      @if($selectedRegional !="" && $selectedKebun =="")  
       <!-- Detail Charts Section - By Kebun -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <!-- Presensi Detail Chart -->
@@ -180,7 +183,35 @@
           </div>
         </div>
       </div>
+      @endif
+      @if($selectedRegional !="" && $selectedKebun !="")
+      <!-- Detail Charts Section - By Kebun -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <!-- Presensi Detail Chart -->
+        <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
+          <h2 class="text-white text-xs md:text-sm font-bold mb-3 text-center">Presensi</h2>
+          <div class="relative h-56 md:h-64">
+            <canvas id="presensiDetailChart"></canvas>
+          </div>
+        </div>
 
+        <!-- Presentase Hadir Detail Chart -->
+        <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
+          <h2 class="text-white text-xs md:text-sm font-bold mb-3 text-center">Presentase Hadir</h2>
+          <div class="relative h-56 md:h-64">
+            <canvas id="presentaseHadirDetailChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Presentase Input Detail Chart -->
+        <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm lg:col-span-2">
+          <h2 class="text-white text-xs md:text-sm font-bold mb-3 text-center">Presentase Input</h2>
+          <div class="relative h-56 md:h-64">
+            <canvas id="presentaseInputDetailChart"></canvas>
+          </div>
+        </div>
+      </div>
+      @endif
     </div>
   </div>
 </div>
@@ -193,6 +224,7 @@
   const chartColors = {
     blue: '#0EA5E9',
     cyan: '#06B6D4',
+    red: '#EF4444',
     purple: '#8B5CF6',
     primary: '#1E40AF',
     gridColor: 'rgba(148, 163, 184, 0.1)',
@@ -226,248 +258,483 @@
     },
   };
 
-  // 1. Presensi Chart (Grouped Bar)
-  const presensiCtx = document.getElementById('presensiChart').getContext('2d');
-  new Chart(presensiCtx, {
-    type: 'bar',
-    data: {
-      labels: ['REGIONAL 2', 'REGIONAL 3', 'REGIONAL 7', 'REGIONAL 8'],
-      datasets: [
-        {
-          label: 'Jumlah Presensi Hadir',
-          data: [3417, 5096, 837, 39],
-          backgroundColor: chartColors.blue,
-          borderRadius: 6,
-          borderSkipped: false,
-        },
-        {
-          label: 'Jumlah Karyawan',
-          data: [3417, 5096, 837, 142],
-          backgroundColor: chartColors.cyan,
-          borderRadius: 6,
-          borderSkipped: false,
-        },
-      ],
-    },
-    options: {
-      ...commonOptions,
-      scales: {
-        ...commonOptions.scales,
-        x: {
-          ...commonOptions.scales.x,
-          stacked: false,
-        },
-        y: {
-          ...commonOptions.scales.y,
-          stacked: false,
+  @if($selectedRegional == "")
+    // 1. Presensi Chart (Grouped Bar)
+    const presensiCtx = document.getElementById('presensiChart').getContext('2d');
+    new Chart(presensiCtx, {
+      type: 'bar',
+      data: {
+        labels: [
+          @for ($i = 0; $i < count($presensiData); $i++) 
+            '{{ $presensiData[$i]->regional }}',
+          @endfor
+        ],
+        datasets: [
+          {
+            label: '% Input Presensi',
+            data: [
+              @for ($i = 0; $i < count($presensiData); $i++)
+                {{ $presensiData[$i]->prosentase }},
+              @endfor
+            ],
+            backgroundColor: chartColors.blue,
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+          {
+            label: '% Belum Input Presensi',
+            data: [
+              @for ($i = 0; $i < count($presensiData); $i++)
+                {{ 100 - $presensiData[$i]->prosentase }},
+              @endfor
+            ],
+            backgroundColor: chartColors.red,
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+        ],
+      },
+      options: {
+        ...commonOptions,
+        scales: {
+          ...commonOptions.scales,
+          x: {
+            ...commonOptions.scales.x,
+            stacked: true,
+          },
+          y: {
+            ...commonOptions.scales.y,
+            stacked: true,
+          },
         },
       },
-    },
-  });
+    });
 
-  // 2. Presentase Hadir Chart (Stacked Bar)
-  const presentaseHadirCtx = document.getElementById('presentaseHadirChart').getContext('2d');
-  new Chart(presentaseHadirCtx, {
-    type: 'bar',
-    data: {
-      labels: ['REGIONAL 7', 'REGIONAL 2', 'REGIONAL 3', 'REGIONAL 8'],
-      datasets: [
-        {
-          label: 'Presentase Hadir',
-          data: [47, 58, 78, 29],
-          backgroundColor: chartColors.blue,
-          borderRadius: 6,
-          borderSkipped: false,
-        },
-        {
-          label: 'Presentase Tidak Hadir',
-          data: [53, 42, 22, 71],
-          backgroundColor: chartColors.cyan,
-          borderRadius: 6,
-          borderSkipped: false,
-        },
-      ],
-    },
-    options: {
-      ...commonOptions,
-      scales: {
-        ...commonOptions.scales,
-        x: {
-          ...commonOptions.scales.x,
-          stacked: true,
-        },
-        y: {
-          ...commonOptions.scales.y,
-          stacked: true,
-          max: 100,
+    // 2. Presentase Hadir Chart (Stacked Bar)
+    const presentaseHadirCtx = document.getElementById('presentaseHadirChart').getContext('2d');
+    new Chart(presentaseHadirCtx, {
+      type: 'bar',
+      data: {
+        labels: [
+          @for ($i = 0; $i < count($presensiData); $i++) 
+            '{{ $presensiData[$i]->regional }}',
+          @endfor
+        ],
+        datasets: [
+          {
+            label: '% Hadir',
+            data: [
+              @for ($i = 0; $i < count($presensiData); $i++)
+                {{ $presensiData[$i]->prosentase_kehadiran }},
+              @endfor
+            ],
+            backgroundColor: chartColors.blue,
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+          {
+            label: '% Tidak Hadir',
+            data: [
+              @for ($i = 0; $i < count($presensiData); $i++)
+                {{ 100 - $presensiData[$i]->prosentase_kehadiran }},
+              @endfor
+            ],
+            backgroundColor: chartColors.red,
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+        ],
+      },
+      options: {
+        ...commonOptions,
+        scales: {
+          ...commonOptions.scales,
+          x: {
+            ...commonOptions.scales.x,
+            stacked: true,
+          },
+          y: {
+            ...commonOptions.scales.y,
+            stacked: true,
+            max: 100,
+          },
         },
       },
-    },
-  });
+    });
 
-  // 3. Presentase Input Chart (Grouped Bar)
-  const presentaseInputCtx = document.getElementById('presentaseInputChart').getContext('2d');
-  new Chart(presentaseInputCtx, {
-    type: 'bar',
-    data: {
-      labels: ['REGIONAL 2', 'REGIONAL 3', 'REGIONAL 7', 'REGIONAL 8'],
-      datasets: [
-        {
-          label: 'Jumlah Input Presensi',
-          data: [3599, 5893, 866, 922],
-          backgroundColor: chartColors.blue,
-          borderRadius: 6,
-          borderSkipped: false,
-        },
-        {
-          label: 'Jumlah Karyawan',
-          data: [4184, 8766, 142, 142],
-          backgroundColor: chartColors.cyan,
-          borderRadius: 6,
-          borderSkipped: false,
-        },
-      ],
-    },
-    options: {
-      ...commonOptions,
-      scales: {
-        ...commonOptions.scales,
-        x: {
-          ...commonOptions.scales.x,
-          stacked: false,
-        },
-        y: {
-          ...commonOptions.scales.y,
-          stacked: false,
+    // 3. Presentase Input Chart (Grouped Bar)
+    const presentaseInputCtx = document.getElementById('presentaseInputChart').getContext('2d');
+    new Chart(presentaseInputCtx, {
+      type: 'bar',
+      data: {
+        labels: [
+          @for ($i = 0; $i < count($presensiData); $i++) 
+            '{{ $presensiData[$i]->regional }}',
+          @endfor
+        ],
+        datasets: [
+          {
+            label: 'Jumlah Input Presensi',
+            data: [
+              @for ($i = 0; $i < count($presensiData); $i++)
+                {{ $presensiData[$i]->total_pegawai - $presensiData[$i]->belum_hadir }},
+              @endfor
+            ],
+            backgroundColor: chartColors.blue,
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+          {
+            label: 'Jumlah Karyawan',
+            data: [
+              @for ($i = 0; $i < count($presensiData); $i++)
+                {{ $presensiData[$i]->total_pegawai }},
+              @endfor
+            ],
+            backgroundColor: chartColors.cyan,
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+        ],
+      },
+      options: {
+        ...commonOptions,
+        scales: {
+          ...commonOptions.scales,
+          x: {
+            ...commonOptions.scales.x,
+            stacked: false,
+          },
+          y: {
+            ...commonOptions.scales.y,
+            stacked: false,
+          },
         },
       },
-    },
-  });
+    });
+  @endif
 
   // ============================================
   // DETAIL CHARTS BY KEBUN
   // ============================================
 
-  // 4. Presensi Detail Chart (Grouped Bar - By Kebun)
-  const presensiDetailCtx = document.getElementById('presensiDetailChart').getContext('2d');
-  new Chart(presensiDetailCtx, {
-    type: 'bar',
-    data: {
-      labels: ['KEBUN GE...', 'KEBUN KA...', 'KEBUN SU...', 'KEBUN KR...', 'KEBUN MI...', 'KEBUN BE...', 'KEBUN CL...', 'KEBUN TE...', 'KEBUN AL...', 'KEBUN W.', 'KEBUN PA...', 'KEBUN CL...', 'KEBUN BE...', 'KEBUN BA...', 'KEBUN N...'],
-      datasets: [
-        {
-          label: 'Jumlah Presensi Hadir',
-          data: [641, 2278, 1241, 1292, 131, 506, 488, 427, 473, 464, 451, 429, 374, 361, 955],
-          backgroundColor: chartColors.blue,
-          borderRadius: 6,
-          borderSkipped: false,
-        },
-        {
-          label: 'Jumlah Karyawan',
-          data: [707, 2104, 1348, 1225, 142, 480, 488, 474, 479, 413, 412, 425, 328, 304, 1025],
-          backgroundColor: chartColors.cyan,
-          borderRadius: 6,
-          borderSkipped: false,
-        },
-      ],
-    },
-    options: {
-      ...commonOptions,
-      scales: {
-        ...commonOptions.scales,
-        x: {
-          ...commonOptions.scales.x,
-          stacked: false,
-          ticks: { ...commonOptions.scales.x.ticks, font: { size: 9 } },
-        },
-        y: {
-          ...commonOptions.scales.y,
-          stacked: false,
+  @if($selectedRegional != "" && $selectedKebun == "")
+    // 4. Presensi Detail Chart (Grouped Bar - By Kebun)
+    const presensiDetailCtx = document.getElementById('presensiDetailChart').getContext('2d');
+    new Chart(presensiDetailCtx, {
+      type: 'bar',
+      data: {
+        labels: [
+          @for ($i = 0; $i < count($presensiData); $i++) 
+            '{{ str_replace('KEBUN ', '', $presensiData[$i]->kebun) }}',
+          @endfor
+        ],
+        datasets: [
+          {
+            label: '% Input Presensi',
+            data: [
+              @for ($i = 0; $i < count($presensiData); $i++)
+                {{ $presensiData[$i]->prosentase }},
+              @endfor
+            ],
+            backgroundColor: chartColors.blue,
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+          {
+            label: '% Tidak Input Presensi',
+            data: [
+              @for ($i = 0; $i < count($presensiData); $i++)
+                {{ 100 - $presensiData[$i]->prosentase }},
+              @endfor
+            ],
+            backgroundColor: chartColors.red,
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+        ],
+      },
+      options: {
+        ...commonOptions,
+        scales: {
+          ...commonOptions.scales,
+          x: {
+            ...commonOptions.scales.x,
+            stacked: true,
+            ticks: { ...commonOptions.scales.x.ticks, font: { size: 9 } },
+          },
+          y: {
+            ...commonOptions.scales.y,
+            stacked: true,
+          },
         },
       },
-    },
-  });
+    });
 
-  // 5. Presentase Hadir Detail Chart (Stacked Bar - By Kebun)
-  const presentaseHadirDetailCtx = document.getElementById('presentaseHadirDetailChart').getContext('2d');
-  new Chart(presentaseHadirDetailCtx, {
-    type: 'bar',
-    data: {
-      labels: ['KEBUN GE...', 'KEBUN KA...', 'KEBUN SU...', 'KEBUN KR...', 'KEBUN MI...', 'KEBUN BE...', 'KEBUN CL...', 'KEBUN TE...', 'KEBUN AL...', 'KEBUN W.', 'KEBUN PA...', 'KEBUN CL...', 'KEBUN BE...', 'KEBUN BA...', 'KEBUN N...'],
-      datasets: [
-        {
-          label: 'Presentase Hadir',
-          data: [91, 99, 92, 95, 92, 95, 100, 90, 99, 82, 86, 87, 73, 48, 93],
-          backgroundColor: chartColors.blue,
-          borderRadius: 6,
-          borderSkipped: false,
-        },
-        {
-          label: 'Presentase Tidak Hadir',
-          data: [9, 1, 8, 5, 8, 5, 0, 10, 1, 18, 14, 13, 27, 52, 7],
-          backgroundColor: chartColors.cyan,
-          borderRadius: 6,
-          borderSkipped: false,
-        },
-      ],
-    },
-    options: {
-      ...commonOptions,
-      scales: {
-        ...commonOptions.scales,
-        x: {
-          ...commonOptions.scales.x,
-          stacked: true,
-          ticks: { ...commonOptions.scales.x.ticks, font: { size: 9 } },
-        },
-        y: {
-          ...commonOptions.scales.y,
-          stacked: true,
-          max: 100,
+    // 5. Presentase Hadir Detail Chart (Stacked Bar - By Kebun)
+    const presentaseHadirDetailCtx = document.getElementById('presentaseHadirDetailChart').getContext('2d');
+    new Chart(presentaseHadirDetailCtx, {
+      type: 'bar',
+      data: {
+        labels: [
+          @for ($i = 0; $i < count($presensiData); $i++) 
+            '{{ str_replace('KEBUN ', '', $presensiData[$i]->kebun) }}',
+          @endfor
+        ],
+        datasets: [
+          {
+            label: '% Hadir',
+            data: [
+              @for ($i = 0; $i < count($presensiData); $i++)
+                {{ $presensiData[$i]->prosentase_kehadiran }},
+              @endfor
+            ],
+            backgroundColor: chartColors.blue,
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+          {
+            label: '% Tidak Hadir',
+            data: [
+              @for ($i = 0; $i < count($presensiData); $i++)
+                {{ 100 - $presensiData[$i]->prosentase_kehadiran }},
+              @endfor
+            ],
+            backgroundColor: chartColors.red,
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+        ],
+      },
+      options: {
+        ...commonOptions,
+        scales: {
+          ...commonOptions.scales,
+          x: {
+            ...commonOptions.scales.x,
+            stacked: true,
+            ticks: { ...commonOptions.scales.x.ticks, font: { size: 9 } },
+          },
+          y: {
+            ...commonOptions.scales.y,
+            stacked: true,
+            max: 100,
+          },
         },
       },
-    },
-  });
+    });
 
-  // 6. Presentase Input Detail Chart (Grouped Bar - By Kebun)
-  const presentaseInputDetailCtx = document.getElementById('presentaseInputDetailChart').getContext('2d');
-  new Chart(presentaseInputDetailCtx, {
-    type: 'bar',
-    data: {
-      labels: ['KEBUN GE...', 'KEBUN KA...', 'KEBUN SU...', 'KEBUN KR...', 'KEBUN MI...', 'KEBUN BE...', 'KEBUN CL...', 'KEBUN TE...', 'KEBUN AL...', 'KEBUN W.', 'KEBUN PA...', 'KEBUN CL...', 'KEBUN BE...', 'KEBUN BA...', 'KEBUN N...'],
-      datasets: [
-        {
-          label: 'Jumlah Input Presensi',
-          data: [2276, 2104, 940, 1040, 628, 1506, 487, 480, 1376, 373, 375, 160, 1642, 244, 3309],
-          backgroundColor: chartColors.blue,
-          borderRadius: 6,
-          borderSkipped: false,
-        },
-        {
-          label: 'Jumlah Karyawan',
-          data: [3304, 264, 244, 1229, 512, 513, 411, 125, 390, 78, 746, 703, 684, 513, 6125],
-          backgroundColor: chartColors.cyan,
-          borderRadius: 6,
-          borderSkipped: false,
-        },
-      ],
-    },
-    options: {
-      ...commonOptions,
-      scales: {
-        ...commonOptions.scales,
-        x: {
-          ...commonOptions.scales.x,
-          stacked: false,
-          ticks: { ...commonOptions.scales.x.ticks, font: { size: 9 } },
-        },
-        y: {
-          ...commonOptions.scales.y,
-          stacked: false,
+    // 6. Presentase Input Detail Chart (Grouped Bar - By Kebun)
+    const presentaseInputDetailCtx = document.getElementById('presentaseInputDetailChart').getContext('2d');
+    new Chart(presentaseInputDetailCtx, {
+      type: 'bar',
+      data: {
+        labels: [
+          @for ($i = 0; $i < count($presensiData); $i++) 
+            '{{ str_replace('KEBUN ', '', $presensiData[$i]->kebun) }}',
+          @endfor
+        ],
+        datasets: [
+          {
+            label: 'Jumlah Input Presensi',
+            data: [
+              @for ($i = 0; $i < count($presensiData); $i++)
+                {{ $presensiData[$i]->total_pegawai - $presensiData[$i]->belum_hadir }},
+              @endfor
+            ],
+            backgroundColor: chartColors.blue,
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+          {
+            label: 'Jumlah Pemanen',
+            data: [
+              @for ($i = 0; $i < count($presensiData); $i++)
+                {{ $presensiData[$i]->total_pegawai }},
+              @endfor
+            ],
+            backgroundColor: chartColors.cyan,
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+        ],
+      },
+      options: {
+        ...commonOptions,
+        scales: {
+          ...commonOptions.scales,
+          x: {
+            ...commonOptions.scales.x,
+            stacked: false,
+            ticks: { ...commonOptions.scales.x.ticks, font: { size: 9 } },
+          },
+          y: {
+            ...commonOptions.scales.y,
+            stacked: false,
+          },
         },
       },
-    },
-  });
+    });
+  @endif
+
+  @if($selectedRegional != "" && $selectedKebun != "")
+    // 4. Presensi Detail Chart (Grouped Bar - By Kebun)
+    const presensiDetailCtx = document.getElementById('presensiDetailChart').getContext('2d');
+    new Chart(presensiDetailCtx, {
+      type: 'bar',
+      data: {
+        labels: [
+          @for ($i = 0; $i < count($presensiData); $i++) 
+            '{{ str_replace('KEBUN ', '', $presensiData[$i]->afdeling) }}',
+          @endfor
+        ],
+        datasets: [
+          {
+            label: '% Input Presensi',
+            data: [
+              @for ($i = 0; $i < count($presensiData); $i++)
+                {{ $presensiData[$i]->prosentase }},
+              @endfor
+            ],
+            backgroundColor: chartColors.blue,
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+          {
+            label: '% Tidak Input Presensi',
+            data: [
+              @for ($i = 0; $i < count($presensiData); $i++)
+                {{ 100 - $presensiData[$i]->prosentase }},
+              @endfor
+            ],
+            backgroundColor: chartColors.red,
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+        ],
+      },
+      options: {
+        ...commonOptions,
+        scales: {
+          ...commonOptions.scales,
+          x: {
+            ...commonOptions.scales.x,
+            stacked: true,
+            ticks: { ...commonOptions.scales.x.ticks, font: { size: 9 } },
+          },
+          y: {
+            ...commonOptions.scales.y,
+            stacked: true,
+          },
+        },
+      },
+    });
+
+    // 5. Presentase Hadir Detail Chart (Stacked Bar - By Kebun)
+    const presentaseHadirDetailCtx = document.getElementById('presentaseHadirDetailChart').getContext('2d');
+    new Chart(presentaseHadirDetailCtx, {
+      type: 'bar',
+      data: {
+        labels: [
+          @for ($i = 0; $i < count($presensiData); $i++) 
+            '{{ str_replace('KEBUN ', '', $presensiData[$i]->afdeling) }}',
+          @endfor
+        ],
+        datasets: [
+          {
+            label: '% Hadir',
+            data: [
+              @for ($i = 0; $i < count($presensiData); $i++)
+                {{ $presensiData[$i]->prosentase_kehadiran }},
+              @endfor
+            ],
+            backgroundColor: chartColors.blue,
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+          {
+            label: '% Tidak Hadir',
+            data: [
+              @for ($i = 0; $i < count($presensiData); $i++)
+                {{ 100 - $presensiData[$i]->prosentase_kehadiran }},
+              @endfor
+            ],
+            backgroundColor: chartColors.red,
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+        ],
+      },
+      options: {
+        ...commonOptions,
+        scales: {
+          ...commonOptions.scales,
+          x: {
+            ...commonOptions.scales.x,
+            stacked: true,
+            ticks: { ...commonOptions.scales.x.ticks, font: { size: 9 } },
+          },
+          y: {
+            ...commonOptions.scales.y,
+            stacked: true,
+            max: 100,
+          },
+        },
+      },
+    });
+
+    // 6. Presentase Input Detail Chart (Grouped Bar - By Kebun)
+    const presentaseInputDetailCtx = document.getElementById('presentaseInputDetailChart').getContext('2d');
+    new Chart(presentaseInputDetailCtx, {
+      type: 'bar',
+      data: {
+        labels: [
+          @for ($i = 0; $i < count($presensiData); $i++) 
+            '{{ str_replace('KEBUN ', '', $presensiData[$i]->afdeling) }}',
+          @endfor
+        ],
+        datasets: [
+          {
+            label: 'Jumlah Input Presensi',
+            data: [
+              @for ($i = 0; $i < count($presensiData); $i++)
+                {{ $presensiData[$i]->total_pegawai - $presensiData[$i]->belum_hadir }},
+              @endfor
+            ],
+            backgroundColor: chartColors.blue,
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+          {
+            label: 'Jumlah Pemanen',
+            data: [
+              @for ($i = 0; $i < count($presensiData); $i++)
+                {{ $presensiData[$i]->total_pegawai }},
+              @endfor
+            ],
+            backgroundColor: chartColors.cyan,
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+        ],
+      },
+      options: {
+        ...commonOptions,
+        scales: {
+          ...commonOptions.scales,
+          x: {
+            ...commonOptions.scales.x,
+            stacked: false,
+            ticks: { ...commonOptions.scales.x.ticks, font: { size: 9 } },
+          },
+          y: {
+            ...commonOptions.scales.y,
+            stacked: false,
+          },
+        },
+      },
+    });
+  @endif
 </script>
 
 <!-- Date Range Picker Script -->
@@ -493,8 +760,20 @@
   const today = new Date();
   const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
   
-  datePickerStart.value = sevenDaysAgo.toISOString().split('T')[0];
-  datePickerEnd.value = today.toISOString().split('T')[0];
+  // Get URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const tglAwalParam = urlParams.get('tgl_awal');
+  const tglAkhirParam = urlParams.get('tgl_akhir');
+  const idRegParam = urlParams.get('id_reg');
+  const kodeKebunParam = urlParams.get('kode_kebun');
+
+  // Set date values dari parameter atau default
+  datePickerStart.value = tglAwalParam || sevenDaysAgo.toISOString().split('T')[0];
+  datePickerEnd.value = tglAkhirParam || today.toISOString().split('T')[0];
+  
+  // Set select values dari parameter
+  if (idRegParam) document.getElementById('selectRegional').value = idRegParam;
+  if (kodeKebunParam) document.getElementById('selectKebun').value = kodeKebunParam;
   
   // Update display
   function updateDateDisplay() {
@@ -540,6 +819,99 @@
     if (e.key === 'Enter' && !datePickerPopup.classList.contains('hidden')) {
       datePickerApply.click();
     }
+  });
+
+  // Regional Select Change - Load Kebun Data via AJAX
+  document.getElementById('selectRegional').addEventListener('change', function() {
+    const regionalId = this.value;
+    const selectKebun = document.getElementById('selectKebun');
+
+    if (!regionalId) {
+      // Reset select kebun jika regional tidak dipilih
+      selectKebun.innerHTML = '<option value="">Pilih</option>';
+      return;
+    }
+
+    // Show loading state
+    selectKebun.innerHTML = '<option value="">Loading...</option>';
+
+    // AJAX call ke get_data_kebun
+    fetch('{{ route('get_data_kebun') }}?id_reg=' + regionalId + '&komoditas=2', {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      // Clear options
+      selectKebun.innerHTML = '<option value="">Pilih</option>';
+
+      // Populate options dari response
+      if (data.data && data.data.length > 0) {
+        // Create a map to store unique kebun by ID
+        const uniqueKebun = new Map();
+        
+        data.data.forEach(item => {
+          if (!uniqueKebun.has(item.kebun_id)) {
+            uniqueKebun.set(item.kebun_id, item.nama_kebun);
+          }
+        });
+
+        // Add options to select
+        uniqueKebun.forEach((nama, kebunId) => {
+          const option = document.createElement('option');
+          option.value = kebunId;
+          option.textContent = nama;
+          selectKebun.appendChild(option);
+        });
+      } else {
+        selectKebun.innerHTML = '<option value="">Tidak ada data kebun</option>';
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      selectKebun.innerHTML = '<option value="">Error loading data</option>';
+    });
+  });
+
+  // Filter Button Handler
+  document.getElementById('btnFilter').addEventListener('click', () => {
+    const tglAwal = datePickerStart.value;
+    const tglAkhir = datePickerEnd.value;
+    const idReg = document.getElementById('selectRegional').value;
+    const kodeKebun = document.getElementById('selectKebun').value;
+
+    // Validasi input
+    if (!tglAwal || !tglAkhir) {
+      alert('Silakan pilih periode terlebih dahulu');
+      return;
+    }
+
+    // Build URL dengan parameter
+    let url = window.location.pathname + '?';
+    const params = [];
+    
+    if (tglAwal) params.push('tgl_awal=' + tglAwal);
+    if (tglAkhir) params.push('tgl_akhir=' + tglAkhir);
+    if (idReg) params.push('id_reg=' + idReg);
+    if (kodeKebun) params.push('kode_kebun=' + kodeKebun);
+
+    url += params.join('&');
+
+    // Reload halaman dengan parameter baru
+    window.location.href = url;
+  });
+
+  // Reset Button Handler
+  document.getElementById('btnReset').addEventListener('click', () => {
+    // Clear semua filter
+    document.getElementById('selectRegional').value = '';
+    document.getElementById('selectKebun').value = '';
+    
+    // Reset ke halaman tanpa parameter
+    window.location.href = window.location.pathname;
   });
 </script>
 

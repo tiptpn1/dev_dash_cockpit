@@ -154,7 +154,10 @@ class PageController extends Controller
     }
     public function dfarmkaretpresensi()
     {
-        $regional = $_GET['regional'] ?? null;
+        $regional = $_GET['id_reg'] ?? '';
+        $tglAwal = $_GET['tgl_awal'] ?? date('Y-m-d');
+        $tglAkhir = $_GET['tgl_akhir'] ?? date('Y-m-d');
+        $kebun = $_GET['kode_kebun'] ?? '';
         $komoditas = 2;
         
         // Gunakan INNER JOIN (lebih cepat) dan tambahkan filter regional
@@ -194,10 +197,153 @@ class PageController extends Controller
             ->get();
         $selectedRegional = $regional;
         $selectedKomoditas = $komoditas;
+        $selectedKebun = $kebun;
+        if($regional!='' and $kebun==''){
+         
+            $presensiData = DB::connection('pgsql_secondary')->select(
+                'SELECT * FROM fn_rekap_presensi_kebun(?, ?, ?, ?) AS (
+                    kebun_id integer, 
+                    kebun varchar, 
+                    kehadiran bigint, 
+                    sakit bigint, 
+                    cuti bigint, 
+                    libur bigint, 
+                    mangkir bigint, 
+                    dll bigint, 
+                    belum_hadir bigint, 
+                    prosentase double precision, 
+                    prosentase_kehadiran double precision, 
+                    total_pegawai bigint
+                )',
+                ['PENYADAP', $regional, $tglAwal, $tglAkhir]
+            );
+            $presensiDataRegional = DB::connection('pgsql_secondary')->select(
+                'SELECT * FROM public.fn_rekap_presensi_regional_sql(?, ?, ?) 
+                WHERE regional_id = ?',
+                ['PENYADAP', $tglAwal, $tglAkhir, $regional]
+            );
+            // Jika hanya 1 row, langsung assign tanpa aggregate
+            $totalData = !empty($presensiDataRegional) ? (array) $presensiDataRegional[0] : [];
+            // dd($totalData);
+        }
+        if($regional==''){
+         
+            $presensiData = DB::connection('pgsql_secondary')->select(
+                'SELECT * FROM public.fn_rekap_presensi_regional_sql(?, ?, ?)',
+                ['PENYADAP', $tglAwal, $tglAkhir]
+                
+            );
+            $totalData = $this->calculateTotalPresensi($presensiData);
+        }
+        if($regional!='' and $kebun!=''){
+         
+            $presensiData = DB::connection('pgsql_secondary')->select(
+                'SELECT * FROM fn_rekap_presensi_afdeling(?, ?, ?, ?) AS (
+                    afdeling_id integer, 
+                    afdeling varchar, 
+                    kehadiran bigint, 
+                    sakit bigint, 
+                    cuti bigint, 
+                    libur bigint, 
+                    mangkir bigint, 
+                    dll bigint, 
+                    belum_hadir bigint, 
+                    prosentase double precision, 
+                    prosentase_kehadiran double precision, 
+                    total_pegawai bigint
+                )',
+                ['PENYADAP', $kebun, $tglAwal, $tglAkhir]
+            );
+            $presensiDataKebun = DB::connection('pgsql_secondary')->select(
+                'SELECT * FROM fn_rekap_presensi_kebun(?, ?, ?, ?) AS (
+                    kebun_id integer, 
+                    kebun varchar, 
+                    kehadiran bigint, 
+                    sakit bigint, 
+                    cuti bigint, 
+                    libur bigint, 
+                    mangkir bigint, 
+                    dll bigint, 
+                    belum_hadir bigint, 
+                    prosentase double precision, 
+                    prosentase_kehadiran double precision, 
+                    total_pegawai bigint
+                ) WHERE kebun_id = ?',
+                ['PENYADAP', $regional, $tglAwal, $tglAkhir, $kebun]
+            );
+            // Jika hanya 1 row setelah filter, langsung assign tanpa aggregate
+            $totalData = !empty($presensiDataKebun) ? (array) $presensiDataKebun[0] : [];
+        }
+            
+        // Hitung total untuk masing-masing kolom
         
-        // return ($allDatakebun);
-        return view('pages/dfarm/dfarm_karet_presensi', compact('allDatakebun', 'selectedRegional', 'selectedKomoditas'));
+        
+        return view('pages/dfarm/dfarm_karet_presensi', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'presensiData', 'totalData'));
     }
+
+
+    /**
+     * Hitung total untuk masing-masing kolom presensi
+     * @param array $data Array of objects dengan semua kolom presensi
+     * @return array Array dengan key berupa nama kolom dan value berupa total/rata-rata
+     */
+    private function calculateTotalPresensi($data)
+    {
+        if (empty($data)) {
+            return [
+                'kehadiran' => 0,
+                'sakit' => 0,
+                'cuti' => 0,
+                'libur' => 0,
+                'mangkir' => 0,
+                'dll' => 0,
+                'belum_hadir' => 0,
+                'prosentase' => 0,
+                'prosentase_kehadiran' => 0,
+                'total_pegawai' => 0,
+                'total_kebun' => 0
+            ];
+        }
+
+        $totals = [
+            'kehadiran' => 0,
+            'sakit' => 0,
+            'cuti' => 0,
+            'libur' => 0,
+            'mangkir' => 0,
+            'dll' => 0,
+            'belum_hadir' => 0,
+            'prosentase' => 0,
+            'prosentase_kehadiran' => 0,
+            'total_pegawai' => 0,
+        ];
+
+        $count = count($data);
+
+        foreach ($data as $item) {
+            $totals['kehadiran'] += $item->kehadiran ?? 0;
+            $totals['sakit'] += $item->sakit ?? 0;
+            $totals['cuti'] += $item->cuti ?? 0;
+            $totals['libur'] += $item->libur ?? 0;
+            $totals['mangkir'] += $item->mangkir ?? 0;
+            $totals['dll'] += $item->dll ?? 0;
+            $totals['belum_hadir'] += $item->belum_hadir ?? 0;
+            $totals['prosentase'] += floatval($item->prosentase ?? 0);
+            $totals['prosentase_kehadiran'] += floatval($item->prosentase_kehadiran ?? 0);
+            $totals['total_pegawai'] += $item->total_pegawai ?? 0;
+        }
+
+        // Hitung rata-rata untuk prosentase (bukan jumlah total)
+        if ($count > 0) {
+            $totals['prosentase'] = round($totals['prosentase'] / $count, 2);
+            $totals['prosentase_kehadiran'] = round($totals['prosentase_kehadiran'] / $count, 2);
+        }
+
+        $totals['total_kebun'] = $count;
+
+        return $totals;
+    }
+
     public function dfarmkaretproduksi()
     {
         $linkiframe = '';
