@@ -85,6 +85,8 @@ Route::middleware('auth:custom')->group(function () {
     Route::get('/lm14', [PageController::class, 'lm14'])->name('lm14');
     Route::get('/under_construction', [PageController::class, 'under_construction'])->name('under_construction');
 
+    Route::get('/get_data_bigquery', [PageController::class, 'get_data_bigquery'])->name('get_data_bigquery');
+
     // AI Response Route
     Route::post('/ai/response', [AiResponseController::class, 'aiResponse']);
 });

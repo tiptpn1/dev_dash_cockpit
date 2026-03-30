@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
+use BigQuery;
 
 class PageController extends Controller
 {
@@ -159,19 +160,19 @@ class PageController extends Controller
         $tglAkhir = $_GET['tgl_akhir'] ?? date('Y-m-d');
         $kebun = $_GET['kode_kebun'] ?? '';
         $komoditas = 2;
-        
+
         // Gunakan INNER JOIN (lebih cepat) dan tambahkan filter regional
         $data = DB::connection('pgsql_secondary')
             ->table('person_data')
-            ->select('person_data.kebun_id', 'person_data.regional_id','m_kebun.nama as nama_kebun')
+            ->select('person_data.kebun_id', 'person_data.regional_id', 'm_kebun.nama as nama_kebun')
             ->leftJoin('m_kebun', 'person_data.kebun_id', '=', 'm_kebun.id')
             ->whereNotNull('person_data.regional_id')
             ->orderBy('person_data.regional_id');
-        if ($komoditas==2) {
-            $data->where(function($query) {
+        if ($komoditas == 2) {
+            $data->where(function ($query) {
                 $query->where('positionsdesc', 'like', '%Penyadap%')
-                      ->orWhere('positionsdesc', 'like', '%PENYADAP%')
-                      ->orWhere('positionsdesc', 'like', '%penyadap%');
+                    ->orWhere('positionsdesc', 'like', '%PENYADAP%')
+                    ->orWhere('positionsdesc', 'like', '%penyadap%');
             });
         }
         // if ($komoditas==1) {
@@ -188,7 +189,7 @@ class PageController extends Controller
         //               ->orWhere('positionsdesc', 'like', '%panen kopi%');
         //     });
         // }
-        
+
         if ($regional) {
             $data->where('person_data.regional_id', $regional);
         }
@@ -776,6 +777,34 @@ class PageController extends Controller
     public function under_construction()
     {
         return view('pages/under-construction');
+    }
+
+    public function get_data_bigquery()
+    {
+        try {
+            // 1. Buat konfigurasi query
+            $queryConfig = BigQuery::query("SELECT table_name FROM `region-us.INFORMATION_SCHEMA.TABLES` LIMIT 10");
+
+            // 2. Jalankan query → menghasilkan QueryResults
+            $queryResults = BigQuery::runQuery($queryConfig);
+
+            // 3. Ambil rows dari hasil query
+            $rows = [];
+            foreach ($queryResults->rows() as $row) {
+                $rows[] = $row;
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'total'  => count($rows),
+                'data'   => $rows,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 
 }
