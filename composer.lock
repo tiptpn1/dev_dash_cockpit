@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "910326d1f5950389785ca1607dc3da64",
+    "content-hash": "34747293d19a41f4485a8d8ca9ed7a44",
     "packages": [
         {
             "name": "brick/math",
@@ -1740,6 +1740,56 @@
                 }
             ],
             "time": "2026-02-19T13:11:17+00:00"
+        },
+        {
+            "name": "jfbiswajit/php-bigquery",
+            "version": "1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/jfBiswajit/php-bigquery.git",
+                "reference": "1347563fd4edf23b748072dd5f1a7b921ff02890"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/jfBiswajit/php-bigquery/zipball/1347563fd4edf23b748072dd5f1a7b921ff02890",
+                "reference": "1347563fd4edf23b748072dd5f1a7b921ff02890",
+                "shasum": ""
+            },
+            "require": {
+                "google/cloud-bigquery": "^1.25"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "BigQuery": "JfBiswajit\\PHPBigQuery\\Facades\\BigQuery"
+                    },
+                    "providers": [
+                        "JfBiswajit\\PHPBigQuery\\Providers\\BigQueryServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "JfBiswajit\\PHPBigQuery\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Biswajit Biswas",
+                    "email": "jfbiswajit@gmail.com"
+                }
+            ],
+            "description": "PHP BigQuery for Laravel is a seamless integration package that allows you to harness the power of Google BigQuery in your Laravel applications effortlessly. With a zero-configuration setup, plug and play this library to perform high-speed querying and advanced analytics on large datasets. It comes with easy-to-use Laravel facades and service providers, making interaction with BigQuery a breeze. Leverage the capabilities of Google Cloud BigQuery within your Laravel projects with this user-friendly and powerful package.",
+            "support": {
+                "issues": "https://github.com/jfBiswajit/php-bigquery/issues",
+                "source": "https://github.com/jfBiswajit/php-bigquery/tree/1.0.0"
+            },
+            "time": "2023-08-02T18:02:27+00:00"
         },
         {
             "name": "laravel/framework",

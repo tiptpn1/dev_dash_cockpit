@@ -1,381 +1,275 @@
 @extends('layouts.app')
 
-@section('content')
+@section('styles')
     <style>
-        /* ===== MAIN CONTAINER — width shrinks when sidebar opens ===== */
+        /* ===== SCROLL FIX — override Tailwind h-screen di body ===== */
+        html, body {
+            height: auto !important;
+            min-height: 100vh;
+            overflow-y: auto !important;
+        }
+
+        /* Override padding dari layout .main-content agar tidak ada space aneh */
+        .lm13-container.main-content {
+            padding: 0 !important;
+            margin-left: 0 !important;
+        }
+
+        /* ===== MAIN CONTAINER ===== */
         .lm13-container {
             padding: 0;
             margin: 0;
             width: 100%;
-            height: 100%;
-            background: #0d1b2a;
-            overflow-y: auto;
+            min-height: 100vh;
+            background: #f8fafc;
             overflow-x: hidden;
-            transition: width 0.3s;
             box-sizing: border-box;
-            position: relative;
-        }
-        /* When sidebar is open, subtract sidebar width so content doesn't overflow */
-        .sidebar.open~.lm13-container {
-            width: calc(100% - 230px);
+            font-family: inherit;
         }
 
-        /* ===== Animated background blobs ===== */
-        .bg-blob {
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(80px);
-            opacity: 0.22;
-            pointer-events: none;
-            z-index: 0;
+        /* ===== PAGE HEADER — mirip gudang_utilisasi ===== */
+        .lm-page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 50px;
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb;
+            min-height: 56px;
         }
-        .bg-blob-1 {
-            width: 520px; height: 520px;
-            background: radial-gradient(circle, #1e3a5f, transparent);
-            top: -120px; left: -120px;
-            animation: bgBlob1 9s ease-in-out infinite alternate;
+        .lm-header-logo { width: 130px; height: 44px; display: flex; align-items: center; }
+        .lm-header-logo img { width: 100%; height: 100%; object-fit: contain; }
+        .lm-header-center {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-        .bg-blob-2 {
-            width: 420px; height: 420px;
-            background: radial-gradient(circle, #3c6bb5, transparent);
-            bottom: -80px; right: -80px;
-            animation: bgBlob2 11s ease-in-out infinite alternate;
-        }
-        .bg-blob-3 {
-            width: 320px; height: 320px;
-            background: radial-gradient(circle, #4a7bc8, transparent);
-            top: 45%; left: 55%;
-            animation: bgBlob1 13s ease-in-out infinite alternate;
-        }
-        @keyframes bgBlob1 {
-            from { transform: translate(0,0) scale(1); }
-            to   { transform: translate(45px,30px) scale(1.12); }
-        }
-        @keyframes bgBlob2 {
-            from { transform: translate(0,0) scale(1); }
-            to   { transform: translate(-35px,-20px) scale(1.09); }
-        }
-        /* dot-grid overlay */
-        .bg-grid {
-            position: fixed;
-            inset: 0;
-            background-image: radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px);
-            background-size: 32px 32px;
-            pointer-events: none;
-            z-index: 0;
-        }
-        /* ensure content sits above background layers */
-        .gradient-header, .content-section { position: relative; z-index: 1; }
-
-        .gradient-header {
-            background: linear-gradient(to right, #1e40af 0%, #2563eb 100%);
-            color: white;
-            padding: 20px 0;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-        }
-
-        .header-content {
-            max-width: 100%;
+        .lm-header-center h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #166534;
             margin: 0;
-            padding: 0 16px;
         }
-
-        .header-title {
-            font-size: 22px;
-            font-weight: bold;
-            margin-bottom: 4px;
-        }
+        .lm-header-right { display: flex; align-items: center; }
+        .lm-header-right img { height: 44px; width: auto; object-fit: contain; }
 
         .content-section {
             max-width: 100%;
             margin: 0;
-            padding: 14px 16px 24px;
+            padding: 18px 50px 32px;
         }
 
+        /* ===== FILTER CARD ===== */
         .filter-card {
-            background: rgba(30, 64, 175, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 24px;
-            backdrop-filter: blur(10px);
+            background: #fff;
+            border: 1px solid #d1fae5;
+            border-left: 4px solid #166534;
+            border-radius: 8px;
+            padding: 18px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 4px rgba(22,101,52,0.08);
         }
-
         .filter-title {
-            color: white;
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 15px;
+            color: #166534;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
+            gap: 6px;
         }
-
-        .filter-title i {
-            margin-right: 8px;
-            color: #60a5fa;
-        }
-
         .filter-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 12px;
         }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
+        .form-group { display: flex; flex-direction: column; }
         .form-label {
-            color: #e0e7ff;
-            font-size: 12px;
-            font-weight: 600;
-            margin-bottom: 6px;
+            color: #374151;
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 5px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-
         .form-select {
             width: 100%;
-            padding: 10px 12px;
-            background-color: rgba(15, 23, 42, 0.5);
-            border: 1px solid rgba(100, 116, 139, 0.5);
-            border-radius: 8px;
-            color: white;
+            padding: 8px 10px;
+            background-color: #fff;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            color: #1f2937;
             font-size: 13px;
-            transition: all 0.3s ease;
+            transition: border-color 0.2s;
         }
-
         .form-select:focus {
             outline: none;
-            border-color: #60a5fa;
-            background-color: rgba(15, 23, 42, 0.9);
-            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+            border-color: #166534;
+            box-shadow: 0 0 0 2px rgba(22,101,52,0.12);
         }
-
-        .form-select option {
-            background-color: #0f172a;
-            color: white;
-        }
-
         .button-group {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             justify-content: flex-end;
-            margin-top: 15px;
+            margin-top: 12px;
         }
-
         .btn-filter {
-            padding: 10px 24px;
-            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+            padding: 8px 22px;
+            background: #166534;
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: background 0.2s;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             font-size: 13px;
         }
-
-        .btn-filter:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-        }
-
+        .btn-filter:hover { background: #15803d; }
         .btn-reset {
-            padding: 10px 24px;
-            background: rgba(100, 116, 139, 0.3);
-            color: #cbd5e1;
-            border: 1px solid rgba(148, 163, 184, 0.5);
-            border-radius: 8px;
+            padding: 8px 22px;
+            background: #fff;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: background 0.2s;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             font-size: 13px;
         }
+        .btn-reset:hover { background: #f3f4f6; }
 
-        .btn-reset:hover {
-            background: rgba(100, 116, 139, 0.5);
-        }
-
-        /* ===== REPORT TABLE ===== */
+        /* ===== TABLE CARD ===== */
         .table-card {
-            background: rgba(8, 18, 60, 0.55);
-            border: 1px solid rgba(96, 165, 250, 0.2);
-            border-radius: 12px;
+            background: #fff;
+            border: 2px solid #166534;
+            border-radius: 8px;
             overflow: hidden;
-            backdrop-filter: blur(16px);
-            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.45),
-                0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+            box-shadow: 0 2px 8px rgba(22,101,52,0.10);
         }
-
         .table-header {
-            background: linear-gradient(135deg, rgba(15, 35, 120, 0.85) 0%, rgba(30, 64, 200, 0.75) 100%);
-            padding: 16px 24px;
-            border-bottom: 2px solid rgba(96, 165, 250, 0.45);
+            background: #166534;
+            padding: 12px 20px;
+            border-bottom: 2px solid #14532d;
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
-
         .table-title {
-            color: white;
-            font-size: 15px;
+            color: #fff;
+            font-size: 14px;
             font-weight: 700;
             display: flex;
             align-items: center;
-            letter-spacing: 0.03em;
+            gap: 8px;
+            letter-spacing: 0.02em;
         }
-
-        .table-title i {
-            margin-right: 8px;
-            color: #60a5fa;
-        }
-
-        .table-wrapper {
-            overflow-x: auto;
-            width: 100%;
-        }
-
+        .table-wrapper { overflow-x: auto; width: 100%; }
         .report-table {
             width: 100%;
             border-collapse: collapse;
             font-size: 11.5px;
-            color: #e2e8f0;
+            color: #1f2937;
         }
-
         .report-table thead th {
-            background: rgba(71, 85, 105, 0.55);
-            color: #cbd5e1;
+            background: #15803d;
+            color: #fff;
             font-weight: 700;
-            font-size: 11.5px;
+            font-size: 11px;
             text-transform: uppercase;
-            letter-spacing: 0.06em;
-            padding: 11px 14px;
-            border: 1px solid rgba(148, 163, 184, 0.25);
+            letter-spacing: 0.05em;
+            padding: 9px 12px;
+            border: 1px solid #166534;
             text-align: center;
             white-space: nowrap;
         }
-
         .report-table thead th.col-group {
-            background: rgba(100, 116, 139, 0.45);
-            color: #e2e8f0;
-            font-size: 12.5px;
-            letter-spacing: 0.04em;
-            border-bottom: 2px solid rgba(148, 163, 184, 0.35);
+            background: #15803d;
+            color: #dcfce7;
+            font-size: 11.5px;
+            border-bottom: 2px solid #166534;
         }
-
         .report-table thead th.col-label {
             text-align: left;
             white-space: normal;
             min-width: 180px;
         }
-
-        .report-table thead th.col-norek {
-            min-width: 55px;
-            width: 55px;
-        }
-
+        .report-table thead th.col-norek { min-width: 55px; width: 55px; }
         .report-table tbody td {
             padding: 5px 8px;
-            border: 1px solid rgba(100, 116, 139, 0.2);
+            border: 1px solid #e5e7eb;
             vertical-align: middle;
-            color: #e2e8f0;
+            color: #1f2937;
         }
-
         .report-table tbody td.num {
             text-align: right;
             font-family: 'Courier New', Courier, monospace;
             white-space: nowrap;
             width: 100px;
         }
-
-        .report-table tbody td.label-cell {
-            text-align: left;
-            padding-left: 10px;
-            white-space: nowrap;
-        }
-
-        .report-table tbody td.label-cell.indent {
-            padding-left: 22px;
-        }
-
+        .report-table tbody td.label-cell { text-align: left; padding-left: 10px; white-space: nowrap; }
+        .report-table tbody td.label-cell.indent { padding-left: 22px; }
         .report-table tbody tr.row-subtotal td {
-            background: rgba(30, 64, 175, 0.3);
+            background: #f0fdf4;
             font-weight: 700;
-            color: #bfdbfe;
+            color: #14532d;
+            border-top: 1px solid #bbf7d0;
         }
-
         .report-table tbody tr.row-total td {
-            background: rgba(20, 50, 160, 0.6);
-            font-weight: 700;
-            color: #60a5fa;
-            border-top: 2px solid rgba(96, 165, 250, 0.5);
-            border-bottom: 2px solid rgba(96, 165, 250, 0.5);
+            background: #dcfce7;
+            font-weight: 800;
+            color: #14532d;
+            border-top: 2px solid #166534;
+            border-bottom: 2px solid #166534;
         }
-
         .report-table tbody tr.row-section-header td {
-            background: rgba(30, 60, 140, 0.5);
+            background: #166534;
+            color: #fff;
             font-weight: 700;
-            color: #93c5fd;
-            font-size: 12px;
+            font-size: 11.5px;
             text-transform: uppercase;
             letter-spacing: 0.04em;
-            padding-top: 9px;
-            padding-bottom: 9px;
+            padding-top: 8px;
+            padding-bottom: 8px;
         }
-
         .report-table tbody tr.row-info td {
-            background: rgba(8, 20, 60, 0.25);
-            color: #94a3b8;
+            background: #f9fafb;
+            color: #6b7280;
             font-style: italic;
         }
-
-        .report-table tbody tr:hover td {
-            background-color: rgba(59, 130, 246, 0.08);
-        }
-
+        .report-table tbody tr:hover td { background-color: #f0fdf4; }
         .report-table tbody tr.row-subtotal:hover td,
         .report-table tbody tr.row-total:hover td,
-        .report-table tbody tr.row-section-header:hover td {
-            filter: brightness(1.06);
-        }
-
-        .dash {
-            color: #475569;
-        }
-
-        .norek-cell {
-            text-align: center;
-            color: #64748b;
-            font-size: 11px;
-        }
+        .report-table tbody tr.row-section-header:hover td { filter: brightness(0.96); }
+        .dash { color: #9ca3af; }
+        .norek-cell { text-align: center; color: #9ca3af; font-size: 11px; }
     </style>
+@endsection
 
+@section('content')
     <div class="lm13-container main-content">
-        <!-- Background layers -->
-        <div class="bg-blob bg-blob-1"></div>
-        <div class="bg-blob bg-blob-2"></div>
-        <div class="bg-blob bg-blob-3"></div>
-        <div class="bg-grid"></div>
-        <!-- Header -->
-        <div class="gradient-header">
-            <div class="header-content">
-                <div class="header-title">
-                    <i class="fas fa-chart-bar" style="margin-right: 12px;"></i> LM 14 - Biaya Tanaman
-                </div>
-                <p style="color: rgba(255,255,255,0.8); font-size: 14px; margin: 0;">
-                    Manajemen Biaya Tanaman per Komoditi per Regional dan Periode
-                </p>
+        <!-- Page Header — sama seperti gudang_utilisasi -->
+        <header class="lm-page-header">
+            <div class="lm-header-logo">
+                <img src="{{ asset('danantara.png') }}" alt="Danantara">
             </div>
-        </div>
+            <div class="lm-header-center">
+                <svg style="width:28px;height:28px;color:#22c55e;flex-shrink:0;" viewBox="0 0 24 24" fill="currentColor"><path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3A5 5 0 008 22c12 0 15-17 15-17-1 2-8 2-13 3-5 1-6 7-6 7s5.5-2 8.5-2 5 2 5 2-3-5-3-5 3 5 3 5-5 3-5 3 2 3 2 6-2 6-2 6 3-3 3-6-2-6-2-6z"/></svg>
+                <h1>LM 14 &mdash; Biaya Tanaman</h1>
+            </div>
+            <div class="lm-header-right">
+                <img src="{{ asset('ptpn1.png') }}" alt="PTPN 1">
+            </div>
+        </header>
 
         <!-- Main Content -->
         <div class="content-section">
@@ -479,17 +373,17 @@
                             <!-- Row 2: sub-columns -->
                             <tr>
                                 <!-- Bulan Ini -->
-                                <th style="font-size:10px; padding:5px 6px; background:rgba(71,85,105,0.55); color:#cbd5e1;">FISIK</th>
-                                <th style="font-size:10px; padding:5px 6px; background:rgba(71,85,105,0.55); color:#cbd5e1;">BIAYA<br>BAHAN</th>
-                                <th style="font-size:10px; padding:5px 6px; background:rgba(71,85,105,0.55); color:#cbd5e1;">BIAYA<br>PEMELIHARAAN</th>
-                                <th style="font-size:10px; padding:5px 6px; background:rgba(71,85,105,0.55); color:#cbd5e1;">TOTAL BIAYA<br>(Rp.)</th>
-                                <th style="font-size:10px; padding:5px 6px; background:rgba(71,85,105,0.55); color:#cbd5e1;">RP/Ha</th>
+                                <th style="font-size:10px; padding:5px 6px; background:#15803d; color:#fff;">FISIK</th>
+                                <th style="font-size:10px; padding:5px 6px; background:#15803d; color:#fff;">BIAYA<br>BAHAN</th>
+                                <th style="font-size:10px; padding:5px 6px; background:#15803d; color:#fff;">BIAYA<br>PEMELIHARAAN</th>
+                                <th style="font-size:10px; padding:5px 6px; background:#15803d; color:#fff;">TOTAL BIAYA<br>(Rp.)</th>
+                                <th style="font-size:10px; padding:5px 6px; background:#15803d; color:#fff;">RP/Ha</th>
                                 <!-- S.D Bulan Ini -->
-                                <th style="font-size:10px; padding:5px 6px; background:rgba(100,116,139,0.45); color:#e2e8f0;">FISIK</th>
-                                <th style="font-size:10px; padding:5px 6px; background:rgba(100,116,139,0.45); color:#e2e8f0;">BIAYA<br>BAHAN</th>
-                                <th style="font-size:10px; padding:5px 6px; background:rgba(100,116,139,0.45); color:#e2e8f0;">BIAYA<br>PEMELIHARAAN</th>
-                                <th style="font-size:10px; padding:5px 6px; background:rgba(100,116,139,0.45); color:#e2e8f0;">TOTAL BIAYA<br>(Rp.)</th>
-                                <th style="font-size:10px; padding:5px 6px; background:rgba(100,116,139,0.45); color:#e2e8f0;">Rp/Ha</th>
+                                <th style="font-size:10px; padding:5px 6px; background:#15803d; color:#fff;">FISIK</th>
+                                <th style="font-size:10px; padding:5px 6px; background:#15803d; color:#fff;">BIAYA<br>BAHAN</th>
+                                <th style="font-size:10px; padding:5px 6px; background:#15803d; color:#fff;">BIAYA<br>PEMELIHARAAN</th>
+                                <th style="font-size:10px; padding:5px 6px; background:#15803d; color:#fff;">TOTAL BIAYA<br>(Rp.)</th>
+                                <th style="font-size:10px; padding:5px 6px; background:#15803d; color:#fff;">Rp/Ha</th>
                             </tr>
                         </thead>
                         <tbody>
