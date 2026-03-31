@@ -492,11 +492,152 @@ class PageController extends Controller
 
         return $totals;
     }
+    private function calculateTotalPrestasi($data)
+    {
+        if (empty($data)) {
+            return [
+                'basah_latek' => 0,
+                'basah_lump' => 0,
+                'basah_scrab' => 0,
+                'total_basah' => 0,
+                'sheet' => 0,
+                'compo' => 0,
+                'scrap' => 0,
+                'total_kering' => 0,
+            ];
+        }
+
+        $totals = [
+            'basah_latek' => 0,
+            'basah_lump' => 0,
+            'basah_scrab' => 0,
+            'total_basah' => 0,
+            'sheet' => 0,
+            'compo' => 0,
+            'scrap' => 0,
+            'total_kering' => 0,
+        ];
+
+        $count = count($data);
+
+        foreach ($data as $item) {
+            $totals['basah_latek'] += $item->basah_latek ?? 0;
+            $totals['basah_lump'] += $item->basah_lump ?? 0;
+            $totals['basah_scrab'] += $item->basah_scrab ?? 0;
+            $totals['total_basah'] += $item->total_basah ?? 0;
+            $totals['sheet'] += $item->sheet ?? 0;
+            $totals['compo'] += $item->compo ?? 0;
+            $totals['scrap'] += $item->scrap ?? 0;
+            $totals['total_kering'] += $item->total_kering ?? 0;
+        }
+
+        $totals['total_kebun'] = $count;
+
+        return $totals;
+    }
 
     public function dfarmkaretproduksi()
     {
-        $linkiframe = '';
-        return view('pages/dfarm/dfarm_karet_produksi');
+        $regional = $_GET['id_reg'] ?? '';
+        $tglAwal = $_GET['tgl_awal'] ?? date('Y-m-d');
+        $tglAkhir = $_GET['tgl_akhir'] ?? date('Y-m-d');
+        $kebun = $_GET['kode_kebun'] ?? '';
+        $jobdesc = $_GET['jobdesc'] ?? 'PENYADAP';
+        $komoditas = 2;
+        
+        if($tglAwal > $tglAkhir){
+            return Redirect::back()->withErrors(['msg' => 'Tanggal awal tidak boleh lebih besar dari tanggal akhir']);
+        }
+        // Gunakan INNER JOIN (lebih cepat) dan tambahkan filter regional
+        $data = DB::connection('pgsql_secondary')
+            ->table('person_data')
+            ->select('person_data.kebun_id', 'person_data.regional_id', 'm_kebun.nama as nama_kebun')
+            ->leftJoin('m_kebun', 'person_data.kebun_id', '=', 'm_kebun.id')
+            ->whereNotNull('person_data.regional_id')
+            ->orderBy('person_data.regional_id');
+        
+        if ($komoditas == 2) {
+            $data->where(function ($query) {
+                $query->where('positionsdesc', 'like', '%Penyadap%')
+                    ->orWhere('positionsdesc', 'like', '%PENYADAP%')
+                    ->orWhere('positionsdesc', 'like', '%penyadap%');
+            });
+        }
+        
+        if ($regional) {
+            $data->where('person_data.regional_id', $regional);
+        }
+        // Gunakan pagination untuk data besar
+        $allDatakebun = $data->groupBy('person_data.kebun_id', 'person_data.regional_id', 'm_kebun.nama')
+            ->get();
+        $selectedRegional = $regional;
+        $selectedKomoditas = $komoditas;
+        $selectedKebun = $kebun;
+        if($regional!='' and $kebun==''){
+            $prestasiData = DB::connection('pgsql_secondary')->select(
+                'SELECT * FROM fn_rekap_prestasi_kebun_fast(?, ?, ?, ?) AS (
+                    id integer, 
+                    nama varchar, 
+                    basah_latek numeric, 
+                    basah_lump numeric, 
+                    basah_scrab numeric, 
+                    total_basah numeric,
+                    sheet numeric, 
+                    compo numeric, 
+                    scrap numeric, 
+                    total_kering numeric
+                )',
+                [2, $regional, $tglAwal, $tglAkhir]
+            );
+            $totalData = $this->calculateTotalPrestasi($prestasiData);
+            // dd($totalData);
+        }
+        if($regional==''){
+         
+            $prestasiData = DB::connection('pgsql_secondary')->select(
+                'SELECT * FROM fn_rekap_prestasi_regional(?, ?, ?) AS (
+                    id integer, 
+                    nama varchar, 
+                    basah_latek numeric, 
+                    basah_lump numeric, 
+                    basah_scrab numeric, 
+                    total_basah numeric,
+                    sheet numeric, 
+                    compo numeric, 
+                    scrap numeric, 
+                    total_kering numeric
+                )',
+                [2, $tglAwal, $tglAkhir]
+            );
+            $totalData = $this->calculateTotalPrestasi($prestasiData);
+        }
+        if($regional!='' and $kebun!=''){
+         
+            $prestasiData = DB::connection('pgsql_secondary')->select(
+                'SELECT * FROM fn_rekap_prestasi_afdeling(?, ?, ?, ?) AS (
+                    id integer, 
+                    nama varchar, 
+                    basah_latek numeric, 
+                    basah_lump numeric, 
+                    basah_scrab numeric, 
+                    total_basah numeric,
+                    sheet numeric, 
+                    compo numeric, 
+                    scrap numeric, 
+                    total_kering numeric
+                )',
+                [2, $kebun, $tglAwal, $tglAkhir]
+            );
+            $totalData = $this->calculateTotalPrestasi($prestasiData);
+        }
+            
+        // Hitung total untuk masing-masing kolom
+        if(empty($totalData) ){
+           return Redirect::back()->withErrors(['msg' => 'Data tidak ditemukan untuk filter yang dipilih']);
+        }
+        
+        
+        return view('pages/dfarm/dfarm_karet_produksi', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'prestasiData', 'totalData', 'tglAwal', 'tglAkhir', 'jobdesc'));
     }
     public function dfarmtehold()
     {
