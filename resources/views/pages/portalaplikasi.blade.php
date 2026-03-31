@@ -19,11 +19,12 @@
     <link href="{{url('')}}/assets/css/miri-ui-kit-free.css" rel="stylesheet">
     <link href="{{url('')}}/assets/css/customptpn.css" rel="stylesheet">
     <link href="{{url('')}}/assets/css/customsearchbar.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <!-- Stylesheet for demo page specific css -->
-    <link href="{{url('')}}/assets/css/demo.css" rel="stylesheet">
+    {{-- <link href="{{url('')}}/assets/css/demo.css" rel="stylesheet"> --}}
+    <link href="{{url('')}}/css/styles.css" rel="stylesheet">
     <script src="{{url('')}}/assets/js/65eeb291f3.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Droid+Sans:wght@400;700&display=swap">
-</head>
 <style>
             body {
                 background-color: #081028; 
@@ -60,33 +61,64 @@
             left: 0;
             width: 0;
             height: 100%;
-            background-color: #202124;
+            background-color: #transparent;
             overflow-x: hidden;
             transition: width 0.3s;
             z-index: 998;
+            visibility: hidden;
         }
 
         .sidebar.open {
             width: 200px;
+            visibility: visible;
+            padding: 1rem;
+            background-color: #202124;
         }
-
-        .sidebar .menu {
+        .sidebar .menu-icon {
+            flex-shrink: 0;
+            width: 1.15em;
+            margin-right: 10px;
+            text-align: center;
+            color: #e8e8e8;
+        }
+        .sidebar-header {
             display: none;
-            padding-top: 30%;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(0, 0, 0, 0.15);
+        }
+        .sidebar .menu {
+            display: block;
+            padding-top: 12px;
         }
 
-        .sidebar.open .menu {
-            display: block;
+        .sidebar.open .sidebar-header {
+            display: flex;
+        }
+        .sidebar-title {
+            font-size: 1.35rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: #e8eaed;
+        }
+        .sidebar-logo {
+            height: 32px;
+            width: auto;
+            object-fit: contain;
         }
 
         .sidebar a {
-            display: block;
-            padding: 10px;
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
             text-decoration: none;
             color: #e8e8e8;
             text-align: left;
             transition: background-color 0.3s;
             font-size: 1em;
+            min-height: 40px;
         }
 
         .sidebar a:hover {
@@ -136,6 +168,7 @@
         }
 </style>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
 <body>
     <div class="icon" id="menuIcon">
         <img src="{{url('')}}/asset/images/menu.png" alt="Menu Icon">
@@ -154,58 +187,29 @@
                 <div class="col-md-3" style="margin: 15px 0 !important;">
                     <div class="team-card card border-0 raise-on-hover">
                         <div align="center">
-                                                <a href='https://digital-farming-karet.holding-perkebunan.com/'>
+                                                <a href='https://dfarm.ptpn1.co.id/'>
                             <img src="{{url('')}}/asset/images/dfarm.png" alt="Gambar" class="card-img-top" style="border-radius: 55px; max-height:150px;">
                         </a>
                                                 </div>
                         <div class="card-body px-0">
-                            <h5 class="card-title mb-0" align="center">DFARM KARET</h5>
+                            <h5 class="card-title mb-0" align="center">DFARM PTPN I</h5>
                             <!-- <p class=" font-weight-medium designation">Team IT PTPN</p> -->
-                            <div align="center">Digital Farming Karet</div>
+                            <div align="center">Digital Farming PTPN I</div>
                             <br>
                             <!-- <p class="social-links"> -->
                             <div align="center">
-                            <a href='https://play.google.com/store/apps/details?id=com.ptpn.dfarmkarets&hl=id'>
+                                <a href='https://play.google.com/store/apps/details?id=com.gsi.ptpn.on_farm_off_farm_mobile&hl=id'>
                                 <span class='buttonview'>
                                 <i class='fas fa-download'></i>
                                     Download
-                                </span></a> &nbsp;                            <a href="https://digital-farming-karet.holding-perkebunan.com/">
+                                </span></a> 
+                                &nbsp;                            
+                                <a href="https://dfarm.ptpn1.co.id/">
                                 <span class="buttonview">
                                 <i class="fas fa-sign-in-alt"></i>
                                     Masuk
                                 </span>
-                            </a>
-                           
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3" style="margin: 15px 0 !important;">
-                    <div class="team-card card border-0 raise-on-hover">
-                        <div align="center">
-                                                <a href='https://digital-farming-karet.holding-perkebunan.com/'>
-                            <img src="{{url('')}}/asset/images/dfarm.png" alt="Gambar" class="card-img-top" style="border-radius: 55px; max-height:150px;">
-                        </a>
-                                                </div>
-                        <div class="card-body px-0">
-                            <h5 class="card-title mb-0" align="center">DFARM TEH</h5>
-                            <!-- <p class=" font-weight-medium designation">Team IT PTPN</p> -->
-                            <div align="center">Digital Farming Teh</div>
-                            <br>
-                            <!-- <p class="social-links"> -->
-                            <div align="center">
-                            <a href='https://play.google.com/store/apps/details?id=com.ptpn.dfarmkarets&hl=id'>
-                                <span class='buttonview'>
-                                <i class='fas fa-download'></i>
-                                    Download
-                                </span>
-                            </a> &nbsp;                            
-                            <a href="http://ptpn1regional2.co.id/dfarmamco/">
-                                <span class="buttonview">
-                                <i class="fas fa-sign-in-alt"></i>
-                                    Masuk
-                                </span>
-                            </a>
+                                </a>
                            
                             </div>
                         </div>
@@ -329,12 +333,18 @@
                             <br>
                             <!-- <p class="social-links"> -->
                             <div align="center">
-                                                        <a href="https://eoffice.ptpn1.co.id/">
+                                <a href='https://play.google.com/store/apps/details?id=com.ptpn1.nadine&hl=id'>
+                                <span class='buttonview'>
+                                <i class='fas fa-download'></i>
+                                    Download
+                                </span></a> 
+                                &nbsp;                            
+                                <a href="https://nadine.ptpn1.co.id/">
                                 <span class="buttonview">
                                 <i class="fas fa-sign-in-alt"></i>
                                     Masuk
                                 </span>
-                            </a>
+                                </a>
                            
                             </div>
                         </div>
