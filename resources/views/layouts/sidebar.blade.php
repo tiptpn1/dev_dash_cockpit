@@ -134,6 +134,12 @@ if (isset($user)) {
                         class="menu-item" id="gis"><i class="fa-solid fa-cloud-sun menu-icon"></i>CUACA</a>
                 </div>
                 @endif
+                @if($user && $user->skyview)
+                <a href="{{url('')}}/skyview" class="menu-item" id='skyview'><i
+                        class="fa-solid fa-map-location-dot menu-icon"></i>AGRO Skyview</a>
+                
+                @endif
+                
             </div>
             @if($user && $user->lm)
             <a href="#lm" id="lm" class="parent"><i class="fa-solid fa-book menu-icon"></i>LM <span
