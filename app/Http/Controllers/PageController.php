@@ -159,7 +159,11 @@ class PageController extends Controller
         $tglAwal = $_GET['tgl_awal'] ?? date('Y-m-d');
         $tglAkhir = $_GET['tgl_akhir'] ?? date('Y-m-d');
         $kebun = $_GET['kode_kebun'] ?? '';
+        $jobdesc = $_GET['jobdesc'] ?? 'PENYADAP';
         $komoditas = 2;
+        if($tglAwal > $tglAkhir){
+            return Redirect::back()->withErrors(['msg' => 'Tanggal awal tidak boleh lebih besar dari tanggal akhir']);
+        }
 
         // Gunakan INNER JOIN (lebih cepat) dan tambahkan filter regional
         $data = DB::connection('pgsql_secondary')
@@ -200,7 +204,6 @@ class PageController extends Controller
         $selectedKomoditas = $komoditas;
         $selectedKebun = $kebun;
         if($regional!='' and $kebun==''){
-         
             $presensiData = DB::connection('pgsql_secondary')->select(
                 'SELECT * FROM fn_rekap_presensi_kebun(?, ?, ?, ?) AS (
                     kebun_id integer, 
@@ -216,12 +219,12 @@ class PageController extends Controller
                     prosentase_kehadiran double precision, 
                     total_pegawai bigint
                 )',
-                ['PENYADAP', $regional, $tglAwal, $tglAkhir]
+                [$jobdesc, $regional, $tglAwal, $tglAkhir]
             );
             $presensiDataRegional = DB::connection('pgsql_secondary')->select(
                 'SELECT * FROM public.fn_rekap_presensi_regional_sql(?, ?, ?) 
                 WHERE regional_id = ?',
-                ['PENYADAP', $tglAwal, $tglAkhir, $regional]
+                [$jobdesc, $tglAwal, $tglAkhir, $regional]
             );
             // Jika hanya 1 row, langsung assign tanpa aggregate
             $totalData = !empty($presensiDataRegional) ? (array) $presensiDataRegional[0] : [];
@@ -231,7 +234,7 @@ class PageController extends Controller
          
             $presensiData = DB::connection('pgsql_secondary')->select(
                 'SELECT * FROM public.fn_rekap_presensi_regional_sql(?, ?, ?)',
-                ['PENYADAP', $tglAwal, $tglAkhir]
+                [$jobdesc, $tglAwal, $tglAkhir]
                 
             );
             $totalData = $this->calculateTotalPresensi($presensiData);
@@ -253,7 +256,7 @@ class PageController extends Controller
                     prosentase_kehadiran double precision, 
                     total_pegawai bigint
                 )',
-                ['PENYADAP', $kebun, $tglAwal, $tglAkhir]
+                [$jobdesc, $kebun, $tglAwal, $tglAkhir]
             );
             $presensiDataKebun = DB::connection('pgsql_secondary')->select(
                 'SELECT * FROM fn_rekap_presensi_kebun(?, ?, ?, ?) AS (
@@ -270,16 +273,19 @@ class PageController extends Controller
                     prosentase_kehadiran double precision, 
                     total_pegawai bigint
                 ) WHERE kebun_id = ?',
-                ['PENYADAP', $regional, $tglAwal, $tglAkhir, $kebun]
+                [$jobdesc, $regional, $tglAwal, $tglAkhir, $kebun]
             );
             // Jika hanya 1 row setelah filter, langsung assign tanpa aggregate
             $totalData = !empty($presensiDataKebun) ? (array) $presensiDataKebun[0] : [];
         }
             
         // Hitung total untuk masing-masing kolom
+        if(empty($totalData) ){
+           return Redirect::back()->withErrors(['msg' => 'Data tidak ditemukan untuk filter yang dipilih']);
+        }
         
         
-        return view('pages/dfarm/dfarm_karet_presensi', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'presensiData', 'totalData'));
+        return view('pages/dfarm/dfarm_karet_presensi', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'presensiData', 'totalData', 'tglAwal', 'tglAkhir', 'jobdesc'));
     }
 
 

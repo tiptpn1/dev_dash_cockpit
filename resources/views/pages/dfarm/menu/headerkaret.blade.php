@@ -14,12 +14,12 @@
       <div class="dropdown-menu" id="prensensi-dropdown">
         <a class="dropdown-menu-item" href="{{ route('dfarmkaretpresensi') }}">
           <i class="fa-solid fa-clipboard-check" style="width: 14px;"></i>
-          Data Presensi
+          Dashboard
         </a>
-        {{-- <a class="dropdown-menu-item" href="#">
+        <a class="dropdown-menu-item" href="{{ route('dfarmkaretpresensitabular') }}">
           <i class="fa-solid fa-chart-bar" style="width: 14px;"></i>
-          Laporan
-        </a> --}}
+          Tabular Data
+        </a>
       </div>
     </div>
 
@@ -38,10 +38,18 @@
           <i class="fa-solid fa-leaf" style="width: 14px;"></i>
           Produksi Karet
         </a>
-        {{-- <a class="dropdown-menu-item" href="#">
+        <a class="dropdown-menu-item" href="{{ route('dfarmkaretproduksi') }}">
+          <i class="fa-solid fa-leaf" style="width: 14px;"></i>
+          Produksi Teh
+        </a>
+        <a class="dropdown-menu-item" href="{{ route('dfarmkaretproduksi') }}">
+          <i class="fa-solid fa-leaf" style="width: 14px;"></i>
+          Produksi Kopi
+        </a>
+        <a class="dropdown-menu-item" href="#">
           <i class="fa-solid fa-chart-line" style="width: 14px;"></i>
-          Analisis
-        </a> --}}
+          Prestasi Pemeliharaan
+        </a>
       </div>
     </div>
   </div>

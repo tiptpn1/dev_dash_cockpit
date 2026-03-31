@@ -20,8 +20,62 @@
   <div class="flex-1 overflow-y-auto">
     <div class="max-w-7xl mx-auto px-4 py-6">
       
+      <!-- Error Notification Popup -->
+      <div id="errorPopup" class="hidden fixed top-20 right-4 bg-red-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 z-50 animate-slide-in">
+        <div class="flex-1">
+          <p id="errorMessage" class="text-sm font-medium"></p>
+        </div>
+        <button id="closeErrorBtn" class="text-white hover:text-gray-200 transition-colors">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <style>
+        @keyframes slide-in {
+          from {
+            transform: translateX(400px);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        
+        @keyframes slide-out {
+          from {
+            transform: translateX(0);
+            opacity: 1;
+          }
+          to {
+            transform: translateX(400px);
+            opacity: 0;
+          }
+        }
+        
+        .animate-slide-in {
+          animation: slide-in 0.3s ease-out;
+        }
+        
+        .animate-slide-out {
+          animation: slide-out 0.3s ease-out;
+        }
+      </style>
+      
       <!-- Filters Section -->
-      <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
+        <!-- Job Desc Filter -->
+        <div>
+          <label class="block text-white text-xs md:text-sm font-medium mb-1">Job Desc</label>
+          <select id="selectJobDesc" class="w-full px-3 py-2 text-sm rounded-lg bg-slate-700 bg-opacity-50 text-black border border-slate-600 focus:outline-none focus:border-blue-400 font-medium">
+            {{-- <option value="">Pilih</option> --}}
+            <option value="PENYADAP" <?php if ($jobdesc == 'PENYADAP') echo 'selected'; ?>>PENYADAP</option>
+            <option value="PEMETIK" <?php if ($jobdesc == 'PEMETIK') echo 'selected'; ?>>PEMETIK</option>
+            <option value="PANEN KOPI" <?php if ($jobdesc == 'PANEN KOPI') echo 'selected'; ?>>PANEN KOPI</option>
+            <option value="PEMELIHARAAN" <?php if ($jobdesc == 'PEMELIHARAAN') echo 'selected'; ?>>PEMELIHARAAN</option>
+          </select>
+        </div>
+
         <!-- Date Range Filter -->
         <div>
           <label class="block text-white text-xs md:text-sm font-medium mb-1">Periode</label>
@@ -95,19 +149,19 @@
         <!-- Presensi Hadir -->
         <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
           <h3 class="text-gray-300 text-xs font-medium mb-1">Presensi Hadir</h3>
-          <p class="text-2xl md:text-3xl font-bold text-white">{{$totalData['kehadiran']}} Org</p>
+          <p class="text-2xl md:text-3xl font-bold text-white">{{ number_format($totalData['kehadiran'], 0, ',', '.') }} Org</p>
         </div>
 
         <!-- Jumlah Input Presensi -->
         <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
           <h3 class="text-gray-300 text-xs font-medium mb-1">Jumlah Input Presensi</h3>
-          <p class="text-2xl md:text-3xl font-bold text-white">{{$totalData['total_pegawai']-$totalData['belum_hadir']}} Org</p>
+          <p class="text-2xl md:text-3xl font-bold text-white">{{ number_format($totalData['total_pegawai']-$totalData['belum_hadir'], 0, ',', '.') }} Org</p>
         </div>
 
-        <!-- Jumlah Pemanen -->
+        <!-- Jumlah Karyawan -->
         <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
-          <h3 class="text-gray-300 text-xs font-medium mb-1">Jumlah Pemanen</h3>
-          <p class="text-2xl md:text-3xl font-bold text-white">{{$totalData['total_pegawai']}} Org</p>
+          <h3 class="text-gray-300 text-xs font-medium mb-1">Jumlah Karyawan</h3>
+          <p class="text-2xl md:text-3xl font-bold text-white">{{ number_format($totalData['total_pegawai'], 0, ',', '.') }} Org</p>
         </div>
 
         <!-- Persentase Kehadiran -->
@@ -220,6 +274,42 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
+  // ============================================
+  // ERROR NOTIFICATION HANDLER
+  // ============================================
+  function showErrorPopup(message) {
+    const errorPopup = document.getElementById('errorPopup');
+    const errorMessage = document.getElementById('errorMessage');
+    
+    errorMessage.textContent = message;
+    errorPopup.classList.remove('hidden', 'animate-slide-out');
+    errorPopup.classList.add('animate-slide-in');
+    
+    // Auto-hide setelah 3 detik
+    setTimeout(() => {
+      errorPopup.classList.remove('animate-slide-in');
+      errorPopup.classList.add('animate-slide-out');
+      setTimeout(() => {
+        errorPopup.classList.add('hidden');
+      }, 300);
+    }, 3000);
+  }
+
+  // Close button handler
+  document.getElementById('closeErrorBtn').addEventListener('click', () => {
+    const errorPopup = document.getElementById('errorPopup');
+    errorPopup.classList.remove('animate-slide-in');
+    errorPopup.classList.add('animate-slide-out');
+    setTimeout(() => {
+      errorPopup.classList.add('hidden');
+    }, 300);
+  });
+
+  // Check untuk error dari session
+  @if($errors->has('msg'))
+    showErrorPopup('{{ $errors->first('msg') }}');
+  @endif
+
   // Chart Colors
   const chartColors = {
     blue: '#0EA5E9',
@@ -756,9 +846,9 @@
   const datePickerApply = document.getElementById('datePickerApply');
   const datePickerCancel = document.getElementById('datePickerCancel');
 
-  // Set default dates (today dan 7 hari lalu)
-  const today = new Date();
-  const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+  // Get default dates dari controller
+  const tglAwalDefault = '{{ $tglAwal ?? '' }}';
+  const tglAkhirDefault = '{{ $tglAkhir ?? '' }}';
   
   // Get URL parameters
   const urlParams = new URLSearchParams(window.location.search);
@@ -766,12 +856,14 @@
   const tglAkhirParam = urlParams.get('tgl_akhir');
   const idRegParam = urlParams.get('id_reg');
   const kodeKebunParam = urlParams.get('kode_kebun');
+  const jobDescParam = urlParams.get('jobdesc');
 
-  // Set date values dari parameter atau default
-  datePickerStart.value = tglAwalParam || sevenDaysAgo.toISOString().split('T')[0];
-  datePickerEnd.value = tglAkhirParam || today.toISOString().split('T')[0];
+  // Set date values dari parameter atau default dari controller
+  datePickerStart.value = tglAwalParam || tglAwalDefault;
+  datePickerEnd.value = tglAkhirParam || tglAkhirDefault;
   
   // Set select values dari parameter
+  if (jobDescParam) document.getElementById('selectJobDesc').value = jobDescParam;
   if (idRegParam) document.getElementById('selectRegional').value = idRegParam;
   if (kodeKebunParam) document.getElementById('selectKebun').value = kodeKebunParam;
   
@@ -880,6 +972,7 @@
   document.getElementById('btnFilter').addEventListener('click', () => {
     const tglAwal = datePickerStart.value;
     const tglAkhir = datePickerEnd.value;
+    const jobDesc = document.getElementById('selectJobDesc').value;
     const idReg = document.getElementById('selectRegional').value;
     const kodeKebun = document.getElementById('selectKebun').value;
 
@@ -895,6 +988,7 @@
     
     if (tglAwal) params.push('tgl_awal=' + tglAwal);
     if (tglAkhir) params.push('tgl_akhir=' + tglAkhir);
+    if (jobDesc) params.push('jobdesc=' + jobDesc);
     if (idReg) params.push('id_reg=' + idReg);
     if (kodeKebun) params.push('kode_kebun=' + kodeKebun);
 
@@ -907,6 +1001,7 @@
   // Reset Button Handler
   document.getElementById('btnReset').addEventListener('click', () => {
     // Clear semua filter
+    document.getElementById('selectJobDesc').value = '';
     document.getElementById('selectRegional').value = '';
     document.getElementById('selectKebun').value = '';
     

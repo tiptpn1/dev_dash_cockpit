@@ -39,8 +39,8 @@ if (isset($user)) {
                     <a href="{{url('')}}/amanah"><i class="fa-solid fa-building menu-icon"></i>AMANAH</a>
                     <a href="{{url('')}}/picaonfarm"><i class="fa-solid fa-clipboard-list menu-icon"></i>PICA On Farm</a>
                     <a href="{{url('')}}/picaofffarm"><i class="fa-solid fa-clipboard-list menu-icon"></i>PICA Off Farm</a>
-                    <a href="{{url('')}}/dfarmkaret"><i class="fa-solid fa-seedling menu-icon"></i>DFarm Karet</a>
-                    <a href="{{url('')}}/dfarmteh"><i class="fa-solid fa-seedling menu-icon"></i>DFarm Teh</a>
+                    <a href="{{url('')}}/dfarmkaret"><i class="fa-solid fa-seedling menu-icon"></i>DFarm PTPN I</a>
+                    {{-- <a href="{{url('')}}/dfarmteh"><i class="fa-solid fa-seedling menu-icon"></i>DFarm Teh</a> --}}
                     <!-- <a href="{{url('')}}/gudangutilisasi">Dashboard Utilisasi Gudang</a> -->
                 </div>
                 <a href="{{url('')}}/gudangutilisasi" class="menu-item"><i
