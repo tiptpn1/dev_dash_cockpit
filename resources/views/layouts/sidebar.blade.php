@@ -17,8 +17,11 @@ if (isset($user)) {
         <!-- <a href="#home">Home</a> -->
 
         <a href="{{url('')}}" class="menu-item" id="overview"><i class="fa-solid fa-house menu-icon"></i>Overview</a>
+        @if($user && $user->mrc)
         <a href="{{url('')}}/mrc" class="menu-item" id="mrc"><i class="fa-solid fa-calendar-days menu-icon"></i>MRC</a>
+        @endif
         @if($username != 'mrc')
+                @if($user && $user->operasional)
                 <a href="#operasional" id="operasional" class="parent"><i class="fa-solid fa-gears menu-icon"></i>Operasional
                     <span class="toggle-icon">&#9654;</span></a>
                 <div class="submenu" id="operasionalSubmenu">
@@ -43,8 +46,12 @@ if (isset($user)) {
                     {{-- <a href="{{url('')}}/dfarmteh"><i class="fa-solid fa-seedling menu-icon"></i>DFarm Teh</a> --}}
                     <!-- <a href="{{url('')}}/gudangutilisasi">Dashboard Utilisasi Gudang</a> -->
                 </div>
-                <a href="{{url('')}}/gudangutilisasi" class="menu-item"><i
+                @endif
+                @if($user && $user->warehouse)
+                <a href="{{url('')}}/gudangutilisasi" class="menu-item" id='warehouse'><i
                         class="fa-solid fa-warehouse menu-icon"></i>Warehouse</a>
+                @endif
+                @if($user && $user->sales)
                 <a href="#sales" id="sales" class="parent"><i class="fa-solid fa-chart-line menu-icon"></i>Sales<span
                         class="toggle-icon">&#9654;</span></a>
                 <div class="submenu" id="salesSubmenu">
@@ -52,6 +59,8 @@ if (isset($user)) {
                         Sales</a>
                     <a href="{{url('')}}/soptea"><i class="fa-solid fa-mug-hot menu-icon"></i>S&OP Tea</a>
                 </div>
+                @endif
+                @if($user && $user->aset)
                 <a href="#aset" id="aset" class="parent"><i class="fa-solid fa-building menu-icon"></i>Asset <span
                         class="toggle-icon">&#9654;</span></a>
                 <div class="submenu" id="asetSubmenu">
@@ -60,6 +69,8 @@ if (isset($user)) {
                     <a href="{{url('')}}/asset_optimalisasi"><i class="fa-solid fa-chart-pie menu-icon"></i>Optimalisasi</a>
                     <a href="{{url('')}}/asset_divestasi"><i class="fa-solid fa-hand-holding-dollar menu-icon"></i>Divestasi</a>
                 </div>
+                @endif
+                @if($user && $user->finansial)
                 <a href="#finansial" id="finansial" class="parent"><i class="fa-solid fa-coins menu-icon"></i>Finansial <span
                         class="toggle-icon">&#9654;</span></a>
                 <div class="submenu" id="finansialSubmenu">
@@ -67,6 +78,8 @@ if (isset($user)) {
                     <a href="{{url('')}}/fin_parent"><i class="fa-solid fa-building menu-icon"></i>Parent Only</a>
                     <a href="{{url('')}}/fin_sub"><i class="fa-solid fa-sitemap menu-icon"></i>Subsidiary</a>
                 </div>
+                @endif
+                @if($user && $user->hr)
                 <a href="#hrsdm" id="hrsdm" class="parent"><i class="fa-solid fa-users menu-icon"></i>Human Resource<span
                         class="toggle-icon">&#9654;</span></a>
                 <div class="submenu" id="hrSubmenu">
@@ -76,18 +89,24 @@ if (isset($user)) {
                     <a href="{{url('')}}/hr_revenue"><i class="fa-solid fa-money-bill-trend-up menu-icon"></i>HR Revenue &
                         Cost</a>
                 </div>
+                @endif
+                @if($user && $user->legal)
                 <a href="#agraria" id="aset" class="parent"><i class="fa-solid fa-scale-balanced menu-icon"></i>Legal & Agraria
                     <span class="toggle-icon">&#9654;</span></a>
                 <div class="submenu" id="asetSubmenu">
                     <a href="{{url('')}}/agraria_tax"><i class="fa-solid fa-percent menu-icon"></i>Tax Relaxation BPHTP 0%</a>
                     <a href="{{url('')}}/agraria"><i class="fa-solid fa-file-contract menu-icon"></i>Agraria</a>
                 </div>
+                @endif
+                @if($user && $user->progress)
                 <!-- <a href="{{url('')}}/pengadaan" class="menu-item" id="pengadaan">Pengadaan</a> -->
                 <a href="#capaian" id="capaian" class="parent"><i class="fa-solid fa-chart-line menu-icon"></i>Capaian Progres
                     <span class="toggle-icon">&#9654;</span></a>
                 <div class="submenu" id="asetSubmenu">
                     <a href="{{url('')}}/sla"><i class="fa-solid fa-clock menu-icon"></i>SLA</a>
                 </div>
+                @endif
+                @if($user && $user->pengadaan)
                 <a href="#pengadaan" id="pengadaan" class="parent"><i
                         class="fa-solid fa-cart-shopping menu-icon"></i>Pengadaan<span class="toggle-icon">&#9654;</span></a>
                 <div class="submenu" id="asetSubmenu">
@@ -97,9 +116,13 @@ if (isset($user)) {
                         Pengadaan</a>
                     <a href="{{url('')}}/stokpengadaan"><i class="fa-solid fa-boxes-stacked menu-icon"></i>Stok Pengadaan</a>
                 </div>
+                @endif
+                @if($user && $user->carbon)
                 <div class="submenu" id="asetSubmenu">
                     <a href="{{url('')}}/dashemisi"><i class="fa-solid fa-smog menu-icon"></i>Dashboard Emisi</a>
                 </div>
+                @endif
+                @if($user && $user->gis)
                 <a href="#gis" id="gis" class="parent"><i class="fa-solid fa-map-location-dot menu-icon"></i>GIS <span
                         class="toggle-icon">&#9654;</span></a>
                 <div class="submenu" id="gisSubmenu">
@@ -110,21 +133,28 @@ if (isset($user)) {
                     <a href="http://aset-dives-dev.ptpn1.co.id/weather?token=234kjjlksflk8y98ksafdklj23" target='_blank'
                         class="menu-item" id="gis"><i class="fa-solid fa-cloud-sun menu-icon"></i>CUACA</a>
                 </div>
+                @endif
             </div>
+            @if($user && $user->lm)
             <a href="#lm" id="lm" class="parent"><i class="fa-solid fa-book menu-icon"></i>LM <span
                     class="toggle-icon">&#9654;</span></a>
             <div class="submenu" id="lmSubmenu">
                 <a href="{{url('')}}/under_construction"><i class="fa-solid fa-book-open menu-icon"></i>LM13</a>
                 <a href="{{url('')}}/under_construction"><i class="fa-solid fa-book-open menu-icon"></i>LM14</a>
             </div>
+            @endif
 
         @endif
 
 
     @if($username != 'mrc')
+        @if($user && $user->aigr1)
         <a href="{{url('')}}/aigri" class="menu-item" id="aigr1"><i class="fa-solid fa-robot menu-icon"></i>AIGR1</a>
+        @endif
+        @if($user && $user->garda)
         <a href="{{url('')}}/gardai" class="menu-item" id="gardai"><i
                 class="fa-solid fa-fire-flame-curved menu-icon"></i>Garda AI</a>
+        @endif
         <a href="{{url('')}}/portalaplikasi" class="menu-item" id="portalaplikasi"><i
                 class="fa-solid fa-th-large menu-icon"></i>Portal Aplikasi</a>
 

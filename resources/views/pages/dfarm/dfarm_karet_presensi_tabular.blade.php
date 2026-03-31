@@ -250,7 +250,7 @@
       @if($selectedRegional !="" && $selectedKebun =="")  
       <!-- Detail Charts Section - By Kebun -->
       <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm mb-6">
-        <h2 class="text-white text-xs md:text-sm font-bold mb-4 text-center">Data Presensi Berdasarkan Regional</h2>
+        <h2 class="text-white text-xs md:text-sm font-bold mb-4 text-center">Data Presensi Berdasarkan Kebun</h2>
         <div class="overflow-x-auto">
           <table class="w-full text-xs md:text-sm">
             <thead>
@@ -315,7 +315,7 @@
       <!-- Detail Charts Section - By Kebun -->
       <!-- Detail Charts Section - By Kebun -->
       <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm mb-6">
-        <h2 class="text-white text-xs md:text-sm font-bold mb-4 text-center">Data Presensi Berdasarkan Regional</h2>
+        <h2 class="text-white text-xs md:text-sm font-bold mb-4 text-center">Data Presensi Berdasarkan Afdeling</h2>
         <div class="overflow-x-auto">
           <table class="w-full text-xs md:text-sm">
             <thead>
