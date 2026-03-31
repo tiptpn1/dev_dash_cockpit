@@ -161,10 +161,15 @@ class PageController extends Controller
         $kebun = $_GET['kode_kebun'] ?? '';
         $jobdesc = $_GET['jobdesc'] ?? 'PENYADAP';
         $komoditas = 2;
+        if($jobdesc == 'PEMETIK'){
+            $komoditas = 1;
+        }
+        if($jobdesc == 'PANEN KOPI'){
+            $komoditas = 3;
+        }
         if($tglAwal > $tglAkhir){
             return Redirect::back()->withErrors(['msg' => 'Tanggal awal tidak boleh lebih besar dari tanggal akhir']);
         }
-
         // Gunakan INNER JOIN (lebih cepat) dan tambahkan filter regional
         $data = DB::connection('pgsql_secondary')
             ->table('person_data')
@@ -172,6 +177,13 @@ class PageController extends Controller
             ->leftJoin('m_kebun', 'person_data.kebun_id', '=', 'm_kebun.id')
             ->whereNotNull('person_data.regional_id')
             ->orderBy('person_data.regional_id');
+        if ($komoditas == 1) {
+            $data->where(function ($query) {
+                $query->where('positionsdesc', 'like', '%Pemetik%')
+                    ->orWhere('positionsdesc', 'like', '%PEMETIK%')
+                    ->orWhere('positionsdesc', 'like', '%pemetik%');
+            });
+        }
         if ($komoditas == 2) {
             $data->where(function ($query) {
                 $query->where('positionsdesc', 'like', '%Penyadap%')
@@ -179,21 +191,13 @@ class PageController extends Controller
                     ->orWhere('positionsdesc', 'like', '%penyadap%');
             });
         }
-        // if ($komoditas==1) {
-        //     $data->where(function($query) {
-        //         $query->where('positionsdesc', 'like', '%Pemetik%')
-        //               ->orWhere('positionsdesc', 'like', '%PEMETIK%')
-        //               ->orWhere('positionsdesc', 'like', '%pemetik%');
-        //     });
-        // }
-        // if ($komoditas==3) {
-        //     $data->where(function($query) {
-        //         $query->where('positionsdesc', 'like', '%Panen Kopi%')
-        //               ->orWhere('positionsdesc', 'like', '%PANEN KOPI%')
-        //               ->orWhere('positionsdesc', 'like', '%panen kopi%');
-        //     });
-        // }
-
+        if ($komoditas == 3) {
+            $data->where(function ($query) {
+                $query->where('positionsdesc', 'like', '%Panen Kopi%')
+                    ->orWhere('positionsdesc', 'like', '%PANEN KOPI%')
+                    ->orWhere('positionsdesc', 'like', '%panen kopi%');
+            });
+        }
         if ($regional) {
             $data->where('person_data.regional_id', $regional);
         }
@@ -287,7 +291,145 @@ class PageController extends Controller
         
         return view('pages/dfarm/dfarm_karet_presensi', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'presensiData', 'totalData', 'tglAwal', 'tglAkhir', 'jobdesc'));
     }
+    
+    public function dfarmkaretpresensitabular()
+    {
+        $regional = $_GET['id_reg'] ?? '';
+        $tglAwal = $_GET['tgl_awal'] ?? date('Y-m-d');
+        $tglAkhir = $_GET['tgl_akhir'] ?? date('Y-m-d');
+        $kebun = $_GET['kode_kebun'] ?? '';
+        $jobdesc = $_GET['jobdesc'] ?? 'PENYADAP';
+        $komoditas = 2;
+        if($jobdesc == 'PEMETIK'){
+            $komoditas = 1;
+        }
+        if($jobdesc == 'PANEN KOPI'){
+            $komoditas = 3;
+        }
+        if($tglAwal > $tglAkhir){
+            return Redirect::back()->withErrors(['msg' => 'Tanggal awal tidak boleh lebih besar dari tanggal akhir']);
+        }
+        // Gunakan INNER JOIN (lebih cepat) dan tambahkan filter regional
+        $data = DB::connection('pgsql_secondary')
+            ->table('person_data')
+            ->select('person_data.kebun_id', 'person_data.regional_id', 'm_kebun.nama as nama_kebun')
+            ->leftJoin('m_kebun', 'person_data.kebun_id', '=', 'm_kebun.id')
+            ->whereNotNull('person_data.regional_id')
+            ->orderBy('person_data.regional_id');
+        if ($komoditas == 1) {
+            $data->where(function ($query) {
+                $query->where('positionsdesc', 'like', '%Pemetik%')
+                    ->orWhere('positionsdesc', 'like', '%PEMETIK%')
+                    ->orWhere('positionsdesc', 'like', '%pemetik%');
+            });
+        }
+        if ($komoditas == 2) {
+            $data->where(function ($query) {
+                $query->where('positionsdesc', 'like', '%Penyadap%')
+                    ->orWhere('positionsdesc', 'like', '%PENYADAP%')
+                    ->orWhere('positionsdesc', 'like', '%penyadap%');
+            });
+        }
+        if ($komoditas == 3) {
+            $data->where(function ($query) {
+                $query->where('positionsdesc', 'like', '%Panen Kopi%')
+                    ->orWhere('positionsdesc', 'like', '%PANEN KOPI%')
+                    ->orWhere('positionsdesc', 'like', '%panen kopi%');
+            });
+        }
+        if ($regional) {
+            $data->where('person_data.regional_id', $regional);
+        }
+        // Gunakan pagination untuk data besar
+        $allDatakebun = $data->groupBy('person_data.kebun_id', 'person_data.regional_id', 'm_kebun.nama')
+            ->get();
+        $selectedRegional = $regional;
+        $selectedKomoditas = $komoditas;
+        $selectedKebun = $kebun;
+        if($regional!='' and $kebun==''){
+            $presensiData = DB::connection('pgsql_secondary')->select(
+                'SELECT * FROM fn_rekap_presensi_kebun(?, ?, ?, ?) AS (
+                    kebun_id integer, 
+                    kebun varchar, 
+                    kehadiran bigint, 
+                    sakit bigint, 
+                    cuti bigint, 
+                    libur bigint, 
+                    mangkir bigint, 
+                    dll bigint, 
+                    belum_hadir bigint, 
+                    prosentase double precision, 
+                    prosentase_kehadiran double precision, 
+                    total_pegawai bigint
+                )',
+                [$jobdesc, $regional, $tglAwal, $tglAkhir]
+            );
+            $presensiDataRegional = DB::connection('pgsql_secondary')->select(
+                'SELECT * FROM public.fn_rekap_presensi_regional_sql(?, ?, ?) 
+                WHERE regional_id = ?',
+                [$jobdesc, $tglAwal, $tglAkhir, $regional]
+            );
+            // Jika hanya 1 row, langsung assign tanpa aggregate
+            $totalData = !empty($presensiDataRegional) ? (array) $presensiDataRegional[0] : [];
 
+        }
+        if($regional==''){
+         
+            $presensiData = DB::connection('pgsql_secondary')->select(
+                'SELECT * FROM public.fn_rekap_presensi_regional_sql(?, ?, ?)',
+                [$jobdesc, $tglAwal, $tglAkhir]
+                
+            );
+            $totalData = $this->calculateTotalPresensi($presensiData);
+        }
+        if($regional!='' and $kebun!=''){
+         
+            $presensiData = DB::connection('pgsql_secondary')->select(
+                'SELECT * FROM fn_rekap_presensi_afdeling(?, ?, ?, ?) AS (
+                    afdeling_id integer, 
+                    afdeling varchar, 
+                    kehadiran bigint, 
+                    sakit bigint, 
+                    cuti bigint, 
+                    libur bigint, 
+                    mangkir bigint, 
+                    dll bigint, 
+                    belum_hadir bigint, 
+                    prosentase double precision, 
+                    prosentase_kehadiran double precision, 
+                    total_pegawai bigint
+                )',
+                [$jobdesc, $kebun, $tglAwal, $tglAkhir]
+            );
+            $presensiDataKebun = DB::connection('pgsql_secondary')->select(
+                'SELECT * FROM fn_rekap_presensi_kebun(?, ?, ?, ?) AS (
+                    kebun_id integer, 
+                    kebun varchar, 
+                    kehadiran bigint, 
+                    sakit bigint, 
+                    cuti bigint, 
+                    libur bigint, 
+                    mangkir bigint, 
+                    dll bigint, 
+                    belum_hadir bigint, 
+                    prosentase double precision, 
+                    prosentase_kehadiran double precision, 
+                    total_pegawai bigint
+                ) WHERE kebun_id = ?',
+                [$jobdesc, $regional, $tglAwal, $tglAkhir, $kebun]
+            );
+            // Jika hanya 1 row setelah filter, langsung assign tanpa aggregate
+            $totalData = !empty($presensiDataKebun) ? (array) $presensiDataKebun[0] : [];
+        }
+            
+        // Hitung total untuk masing-masing kolom
+        if(empty($totalData) ){
+           return Redirect::back()->withErrors(['msg' => 'Data tidak ditemukan untuk filter yang dipilih']);
+        }
+        
+        
+        return view('pages/dfarm/dfarm_karet_presensi_tabular', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'presensiData', 'totalData', 'tglAwal', 'tglAkhir', 'jobdesc'));
+    }
 
     /**
      * Hitung total untuk masing-masing kolom presensi
