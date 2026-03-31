@@ -88,6 +88,7 @@ Route::middleware('auth:custom')->group(function () {
 
 
     Route::get('/skyview', [PageController::class, 'skyview'])->name('skyview');
+    Route::get('/exec_summary', [PageController::class, 'exec_summary'])->name('exec_summary');
 
     Route::get('/get_data_bigquery', [PageController::class, 'get_data_bigquery'])->name('get_data_bigquery');
 

@@ -722,6 +722,12 @@ class PageController extends Controller
         return view('pages/skyview', compact('linkiframe'));
     }
 
+    public function exec_summary()
+    {
+        $linkiframe = 'https://docs.google.com/presentation/d/1gtUYMn5TCy3u6Jc7KwFzhAX90zy7n0HMGASXYvov03Y/embed';
+        return view('pages/overview_page', compact('linkiframe'));
+    }
+
     public function gudangutilisasi()
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/8dde5a31-7f44-4128-a71d-33586cf872ed/page/78vkF';

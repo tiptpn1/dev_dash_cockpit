@@ -137,6 +137,8 @@ if (isset($user)) {
                 @if($user && $user->skyview)
                 <a href="{{url('')}}/skyview" class="menu-item" id='skyview'><i
                         class="fa-solid fa-map-location-dot menu-icon"></i>AGRO Skyview</a>
+                <a href="{{url('')}}/exec_summary" class="menu-item" id='exec_summary'><i
+                        class="fa-solid fa-map-location-dot menu-icon"></i>Exec Summary</a>
                 
                 @endif
                 
