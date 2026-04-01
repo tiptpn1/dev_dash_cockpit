@@ -46,7 +46,7 @@
           <i class="fa-solid fa-leaf" style="width: 14px;"></i>
           Produksi Kopi
         </a>
-        <a class="dropdown-menu-item" href="#">
+        <a class="dropdown-menu-item" href="{{ route('dfarmpemeliharaan') }}">
           <i class="fa-solid fa-chart-line" style="width: 14px;"></i>
           Prestasi Pemeliharaan
         </a>

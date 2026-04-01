@@ -52,6 +52,7 @@ Route::middleware('auth:custom')->group(function () {
     Route::get('/dfarmteh', [PageController::class, 'dfarmtehpresensi'])->name('dfarmtehpresensi');
     Route::get('/dfarmtehproduksi', [PageController::class, 'dfarmtehproduksi'])->name('dfarmtehproduksi');
     Route::get('/dfarmkopiproduksi', [PageController::class, 'dfarmkopiproduksi'])->name('dfarmkopiproduksi');
+    Route::get('/dfarmpemeliharaan', [PageController::class, 'dfarmpemeliharaan'])->name('dfarmpemeliharaan');
     Route::get('/get_data_kebun', [ApiController::class, 'get_data_kebun'])->name('get_data_kebun');
 
     Route::get('/fin_console', [PageController::class, 'fin_console'])->name('fin_console');
