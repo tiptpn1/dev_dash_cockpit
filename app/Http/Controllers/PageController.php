@@ -842,7 +842,7 @@ class PageController extends Controller
 
     public function skyview()
     {
-        $linkiframe = 'https://www.youtube.com/embed/yPTrVQoepTo';
+        $linkiframe = 'https://www.youtube.com/embed/76NgtK2Qz4w';
         return view('pages/skyview', compact('linkiframe'));
     }
 
