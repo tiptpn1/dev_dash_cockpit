@@ -11,7 +11,7 @@
   <div class="bg-gradient-to-r from-blue-700 to-blue-500 text-white py-4 px-6 shadow-lg flex-shrink-0">
     <div class="max-w-7xl mx-auto">
       <h1 class="text-2xl md:text-3xl font-bold">
-        <span class="font-light">Produksi Karet</span> <span class="italic">DFARM PTPN I</span>
+        <span class="font-light">Produksi Teh</span> <span class="italic">DFARM PTPN I</span>
       </h1>
     </div>
   </div>
@@ -464,7 +464,7 @@
     selectKebun.innerHTML = '<option value="">Loading...</option>';
 
     // AJAX call ke get_data_kebun
-    fetch('{{ route('get_data_kebun') }}?id_reg=' + regionalId + '&komoditas=2', {
+    fetch('{{ route('get_data_kebun') }}?id_reg=' + regionalId + '&komoditas=1', {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
