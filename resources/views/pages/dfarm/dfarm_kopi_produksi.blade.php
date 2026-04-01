@@ -134,32 +134,43 @@
       </div>
 
       <!-- KPI Cards Section -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
         <!-- Presensi Hadir -->
         <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
-          <h3 class="text-gray-300 text-xs font-medium mb-1">Panen Manual</h3>
-          <p class="text-2xl md:text-3xl font-bold text-white">{{number_format($totalData['panen_manual'], 0, ',', '.') }} Kg</p>
+          <h3 class="text-gray-300 text-xs font-medium mb-1">Lateks Basah</h3>
+          <p class="text-2xl md:text-3xl font-bold text-white">{{number_format($totalData['basah_latek'], 0, ',', '.') }} Kg</p>
         </div>
 
         <!-- Jumlah Input Presensi -->
         <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
-          <h3 class="text-gray-300 text-xs font-medium mb-1">Panen Gunting</h3>
-          <p class="text-2xl md:text-3xl font-bold text-white">{{number_format($totalData['panen_gunting'], 0, ',', '.') }} Kg</p>
+          <h3 class="text-gray-300 text-xs font-medium mb-1">Lump Basah</h3>
+          <p class="text-2xl md:text-3xl font-bold text-white">{{number_format($totalData['basah_lump'], 0, ',', '.') }} Kg</p>
         </div>
 
         <!-- Jumlah Karyawan -->
         <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
-          <h3 class="text-gray-300 text-xs font-medium mb-1">Panen Mesin</h3>
-          <p class="text-2xl md:text-3xl font-bold text-white">{{number_format($totalData['panen_mesin_individu'], 0, ',', '.') }} Kg</p>
+          <h3 class="text-gray-300 text-xs font-medium mb-1">Scrap Basah</h3>
+          <p class="text-2xl md:text-3xl font-bold text-white">{{number_format($totalData['basah_scrab'], 0, ',', '.') }} Kg</p>
         </div>
 
         <!-- Persentase Kehadiran -->
         <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
-          <h3 class="text-gray-300 text-xs font-medium mb-1">Total</h3>
-          <p class="text-2xl md:text-3xl font-bold text-white">{{number_format($totalData['total'], 0, ',', '.') }} Kg</p>
+          <h3 class="text-gray-300 text-xs font-medium mb-1">Sheet</h3>
+          <p class="text-2xl md:text-3xl font-bold text-white">{{number_format($totalData['sheet'], 0, ',', '.') }} Kg</p>
         </div>
 
+        <!-- Presentase Presensi -->
+        <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
+          <h3 class="text-gray-300 text-xs font-medium mb-1">Compo + Scrap</h3>
+          <p class="text-2xl md:text-3xl font-bold text-white">{{number_format($totalData['compo'] + $totalData['scrap'], 0, ',', '.') }} Kg</p>
         </div>
+
+        <!-- Presentase Input Presensi -->
+        <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
+          <h3 class="text-gray-300 text-xs font-medium mb-1">Total Kering</h3>
+          <p class="text-2xl md:text-3xl font-bold text-white">{{number_format($totalData['total_kering'], 0, ',', '.') }} Kg</p>
+        </div>
+      </div>
       <!-- Charts Section - By Regional -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         <!-- Presentase Input Chart -->
@@ -176,6 +187,23 @@
             <canvas id="presentaseInputChart"></canvas>
           </div>
         </div>
+
+        <!-- Prestasi Chart Regional-->
+        <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
+          <h2 class="text-white text-xs md:text-sm font-bold mb-3 text-center">Perbandingan High Grade & Low Grade Bahan Baku</h2>
+          <div class="relative h-56 md:h-64">
+            <canvas id="presensiChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Presentase Hadir Chart -->
+        <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
+          <h2 class="text-white text-xs md:text-sm font-bold mb-3 text-center">Perbandingan High Grade & Low Grade Kering</h2>
+          <div class="relative h-56 md:h-64">
+            <canvas id="presentaseHadirChart"></canvas>
+          </div>
+        </div>
+
         
       </div>
       
@@ -261,6 +289,109 @@
     },
   };
 
+    // 1. Presensi Chart (Grouped Bar)
+    const presensiCtx = document.getElementById('presensiChart').getContext('2d');
+    new Chart(presensiCtx, {
+      type: 'bar',
+      data: {
+        labels: [
+          @for ($i = 0; $i < count($prestasiData); $i++) 
+            '{{ $prestasiData[$i]->nama }}',
+          @endfor
+        ],
+        datasets: [
+          {
+            label: '% High Grade',
+            data: [
+              @for ($i = 0; $i < count($prestasiData); $i++)
+                {{ ($prestasiData[$i]->basah_latek + $prestasiData[$i]->basah_lump + $prestasiData[$i]->basah_scrab) != 0 ? ($prestasiData[$i]->basah_latek)/($prestasiData[$i]->basah_latek + $prestasiData[$i]->basah_lump + $prestasiData[$i]->basah_scrab) * 100 : 0 }},
+              @endfor
+            ],
+            backgroundColor: chartColors.blue,
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+          {
+            label: '% Low Grade',
+            data: [
+              @for ($i = 0; $i < count($prestasiData); $i++)
+                {{ ($prestasiData[$i]->basah_latek + $prestasiData[$i]->basah_lump + $prestasiData[$i]->basah_scrab) != 0 ? ($prestasiData[$i]->basah_lump + $prestasiData[$i]->basah_scrab)/($prestasiData[$i]->basah_latek + $prestasiData[$i]->basah_lump + $prestasiData[$i]->basah_scrab) * 100 : 0 }},
+              @endfor
+            ],
+            backgroundColor: chartColors.red,
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+        ],
+      },
+      options: {
+        ...commonOptions,
+        scales: {
+          ...commonOptions.scales,
+          x: {
+            ...commonOptions.scales.x,
+            stacked: true,
+          },
+          y: {
+            ...commonOptions.scales.y,
+            stacked: true,
+          },
+        },
+      },
+    });
+
+    // 2. Presentase Hadir Chart (Stacked Bar)
+    const presentaseHadirCtx = document.getElementById('presentaseHadirChart').getContext('2d');
+    new Chart(presentaseHadirCtx, {
+      type: 'bar',
+      data: {
+        labels: [
+          @for ($i = 0; $i < count($prestasiData); $i++) 
+            '{{ $prestasiData[$i]->nama }}',
+          @endfor
+        ],
+        datasets: [
+          {
+            label: '% High Grade',
+            data: [
+              @for ($i = 0; $i < count($prestasiData); $i++)
+                {{ $prestasiData[$i]->total_kering != 0 ? $prestasiData[$i]->sheet/($prestasiData[$i]->total_kering) * 100 : 0 }},
+              @endfor
+            ],
+            backgroundColor: chartColors.blue,
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+          {
+            label: '% Low Grade',
+            data: [
+              @for ($i = 0; $i < count($prestasiData); $i++)
+                {{ $prestasiData[$i]->total_kering != 0 ? 100 - ($prestasiData[$i]->sheet/($prestasiData[$i]->total_kering) * 100) : 0 }},
+              @endfor
+            ],
+            backgroundColor: chartColors.red,
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+        ],
+      },
+      options: {
+        ...commonOptions,
+        scales: {
+          ...commonOptions.scales,
+          x: {
+            ...commonOptions.scales.x,
+            stacked: true,
+          },
+          y: {
+            ...commonOptions.scales.y,
+            stacked: true,
+            max: 100,
+          },
+        },
+      },
+    });
+
     // 3. Presentase Input Chart (Grouped Bar)
     const presentaseInputCtx = document.getElementById('presentaseInputChart').getContext('2d');
     new Chart(presentaseInputCtx, {
@@ -273,17 +404,27 @@
         ],
         datasets: [
           {
-            label: 'Total (Kg)',
+            label: 'Kering Hg (Kg)',
             data: [
               @for ($i = 0; $i < count($prestasiData); $i++)
-                {{ $prestasiData[$i]->total }},
+                {{ $prestasiData[$i]->sheet }},
               @endfor
             ],
             backgroundColor: chartColors.blue,
             borderRadius: 6,
             borderSkipped: false,
           },
-          
+          {
+            label: 'Kering Lg (Kg)',
+            data: [
+              @for ($i = 0; $i < count($prestasiData); $i++)
+                {{ $prestasiData[$i]->compo+$prestasiData[$i]->scrap }},
+              @endfor
+            ],
+            backgroundColor: chartColors.red,
+            borderRadius: 6,
+            borderSkipped: false,
+          },
         ],
       },
       options: {
@@ -313,10 +454,10 @@
         ],
         datasets: [
           {
-            label: 'Panen Manual (Kg)',
+            label: 'Basah Hg (Kg)',
             data: [
               @for ($i = 0; $i < count($prestasiData); $i++)
-                {{ $prestasiData[$i]->panen_manual }},
+                {{ $prestasiData[$i]->basah_latek }},
               @endfor
             ],
             backgroundColor: chartColors.blue,
@@ -324,24 +465,13 @@
             borderSkipped: false,
           },
           {
-            label: 'Panen Gunting (Kg)',
+            label: 'Basah Lg (Kg)',
             data: [
               @for ($i = 0; $i < count($prestasiData); $i++)
-                {{ $prestasiData[$i]->panen_gunting }},
+                {{ $prestasiData[$i]->basah_lump+$prestasiData[$i]->basah_scrab }},
               @endfor
             ],
-            backgroundColor: chartColors.cyan,
-            borderRadius: 6,
-            borderSkipped: false,
-          },
-          {
-            label: 'Panen Mesin (Kg)',
-            data: [
-              @for ($i = 0; $i < count($prestasiData); $i++)
-                {{ $prestasiData[$i]->panen_mesin_individu }},
-              @endfor
-            ],
-            backgroundColor: chartColors.purple,
+            backgroundColor: chartColors.red,
             borderRadius: 6,
             borderSkipped: false,
           },

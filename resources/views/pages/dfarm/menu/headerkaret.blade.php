@@ -38,11 +38,11 @@
           <i class="fa-solid fa-leaf" style="width: 14px;"></i>
           Produksi Karet
         </a>
-        <a class="dropdown-menu-item" href="{{ route('dfarmkaretproduksi') }}">
+        <a class="dropdown-menu-item" href="{{ route('dfarmtehproduksi') }}">
           <i class="fa-solid fa-leaf" style="width: 14px;"></i>
           Produksi Teh
         </a>
-        <a class="dropdown-menu-item" href="{{ route('dfarmkaretproduksi') }}">
+        <a class="dropdown-menu-item" href="{{ route('dfarmkopiproduksi') }}">
           <i class="fa-solid fa-leaf" style="width: 14px;"></i>
           Produksi Kopi
         </a>
