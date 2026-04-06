@@ -184,6 +184,15 @@
         </div>
         
       </div>
+      <div class="grid grid-cols-1 lg:grid-cols-1 gap-4 mb-6">
+        <!-- Presentase Input Chart -->
+        <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
+          <h2 class="text-white text-xs md:text-sm font-bold mb-3 text-center">% Input Produksi</h2>
+          <div class="relative h-56 md:h-64">
+            <canvas id="presentaseInputProduksiChart"></canvas>
+          </div>
+        </div>
+      </div>
       
     </div>
   </div>
@@ -375,6 +384,57 @@
           y: {
             ...commonOptions.scales.y,
             stacked: false,
+          },
+        },
+      },
+    });
+
+    // 5. Presentase Input Chart (Grouped Bar)
+    const presentaseInputProduksiCtx = document.getElementById('presentaseInputProduksiChart').getContext('2d');
+    new Chart(presentaseInputProduksiCtx, {
+      type: 'bar',
+      data: {
+        labels: [
+          @for ($i = 0; $i < count($prestasiDataLite); $i++) 
+            '{{ $prestasiDataLite[$i]->nama }}',
+          @endfor
+        ],
+        datasets: [
+          {
+            label: '% Input',
+            data: [
+              @for ($i = 0; $i < count($prestasiDataLite); $i++)
+                {{ min(100, $prestasiDataLite[$i]->persen_input_produksi) }},
+              @endfor
+            ],
+            backgroundColor: chartColors.blue,
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+          {
+            label: '% Tidak Input',
+            data: [
+              @for ($i = 0; $i < count($prestasiDataLite); $i++)
+                {{ max(0, 100 - min(100, $prestasiDataLite[$i]->persen_input_produksi)) }},
+              @endfor
+            ],
+            backgroundColor: chartColors.red,
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+        ],
+      },
+      options: {
+        ...commonOptions,
+        scales: {
+          ...commonOptions.scales,
+          x: {
+            ...commonOptions.scales.x,
+            stacked: true,
+          },
+          y: {
+            ...commonOptions.scales.y,
+            stacked: true,
           },
         },
       },

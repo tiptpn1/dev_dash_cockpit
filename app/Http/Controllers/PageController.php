@@ -696,6 +696,11 @@ class PageController extends Controller
                 )',
                 [2, $regional, $tglAwal, $tglAkhir]
             );
+            $prestasiDataLite = DB::connection('pgsql_secondary')->select(
+                'SELECT nama, persen_input_presensi, persen_input_produksi 
+                FROM fn_report_n1_karet_rekap_presensi_prestasi_kebun_lite(?, ?, ?, ?, ?, ?)',
+                ['PENYADAP', $regional, '', 2, $tglAwal, $tglAkhir]
+            );
             $totalData = $this->calculateTotalPrestasi($prestasiData);
             // dd($totalData);
         }
@@ -715,6 +720,11 @@ class PageController extends Controller
                     total_kering numeric
                 )',
                 [2, $tglAwal, $tglAkhir]
+            );
+            $prestasiDataLite = DB::connection('pgsql_secondary')->select(
+                'SELECT nama, persen_input_presensi, persen_input_produksi 
+                FROM fn_report_n1_karet_rekap_presensi_prestasi_regional_lite(?, ?, ?, ?, ?)',
+                ['PENYADAP', '', 2, $tglAwal, $tglAkhir]
             );
             $totalData = $this->calculateTotalPrestasi($prestasiData);
         }
@@ -736,6 +746,11 @@ class PageController extends Controller
                 [2, $kebun, $tglAwal, $tglAkhir]
             );
             $totalData = $this->calculateTotalPrestasi($prestasiData);
+            $prestasiDataLite = DB::connection('pgsql_secondary')->select(
+                'SELECT nama, persen_input_presensi, persen_input_produksi 
+                FROM fn_report_n1_karet_rekap_presensi_prestasi_afdeling_lite(?, ?, ?, ?, ?)',
+                ['PENYADAP',  $kebun, 2, $tglAwal, $tglAkhir]
+            );
         }
             
         // Hitung total untuk masing-masing kolom
@@ -744,7 +759,7 @@ class PageController extends Controller
         }
         
         
-        return view('pages/dfarm/dfarm_karet_produksi', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'prestasiData', 'totalData', 'tglAwal', 'tglAkhir', 'jobdesc'));
+        return view('pages/dfarm/dfarm_karet_produksi', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'prestasiData', 'prestasiDataLite', 'totalData', 'tglAwal', 'tglAkhir', 'jobdesc'));
     }
     public function dfarmtehproduksi()
     {
@@ -798,6 +813,11 @@ class PageController extends Controller
                 [$regional, $tglAwal, $tglAkhir]
             );
             $totalData = $this->calculateTotalPrestasiTeh($prestasiData);
+            $prestasiDataLite = DB::connection('pgsql_secondary')->select(
+                'SELECT nama, persen_input_presensi, persen_input_produksi 
+                FROM fn_report_n1_karet_rekap_presensi_prestasi_kebun_lite(?, ?, ?, ?, ?, ?)',
+                ['PEMETIK',  $regional, '', 1, $tglAwal, $tglAkhir]
+            );
         }
         if($regional==''){
          
@@ -814,6 +834,11 @@ class PageController extends Controller
                 [$tglAwal, $tglAkhir]
             );
             $totalData = $this->calculateTotalPrestasiTeh($prestasiData);
+            $prestasiDataLite = DB::connection('pgsql_secondary')->select(
+                'SELECT nama, persen_input_presensi, persen_input_produksi 
+                FROM fn_report_n1_karet_rekap_presensi_prestasi_regional_lite(?, ?, ?, ?, ?)',
+                ['PEMETIK',  '', 1, $tglAwal, $tglAkhir]
+            );
         }
         if($regional!='' and $kebun!=''){
          
@@ -830,6 +855,11 @@ class PageController extends Controller
                 [$kebun, $tglAwal, $tglAkhir]
             );
             $totalData = $this->calculateTotalPrestasiTeh($prestasiData);
+            $prestasiDataLite = DB::connection('pgsql_secondary')->select(
+                'SELECT nama, persen_input_presensi, persen_input_produksi 
+                FROM fn_report_n1_karet_rekap_presensi_prestasi_afdeling_lite(?, ?, ?, ?, ?)',
+                ['PEMETIK',  $kebun, 1, $tglAwal, $tglAkhir]
+            );
         }
             
         // Hitung total untuk masing-masing kolom
@@ -838,7 +868,7 @@ class PageController extends Controller
         }
         
         
-        return view('pages/dfarm/dfarm_teh_produksi', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'prestasiData', 'totalData', 'tglAwal', 'tglAkhir', 'jobdesc'));
+        return view('pages/dfarm/dfarm_teh_produksi', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'prestasiData','prestasiDataLite', 'totalData', 'tglAwal', 'tglAkhir', 'jobdesc'));
     }
     public function dfarmkopiproduksi()
     {
@@ -897,6 +927,11 @@ class PageController extends Controller
                 [$komoditas, $regional, $tglAwal, $tglAkhir]
             );
             $totalData = $this->calculateTotalPrestasiKopi($prestasiData);
+            $prestasiDataLite = DB::connection('pgsql_secondary')->select(
+                'SELECT nama, persen_input_presensi, persen_input_produksi 
+                FROM fn_report_n1_karet_rekap_presensi_prestasi_kebun_lite(?, ?, ?, ?, ?, ?)',
+                ['PANEN KOPI',  $regional, '', 3, $tglAwal, $tglAkhir]
+            );
         }
         if($regional==''){
          
@@ -918,6 +953,11 @@ class PageController extends Controller
                 [$komoditas, $tglAwal, $tglAkhir]
             );
             $totalData = $this->calculateTotalPrestasiKopi($prestasiData);
+            $prestasiDataLite = DB::connection('pgsql_secondary')->select(
+                'SELECT nama, persen_input_presensi, persen_input_produksi 
+                FROM fn_report_n1_karet_rekap_presensi_prestasi_regional_lite(?, ?, ?, ?, ?)',
+                ['PANEN KOPI',  '', 3, $tglAwal, $tglAkhir]
+            );
         }
         if($regional!='' and $kebun!=''){
          
@@ -939,6 +979,11 @@ class PageController extends Controller
                 [$komoditas, $kebun, $tglAwal, $tglAkhir]
             );
             $totalData = $this->calculateTotalPrestasiKopi($prestasiData);
+            $prestasiDataLite = DB::connection('pgsql_secondary')->select(
+                'SELECT nama, persen_input_presensi, persen_input_produksi 
+                FROM fn_report_n1_karet_rekap_presensi_prestasi_afdeling_lite(?, ?, ?, ?, ?)',
+                ['PANEN KOPI',  $kebun, 3, $tglAwal, $tglAkhir]
+            );
         }
             
         // Hitung total untuk masing-masing kolom
@@ -947,7 +992,7 @@ class PageController extends Controller
         }
         
         
-        return view('pages/dfarm/dfarm_kopi_produksi', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'prestasiData', 'totalData', 'tglAwal', 'tglAkhir', 'jobdesc'));
+        return view('pages/dfarm/dfarm_kopi_produksi', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'prestasiData', 'prestasiDataLite', 'totalData', 'tglAwal', 'tglAkhir', 'jobdesc'));
     }
     public function dfarmpemeliharaan()
     {
@@ -1024,6 +1069,11 @@ class PageController extends Controller
                 [$komoditas, $jenis_aktivitas, $regional,$tglAwal, $tglAkhir]
             );
             $totalData = $this->calculateTotalPrestasiPemeliharaan($prestasiData);
+            $prestasiDataLite = DB::connection('pgsql_secondary')->select(
+                'SELECT nama, persen_input_presensi, persen_input_produksi 
+                FROM fn_report_n1_karet_rekap_presensi_prestasi_kebun_lite(?, ?, ?, ?, ?, ?)',
+                ['PEMELIHARAAN',  $regional, '', $komoditas, $tglAwal, $tglAkhir]
+            );
         }
         if($regional==''){
          
@@ -1036,6 +1086,11 @@ class PageController extends Controller
                 [$komoditas, $jenis_aktivitas, $tglAwal, $tglAkhir]
             );
             $totalData = $this->calculateTotalPrestasiPemeliharaan($prestasiData);
+            $prestasiDataLite = DB::connection('pgsql_secondary')->select(
+                'SELECT nama, persen_input_presensi, persen_input_produksi 
+                FROM fn_report_n1_karet_rekap_presensi_prestasi_regional_lite(?, ?, ?, ?, ?)',
+                ['PEMELIHARAAN',  '', $komoditas, $tglAwal, $tglAkhir]
+            );
         }
         if($regional!='' and $kebun!=''){
          
@@ -1048,6 +1103,11 @@ class PageController extends Controller
                 [ $komoditas, $jenis_aktivitas, $kebun, $tglAwal, $tglAkhir]
             );
             $totalData = $this->calculateTotalPrestasiPemeliharaan($prestasiData);
+            $prestasiDataLite = DB::connection('pgsql_secondary')->select(
+                'SELECT nama, persen_input_presensi, persen_input_produksi 
+                FROM fn_report_n1_karet_rekap_presensi_prestasi_afdeling_lite(?, ?, ?, ?, ?)',
+                ['PEMELIHARAAN',  $kebun, $komoditas, $tglAwal, $tglAkhir]
+            );
         }
             
         // Hitung total untuk masing-masing kolom
@@ -1056,7 +1116,7 @@ class PageController extends Controller
         }
         
         
-        return view('pages/dfarm/dfarm_pemeliharaan', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'selectedaktivitas', 'prestasiData', 'totalData', 'tglAwal', 'tglAkhir', 'jobdesc', 'detaildatapemeliharaan', 'alldatapemeliharaan'));
+        return view('pages/dfarm/dfarm_pemeliharaan', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'selectedaktivitas', 'prestasiData', 'prestasiDataLite', 'totalData', 'tglAwal', 'tglAkhir', 'jobdesc', 'detaildatapemeliharaan', 'alldatapemeliharaan'));
     }
     public function dfarmtehold()
     {
