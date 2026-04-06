@@ -25,17 +25,17 @@
             justify-content: center;
             overflow: hidden;
         }
-        /* Background foto full layar */
+        /* Background: gradient langsung (ringan), foto besar dimuat setelah paint */
         .login-photo {
             position: absolute;
             inset: 0;
             z-index: 0;
-        }
-        .login-photo img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
+            background-color: #152942;
+            background-image: linear-gradient(160deg, #152942 0%, #1e3a5f 45%, #0f172a 100%);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: background-image 0.35s ease;
         }
         .login-photo::after {
             content: '';
@@ -234,13 +234,11 @@
 </head>
 <body>
     <div class="login-page">
-        <div class="login-photo">
-            <img src="{{ asset('5.jpg') }}" alt="">
-        </div>
+        <div class="login-photo" id="loginPhotoBg" data-bg="{{ asset('5.jpg') }}" role="presentation"></div>
         <div class="login-form-wrap">
             <div class="login-form-box">
                 <div class="login-logo">
-                    <img src="{{ asset('ptpn1.png') }}" alt="PTPN 1">
+                    <img src="{{ asset('ptpn1.png') }}" alt="PTPN 1" decoding="async">
                 </div>
                 <p class="login-app-title">Asset and Agribusiness Navigation Dashboard</p>
                 <p class="login-ptpn-title">PTPN I</p>
@@ -261,7 +259,7 @@
                     <label for="captcha">Kode Keamanan</label>
                     <div class="login-captcha-wrap">
                         <span class="login-captcha-img">
-                            <img src="{{ route('svg.captcha') }}?t={{ time() }}" alt="Captcha" id="captchaImage">
+                            <img src="{{ route('svg.captcha') }}?t={{ time() }}" alt="Captcha" id="captchaImage" width="130" height="44" decoding="async" fetchpriority="low">
                         </span>
                         <button type="button" class="login-captcha-refresh" id="btnRefreshCaptcha" title="Refresh captcha" aria-label="Refresh captcha">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
@@ -281,6 +279,24 @@
         </div>
     </div>
     <script>
+        (function() {
+            var el = document.getElementById('loginPhotoBg');
+            if (!el) return;
+            var url = el.getAttribute('data-bg');
+            if (!url) return;
+            function loadBg() {
+                var img = new Image();
+                img.onload = function() {
+                    el.style.backgroundImage = 'url("' + url.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '")';
+                };
+                img.src = url;
+            }
+            if (window.requestAnimationFrame) {
+                requestAnimationFrame(function() { setTimeout(loadBg, 0); });
+            } else {
+                setTimeout(loadBg, 0);
+            }
+        })();
         document.getElementById('btnTogglePassword').addEventListener('click', function() {
             var input = document.getElementById('password');
             var eye = this.querySelector('.icon-eye');
