@@ -1190,9 +1190,10 @@ class PageController extends Controller
         return view('pages/overview_page', compact('linkiframe'));
     }
 
-    public function skyview()
+    public function skyview(Request $request)
     {
-        $linkiframe = 'https://www.youtube.com/embed/76NgtK2Qz4w';
+        // Jika ada ?link= dari skyview_table, gunakan itu; otherwise pakai default
+        $linkiframe = $request->query('link', 'https://www.youtube.com/embed/76NgtK2Qz4w');
         return view('pages/skyview', compact('linkiframe'));
     }
 

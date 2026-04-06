@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\AiResponseController;
 use App\Http\Controllers\ApiController;
+use App\Http\Controllers\SkyviewController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -91,6 +92,13 @@ Route::middleware('auth:custom')->group(function () {
 
     Route::get('/skyview', [PageController::class, 'skyview'])->name('skyview');
     Route::get('/exec_summary', [PageController::class, 'exec_summary'])->name('exec_summary');
+
+    // Skyview Table (CRUD)
+    Route::get('/skyview-table', [SkyviewController::class, 'index'])->name('skyview_table');
+    Route::post('/skyview-table', [SkyviewController::class, 'store'])->name('skyview.store');
+    Route::get('/skyview-table/{skyview}', [SkyviewController::class, 'show'])->name('skyview.show');
+    Route::put('/skyview-table/{skyview}', [SkyviewController::class, 'update'])->name('skyview.update');
+    Route::delete('/skyview-table/{skyview}', [SkyviewController::class, 'destroy'])->name('skyview.destroy');
 
     Route::get('/get_data_bigquery', [PageController::class, 'get_data_bigquery'])->name('get_data_bigquery');
 
