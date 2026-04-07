@@ -3,6 +3,8 @@
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\AiResponseController;
+use App\Http\Controllers\ApiController;
+use App\Http\Controllers\SkyviewController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -30,24 +32,31 @@ Route::get('/portalaplikasi', [PageController::class, 'portalaplikasi'])->name('
 Route::get('/portallm', [PageController::class, 'portallm'])->name('portallm');
 
 Route::middleware('auth:custom')->group(function () {
-        Route::get('/', [PageController::class, 'overview'])->name('overview');
-        Route::get('/mrc', [PageController::class, 'mrc'])->name('mrc');
-        Route::get('/aigri', [PageController::class, 'aigri'])->name('aigri');
-        Route::get('/gardai', [PageController::class, 'gardai'])->name('gardai');
-        Route::get('/onfarmkaret', [PageController::class, 'onfarmkaret'])->name('onfarmkaret');
-        Route::get('/onfarmteh', [PageController::class, 'onfarmteh'])->name('onfarmteh');
-        Route::get('/onfarmkopi', [PageController::class, 'onfarmkopi'])->name('onfarmkopi');
-        Route::get('/offfarmkaret', [PageController::class, 'offfarmkaret'])->name('offfarmkaret');
-        Route::get('/offfarmteh', [PageController::class, 'offfarmteh'])->name('offfarmteh');
-        Route::get('/offfarmkopi', [PageController::class, 'offfarmkopi'])->name('offfarmkopi');
-        Route::get('/gudangutilisasi', [PageController::class, 'gudangutilisasi'])->name('gudangutilisasi');
+    Route::get('/', [PageController::class, 'overview'])->name('overview');
+    Route::get('/mrc', [PageController::class, 'mrc'])->name('mrc');
+    Route::get('/aigri', [PageController::class, 'aigri'])->name('aigri');
+    Route::get('/gardai', [PageController::class, 'gardai'])->name('gardai');
+    Route::get('/onfarmkaret', [PageController::class, 'onfarmkaret'])->name('onfarmkaret');
+    Route::get('/onfarmteh', [PageController::class, 'onfarmteh'])->name('onfarmteh');
+    Route::get('/onfarmkopi', [PageController::class, 'onfarmkopi'])->name('onfarmkopi');
+    Route::get('/offfarmkaret', [PageController::class, 'offfarmkaret'])->name('offfarmkaret');
+    Route::get('/offfarmteh', [PageController::class, 'offfarmteh'])->name('offfarmteh');
+    Route::get('/offfarmkopi', [PageController::class, 'offfarmkopi'])->name('offfarmkopi');
+    Route::get('/gudangutilisasi', [PageController::class, 'gudangutilisasi'])->name('gudangutilisasi');
 
-        Route::get('/picaonfarm', [PageController::class, 'picaonfarm'])->name('picaonfarm');
-        Route::get('/picaofffarm', [PageController::class, 'picaofffarm'])->name('picaofffarm');
+    Route::get('/picaonfarm', [PageController::class, 'picaonfarm'])->name('picaonfarm');
+    Route::get('/picaofffarm', [PageController::class, 'picaofffarm'])->name('picaofffarm');
 
-        Route::get('/dfarmkaret', [PageController::class, 'dfarmkaret'])->name('dfarmkaret');
-        Route::get('/dfarmteh', [PageController::class, 'dfarmteh'])->name('dfarmteh');
+    Route::get('/dfarmkaret', [PageController::class, 'dfarmkaretpresensi'])->name('dfarmkaretpresensi');
+    Route::get('/dfarmpresensitabular', [PageController::class, 'dfarmkaretpresensitabular'])->name('dfarmkaretpresensitabular');
+    Route::get('/dfarmkaretproduksi', [PageController::class, 'dfarmkaretproduksi'])->name('dfarmkaretproduksi');
+    Route::get('/dfarmteh', [PageController::class, 'dfarmtehpresensi'])->name('dfarmtehpresensi');
+    Route::get('/dfarmtehproduksi', [PageController::class, 'dfarmtehproduksi'])->name('dfarmtehproduksi');
+    Route::get('/dfarmkopiproduksi', [PageController::class, 'dfarmkopiproduksi'])->name('dfarmkopiproduksi');
+    Route::get('/dfarmpemeliharaan', [PageController::class, 'dfarmpemeliharaan'])->name('dfarmpemeliharaan');
+    Route::get('/get_data_kebun', [ApiController::class, 'get_data_kebun'])->name('get_data_kebun');
 
+<<<<<<< HEAD
         Route::get('/fin_console', [PageController::class, 'fin_console'])->name('fin_console');
         Route::get('/fin_parent', [PageController::class, 'fin_parent'])->name('fin_parent');
         Route::get('/fin_sub', [PageController::class, 'fin_sub'])->name('fin_sub');
@@ -55,17 +64,22 @@ Route::middleware('auth:custom')->group(function () {
         Route::get('/hr_demographics', [PageController::class, 'hr_demographics'])->name('hr_demographics');
         Route::get('/hr_dev', [PageController::class, 'hr_dev'])->name('hr_dev');
         Route::get('/hr_revenue', [PageController::class, 'hr_revenue'])->name('hr_revenue');
+=======
+    Route::get('/fin_console', [PageController::class, 'fin_console'])->name('fin_console');
+    Route::get('/fin_parent', [PageController::class, 'fin_parent'])->name('fin_parent');
+    Route::get('/fin_sub', [PageController::class, 'fin_sub'])->name('fin_sub');
+>>>>>>> main
 
-        Route::get('/agraria_tax', [PageController::class, 'agraria_tax'])->name('agraria_tax');
-        Route::get('/agraria', [PageController::class, 'agraria'])->name('agraria');
+    Route::get('/hr_demographics', [PageController::class, 'hr_demographics'])->name('hr_demographics');
+    Route::get('/hr_dev', [PageController::class, 'hr_dev'])->name('hr_dev');
+    Route::get('/hr_revenue', [PageController::class, 'hr_revenue'])->name('hr_revenue');
 
-        Route::get('/sales_comodities', [PageController::class, 'sales_comodities'])->name('sales_comodities');
+    Route::get('/agraria_tax', [PageController::class, 'agraria_tax'])->name('agraria_tax');
+    Route::get('/agraria', [PageController::class, 'agraria'])->name('agraria');
 
-        Route::get('/asset_peta', [PageController::class, 'asset_peta'])->name('asset_peta');
-        Route::get('/asset_recovery', [PageController::class, 'asset_recovery'])->name('asset_recovery');
-        Route::get('/asset_optimalisasi', [PageController::class, 'asset_optimalisasi'])->name('asset_optimalisasi');
-        Route::get('/asset_divestasi', [PageController::class, 'asset_divestasi'])->name('asset_divestasi');
+    Route::get('/sales_comodities', [PageController::class, 'sales_comodities'])->name('sales_comodities');
 
+<<<<<<< HEAD
         Route::get('/sla', [PageController::class, 'sla'])->name('sla');
         Route::get('/pengadaan', [PageController::class, 'pengadaan'])->name('pengadaaan');
         Route::get('/amanah', [PageController::class, 'amanah'])->name('amanah');
@@ -82,4 +96,41 @@ Route::middleware('auth:custom')->group(function () {
 
         // AI Response Route
         Route::post('/ai/response', [AiResponseController::class, 'aiResponse']);
+=======
+    Route::get('/asset_peta', [PageController::class, 'asset_peta'])->name('asset_peta');
+    Route::get('/asset_recovery', [PageController::class, 'asset_recovery'])->name('asset_recovery');
+    Route::get('/asset_optimalisasi', [PageController::class, 'asset_optimalisasi'])->name('asset_optimalisasi');
+    Route::get('/asset_divestasi', [PageController::class, 'asset_divestasi'])->name('asset_divestasi');
+
+    Route::get('/sla', [PageController::class, 'sla'])->name('sla');
+    Route::get('/pengadaan', [PageController::class, 'pengadaan'])->name('pengadaaan');
+    Route::get('/amanah', [PageController::class, 'amanah'])->name('amanah');
+    Route::get('/iot', [PageController::class, 'iot'])->name('iot');
+    Route::get('/prapengadaan', [PageController::class, 'prapengadaan'])->name('prapengadaan');
+    Route::get('/prosespengadaan', [PageController::class, 'prosespengadaan'])->name('prosespengadaan');
+    Route::get('/kontrakpengadaan', [PageController::class, 'kontrakpengadaan'])->name('kontrakpengadaan');
+    Route::get('/stokpengadaan', [PageController::class, 'stokpengadaan'])->name('stokpengadaan');
+    Route::get('/dashboardemisi', [PageController::class, 'dashboardemisi'])->name('dashboardemisi');
+    Route::get('/soptea', [PageController::class, 'soptea'])->name('soptea');
+
+    Route::get('/lm13', [PageController::class, 'lm13'])->name('lm13');
+    Route::get('/lm14', [PageController::class, 'lm14'])->name('lm14');
+    Route::get('/under_construction', [PageController::class, 'under_construction'])->name('under_construction');
+
+
+    Route::get('/skyview', [PageController::class, 'skyview'])->name('skyview');
+    Route::get('/exec_summary', [PageController::class, 'exec_summary'])->name('exec_summary');
+
+    // Skyview Table (CRUD)
+    Route::get('/skyview-table', [SkyviewController::class, 'index'])->name('skyview_table');
+    Route::post('/skyview-table', [SkyviewController::class, 'store'])->name('skyview.store');
+    Route::get('/skyview-table/{skyview}', [SkyviewController::class, 'show'])->name('skyview.show');
+    Route::put('/skyview-table/{skyview}', [SkyviewController::class, 'update'])->name('skyview.update');
+    Route::delete('/skyview-table/{skyview}', [SkyviewController::class, 'destroy'])->name('skyview.destroy');
+
+    Route::get('/get_data_bigquery', [PageController::class, 'get_data_bigquery'])->name('get_data_bigquery');
+
+    // AI Response Route
+    Route::post('/ai/response', [AiResponseController::class, 'aiResponse']);
+>>>>>>> main
 });

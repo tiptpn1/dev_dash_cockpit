@@ -11,7 +11,7 @@
   <div class="bg-gradient-to-r from-blue-700 to-blue-500 text-white py-4 px-6 shadow-lg flex-shrink-0">
     <div class="max-w-7xl mx-auto">
       <h1 class="text-2xl md:text-3xl font-bold">
-        <span class="font-light">Produksi Teh</span> <span class="italic">DFARM PTPN I</span>
+        <span class="font-light">Produksi Kopi</span> <span class="italic">DFARM PTPN I</span>
       </h1>
     </div>
   </div>
@@ -134,29 +134,35 @@
       </div>
 
       <!-- KPI Cards Section -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
         <!-- Presensi Hadir -->
         <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
-          <h3 class="text-gray-300 text-xs font-medium mb-1">Panen Manual</h3>
-          <p class="text-2xl md:text-3xl font-bold text-white">{{number_format($totalData['panen_manual'], 0, ',', '.') }} Kg</p>
+          <h3 class="text-gray-300 text-xs font-medium mb-1">Basah Merah</h3>
+          <p class="text-2xl md:text-3xl font-bold text-white">{{number_format($totalData['basah_merah'], 0, ',', '.') }} Kg</p>
         </div>
 
         <!-- Jumlah Input Presensi -->
         <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
-          <h3 class="text-gray-300 text-xs font-medium mb-1">Panen Gunting</h3>
-          <p class="text-2xl md:text-3xl font-bold text-white">{{number_format($totalData['panen_gunting'], 0, ',', '.') }} Kg</p>
+          <h3 class="text-gray-300 text-xs font-medium mb-1">Basah Kuning</h3>
+          <p class="text-2xl md:text-3xl font-bold text-white">{{number_format($totalData['basah_kuning'], 0, ',', '.') }} Kg</p>
         </div>
 
         <!-- Jumlah Karyawan -->
         <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
-          <h3 class="text-gray-300 text-xs font-medium mb-1">Panen Mesin</h3>
-          <p class="text-2xl md:text-3xl font-bold text-white">{{number_format($totalData['panen_mesin_individu'], 0, ',', '.') }} Kg</p>
+          <h3 class="text-gray-300 text-xs font-medium mb-1">Basah Hijau</h3>
+          <p class="text-2xl md:text-3xl font-bold text-white">{{number_format($totalData['basah_hijau'], 0, ',', '.') }} Kg</p>
+        </div>
+
+        <!-- Jumlah Karyawan -->
+        <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
+          <h3 class="text-gray-300 text-xs font-medium mb-1">Basah hitam</h3>
+          <p class="text-2xl md:text-3xl font-bold text-white">{{number_format($totalData['basah_hitam'], 0, ',', '.') }} Kg</p>
         </div>
 
         <!-- Persentase Kehadiran -->
         <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
           <h3 class="text-gray-300 text-xs font-medium mb-1">Total</h3>
-          <p class="text-2xl md:text-3xl font-bold text-white">{{number_format($totalData['total'], 0, ',', '.') }} Kg</p>
+          <p class="text-2xl md:text-3xl font-bold text-white">{{number_format($totalData['total_basah'], 0, ',', '.') }} Kg</p>
         </div>
 
         </div>
@@ -178,7 +184,6 @@
         </div>
         
       </div>
-
       <div class="grid grid-cols-1 lg:grid-cols-1 gap-4 mb-6">
         <!-- Presentase Input Chart -->
         <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
@@ -286,7 +291,7 @@
             label: 'Total (Kg)',
             data: [
               @for ($i = 0; $i < count($prestasiData); $i++)
-                {{ $prestasiData[$i]->total }},
+                {{ $prestasiData[$i]->total_basah }},
               @endfor
             ],
             backgroundColor: chartColors.blue,
@@ -323,10 +328,10 @@
         ],
         datasets: [
           {
-            label: 'Panen Manual (Kg)',
+            label: 'Basah Merah (Kg)',
             data: [
               @for ($i = 0; $i < count($prestasiData); $i++)
-                {{ $prestasiData[$i]->panen_manual }},
+                {{ $prestasiData[$i]->basah_merah }},
               @endfor
             ],
             backgroundColor: chartColors.blue,
@@ -334,10 +339,10 @@
             borderSkipped: false,
           },
           {
-            label: 'Panen Gunting (Kg)',
+            label: 'Basah Kuning (Kg)',
             data: [
               @for ($i = 0; $i < count($prestasiData); $i++)
-                {{ $prestasiData[$i]->panen_gunting }},
+                {{ $prestasiData[$i]->basah_kuning }},
               @endfor
             ],
             backgroundColor: chartColors.cyan,
@@ -345,13 +350,24 @@
             borderSkipped: false,
           },
           {
-            label: 'Panen Mesin (Kg)',
+            label: 'Basah Hijau (Kg)',
             data: [
               @for ($i = 0; $i < count($prestasiData); $i++)
-                {{ $prestasiData[$i]->panen_mesin_individu }},
+                {{ $prestasiData[$i]->basah_hijau }},
               @endfor
             ],
             backgroundColor: chartColors.purple,
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+          {
+            label: 'Basah Hitam (Kg)',
+            data: [
+              @for ($i = 0; $i < count($prestasiData); $i++)
+                {{ $prestasiData[$i]->basah_hitam }},
+              @endfor
+            ],
+            backgroundColor: chartColors.red,
             borderRadius: 6,
             borderSkipped: false,
           },
@@ -525,7 +541,7 @@
     selectKebun.innerHTML = '<option value="">Loading...</option>';
 
     // AJAX call ke get_data_kebun
-    fetch('{{ route('get_data_kebun') }}?id_reg=' + regionalId + '&komoditas=1', {
+    fetch('{{ route('get_data_kebun') }}?id_reg=' + regionalId + '&komoditas=3', {
       method: 'GET',
       headers: {
         'Accept': 'application/json',

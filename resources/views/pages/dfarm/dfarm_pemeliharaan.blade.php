@@ -63,7 +63,33 @@
       </style>
       
       <!-- Filters Section -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-3 mb-4">
+
+        <!-- Komoditas Filter -->
+        <div>
+          <label class="block text-white text-xs md:text-sm font-medium mb-1">Komoditas</label>
+          <select id="selectKomoditas" class="w-full px-3 py-2 text-sm rounded-lg bg-slate-700 bg-opacity-50 text-black border border-slate-600 focus:outline-none focus:border-blue-400 font-medium">
+            <option value="">Pilih</option>
+            <option value="1" {{ $selectedKomoditas == 1 ? 'selected' : '' }}>Teh</option>
+            <option value="2" {{ $selectedKomoditas == 2 ? 'selected' : '' }}>Karet</option>
+            <option value="3" {{ $selectedKomoditas == 3 ? 'selected' : '' }}>Kopi</option>
+          </select>
+        </div>
+
+        <!-- Aktivitas Filter -->
+        <div>
+          <label class="block text-white text-xs md:text-sm font-medium mb-1">Aktivitas</label>
+          <select id="selectAktivitas" class="w-full px-3 py-2 text-sm rounded-lg bg-slate-700 bg-opacity-50 text-black border border-slate-600 focus:outline-none focus:border-blue-400 font-medium">
+            <option value="">Pilih</option>
+            <?php 
+              foreach ($alldatapemeliharaan as $key) {
+                echo '<option value="' . $key->id . '"';
+                if ($selectedaktivitas == $key->id) echo ' selected';
+                echo '>' . $key->nama . '</option>';
+              }
+            ?>
+          </select>
+        </div>
 
         <!-- Date Range Filter -->
         <div>
@@ -137,55 +163,69 @@
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <!-- Presensi Hadir -->
         <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
-          <h3 class="text-gray-300 text-xs font-medium mb-1">Panen Manual</h3>
-          <p class="text-2xl md:text-3xl font-bold text-white">{{number_format($totalData['panen_manual'], 0, ',', '.') }} Kg</p>
+          <h3 class="text-gray-300 text-xs font-medium mb-1">Hasil Pemeliharaan</h3>
+          <p class="text-2xl md:text-3xl font-bold text-white">{{number_format($totalData['hasil_pemeliharaan'] ?? 0, 0, ',', '.') }} {{ $detaildatapemeliharaan?->satuan ?? '' }}</p>
         </div>
-
-        <!-- Jumlah Input Presensi -->
-        <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
-          <h3 class="text-gray-300 text-xs font-medium mb-1">Panen Gunting</h3>
-          <p class="text-2xl md:text-3xl font-bold text-white">{{number_format($totalData['panen_gunting'], 0, ',', '.') }} Kg</p>
-        </div>
-
-        <!-- Jumlah Karyawan -->
-        <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
-          <h3 class="text-gray-300 text-xs font-medium mb-1">Panen Mesin</h3>
-          <p class="text-2xl md:text-3xl font-bold text-white">{{number_format($totalData['panen_mesin_individu'], 0, ',', '.') }} Kg</p>
-        </div>
-
-        <!-- Persentase Kehadiran -->
-        <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
-          <h3 class="text-gray-300 text-xs font-medium mb-1">Total</h3>
-          <p class="text-2xl md:text-3xl font-bold text-white">{{number_format($totalData['total'], 0, ',', '.') }} Kg</p>
-        </div>
-
-        </div>
+      </div>
       <!-- Charts Section - By Regional -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+      <div class="grid grid-cols-1 lg:grid-cols-1 gap-4 mb-6">
         <!-- Presentase Input Chart -->
         <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
-          <h2 class="text-white text-xs md:text-sm font-bold mb-3 text-center">Produksi Kebun</h2>
+          <h2 class="text-white text-xs md:text-sm font-bold mb-3 text-center">Hasil Aktivitas @if($detaildatapemeliharaan) <br> ({{ $detaildatapemeliharaan->nama }}) @endif</h2>
           <div class="relative h-56 md:h-64">
             <canvas id="presentaseInputChartBasah"></canvas>
           </div>
         </div>
-
-        <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
-          <h2 class="text-white text-xs md:text-sm font-bold mb-3 text-center">Produksi Kering</h2>
-          <div class="relative h-56 md:h-64">
-            <canvas id="presentaseInputChart"></canvas>
-          </div>
-        </div>
         
       </div>
-
-      <div class="grid grid-cols-1 lg:grid-cols-1 gap-4 mb-6">
-        <!-- Presentase Input Chart -->
-        <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
-          <h2 class="text-white text-xs md:text-sm font-bold mb-3 text-center">% Input Produksi</h2>
-          <div class="relative h-56 md:h-64">
-            <canvas id="presentaseInputProduksiChart"></canvas>
-          </div>
+      <!-- Table Section - By Regional -->
+      <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
+        <h2 class="text-white text-sm md:text-base font-bold mb-4 text-center">
+          @if($detaildatapemeliharaan)
+            {{ $detaildatapemeliharaan->nama }}
+            <br>
+            Komoditas {{ $selectedKomoditas == 1 ? 'Teh' : ($selectedKomoditas == 2 ? 'Karet' : ($selectedKomoditas == 3 ? 'Kopi' : '-')) }}
+            <br>
+            Tanggal {{ \Carbon\Carbon::parse($tglAwal)->translatedFormat('d M Y') }} - {{ \Carbon\Carbon::parse($tglAkhir)->translatedFormat('d M Y') }}
+          @endif
+        </h2>
+        
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-slate-600 bg-slate-800 bg-opacity-50">
+                <th class="px-4 py-3 text-left text-gray-300 font-semibold">No</th>
+                <th class="px-4 py-3 text-left text-gray-300 font-semibold">Nama</th>
+                <th class="px-4 py-3 text-right text-gray-300 font-semibold">Hasil</th>
+                <th class="px-4 py-3 text-left text-gray-300 font-semibold">Satuan</th>
+              </tr>
+            </thead>
+            <tbody>
+              @forelse($prestasiData as $key => $item)
+                
+                <tr class="border-b border-slate-600 hover:bg-slate-700 hover:bg-opacity-30 transition-colors">
+                  <td class="px-4 py-3 text-gray-300">{{ $key + 1 }}</td>
+                  <td class="px-4 py-3 text-gray-200">{{ $item->nama }}</td>
+                  <td class="px-4 py-3 text-right text-white font-medium">
+                    {{ number_format($item->hasil_pemeliharaan ?? 0, 2, ',', '.') }}
+                  </td>
+                  <td class="px-4 py-3 text-gray-300">{{ $detaildatapemeliharaan?->satuan ?? '-' }}</td>
+                </tr>
+              @empty
+                <tr>
+                  <td colspan="4" class="px-4 py-8 text-center text-gray-400">
+                    <i class="fa-solid fa-inbox mr-2"></i>Tidak ada data pemeliharaan
+                  </td>
+                </tr>
+              @endforelse
+              <tr class="border-t border-slate-600 bg-slate-800 bg-opacity-50">
+                <td colspan="2" class="px-4 py-3 text-gray-300 font-semibold">Total</td>
+                <td class="px-4 py-3 text-right text-white font-bold">
+                  {{ number_format($totalData['hasil_pemeliharaan'] ?? 0, 2, ',', '.') }}
+                </td>
+                <td class="px-4 py-3 text-gray-300">{{ $detaildatapemeliharaan?->satuan ?? '-' }}</td>
+            </tbody>
+          </table>
         </div>
       </div>
       
@@ -271,9 +311,9 @@
     },
   };
 
-    // 3. Presentase Input Chart (Grouped Bar)
-    const presentaseInputCtx = document.getElementById('presentaseInputChart').getContext('2d');
-    new Chart(presentaseInputCtx, {
+    // 5. Presentase Input Chart (Grouped Bar)
+    const presentaseInputBasahCtx = document.getElementById('presentaseInputChartBasah').getContext('2d');
+    new Chart(presentaseInputBasahCtx, {
       type: 'bar',
       data: {
         labels: [
@@ -283,10 +323,10 @@
         ],
         datasets: [
           {
-            label: 'Total (Kg)',
+            label: 'Hasil Pemeliharaan ({{ $detaildatapemeliharaan?->satuan ?? "" }})',
             data: [
               @for ($i = 0; $i < count($prestasiData); $i++)
-                {{ $prestasiData[$i]->total }},
+                {{ $prestasiData[$i]->hasil_pemeliharaan }},
               @endfor
             ],
             backgroundColor: chartColors.blue,
@@ -307,118 +347,6 @@
           y: {
             ...commonOptions.scales.y,
             stacked: false,
-          },
-        },
-      },
-    });
-    // 5. Presentase Input Chart (Grouped Bar)
-    const presentaseInputBasahCtx = document.getElementById('presentaseInputChartBasah').getContext('2d');
-    new Chart(presentaseInputBasahCtx, {
-      type: 'bar',
-      data: {
-        labels: [
-          @for ($i = 0; $i < count($prestasiData); $i++) 
-            '{{ $prestasiData[$i]->nama }}',
-          @endfor
-        ],
-        datasets: [
-          {
-            label: 'Panen Manual (Kg)',
-            data: [
-              @for ($i = 0; $i < count($prestasiData); $i++)
-                {{ $prestasiData[$i]->panen_manual }},
-              @endfor
-            ],
-            backgroundColor: chartColors.blue,
-            borderRadius: 6,
-            borderSkipped: false,
-          },
-          {
-            label: 'Panen Gunting (Kg)',
-            data: [
-              @for ($i = 0; $i < count($prestasiData); $i++)
-                {{ $prestasiData[$i]->panen_gunting }},
-              @endfor
-            ],
-            backgroundColor: chartColors.cyan,
-            borderRadius: 6,
-            borderSkipped: false,
-          },
-          {
-            label: 'Panen Mesin (Kg)',
-            data: [
-              @for ($i = 0; $i < count($prestasiData); $i++)
-                {{ $prestasiData[$i]->panen_mesin_individu }},
-              @endfor
-            ],
-            backgroundColor: chartColors.purple,
-            borderRadius: 6,
-            borderSkipped: false,
-          },
-        ],
-      },
-      options: {
-        ...commonOptions,
-        scales: {
-          ...commonOptions.scales,
-          x: {
-            ...commonOptions.scales.x,
-            stacked: false,
-          },
-          y: {
-            ...commonOptions.scales.y,
-            stacked: false,
-          },
-        },
-      },
-    });
-
-    // 5. Presentase Input Chart (Grouped Bar)
-    const presentaseInputProduksiCtx = document.getElementById('presentaseInputProduksiChart').getContext('2d');
-    new Chart(presentaseInputProduksiCtx, {
-      type: 'bar',
-      data: {
-        labels: [
-          @for ($i = 0; $i < count($prestasiDataLite); $i++) 
-            '{{ $prestasiDataLite[$i]->nama }}',
-          @endfor
-        ],
-        datasets: [
-          {
-            label: '% Input',
-            data: [
-              @for ($i = 0; $i < count($prestasiDataLite); $i++)
-                {{ min(100, $prestasiDataLite[$i]->persen_input_produksi) }},
-              @endfor
-            ],
-            backgroundColor: chartColors.blue,
-            borderRadius: 6,
-            borderSkipped: false,
-          },
-          {
-            label: '% Tidak Input',
-            data: [
-              @for ($i = 0; $i < count($prestasiDataLite); $i++)
-                {{ max(0, 100 - min(100, $prestasiDataLite[$i]->persen_input_produksi)) }},
-              @endfor
-            ],
-            backgroundColor: chartColors.red,
-            borderRadius: 6,
-            borderSkipped: false,
-          },
-        ],
-      },
-      options: {
-        ...commonOptions,
-        scales: {
-          ...commonOptions.scales,
-          x: {
-            ...commonOptions.scales.x,
-            stacked: true,
-          },
-          y: {
-            ...commonOptions.scales.y,
-            stacked: true,
           },
         },
       },
@@ -455,6 +383,8 @@
   const tglAkhirParam = urlParams.get('tgl_akhir');
   const idRegParam = urlParams.get('id_reg');
   const kodeKebunParam = urlParams.get('kode_kebun');
+  const komoditasParam = urlParams.get('komoditas');
+  const jenisAktivitasParam = urlParams.get('jenis_aktivitas');
 
   // Set date values dari parameter atau default dari controller
   datePickerStart.value = tglAwalParam || tglAwalDefault;
@@ -463,6 +393,8 @@
   // Set select values dari parameter
   if (idRegParam) document.getElementById('selectRegional').value = idRegParam;
   if (kodeKebunParam) document.getElementById('selectKebun').value = kodeKebunParam;
+  if (komoditasParam) document.getElementById('selectKomoditas').value = komoditasParam;
+  if (jenisAktivitasParam) document.getElementById('selectAktivitas').value = jenisAktivitasParam;
   
   // Update display
   function updateDateDisplay() {
@@ -525,7 +457,7 @@
     selectKebun.innerHTML = '<option value="">Loading...</option>';
 
     // AJAX call ke get_data_kebun
-    fetch('{{ route('get_data_kebun') }}?id_reg=' + regionalId + '&komoditas=1', {
+    fetch('{{ route('get_data_kebun') }}?id_reg=' + regionalId + '&komoditas=' + (document.getElementById('selectKomoditas').value || '1'), {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
@@ -571,6 +503,8 @@
     const tglAkhir = datePickerEnd.value;
     const idReg = document.getElementById('selectRegional').value;
     const kodeKebun = document.getElementById('selectKebun').value;
+    const komoditas = document.getElementById('selectKomoditas').value;
+    const jenisAktivitas = document.getElementById('selectAktivitas').value;
 
     // Validasi input
     if (!tglAwal || !tglAkhir) {
@@ -586,11 +520,33 @@
     if (tglAkhir) params.push('tgl_akhir=' + tglAkhir);
     if (idReg) params.push('id_reg=' + idReg);
     if (kodeKebun) params.push('kode_kebun=' + kodeKebun);
+    if (komoditas) params.push('komoditas=' + komoditas);
+    if (jenisAktivitas) params.push('jenis_aktivitas=' + jenisAktivitas);
 
     url += params.join('&');
 
     // Reload halaman dengan parameter baru
     window.location.href = url;
+  });
+
+  // Handle Komoditas change
+  document.getElementById('selectKomoditas').addEventListener('change', () => {
+    const tglAwal = datePickerStart.value;
+    const tglAkhir = datePickerEnd.value;
+    
+    if (tglAwal && tglAkhir) {
+      document.getElementById('btnFilter').click();
+    }
+  });
+
+  // Handle Aktivitas change
+  document.getElementById('selectAktivitas').addEventListener('change', () => {
+    const tglAwal = datePickerStart.value;
+    const tglAkhir = datePickerEnd.value;
+    
+    if (tglAwal && tglAkhir) {
+      document.getElementById('btnFilter').click();
+    }
   });
 
   // Reset Button Handler

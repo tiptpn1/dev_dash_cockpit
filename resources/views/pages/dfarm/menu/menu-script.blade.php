@@ -4,10 +4,17 @@
     // Get current route/page
     const currentRoute = window.location.pathname;
     
+<<<<<<< HEAD
     // Define menu routes mapping
     const menuRoutesMap = {
       prensensi: ['/dfarmkaret', '/dfarmteh', '/presensi'],
       produksi: ['/produksi', '/produksikaret', '/produksiteh', '/analisis']
+=======
+    // Define menu routes mapping (order matters - check more specific routes first!)
+    const menuRoutesMap = {
+      // produksi: ['/dfarmkaretproduksi', '/dfarmtehproduksi'],
+      // prensensi: ['/dfarmkaret', '/dfarmteh']
+>>>>>>> main
     };
     
     // Determine which menu should be active
