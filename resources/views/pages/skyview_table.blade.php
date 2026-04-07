@@ -139,45 +139,55 @@
         padding: 0; border-bottom: 3px solid #16a34a !important;
     }
     .video-tray-inner {
-        padding: 20px 30px;
-        display: flex; align-items: flex-start; gap: 30px;
+        padding: 18px 24px;
+        display: flex; flex-direction: column; align-items: center; gap: 12px;
     }
     .video-embed-wrap {
-        position: relative; width: 480px; min-width: 300px;
-        flex-shrink: 0; border-radius: 10px; overflow: hidden;
-        box-shadow: 0 4px 24px rgba(37, 235, 113, 0.35);
+        position: relative; width: 80%;
+        border-radius: 12px; overflow: hidden;
+        box-shadow: 0 4px 28px rgba(37, 235, 113, 0.3);
         cursor: pointer;
+        aspect-ratio: 16/9;
     }
     .video-embed-wrap img.thumb {
-        width: 100%; display: block; border-radius: 10px;
+        width: 100%; display: block; border-radius: 12px;
     }
     .video-play-overlay {
         position: absolute; inset: 0;
         display: flex; align-items: center; justify-content: center;
-        background: rgba(0,0,0,0); transition: background 0.2s;
+        background: rgba(0,0,0,0.1); transition: background 0.2s;
     }
-    .video-embed-wrap:hover .video-play-overlay { background: rgba(0,0,0,0); }
+    .video-embed-wrap:hover .video-play-overlay { background: rgba(0,0,0,0.05); }
     .play-icon {
-        width: 64px; height: 64px; background: rgba(220,38,38,0.92);
+        width: 72px; height: 72px; background: rgba(220,38,38,0.92);
         border-radius: 50%; display: flex; align-items: center; justify-content: center;
-        box-shadow: 0 4px 16px rgba(220,38,38,0.5);
+        box-shadow: 0 4px 20px rgba(220,38,38,0.55);
         transition: transform 0.2s;
     }
-    .video-embed-wrap:hover .play-icon { transform: scale(1.1); }
+    .video-embed-wrap:hover .play-icon { transform: scale(1.12); }
     .play-icon svg { color: #fff; }
 
-    .video-info { flex: 1; color: #f1f5f9; }
-    .video-info h4 { font-size: 1rem; font-weight: 700; color: #60a5fa; margin: 0 0 8px; }
-    .video-info p { font-size: 13px; color: #94a3b8; margin: 3px 0; }
-    .video-info .vi-date { font-size: 12px; color: #64748b; margin-bottom: 12px; }
+    .video-tray-meta {
+        display: flex; align-items: center; gap: 24px;
+        color: #94a3b8; font-size: 13.5px;
+    }
+    .video-tray-meta span { display: flex; align-items: center; gap: 5px; }
+    .video-tray-meta strong { color: #e2e8f0; font-weight: 700; }
+    .video-tray-footer {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 16px; flex-wrap: wrap; width: 80%;
+    }
+    .video-tray-footer .video-tray-meta {
+        flex: 1;
+    }
     .btn-open-skyview {
-        display: inline-flex; align-items: center; gap: 6px;
-        padding: 8px 18px;
+        display: inline-flex; align-items: center; gap: 7px;
+        padding: 9px 22px;
         background: linear-gradient(135deg, #dc2626, #b91c1c);
-        color: #fff; border: none; border-radius: 7px;
+        color: #fff; border: none; border-radius: 8px;
         font-size: 13px; font-weight: 700; cursor: pointer;
         text-decoration: none; transition: all 0.2s;
-        box-shadow: 0 2px 8px rgba(220,38,38,0.3);
+        box-shadow: 0 2px 10px rgba(220,38,38,0.35);
     }
     .btn-open-skyview:hover { opacity: 0.9; transform: translateY(-1px); }
 
@@ -398,7 +408,7 @@
                             <th style="width:50px;">#</th>
                             <th class="th-left">Kebun / Unit</th>
                             <th style="width:130px;">Tanggal</th>
-                            <th>Link YouTube</th>
+                            <th>Link</th>
                             <th style="width:200px;">Aksi</th>
                         </tr>
                     </thead>
@@ -530,7 +540,7 @@
                 <div class="form-error" id="err-tanggal"></div>
             </div>
             <div class="form-group">
-                <label class="form-label" for="input-link">Link YouTube</label>
+                <label class="form-label" for="input-link">Link</label>
                 <input class="form-input" type="url" id="input-link" name="link_youtube" placeholder="https://www.youtube.com/watch?v=...">
                 <div class="form-error" id="err-link"></div>
             </div>
@@ -795,29 +805,27 @@ function toggleVideoTray(id, btn) {
         <div class="video-embed-wrap" id="embed-wrap-${id}" title="Klik untuk memutar video">
             ${thumbUrl
                 ? `<img class="thumb" id="thumb-${id}" src="${thumbUrl}" alt="Thumbnail ${kebun}"
-                     onerror="this.src='https://placehold.co/480x270/166534/fff?text=No+Thumbnail'"
-                     style="cursor:pointer;" onclick="playVideoInline(${id}, '${embedUrl}')"
+                     onerror="this.src='https://placehold.co/1280x720/166534/fff?text=No+Thumbnail'"
+                     style="cursor:pointer;width:100%;height:100%;object-fit:cover;" onclick="playVideoInline(${id}, '${embedUrl}')"
                    >
                    <div class="video-play-overlay" onclick="playVideoInline(${id}, '${embedUrl}')" style="cursor:pointer;">
                        <div class="play-icon">
-                           <svg viewBox="0 0 24 24" fill="currentColor" style="width:28px;height:28px;margin-left:4px;">
+                           <svg viewBox="0 0 24 24" fill="currentColor" style="width:36px;height:36px;margin-left:5px;">
                                <path d="M8 5v14l11-7z"/>
                            </svg>
                        </div>
                    </div>`
-                : `<div style="width:480px;height:270px;background:#1e293b;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:14px;cursor:pointer;"
-                        onclick="playVideoInline(${id}, '${embedUrl}')">▶ Putar Video</div>`
+                : `<div style="width:100%;height:100%;background:#1e293b;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:15px;cursor:pointer;"
+                        onclick="playVideoInline(${id}, '${embedUrl}')">▶ Klik untuk Putar Video</div>`
             }
         </div>
-        <div class="video-info">
-            <h4>📍 ${kebun}</h4>
-            <p class="vi-date">📅 ${formattedDate}</p>
-            <p style="color:#94a3b8;font-size:12px;margin-bottom:16px;">Klik thumbnail untuk memutar video, atau tombol di bawah untuk membuka di halaman SkyView.</p>
+        <div class="video-tray-footer">
+
             <a class="btn-open-skyview" href="${skyviewUrl}" target="_blank">
                 <svg viewBox="0 0 24 24" fill="currentColor" style="width:15px;height:15px;">
                     <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                 </svg>
-                Buka di SkyView
+                Tampilan Lebih Luas
             </a>
         </div>
     `;
@@ -840,11 +848,10 @@ function playVideoInline(id, embedUrl) {
     wrap.innerHTML = `
         <iframe
             src="${autoUrl}"
-            width="480" height="270"
             frameborder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowfullscreen
-            style="border-radius:10px;display:block;"
+            style="display:block;width:100%;height:100%;border-radius:12px;"
         ></iframe>
     `;
 }
