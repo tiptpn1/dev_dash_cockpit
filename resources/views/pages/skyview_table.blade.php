@@ -409,12 +409,11 @@
                             <td class="sv-no-num">{{ $rowNo }}</td>
                             <td class="td-left">{{ $sv->kebun_unit }}</td>
                             <td>{{ \Carbon\Carbon::parse($sv->tanggal)->isoFormat('D MMM Y') }}</td>
-                            <td>
-                                <a class="yt-link-badge" href="{{ $sv->link_youtube }}" target="_blank" title="{{ $sv->link_youtube }}">
-                                    <svg viewBox="0 0 24 24" fill="currentColor" style="width:13px;height:13px;flex-shrink:0;">
-                                        <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                                    </svg>
-                                    YouTube
+                            <td class="td-left" style="max-width:260px;">
+                                <a href="{{ $sv->link_youtube }}" target="_blank"
+                                   style="color:#1e3a5f;font-size:12px;word-break:break-all;text-decoration:underline;text-underline-offset:2px;"
+                                   title="{{ $sv->link_youtube }}">
+                                    {{ $sv->link_youtube }}
                                 </a>
                             </td>
                             <td>
@@ -793,23 +792,27 @@ function toggleVideoTray(id, btn) {
     const formattedDate = tanggal ? new Date(tanggal).toLocaleDateString('id-ID', {day:'numeric',month:'long',year:'numeric'}) : '-';
 
     inner.innerHTML = `
-        <div class="video-embed-wrap" onclick="window.open('${skyviewUrl}', '_blank')" title="Buka di SkyView Fullscreen">
+        <div class="video-embed-wrap" id="embed-wrap-${id}" title="Klik untuk memutar video">
             ${thumbUrl
-                ? `<img class="thumb" src="${thumbUrl}" alt="Thumbnail ${kebun}" onerror="this.src='https://placehold.co/480x270/1e3a5f/60a5fa?text=No+Thumbnail'">`
-                : `<div style="width:480px;height:270px;background:#1e293b;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:14px;">Tidak ada thumbnail</div>`
+                ? `<img class="thumb" id="thumb-${id}" src="${thumbUrl}" alt="Thumbnail ${kebun}"
+                     onerror="this.src='https://placehold.co/480x270/166534/fff?text=No+Thumbnail'"
+                     style="cursor:pointer;" onclick="playVideoInline(${id}, '${embedUrl}')"
+                   >
+                   <div class="video-play-overlay" onclick="playVideoInline(${id}, '${embedUrl}')" style="cursor:pointer;">
+                       <div class="play-icon">
+                           <svg viewBox="0 0 24 24" fill="currentColor" style="width:28px;height:28px;margin-left:4px;">
+                               <path d="M8 5v14l11-7z"/>
+                           </svg>
+                       </div>
+                   </div>`
+                : `<div style="width:480px;height:270px;background:#1e293b;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:14px;cursor:pointer;"
+                        onclick="playVideoInline(${id}, '${embedUrl}')">▶ Putar Video</div>`
             }
-            <div class="video-play-overlay">
-                <div class="play-icon">
-                    <svg viewBox="0 0 24 24" fill="currentColor" style="width:28px;height:28px;margin-left:4px;">
-                        <path d="M8 5v14l11-7z"/>
-                    </svg>
-                </div>
-            </div>
         </div>
         <div class="video-info">
             <h4>📍 ${kebun}</h4>
             <p class="vi-date">📅 ${formattedDate}</p>
-            <p style="color:#64748b;font-size:12px;margin-bottom:16px;">Klik thumbnail atau tombol di bawah untuk membuka video di halaman Skyview.</p>
+            <p style="color:#94a3b8;font-size:12px;margin-bottom:16px;">Klik thumbnail untuk memutar video, atau tombol di bawah untuk membuka di halaman SkyView.</p>
             <a class="btn-open-skyview" href="${skyviewUrl}" target="_blank">
                 <svg viewBox="0 0 24 24" fill="currentColor" style="width:15px;height:15px;">
                     <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
@@ -822,6 +825,28 @@ function toggleVideoTray(id, btn) {
     tray.classList.add('open');
     _openTrayId = id;
     tray.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ─── PLAY VIDEO INLINE ────────────────────────────────────────────────────────
+function playVideoInline(id, embedUrl) {
+    const wrap = document.getElementById('embed-wrap-' + id);
+    if (!wrap) return;
+
+    // Tambahkan autoplay=1 agar langsung putar
+    const autoUrl = embedUrl.includes('?')
+        ? embedUrl + '&autoplay=1'
+        : embedUrl + '?autoplay=1';
+
+    wrap.innerHTML = `
+        <iframe
+            src="${autoUrl}"
+            width="480" height="270"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen
+            style="border-radius:10px;display:block;"
+        ></iframe>
+    `;
 }
 
 // Keyboard: press Escape to close modal/confirm
