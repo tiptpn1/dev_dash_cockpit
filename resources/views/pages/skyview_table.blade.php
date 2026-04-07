@@ -58,7 +58,7 @@
     .btn-tambah {
         display: inline-flex; align-items: center; gap: 7px;
         padding: 9px 22px;
-        background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+        background: linear-gradient(135deg, #14532d 0%, #166534 100%);
         color: #fff; border: none; border-radius: 8px;
         font-size: 13px; font-weight: 700;
         cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 8px rgba(37,99,235,0.25);
@@ -72,7 +72,7 @@
         border: 1px solid #dbeafe;
     }
     .sv-table-header {
-        background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+        background: linear-gradient(135deg, #14532d 0%, #166534 100%);
         padding: 14px 22px; display: flex; align-items: center; justify-content: space-between;
     }
     .sv-table-title {
@@ -132,11 +132,11 @@
     .video-tray {
         display: none;
         background: #0f172a;
-        border-bottom: 1px solid #1e3a5f;
+        border-bottom: 1px solid #16a34a;
     }
     .video-tray.open { display: table-row; }
     .video-tray td {
-        padding: 0; border-bottom: 3px solid #2563eb !important;
+        padding: 0; border-bottom: 3px solid #16a34a !important;
     }
     .video-tray-inner {
         padding: 20px 30px;
@@ -145,7 +145,7 @@
     .video-embed-wrap {
         position: relative; width: 480px; min-width: 300px;
         flex-shrink: 0; border-radius: 10px; overflow: hidden;
-        box-shadow: 0 4px 24px rgba(37,99,235,0.35);
+        box-shadow: 0 4px 24px rgba(37, 235, 113, 0.35);
         cursor: pointer;
     }
     .video-embed-wrap img.thumb {
@@ -154,9 +154,9 @@
     .video-play-overlay {
         position: absolute; inset: 0;
         display: flex; align-items: center; justify-content: center;
-        background: rgba(0,0,0,0.4); transition: background 0.2s;
+        background: rgba(0,0,0,0); transition: background 0.2s;
     }
-    .video-embed-wrap:hover .video-play-overlay { background: rgba(0,0,0,0.25); }
+    .video-embed-wrap:hover .video-play-overlay { background: rgba(0,0,0,0); }
     .play-icon {
         width: 64px; height: 64px; background: rgba(220,38,38,0.92);
         border-radius: 50%; display: flex; align-items: center; justify-content: center;
@@ -252,7 +252,7 @@
     /* ===== SEARCH CARD ===== */
     .sv-search-card {
         background: #fff; border-radius: 10px;
-        border: 1px solid #dbeafe; border-left: 4px solid #2563eb;
+        border: 1px solid #dbeafe; border-left: 4px solid #166534;
         padding: 16px 20px; margin-bottom: 16px;
         box-shadow: 0 1px 6px rgba(37,99,235,0.08);
     }
@@ -266,7 +266,7 @@
     .sv-search-input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
     .btn-search {
         display: inline-flex; align-items: center; gap: 6px;
-        padding: 9px 18px; background: #2563eb; color: #fff;
+        padding: 9px 18px; background: #166534; color: #fff;
         border: none; border-radius: 7px; font-size: 13px; font-weight: 700;
         cursor: pointer; transition: opacity 0.2s; white-space: nowrap;
     }
