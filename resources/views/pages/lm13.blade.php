@@ -1,8 +1,8 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('styles')
     <style>
-        /* ===== SCROLL FIX — override Tailwind h-screen di body ===== */
+        /* ===== SCROLL FIX â€” override Tailwind h-screen di body ===== */
         html,
         body {
             height: auto !important;
@@ -28,7 +28,7 @@
             font-family: inherit;
         }
 
-        /* ===== PAGE HEADER — mirip gudang_utilisasi ===== */
+        /* ===== PAGE HEADER â€” mirip gudang_utilisasi ===== */
         .lm-page-header {
             display: flex;
             align-items: center;
@@ -347,11 +347,33 @@
             font-size: 11px;
         }
 
+        /* ===== EXPORT BUTTONS ===== */
+        .export-btn-group {
+            display: flex; align-items: center; gap: 8px;
+        }
+        .btn-export {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 6px 14px;
+            border: none; border-radius: 6px;
+            font-size: 12px; font-weight: 700;
+            cursor: pointer; transition: all 0.2s;
+            text-decoration: none; white-space: nowrap;
+        }
+        .btn-export-excel {
+            background: #16a34a; color: #fff;
+            box-shadow: 0 2px 6px rgba(22,163,74,0.35);
+        }
+        .btn-export-excel:hover { background: #15803d; transform: translateY(-1px); }
+        .btn-export-pdf {
+            background: #dc2626; color: #fff;
+            box-shadow: 0 2px 6px rgba(220,38,38,0.35);
+        }
+        .btn-export-pdf:hover { background: #b91c1c; transform: translateY(-1px); }
+
 @endsection
     @section('content')
-        <div class="lm13-container main-content">< !-- Page Header — sama seperti gudang_utilisasi --><header class="lm-page-header"><div class="lm-header-logo"><img src="{{ asset('danantara.png') }}" alt="Danantara"></div><div class="lm-header-center"><svg style="width:28px;height:28px;color:#22c55e;flex-shrink:0;" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 14H7v-2h5v2zm5-4H7v-2h10v2zm0-4H7V7h10v2z" /></svg><h1>LM 13 &mdash;
-        Biaya Produksi</h1></div><div class="lm-header-right"><img src="{{ asset('ptpn1.png') }}" alt="PTPN 1"></div></header>< !-- Main Content --><div class="content-section">< !-- Filter Section --><div class="filter-card"><div class="filter-title"><i class="fas fa-sliders-h"></i>Filter Data </div><form id="filterForm"><div class="filter-grid"><div class="form-group"><label class="form-label">Komoditas</label><select class="form-select" id="komoditasFilter"><option value="">-- Pilih Komoditas --</option><option value="karet">Karet</option><option value="teh">Teh</option><option value="kopi">Kopi</option><option value="tembakau">Tembakau</option></select></div><div class="form-group"><label class="form-label">Regional</label><select class="form-select" id="regionalFilter"><option value="">-- Pilih Regional --</option><option value="regional-1">Regional 1</option><option value="regional-2">Regional 2</option><option value="regional-3">Regional 3</option><option value="regional-4">Regional 4</option><option value="regional-5">Regional 5</option><option value="regional-6">Regional 6</option><option value="regional-7">Regional 7</option><option value="regional-8">Regional 8</option></select></div><div class="form-group"><label class="form-label">Tahun</label><select class="form-select" id="tahunFilter"><option value="">-- Pilih Tahun --</option><option value="2024" selected>2024</option><option value="2023">2023</option><option value="2022">2022</option><option value="2021">2021</option></select></div><div class="form-group"><label class="form-label">Bulan</label><select class="form-select" id="bulanFilter"><option value="">-- Pilih Bulan --</option><option value="01">Januari</option><option value="02">Februari</option><option value="03">Maret</option><option value="04">April</option><option value="05">Mei</option><option value="06">Juni</option><option value="07">Juli</option><option value="08">Agustus</option><option value="09">September</option><option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option></select></div></div><div class="button-group"><button type="reset" class="btn-reset" id="btnReset"><i class="fas fa-redo"></i>Reset </button><button type="submit" class="btn-filter"><i class="fas fa-search"></i>Cari </button></div></form></div>< !--======PRODUCTION REPORT TABLE======--><div class="table-card"><div class="table-header"><div class="table-title"><i class="fas fa-file-invoice-dollar"></i>Laporan Biaya Produksi — LM 13 </div><span style="color:#dcfce7; font-size:12px;">s/d Bulan ini &mdash;
-        Tahun <strong id="tblYearLabel">2024</strong></span></div><div class="table-wrapper"><table class="report-table" id="reportTable"><thead>< !-- Row 1: top group labels --><tr><th rowspan="3" class="col-norek" style="vertical-align:middle; width:70px;">Nomor<br>Rekening</th><th rowspan="3" class="col-label"
+        <div class="lm13-container main-content">< !-- Page Header â€” sama seperti gudang_utilisasi --><header class="lm-page-header"><div class="lm-header-logo"><img src="{{ asset('danantara.png') }}" alt="Danantara"></div><div class="lm-header-center"><svg style="width:28px;height:28px;color:#22c55e;flex-shrink:0;" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 14H7v-2h5v2zm5-4H7v-2h10v2zm0-4H7V7h10v2z" /></svg><h1>LM 13 &mdash;
+        Biaya Produksi</h1></div><div class="lm-header-right"><img src="{{ asset('ptpn1.png') }}" alt="PTPN 1"></div></header>< !-- Main Content --><div class="content-section">< !-- Filter Section --><div class="filter-card"><div class="filter-title"><i class="fas fa-sliders-h"></i>Filter Data </div><form id="filterForm"><div class="filter-grid"><div class="form-group"><label class="form-label">Komoditas</label><select class="form-select" id="komoditasFilter"><option value="">-- Pilih Komoditas --</option><option value="karet">Karet</option><option value="teh">Teh</option><option value="kopi">Kopi</option><option value="tembakau">Tembakau</option></select></div><div class="form-group"><label class="form-label">Regional</label><select class="form-select" id="regionalFilter"><option value="">-- Pilih Regional --</option><option value="regional-1">Regional 1</option><option value="regional-2">Regional 2</option><option value="regional-3">Regional 3</option><option value="regional-4">Regional 4</option><option value="regional-5">Regional 5</option><option value="regional-6">Regional 6</option><option value="regional-7">Regional 7</option><option value="regional-8">Regional 8</option></select></div><div class="form-group"><label class="form-label">Tahun</label><select class="form-select" id="tahunFilter"><option value="">-- Pilih Tahun --</option><option value="2024" selected>2024</option><option value="2023">2023</option><option value="2022">2022</option><option value="2021">2021</option></select></div><div class="form-group"><label class="form-label">Bulan</label><select class="form-select" id="bulanFilter"><option value="">-- Pilih Bulan --</option><option value="01">Januari</option><option value="02">Februari</option><option value="03">Maret</option><option value="04">April</option><option value="05">Mei</option><option value="06">Juni</option><option value="07">Juli</option><option value="08">Agustus</option><option value="09">September</option><option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option></select></div></div><div class="button-group"><button type="reset" class="btn-reset" id="btnReset"><i class="fas fa-redo"></i>Reset </button><button type="submit" class="btn-filter"><i class="fas fa-search"></i>Cari </button></div></form></div>< !--======PRODUCTION REPORT TABLE======--><div class="table-card"><div class="table-header"><div class="table-title"><i class="fas fa-file-invoice-dollar"></i>Laporan Biaya Produksi â€” LM 13 </div><div class="export-btn-group"><span style="color:#dcfce7;font-size:12px;">s/d Bulan ini &mdash; Tahun <strong id="tblYearLabel">2024</strong></span><button class="btn-export btn-export-excel" onclick="exportExcel()" title="Export ke Excel"><svg viewBox="0 0 24 24" fill="currentColor" style="width:13px;height:13px;"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM9.5 17.5l2-3-2-3h1.5l1.25 2 1.25-2H15l-2 3 2 3h-1.5L12.25 15 11 17.5H9.5zM13 9V3.5L18.5 9H13z"/></svg> Excel</button><button class="btn-export btn-export-pdf" onclick="exportPdf()" title="Export ke PDF"><svg viewBox="0 0 24 24" fill="currentColor" style="width:13px;height:13px;"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM12 17H8v-2h4v2zm3-4H8v-2h7v2zm0-4H8V7h7v2zM13 9V3.5L18.5 9H13z"/></svg> PDF</button></div></div><div class="table-wrapper"><table class="report-table" id="reportTable"><thead>< !-- Row 1: top group labels --><tr><th rowspan="3" class="col-norek" style="vertical-align:middle; width:70px;">Nomor<br>Rekening</th><th rowspan="3" class="col-label"
         style="text-align:left; vertical-align:middle; min-width:270px;">Uraian</th><th colspan="3" class="col-group">Jumlah Kilogram &mdash;
         s/d Bulan ini</th><th colspan="3" class="col-group">Kilogram per Hektar &mdash;
         s/d Bulan ini</th></tr>< !-- Row 2: sub-year labels for first block --><tr><th class="col-group" style="font-size:10px; padding:5px 8px;">Real <span class="dyn-year-prev">2023</span></th><th class="col-group" style="font-size:10px; padding:5px 8px;">Real <span class="dyn-year">2024</span></th><th class="col-group" style="font-size:10px; padding:5px 8px;">RKAP <span class="dyn-year">2024</span></th><th class="col-group" style="font-size:10px; padding:5px 8px;">Real <span class="dyn-year-prev">2023</span></th><th class="col-group" style="font-size:10px; padding:5px 8px;">Real <span class="dyn-year">2024</span></th><th class="col-group" style="font-size:10px; padding:5px 8px;">RKAP <span class="dyn-year">2024</span></th></tr></thead><tbody>< !--======PRODUKSI======--><tr><td class="norek-cell"></td><td class="label-cell indent">Produksi Kebun Sendiri yang Diolah (Kering)</td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td></tr><tr><td class="norek-cell"></td><td class="label-cell indent">Di Pabrik Sendiri</td><td class="num"><span class="dash">-</span></td><td class="num">6,
@@ -362,7 +384,7 @@
         style="text-align:left; vertical-align:middle; min-width:270px;">Uraian</th><th colspan="3" class="col-group">Jumlah Kilogram &mdash;
         s/d Bulan ini</th><th colspan="3" class="col-group">Kilogram per Hektar &mdash;
 
-        s/d Bulan ini</th></tr>< !-- Row 2: sub-year labels for first block --><tr><th class="col-group" style="font-size:10px; padding:5px 8px;">Real <span class="dyn-year-prev">2023</span></th><th class="col-group" style="font-size:10px; padding:5px 8px;">Real <span class="dyn-year">2024</span></th><th class="col-group" style="font-size:10px; padding:5px 8px;">RKAP <span class="dyn-year">2024</span></th><th class="col-group" style="font-size:10px; padding:5px 8px;">Real <span class="dyn-year-prev">2023</span></th><th class="col-group" style="font-size:10px; padding:5px 8px;">Real <span class="dyn-year">2024</span></th><th class="col-group" style="font-size:10px; padding:5px 8px;">RKAP <span class="dyn-year">2024</span></th></tr></thead><tbody>< !--======BEBAN PRODUKSI — section header======-->< !--======BEBAN TANAMAN======--><tr><td class="norek-cell">5.1.1</td><td class="label-cell indent">Gaji dan Tunjangan Kary. Pimpinan</td><td class="num"><span class="dash">-</span></td><td class="num">7,
+        s/d Bulan ini</th></tr>< !-- Row 2: sub-year labels for first block --><tr><th class="col-group" style="font-size:10px; padding:5px 8px;">Real <span class="dyn-year-prev">2023</span></th><th class="col-group" style="font-size:10px; padding:5px 8px;">Real <span class="dyn-year">2024</span></th><th class="col-group" style="font-size:10px; padding:5px 8px;">RKAP <span class="dyn-year">2024</span></th><th class="col-group" style="font-size:10px; padding:5px 8px;">Real <span class="dyn-year-prev">2023</span></th><th class="col-group" style="font-size:10px; padding:5px 8px;">Real <span class="dyn-year">2024</span></th><th class="col-group" style="font-size:10px; padding:5px 8px;">RKAP <span class="dyn-year">2024</span></th></tr></thead><tbody>< !--======BEBAN PRODUKSI â€” section header======-->< !--======BEBAN TANAMAN======--><tr><td class="norek-cell">5.1.1</td><td class="label-cell indent">Gaji dan Tunjangan Kary. Pimpinan</td><td class="num"><span class="dash">-</span></td><td class="num">7,
         843,
         792,
         621</td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num">1,
@@ -452,14 +474,85 @@
                         updateYearLabels();
                     });
 
-                // Reset
-                document.getElementById('btnReset').addEventListener('click', function () {
-                        setTimeout(function () {
-                                tahunSel.value='2024';
-                                updateYearLabels();
-                            }
+                // Export Excel
+                window.exportExcel = function() {
+                    if (typeof XLSX === 'undefined') {
+                        alert('Library SheetJS belum dimuat. Coba beberapa saat lagi.');
+                        return;
+                    }
+                    const yr = document.getElementById('tblYearLabel').textContent;
+                    const wb = XLSX.utils.book_new();
+                    const tables = document.querySelectorAll('.report-table');
+                    const allRows = [];
+                    // Title rows
+                    allRows.push(['LM 13 â€” Laporan Biaya Produksi']);
+                    allRows.push(['s/d Bulan ini â€” Tahun ' + yr]);
+                    allRows.push([]);
 
-                            , 50);
+                    tables.forEach(function(tbl, idx) {
+                        // Get header rows
+                        tbl.querySelectorAll('thead tr').forEach(function(tr) {
+                            const row = [];
+                            tr.querySelectorAll('th').forEach(function(th) { row.push(th.innerText.replace(/\s+/g, ' ').trim()); });
+                            allRows.push(row);
+                        });
+                        // Get body rows
+                        tbl.querySelectorAll('tbody tr').forEach(function(tr) {
+                            const row = [];
+                            tr.querySelectorAll('td').forEach(function(td) { row.push(td.innerText.replace(/\s+/g, ' ').trim()); });
+                            allRows.push(row);
+                        });
+                        if (idx < tables.length - 1) allRows.push([]); // separator
                     });
+
+                    const ws = XLSX.utils.aoa_to_sheet(allRows);
+                    ws['!cols'] = [{wch:14},{wch:42},{wch:18},{wch:18},{wch:18},{wch:18},{wch:18},{wch:18}];
+                    XLSX.utils.book_append_sheet(wb, ws, 'LM13');
+                    XLSX.writeFile(wb, 'LM13_Biaya_Produksi_' + yr + '.xlsx');
+                };
+
+                // Export PDF
+                window.exportPdf = function() {
+                    if (typeof window.jspdf === 'undefined') {
+                        alert('Library jsPDF belum dimuat. Coba beberapa saat lagi.');
+                        return;
+                    }
+                    const { jsPDF } = window.jspdf;
+                    const yr = document.getElementById('tblYearLabel').textContent;
+                    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a3' });
+
+                    doc.setFontSize(14);
+                    doc.setTextColor(22, 101, 52);
+                    doc.text('LM 13 â€” Laporan Biaya Produksi', 14, 18);
+                    doc.setFontSize(10);
+                    doc.setTextColor(100);
+                    doc.text('s/d Bulan ini â€” Tahun ' + yr, 14, 26);
+
+                    let startY = 32;
+                    document.querySelectorAll('.report-table').forEach(function(tbl, idx) {
+                        if (idx > 0) startY += 6;
+                        doc.autoTable({
+                            html: tbl,
+                            startY: startY,
+                            styles: { fontSize: 7, cellPadding: 2 },
+                            headStyles: { fillColor: [22, 101, 52], textColor: 255, fontStyle: 'bold' },
+                            alternateRowStyles: { fillColor: [240, 253, 244] },
+                            didDrawPage: function(d) { startY = d.cursor.y; }
+                        });
+                        startY = doc.lastAutoTable.finalY;
+                    });
+
+                    doc.save('LM13_Biaya_Produksi_' + yr + '.pdf');
+                };
+
             });
-    </script>@endsection
+    </script>
+
+@section('scripts')
+    {{-- SheetJS untuk Export Excel --}}
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+    {{-- jsPDF + AutoTable untuk Export PDF --}}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+@endsection
+@endsection

@@ -5,49 +5,103 @@ namespace App\Models;
 
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-class CustomUser implements AuthenticatableContract
+class CustomUser extends Model implements AuthenticatableContract
 {
     use Authenticatable;
 
-    public $id;
-    public $username;
-    public $password;
+    protected $table = 'users';
 
-    public function __construct($attributes = [])
+    protected $fillable = [
+        'username',
+        'password',
+        'role',
+        'plant',
+        'regional',
+    ];
+
+    protected $hidden = ['password', 'remember_token'];
+
+    /**
+     * Relasi many-to-many ke tabel features via user_feature
+     */
+    public function features(): BelongsToMany
     {
-        foreach ($attributes as $key => $value) {
-            $this->$key = $value;
+        return $this->belongsToMany(Feature::class, 'user_feature', 'user_id', 'feature_id');
+    }
+
+    /**
+     * Cache slug fitur yang dimiliki user (lazy load sekali saja)
+     */
+    protected ?array $featureCache = null;
+
+    protected function loadFeatureCache(): void
+    {
+        if ($this->featureCache === null) {
+            $this->featureCache = $this->features()->pluck('slug')->toArray();
         }
     }
 
-    public function getAuthIdentifierName()
+    /**
+     * Cek apakah user memiliki akses ke fitur tertentu
+     * Contoh: $user->hasFeature('mrc')
+     */
+    public function hasFeature(string $slug): bool
+    {
+        $this->loadFeatureCache();
+        return in_array($slug, $this->featureCache);
+    }
+
+    /**
+     * Magic getter: $user->mrc, $user->finansial, dll.
+     * Agar sidebar lama ($user->mrc) tetap kompatibel
+     */
+    public function __get($key)
+    {
+        $features = [
+            'mrc', 'gis', 'lm', 'aigr1', 'garda', 'skyview',
+            'operasional', 'aset', 'finansial', 'hr', 'sales',
+            'legal', 'progress', 'pengadaan', 'carbon', 'warehouse',
+        ];
+
+        if (in_array($key, $features)) {
+            return $this->hasFeature($key);
+        }
+
+        return parent::__get($key);
+    }
+
+    // ─── AuthenticatableContract helpers ───────────────────────────────────
+
+    public function getAuthIdentifierName(): string
     {
         return 'id';
     }
 
-    public function getAuthIdentifier()
+    public function getAuthIdentifier(): mixed
     {
         return $this->id;
     }
 
-    public function getAuthPassword()
+    public function getAuthPassword(): string
     {
         return $this->password;
     }
 
-    public function getRememberToken()
+    public function getRememberToken(): ?string
     {
-        return null; // Not implemented
+        return $this->remember_token;
     }
 
-    public function setRememberToken($value)
+    public function setRememberToken($value): void
     {
-        // Not implemented
+        $this->remember_token = $value;
     }
 
-    public function getRememberTokenName()
+    public function getRememberTokenName(): string
     {
-        return null; // Not implemented
+        return 'remember_token';
     }
 }
