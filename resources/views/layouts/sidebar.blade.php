@@ -147,8 +147,8 @@ if (isset($user)) {
                 <a href="#lm" id="lm" class="parent"><i class="fa-solid fa-book menu-icon"></i>LM <span
                         class="toggle-icon">&#9654;</span></a>
                 <div class="submenu" id="lmSubmenu">
-                    <a href="{{url('')}}/under_construction"><i class="fa-solid fa-book-open menu-icon"></i>LM13</a>
-                    <a href="{{url('')}}/under_construction"><i class="fa-solid fa-book-open menu-icon"></i>LM14</a>
+                    <a href="{{url('')}}/lm13"><i class="fa-solid fa-book-open menu-icon"></i>LM13</a>
+                    <a href="{{url('')}}/lm14"><i class="fa-solid fa-book-open menu-icon"></i>LM14</a>
                 </div>
             @endif
 
