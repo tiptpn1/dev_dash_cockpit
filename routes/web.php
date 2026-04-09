@@ -104,6 +104,8 @@ Route::middleware('auth:custom')->group(function () {
     Route::delete('/skyview-table/{skyview}', [SkyviewController::class, 'destroy'])->name('skyview.destroy');
 
     Route::get('/get_data_lm14', [PageController::class, 'get_data_lm14'])->name('get_data_lm14');
+    Route::get('/get_data_lm16', [PageController::class, 'get_data_lm16'])->name('get_data_lm16');
+
 
     // AI Response Route
     Route::post('/ai/response', [AiResponseController::class, 'aiResponse']);

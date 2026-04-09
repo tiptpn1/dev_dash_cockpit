@@ -1560,6 +1560,7 @@ class PageController extends Controller
 
         return view('pages/lm14_draft', compact('plantList', 'regionalList', 'tahunList', 'tahunSekarang'));
     }
+
     public function under_construction()
     {
         return view('pages/under-construction');
@@ -1614,5 +1615,54 @@ class PageController extends Controller
             ], 500);
         }
     }
+
+    public function get_data_lm16()
+    {
+        // $plant = $request->plant;
+        // $tahun = $request->tahun;
+        // $bulan = $request->bulan;
+        // if ($bulan < 10) {
+        //     $bulan = '00' . $bulan;
+        // }
+        // if ($bulan >= 10 && $bulan < 12) {
+        //     $bulan = '0' . $bulan;
+        // }
+        // $tahun_periode = $tahun . $bulan;
+        try {
+            $query = "
+            SELECT *
+            FROM `dashboard-cockpit.data_dash.cds_lm16`
+            limit 100
+            ";
+
+            // 1. Buat query config
+            $queryConfig = BigQuery::query($query);
+
+            // 2. Set location (INI PENTING 🔥)
+            $queryConfig->location('asia-southeast2');
+
+            // 3. Jalankan query
+            $queryResults = BigQuery::runQuery($queryConfig);
+
+            // 4. Ambil hasil
+            $rows = [];
+            foreach ($queryResults->rows() as $row) {
+                $rows[] = $row;
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'total' => count($rows),
+                'data' => $rows,
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
 
 }
