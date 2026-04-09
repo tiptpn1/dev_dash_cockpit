@@ -15,6 +15,7 @@ class Skyview extends Model
         'kebun_unit',
         'tanggal',
         'link_youtube',
+        'keterangan'
     ];
 
     protected $casts = [
@@ -27,7 +28,8 @@ class Skyview extends Model
     public function getYoutubeIdAttribute(): ?string
     {
         $url = $this->link_youtube;
-        if (!$url) return null;
+        if (!$url)
+            return null;
 
         // youtube.com/watch?v=VIDEO_ID
         if (preg_match('/[?&]v=([a-zA-Z0-9_-]{11})/', $url, $m)) {

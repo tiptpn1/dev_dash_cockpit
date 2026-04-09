@@ -409,6 +409,7 @@
                             <th class="th-left">Kebun / Unit</th>
                             <th style="width:130px;">Tanggal</th>
                             <th>Link</th>
+                            <th>Keterangan</th>
                             <th style="width:200px;">Aksi</th>
                         </tr>
                     </thead>
@@ -426,6 +427,7 @@
                                     {{ $sv->link_youtube }}
                                 </a>
                             </td>
+                            <td>{{ $sv->keterangan }}</td>
                             <td>
                                 <div class="action-btns">
                                     <button class="btn-action btn-view"
@@ -457,7 +459,7 @@
                         </tr>
                         {{-- Video Tray Row --}}
                         <tr class="video-tray" id="tray-{{ $sv->id }}">
-                            <td colspan="5">
+                            <td colspan="6">
                                 <div class="video-tray-inner" id="tray-inner-{{ $sv->id }}">
                                     {{-- Filled dynamically --}}
                                 </div>
@@ -465,7 +467,7 @@
                         </tr>
                         @empty
                         <tr id="empty-row">
-                            <td colspan="5">
+                            <td colspan="6">
                                 <div class="sv-empty">
                                     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 3v2h-2V3H8v2H6V3H4v18h2v-2h2v2h8v-2h2v2h2V3h-2zM8 17H6v-2h2v2zm0-4H6v-2h2v2zm0-4H6V7h2v2zm10 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V7h2v2z"/></svg>
                                     <p>Belum ada data skyview. Klik <strong>Tambah Data</strong> untuk mulai.</p>
@@ -544,7 +546,11 @@
                 <input class="form-input" type="url" id="input-link" name="link_youtube" placeholder="https://www.youtube.com/watch?v=...">
                 <div class="form-error" id="err-link"></div>
             </div>
-
+            <div class="form-group">
+                <label class="form-label" for="input-keterangan">Keterangan</label>
+                <textarea class="form-input" id="input-keterangan" name="keterangan" placeholder="Masukkan keterangan" rows="3"></textarea>
+                <div class="form-error" id="err-keterangan"></div>
+            </div>  
             <div class="modal-actions">
                 <button type="button" class="btn-cancel" onclick="closeModal()">Batal</button>
                 <button type="submit" class="btn-save" id="btn-save">
@@ -589,9 +595,10 @@ const CSRF = "{{ csrf_token() }}";
     $skyviewMap = [];
     foreach ($skyviews as $sv) {
         $skyviewMap[$sv->id] = [
-            'kebun'   => $sv->kebun_unit,
-            'tanggal' => (string) $sv->tanggal,
-            'link'    => $sv->link_youtube,
+            'kebun'      => $sv->kebun_unit,
+            'tanggal'    => $sv->tanggal ? $sv->tanggal->format('Y-m-d') : '',
+            'link'       => $sv->link_youtube,
+            'keterangan' => (string) ($sv->keterangan ?? ''),
         ];
     }
 @endphp
@@ -618,6 +625,7 @@ function openAddModal() {
     document.getElementById('input-kebun').value = '';
     document.getElementById('input-tanggal').value = '';
     document.getElementById('input-link').value = '';
+    document.getElementById('input-keterangan').value = '';
     clearErrors();
     document.getElementById('modal-backdrop').classList.add('show');
     document.getElementById('input-kebun').focus();
@@ -633,6 +641,7 @@ function openEditModal(id, btn) {
     document.getElementById('input-kebun').value = sv.kebun;
     document.getElementById('input-tanggal').value = sv.tanggal;
     document.getElementById('input-link').value = sv.link;
+    document.getElementById('input-keterangan').value = sv.keterangan;
     clearErrors();
     document.getElementById('modal-backdrop').classList.add('show');
     document.getElementById('input-kebun').focus();
@@ -665,6 +674,7 @@ function submitForm(e) {
         kebun_unit:   document.getElementById('input-kebun').value,
         tanggal:      document.getElementById('input-tanggal').value,
         link_youtube: document.getElementById('input-link').value,
+        keterangan:   document.getElementById('input-keterangan').value,
     });
 
     let url    = ROUTES.store;

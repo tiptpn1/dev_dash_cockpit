@@ -87,6 +87,7 @@ Route::middleware('auth:custom')->group(function () {
 
     Route::get('/lm13', [PageController::class, 'lm13'])->name('lm13');
     Route::get('/lm14', [PageController::class, 'lm14'])->name('lm14');
+    Route::get('/lm14_draft', [PageController::class, 'lm14_draft'])->name('lm14_draft');
     Route::get('/under_construction', [PageController::class, 'under_construction'])->name('under_construction');
 
 
@@ -100,7 +101,7 @@ Route::middleware('auth:custom')->group(function () {
     Route::put('/skyview-table/{skyview}', [SkyviewController::class, 'update'])->name('skyview.update');
     Route::delete('/skyview-table/{skyview}', [SkyviewController::class, 'destroy'])->name('skyview.destroy');
 
-    Route::get('/get_data_bigquery', [PageController::class, 'get_data_bigquery'])->name('get_data_bigquery');
+    Route::get('/get_data_lm14', [PageController::class, 'get_data_lm14'])->name('get_data_lm14');
 
     // AI Response Route
     Route::post('/ai/response', [AiResponseController::class, 'aiResponse']);
