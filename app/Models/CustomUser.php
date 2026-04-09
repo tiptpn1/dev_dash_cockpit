@@ -17,6 +17,11 @@ class CustomUser extends Model implements AuthenticatableContract
     protected $fillable = [
         'username',
         'password',
+        'name',
+        'email',
+        'phone',
+        'nik',
+        'organization',
         'role',
         'plant',
         'regional',

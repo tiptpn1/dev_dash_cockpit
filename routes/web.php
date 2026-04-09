@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\SSOController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\AiResponseController;
 use App\Http\Controllers\ApiController;
@@ -18,7 +19,8 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-//
+// Include SSO routes
+require base_path('routes/sso.php');
 
 Route::get('/login', function () {
     return view('auth/login');
