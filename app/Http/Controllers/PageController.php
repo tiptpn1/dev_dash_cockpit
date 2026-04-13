@@ -1580,10 +1580,11 @@ class PageController extends Controller
         $tahun_periode = $tahun . $bulan;
         try {
             $query = "
-            SELECT *
-            FROM `dashboard-cockpit.data_dash.cds_lm14` 
-            WHERE profitcenter like '$plant%'
-            AND tahun_periode = $tahun_periode
+            CALL `dashboard-cockpit.data_dash.sp_laporan_lm14`(
+                '$plant',
+                '$tahun',
+                '$bulan'
+            )
             
             ";
 
@@ -1597,9 +1598,22 @@ class PageController extends Controller
             $queryResults = BigQuery::runQuery($queryConfig);
 
             // 4. Ambil hasil
+            // BigQuery mengembalikan typed objects (Numeric, Date, dll) — konversi ke scalar
+            $bqValue = function ($val) {
+                if (is_null($val))   return null;
+                if (is_scalar($val)) return $val;
+                // Numeric / BigNumeric / Date / Time / Timestamp — semua punya get() atau __toString()
+                if (method_exists($val, 'get')) return $val->get();
+                return (string) $val;
+            };
+
             $rows = [];
             foreach ($queryResults->rows() as $row) {
-                $rows[] = $row;
+                $rowArr = [];
+                foreach ($row as $key => $val) {
+                    $rowArr[$key] = $bqValue($val);
+                }
+                $rows[] = $rowArr;
             }
 
             return response()->json([
@@ -1645,9 +1659,21 @@ class PageController extends Controller
             $queryResults = BigQuery::runQuery($queryConfig);
 
             // 4. Ambil hasil
+            // BigQuery mengembalikan typed objects (Numeric, Date, dll) — konversi ke scalar
+            $bqValue = function ($val) {
+                if (is_null($val))   return null;
+                if (is_scalar($val)) return $val;
+                if (method_exists($val, 'get')) return $val->get();
+                return (string) $val;
+            };
+
             $rows = [];
             foreach ($queryResults->rows() as $row) {
-                $rows[] = $row;
+                $rowArr = [];
+                foreach ($row as $key => $val) {
+                    $rowArr[$key] = $bqValue($val);
+                }
+                $rows[] = $rowArr;
             }
 
             return response()->json([
