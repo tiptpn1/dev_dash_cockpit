@@ -21,8 +21,7 @@ if (isset($user)) {
             <a href="{{url('')}}/mrc" class="menu-item" id="mrc"><i class="fa-solid fa-calendar-days menu-icon"></i>MRC</a>
             <a href="{{url('')}}/skyview-table" class="menu-item" id='skyview'><i
                     class="fa-solid fa-map-location-dot menu-icon"></i>AGRO Skyview</a>
-            <a href="{{url('')}}/exec_summary" class="menu-item" id='exec_summary'><i
-                    class="fa-solid fa-map-location-dot menu-icon"></i>Exec Summary</a>
+
         @endif
         @if($username != 'mrc')
                 @if($user && $user->operasional)
@@ -30,17 +29,17 @@ if (isset($user)) {
                         <span class="toggle-icon">&#9654;</span></a>
                     <div class="submenu" id="operasionalSubmenu">
                         <!-- <a href="#" id="karetSubmenu" class="parents"><i class="fa-solid fa-leaf menu-icon"></i>Karet<span
-                                                                    class="toggle-icon">&#9654;</span></a>
-                                                            <div class="submenu subsub">
-                                                                <a href="{{url('')}}/onfarmkaret"><i class="fa-solid fa-tree menu-icon"></i>On Farm</a>
-                                                                <a href="{{url('')}}/offfarmkaret"><i class="fa-solid fa-truck menu-icon"></i>Off Farm</a>
-                                                            </div>
-                                                            <a href="#" id="tehSubmenu" class="parents"><i class="fa-solid fa-mug-hot menu-icon"></i>Teh<span
-                                                                    class="toggle-icon">&#9654;</span></a>
-                                                            <div class="submenu subsub">
-                                                                <a href="{{url('')}}/onfarmteh"><i class="fa-solid fa-tree menu-icon"></i>On Farm</a>
-                                                                <a href="{{url('')}}/offfarmteh"><i class="fa-solid fa-truck menu-icon"></i>Off Farm</a>
-                                                            </div> -->
+                                                                                            class="toggle-icon">&#9654;</span></a>
+                                                                                    <div class="submenu subsub">
+                                                                                        <a href="{{url('')}}/onfarmkaret"><i class="fa-solid fa-tree menu-icon"></i>On Farm</a>
+                                                                                        <a href="{{url('')}}/offfarmkaret"><i class="fa-solid fa-truck menu-icon"></i>Off Farm</a>
+                                                                                    </div>
+                                                                                    <a href="#" id="tehSubmenu" class="parents"><i class="fa-solid fa-mug-hot menu-icon"></i>Teh<span
+                                                                                            class="toggle-icon">&#9654;</span></a>
+                                                                                    <div class="submenu subsub">
+                                                                                        <a href="{{url('')}}/onfarmteh"><i class="fa-solid fa-tree menu-icon"></i>On Farm</a>
+                                                                                        <a href="{{url('')}}/offfarmteh"><i class="fa-solid fa-truck menu-icon"></i>Off Farm</a>
+                                                                                    </div> -->
                         <!-- <a href="{{url('')}}/onfarmkopi"><i class="fa-solid fa-mug-hot menu-icon"></i>Kopi</a> -->
                         <!-- <a href="{{url('')}}/iot"><i class="fa-solid fa-microchip menu-icon"></i>IOT</a> -->
                         <a href="{{url('')}}/amanah"><i class="fa-solid fa-building menu-icon"></i>AMANAH</a>
@@ -54,8 +53,10 @@ if (isset($user)) {
                 <a href="#pica" id="pica" class="parent"><i class="fa-solid fa-clipboard-list menu-icon"></i>PICA
                     <span class="toggle-icon">&#9654;</span></a>
                 <div class="submenu" id="picaSubmenu">
-                    <a href="{{ route('pica.kuadran_problem_identifications') }}"><i class="fa-solid fa-table-cells-large menu-icon"></i>Kuadran Problem Identifications</a>
-                    <a href="{{ route('pica.list_corrective_actions') }}"><i class="fa-solid fa-list-check menu-icon"></i>List Corrective Actions</a>
+                    <a href="{{ route('pica.kuadran_problem_identifications') }}"><i
+                            class="fa-solid fa-table-cells-large menu-icon"></i>Kuadran Problem Identifications</a>
+                    <a href="{{ route('pica.list_corrective_actions') }}"><i class="fa-solid fa-list-check menu-icon"></i>List
+                        Corrective Actions</a>
                 </div>
                 @if($user && $user->warehouse)
                     <a href="{{url('')}}/gudangutilisasi" class="menu-item" id='warehouse'><i
