@@ -1573,6 +1573,16 @@ class PageController extends Controller
         return view('pages/lm14_draft', compact('plantList', 'regionalList', 'tahunList', 'tahunSekarang'));
     }
 
+    public function lm16_draft()
+    {
+        $plantList = Plant::orderBy('plant', 'asc')->get();
+        $regionalList = Plant::distinct()->orderBy('regional', 'asc')->get(['regional']);
+        $tahunSekarang = (int) date('Y');
+        $tahunList = range($tahunSekarang, $tahunSekarang + 9); // [2026, 2027, ..., 2035]
+
+        return view('pages/lm16_draft', compact('plantList', 'regionalList', 'tahunList', 'tahunSekarang'));
+    }
+
     public function under_construction()
     {
         return view('pages/under-construction');
@@ -1592,7 +1602,7 @@ class PageController extends Controller
         $tahun_periode = $tahun . $bulan;
         try {
             $query = "
-            CALL `dashboard-cockpit.data_dash.sp_laporan_lm14`(
+            CALL `dashboard-cockpit.data_dash.sp_laporan_lm14_karet`(
                 '$plant',
                 '$tahun',
                 '$bulan'
@@ -1612,10 +1622,13 @@ class PageController extends Controller
             // 4. Ambil hasil
             // BigQuery mengembalikan typed objects (Numeric, Date, dll) — konversi ke scalar
             $bqValue = function ($val) {
-                if (is_null($val))   return null;
-                if (is_scalar($val)) return $val;
+                if (is_null($val))
+                    return null;
+                if (is_scalar($val))
+                    return $val;
                 // Numeric / BigNumeric / Date / Time / Timestamp — semua punya get() atau __toString()
-                if (method_exists($val, 'get')) return $val->get();
+                if (method_exists($val, 'get'))
+                    return $val->get();
                 return (string) $val;
             };
 
@@ -1642,23 +1655,26 @@ class PageController extends Controller
         }
     }
 
-    public function get_data_lm16()
+    public function get_data_lm16(Request $request)
     {
-        // $plant = $request->plant;
-        // $tahun = $request->tahun;
-        // $bulan = $request->bulan;
-        // if ($bulan < 10) {
-        //     $bulan = '00' . $bulan;
-        // }
-        // if ($bulan >= 10 && $bulan < 12) {
-        //     $bulan = '0' . $bulan;
-        // }
-        // $tahun_periode = $tahun . $bulan;
+        $plant = $request->plant;
+        $tahun = $request->tahun;
+        $bulan = $request->bulan;
+        if ($bulan < 10) {
+            $bulan = '00' . $bulan;
+        }
+        if ($bulan >= 10 && $bulan < 12) {
+            $bulan = '0' . $bulan;
+        }
+        $tahun_periode = $tahun . $bulan;
         try {
             $query = "
-            SELECT *
-            FROM `dashboard-cockpit.data_dash.cds_lm16`
-            limit 100
+            CALL `dashboard-cockpit.data_dash.sp_laporan_lm16_karet`(
+                '$plant',
+                '$tahun',
+                '$bulan'
+            )
+            
             ";
 
             // 1. Buat query config
@@ -1673,9 +1689,13 @@ class PageController extends Controller
             // 4. Ambil hasil
             // BigQuery mengembalikan typed objects (Numeric, Date, dll) — konversi ke scalar
             $bqValue = function ($val) {
-                if (is_null($val))   return null;
-                if (is_scalar($val)) return $val;
-                if (method_exists($val, 'get')) return $val->get();
+                if (is_null($val))
+                    return null;
+                if (is_scalar($val))
+                    return $val;
+                // Numeric / BigNumeric / Date / Time / Timestamp — semua punya get() atau __toString()
+                if (method_exists($val, 'get'))
+                    return $val->get();
                 return (string) $val;
             };
 
