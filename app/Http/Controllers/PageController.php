@@ -143,6 +143,18 @@ class PageController extends Controller
         return view('pages/overview_page', compact('linkiframe'));
     }
 
+    public function picaKuadranProblemIdentifications()
+    {
+        $linkiframe = 'https://picakateko.holding-perkebunan.com/on-farm/teh/dashboard-kuadran?token=8cb8a28ec911a78ebe997c92d162b29f44e00d3233f7e44649ad929bd105df4n';
+        return view('pages/overview_page', compact('linkiframe'));
+    }
+
+    public function picaListCorrectiveActions()
+    {
+        $linkiframe = 'https://picakateko.holding-perkebunan.com/on-farm/teh/approval?token=8cb8a28ec911a78ebe997c92d162b29f44e00d3233f7e44649ad929bd105df4n';
+        return view('pages/overview_page', compact('linkiframe'));
+    }
+
     public function sla()
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/5d2ef7fa-99cf-44bc-97a1-ad3866a43285/page/ihnUE';

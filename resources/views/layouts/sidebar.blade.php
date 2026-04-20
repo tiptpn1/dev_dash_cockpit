@@ -47,6 +47,12 @@ if (isset($user)) {
                         <!-- <a href="{{url('')}}/gudangutilisasi">Dashboard Utilisasi Gudang</a> -->
                     </div>
                 @endif
+                <a href="#pica" id="pica" class="parent"><i class="fa-solid fa-clipboard-list menu-icon"></i>PICA
+                    <span class="toggle-icon">&#9654;</span></a>
+                <div class="submenu" id="picaSubmenu">
+                    <a href="{{ route('pica.kuadran_problem_identifications') }}"><i class="fa-solid fa-table-cells-large menu-icon"></i>Kuadran Problem Identifications</a>
+                    <a href="{{ route('pica.list_corrective_actions') }}"><i class="fa-solid fa-list-check menu-icon"></i>List Corrective Actions</a>
+                </div>
                 @if($user && $user->warehouse)
                     <a href="{{url('')}}/gudangutilisasi" class="menu-item" id='warehouse'><i
                             class="fa-solid fa-warehouse menu-icon"></i>Warehouse</a>

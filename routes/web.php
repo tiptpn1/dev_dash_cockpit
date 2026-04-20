@@ -48,6 +48,8 @@ Route::middleware('auth:custom')->group(function () {
 
     Route::get('/picaonfarm', [PageController::class, 'picaonfarm'])->name('picaonfarm');
     Route::get('/picaofffarm', [PageController::class, 'picaofffarm'])->name('picaofffarm');
+    Route::get('/pica/kuadran-problem-identifications', [PageController::class, 'picaKuadranProblemIdentifications'])->name('pica.kuadran_problem_identifications');
+    Route::get('/pica/list-corrective-actions', [PageController::class, 'picaListCorrectiveActions'])->name('pica.list_corrective_actions');
 
     Route::get('/dfarmkaret', [PageController::class, 'dfarmkaretpresensi'])->name('dfarmkaretpresensi');
     Route::get('/dfarmpresensitabular', [PageController::class, 'dfarmkaretpresensitabular'])->name('dfarmkaretpresensitabular');
