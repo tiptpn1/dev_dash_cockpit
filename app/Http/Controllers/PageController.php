@@ -1560,17 +1560,12 @@ class PageController extends Controller
 
     public function lm14()
     {
-        return view('pages/lm14');
-    }
-
-    public function lm14_draft()
-    {
         $plantList = Plant::orderBy('plant', 'asc')->get();
         $regionalList = Plant::distinct()->orderBy('regional', 'asc')->get(['regional']);
         $tahunSekarang = (int) date('Y');
         $tahunList = range($tahunSekarang, $tahunSekarang + 9); // [2026, 2027, ..., 2035]
 
-        return view('pages/lm14_draft', compact('plantList', 'regionalList', 'tahunList', 'tahunSekarang'));
+        return view('pages/lm14', compact('plantList', 'regionalList', 'tahunList', 'tahunSekarang'));
     }
 
     public function lm16_draft()

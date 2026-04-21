@@ -1,9 +1,73 @@
 @extends('layouts.app')
 
 @section('styles')
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <style>
+        /* ===== Select2 — sesuaikan dengan tema hijau ===== */
+        .select2-container--default .select2-selection--single {
+            height: 36px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background-color: #fff;
+            color: #1f2937;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 36px;
+            padding-left: 0;
+            color: #111827 !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__placeholder {
+            color: #6b7280 !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 34px;
+        }
+
+        .select2-container--default.select2-container--focus .select2-selection--single,
+        .select2-container--default.select2-container--open .select2-selection--single {
+            border-color: #166534;
+            box-shadow: 0 0 0 2px rgba(22, 101, 52, 0.12);
+            outline: none;
+        }
+
+        .select2-container--default .select2-results__option {
+            color: #111827 !important;
+        }
+
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: #166534;
+            color: #fff !important;
+        }
+
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 12px;
+            color: #111827 !important;
+        }
+
+        .select2-dropdown {
+            border: 1px solid #166534;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .select2-container {
+            width: 100% !important;
+        }
+
         /* ===== SCROLL FIX — override Tailwind h-screen di body ===== */
-        html, body {
+        html,
+        body {
             height: auto !important;
             min-height: 100vh;
             overflow-y: auto !important;
@@ -37,8 +101,20 @@
             border-bottom: 1px solid #e5e7eb;
             min-height: 56px;
         }
-        .lm-header-logo { width: 130px; height: 44px; display: flex; align-items: center; }
-        .lm-header-logo img { width: 100%; height: 100%; object-fit: contain; }
+
+        .lm-header-logo {
+            width: 130px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+        }
+
+        .lm-header-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
         .lm-header-center {
             position: absolute;
             left: 50%;
@@ -47,14 +123,24 @@
             align-items: center;
             gap: 8px;
         }
+
         .lm-header-center h1 {
             font-size: 1.5rem;
             font-weight: 700;
             color: #166534;
             margin: 0;
         }
-        .lm-header-right { display: flex; align-items: center; }
-        .lm-header-right img { height: 44px; width: auto; object-fit: contain; }
+
+        .lm-header-right {
+            display: flex;
+            align-items: center;
+        }
+
+        .lm-header-right img {
+            height: 44px;
+            width: auto;
+            object-fit: contain;
+        }
 
         .content-section {
             max-width: 100%;
@@ -70,8 +156,9 @@
             border-radius: 8px;
             padding: 18px 20px;
             margin-bottom: 20px;
-            box-shadow: 0 1px 4px rgba(22,101,52,0.08);
+            box-shadow: 0 1px 4px rgba(22, 101, 52, 0.08);
         }
+
         .filter-title {
             color: #166534;
             font-size: 14px;
@@ -81,13 +168,19 @@
             align-items: center;
             gap: 6px;
         }
+
         .filter-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 12px;
             margin-bottom: 12px;
         }
-        .form-group { display: flex; flex-direction: column; }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
         .form-label {
             color: #374151;
             font-size: 11px;
@@ -96,6 +189,7 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
+
         .form-select {
             width: 100%;
             padding: 8px 10px;
@@ -106,17 +200,20 @@
             font-size: 13px;
             transition: border-color 0.2s;
         }
+
         .form-select:focus {
             outline: none;
             border-color: #166534;
-            box-shadow: 0 0 0 2px rgba(22,101,52,0.12);
+            box-shadow: 0 0 0 2px rgba(22, 101, 52, 0.12);
         }
+
         .button-group {
             display: flex;
             gap: 8px;
             justify-content: flex-end;
             margin-top: 12px;
         }
+
         .btn-filter {
             padding: 8px 22px;
             background: #166534;
@@ -131,7 +228,11 @@
             gap: 6px;
             font-size: 13px;
         }
-        .btn-filter:hover { background: #15803d; }
+
+        .btn-filter:hover {
+            background: #15803d;
+        }
+
         .btn-reset {
             padding: 8px 22px;
             background: #fff;
@@ -146,7 +247,10 @@
             gap: 6px;
             font-size: 13px;
         }
-        .btn-reset:hover { background: #f3f4f6; }
+
+        .btn-reset:hover {
+            background: #f3f4f6;
+        }
 
         /* ===== TABLE CARD ===== */
         .table-card {
@@ -154,8 +258,9 @@
             border: 2px solid #166534;
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(22,101,52,0.10);
+            box-shadow: 0 2px 8px rgba(22, 101, 52, 0.10);
         }
+
         .table-header {
             background: #166534;
             padding: 12px 20px;
@@ -164,6 +269,7 @@
             align-items: center;
             justify-content: space-between;
         }
+
         .table-title {
             color: #fff;
             font-size: 14px;
@@ -173,13 +279,19 @@
             gap: 8px;
             letter-spacing: 0.02em;
         }
-        .table-wrapper { overflow-x: auto; width: 100%; }
+
+        .table-wrapper {
+            overflow-x: hidden;
+            width: 100%;
+        }
+
         .report-table {
             width: 100%;
             border-collapse: collapse;
             font-size: 11.5px;
             color: #1f2937;
         }
+
         .report-table thead th {
             background: #15803d;
             color: #fff;
@@ -192,38 +304,56 @@
             text-align: center;
             white-space: nowrap;
         }
+
         .report-table thead th.col-group {
             background: #15803d;
             color: #dcfce7;
             font-size: 11.5px;
             border-bottom: 2px solid #166534;
         }
+
         .report-table thead th.col-label {
             text-align: left;
             white-space: normal;
             min-width: 180px;
         }
-        .report-table thead th.col-norek { min-width: 55px; width: 55px; }
+
+        .report-table thead th.col-norek {
+            min-width: 55px;
+            width: 55px;
+        }
+
         .report-table tbody td {
             padding: 5px 8px;
             border: 1px solid #e5e7eb;
             vertical-align: middle;
             color: #1f2937;
         }
+
         .report-table tbody td.num {
             text-align: right;
             font-family: 'Courier New', Courier, monospace;
             white-space: nowrap;
             width: 100px;
         }
-        .report-table tbody td.label-cell { text-align: left; padding-left: 10px; white-space: nowrap; }
-        .report-table tbody td.label-cell.indent { padding-left: 22px; }
+
+        .report-table tbody td.label-cell {
+            text-align: left;
+            padding-left: 10px;
+            white-space: nowrap;
+        }
+
+        .report-table tbody td.label-cell.indent {
+            padding-left: 22px;
+        }
+
         .report-table tbody tr.row-subtotal td {
             background: #f0fdf4;
             font-weight: 700;
             color: #14532d;
             border-top: 1px solid #bbf7d0;
         }
+
         .report-table tbody tr.row-total td {
             background: #dcfce7;
             font-weight: 800;
@@ -231,6 +361,7 @@
             border-top: 2px solid #166534;
             border-bottom: 2px solid #166534;
         }
+
         .report-table tbody tr.row-section-header td {
             background: #166534;
             color: #fff;
@@ -241,17 +372,32 @@
             padding-top: 8px;
             padding-bottom: 8px;
         }
+
         .report-table tbody tr.row-info td {
             background: #f9fafb;
             color: #6b7280;
             font-style: italic;
         }
-        .report-table tbody tr:hover td { background-color: #f0fdf4; }
+
+        .report-table tbody tr:hover td {
+            background-color: #f0fdf4;
+        }
+
         .report-table tbody tr.row-subtotal:hover td,
         .report-table tbody tr.row-total:hover td,
-        .report-table tbody tr.row-section-header:hover td { filter: brightness(0.96); }
-        .dash { color: #9ca3af; }
-        .norek-cell { text-align: center; color: #9ca3af; font-size: 11px; }
+        .report-table tbody tr.row-section-header:hover td {
+            filter: brightness(0.96);
+        }
+
+        .dash {
+            color: #9ca3af;
+        }
+
+        .norek-cell {
+            text-align: center;
+            color: #9ca3af;
+            font-size: 11px;
+        }
     </style>
 @endsection
 
@@ -263,7 +409,10 @@
                 <img src="{{ asset('danantara.png') }}" alt="Danantara">
             </div>
             <div class="lm-header-center">
-                <svg style="width:28px;height:28px;color:#22c55e;flex-shrink:0;" viewBox="0 0 24 24" fill="currentColor"><path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3A5 5 0 008 22c12 0 15-17 15-17-1 2-8 2-13 3-5 1-6 7-6 7s5.5-2 8.5-2 5 2 5 2-3-5-3-5 3 5 3 5-5 3-5 3 2 3 2 6-2 6-2 6 3-3 3-6-2-6-2-6z"/></svg>
+                <svg style="width:28px;height:28px;color:#22c55e;flex-shrink:0;" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3A5 5 0 008 22c12 0 15-17 15-17-1 2-8 2-13 3-5 1-6 7-6 7s5.5-2 8.5-2 5 2 5 2-3-5-3-5 3 5 3 5-5 3-5 3 2 3 2 6-2 6-2 6 3-3 3-6-2-6-2-6z" />
+                </svg>
                 <h1>LM 14 &mdash; Biaya Tanaman</h1>
             </div>
             <div class="lm-header-right">
@@ -285,50 +434,53 @@
                             <label class="form-label">Komoditas</label>
                             <select class="form-select" id="komoditasFilter">
                                 <option value="">-- Pilih Komoditas --</option>
-                                <option value="karet">Karet</option>
-                                <option value="teh">Teh</option>
-                                <option value="kopi">Kopi</option>
-                                <option value="tembakau">Tembakau</option>
+                                <option value="KR">Karet</option>
+                                <option value="TH">Teh</option>
+                                <option value="KP">Kopi</option>
+                                <option value="TB">Tembakau</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Regional</label>
                             <select class="form-select" id="regionalFilter">
-                                <option value="">-- Pilih Regional --</option>
-                                <option value="regional-1">Regional 1</option>
-                                <option value="regional-2">Regional 2</option>
-                                <option value="regional-3">Regional 3</option>
-                                <option value="regional-4">Regional 4</option>
-                                <option value="regional-5">Regional 5</option>
-                                <option value="regional-6">Regional 6</option>
-                                <option value="regional-7">Regional 7</option>
-                                <option value="regional-8">Regional 8</option>
+                                <option value="">-- Semua Regional --</option>
+                                @foreach ($regionalList as $item)
+                                    <option value="{{ $item->regional }}">{{ $item->regional }}</option>
+                                @endforeach
                             </select>
                         </div>
+                        <div class="form-group">
+                            <label class="form-label">Plant</label>
+                            <select class="form-select select2-plant" id="plantFilter" style="width:100%;">
+                                <option value="">-- Semua Kebun --</option>
+                                @foreach ($plantList as $item)
+                                    <option value="{{ $item->plant }}">{{ $item->plant }} - {{ $item->nama }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
                         <div class="form-group">
                             <label class="form-label">Tahun</label>
                             <select class="form-select" id="tahunFilter">
                                 <option value="">-- Pilih Tahun --</option>
-                                <option value="2025" selected>2025</option>
-                                <option value="2024">2024</option>
-                                <option value="2023">2023</option>
-                                <option value="2022">2022</option>
-                                <option value="2021">2021</option>
+                                @foreach ($tahunList as $thn)
+                                    <option value="{{ $thn }}">{{ $thn }}</option>
+                                @endforeach
                             </select>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Bulan</label>
                             <select class="form-select" id="bulanFilter">
                                 <option value="">-- Pilih Bulan --</option>
-                                <option value="01">Januari</option>
-                                <option value="02">Februari</option>
-                                <option value="03">Maret</option>
-                                <option value="04">April</option>
-                                <option value="05">Mei</option>
-                                <option value="06">Juni</option>
-                                <option value="07">Juli</option>
-                                <option value="08">Agustus</option>
-                                <option value="09">September</option>
+                                <option value="1">Januari</option>
+                                <option value="2">Februari</option>
+                                <option value="3">Maret</option>
+                                <option value="4">April</option>
+                                <option value="5">Mei</option>
+                                <option value="6">Juni</option>
+                                <option value="7">Juli</option>
+                                <option value="8">Agustus</option>
+                                <option value="9">September</option>
                                 <option value="10">Oktober</option>
                                 <option value="11">November</option>
                                 <option value="12">Desember</option>
@@ -339,7 +491,7 @@
                         <button type="reset" class="btn-reset" id="btnReset">
                             <i class="fas fa-redo"></i> Reset
                         </button>
-                        <button type="submit" class="btn-filter">
+                        <button type="submit" class="btn-filter" id="btnFilter">
                             <i class="fas fa-search"></i> Cari
                         </button>
                     </div>
@@ -347,1375 +499,35 @@
             </div>
 
             <!-- ====== LM14 REPORT TABLE ====== -->
-            <div class="table-card">
+            <div class="table-card" id="resultCard" style="display:none;">
                 <div class="table-header">
                     <div class="table-title">
-                        <i class="fas fa-seedling"></i>
-                        Laporan Biaya Tanaman &mdash; LM 14
+                        <i class="fas fa-seedling"></i> Hasil Data LM14
                     </div>
-                    <span style="color:#93c5fd; font-size:12px;">
-                        s/d Bulan <strong id="tblBulanLabel">-</strong> &mdash; Tahun <strong id="tblYearLabel">2025</strong>
-                    </span>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span id="resultInfo" style="color:#93c5fd; font-size:12px;"></span>
+                        <button id="btnExportExcel" onclick="exportExcel()" style="
+                                display:inline-flex; align-items:center; gap:5px;
+                                padding:6px 14px; background:#16a34a; color:#fff;
+                                border:none; border-radius:6px; font-size:12px;
+                                font-weight:700; cursor:pointer;">
+                            <i class="fas fa-file-excel"></i> Excel
+                        </button>
+                        <button id="btnExportPdf" onclick="exportPdf()" style="
+                                display:inline-flex; align-items:center; gap:5px;
+                                padding:6px 14px; background:#dc2626; color:#fff;
+                                border:none; border-radius:6px; font-size:12px;
+                                font-weight:700; cursor:pointer;">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </button>
+                    </div>
                 </div>
-
                 <div class="table-wrapper">
-                    <table class="report-table" id="reportTable">
-                        <thead>
-                            <!-- Row 1: fixed cols + 2 group spans -->
-                            <tr>
-                                <th rowspan="2" style="vertical-align:middle; width:48px;">WBS</th>
-                                <th rowspan="2" style="vertical-align:middle; width:48px;">GL</th>
-                                <th rowspan="2" class="col-label" style="text-align:left; vertical-align:middle; min-width:220px;">Nama Rekening</th>
-                                <th rowspan="2" style="vertical-align:middle; width:40px;">Stn</th>
-                                <th colspan="5" class="col-group">BULAN INI</th>
-                                <th colspan="5" class="col-group">S.D BULAN INI</th>
-                            </tr>
-                            <!-- Row 2: sub-columns -->
-                            <tr>
-                                <!-- Bulan Ini -->
-                                <th style="font-size:10px; padding:5px 6px; background:#15803d; color:#fff;">FISIK</th>
-                                <th style="font-size:10px; padding:5px 6px; background:#15803d; color:#fff;">BIAYA<br>BAHAN</th>
-                                <th style="font-size:10px; padding:5px 6px; background:#15803d; color:#fff;">BIAYA<br>PEMELIHARAAN</th>
-                                <th style="font-size:10px; padding:5px 6px; background:#15803d; color:#fff;">TOTAL BIAYA<br>(Rp.)</th>
-                                <th style="font-size:10px; padding:5px 6px; background:#15803d; color:#fff;">RP/Ha</th>
-                                <!-- S.D Bulan Ini -->
-                                <th style="font-size:10px; padding:5px 6px; background:#15803d; color:#fff;">FISIK</th>
-                                <th style="font-size:10px; padding:5px 6px; background:#15803d; color:#fff;">BIAYA<br>BAHAN</th>
-                                <th style="font-size:10px; padding:5px 6px; background:#15803d; color:#fff;">BIAYA<br>PEMELIHARAAN</th>
-                                <th style="font-size:10px; padding:5px 6px; background:#15803d; color:#fff;">TOTAL BIAYA<br>(Rp.)</th>
-                                <th style="font-size:10px; padding:5px 6px; background:#15803d; color:#fff;">Rp/Ha</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- ======================================================= -->
-                            <!-- ====== A. BIAYA TANAMAN — Header Section ====== -->
-                            <!-- ======================================================= -->
-                            <tr class="row-section-header">
-                                <td colspan="14" class="label-cell" style="font-size:12px; padding-left:10px; letter-spacing:0.08em;">
-                                    BIAYA TANAMAN
-                                </td>
-                            </tr>
-
-                            <!-- ====== JUMLAH GAJI ====== -->
-                            <tr>
-                                <td class="norek-cell">9501</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Gaji/Upah dan Biaya Kary. Staf dari WBS</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">42,098,903,106</td>
-                                <td class="num">42,098,903,106</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">9001</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Gaji/Upah dan Biaya Kary. Pelaksana dari WRS</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">36,433,073,100</td>
-                                <td class="num">36,433,073,100</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell"></td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Gaji/Upah dan Biaya Kary. Staf dari CC</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell"></td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Gaji/Upah dan Biaya Kary. Pelaksana dari CC</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr class="row-subtotal">
-                                <td colspan="4" class="label-cell" style="text-align:right; padding-right:10px;">JUMLAH GAJI</td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">78,531,976,206</td>
-                                <td class="num">78,531,976,206</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-
-                            <!-- ====== PEMELIHARAAN TANAH ====== -->
-                            <tr>
-                                <td class="norek-cell">5201</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Pemeliharaan Parit</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">8</td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">154,987,227</td>
-                                <td class="num">154,987,227</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5202</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Pemeliharaan Jalan</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">2,146</td>
-                                <td class="num">73,085,735</td>
-                                <td class="num">1,826,053,341</td>
-                                <td class="num">1,899,139,076</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5203</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Grading &amp; Compact Jalan</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">493</td>
-                                <td class="num">6,908,870</td>
-                                <td class="num">66,978,000</td>
-                                <td class="num">73,886,870</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5204</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Pemeliharaan Jalan dan Jembatan</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">868</td>
-                                <td class="num">24,398,856</td>
-                                <td class="num">409,274,715</td>
-                                <td class="num">433,673,571</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5205</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Pengerasan Jalan dengan Situ dan Batu</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">420</td>
-                                <td class="num">8,659,549</td>
-                                <td class="num">88,274,000</td>
-                                <td class="num">96,933,549</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5206</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Pengangkutan Tanah</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5207</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Pengangkutan Titi/Jembatan</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">2,728,000</td>
-                                <td class="num">2,728,000</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5208</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Pengangkutan Material Lainnya</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5209</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">TM Pemel Teras</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">18,647,000</td>
-                                <td class="num">18,647,000</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5210</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">TM Pembuatan Rorak</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5211</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Pemeliharaan Rorak</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5212</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Pemeliharaan Ereng-Ereng</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5213</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Pemeliharaan Saluran Air</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5214</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Jaga Api</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">20</td>
-                                <td class="num">1,870,000</td>
-                                <td class="num">480,885,640</td>
-                                <td class="num">482,755,640</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">6209</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Pengawas/Mandor Pemeliharaan</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">403,132,055</td>
-                                <td class="num">403,132,055</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">6211</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">TM - Pengawas / Mandor Pemeliharaan</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">6,461,218,595</td>
-                                <td class="num">6,461,218,595</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">9601</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Alokasi GC Pemel</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">2,878,172,090</td>
-                                <td class="num">2,878,172,090</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr class="row-subtotal">
-                                <td colspan="4" class="label-cell" style="font-size:10px; text-align:right; padding-right:8px;">
-                                    Jumlah Biaya Pemeliharaan pemeliharaan jalan, jembatan, dan saluran air
-                                </td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">4,189</td>
-                                <td class="num">115,527,035</td>
-                                <td class="num">12,789,730,668</td>
-                                <td class="num">12,905,257,703</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-
-                            <!-- ====== PEMANGKASAN / TUNAS ====== -->
-                            <tr>
-                                <td class="norek-cell">5701</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Memotong Tajuk/Menunas Pohon</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr class="row-subtotal">
-                                <td colspan="4" class="label-cell" style="text-align:right; padding-right:8px;">Jumlah Biaya Pemangkasan / Tunas</td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-
-                            <!-- ====== PENGENDALIAN GULMA ====== -->
-                            <tr>
-                                <td class="norek-cell">5301</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Penyiangan / Pengendalian Gulma Chemis</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">11,230</td>
-                                <td class="num">601,759,897</td>
-                                <td class="num">1,570,126,340</td>
-                                <td class="num">2,227,886,237</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5302</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Dongkel Akar Kayu</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">440</td>
-                                <td class="num">5,472,354</td>
-                                <td class="num">152,317,254</td>
-                                <td class="num">157,789,618</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5303</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Pengendalian Lalang Sheet</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">178</td>
-                                <td class="num">12,581,036</td>
-                                <td class="num">18,487,590</td>
-                                <td class="num">31,165,198</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5304</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Pemeliharaan Gawangan Manual</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">159</td>
-                                <td class="num">6,845,576</td>
-                                <td class="num">5,416,408,899</td>
-                                <td class="num">5,423,254,475</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5305</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Pemeliharaan Gawangan Chemis</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">9,212</td>
-                                <td class="num">857,083,374</td>
-                                <td class="num">2,188,004,215</td>
-                                <td class="num">2,645,987,589</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5306</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Menyiang/Menupuk Manual</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">353</td>
-                                <td class="num">38,653,087</td>
-                                <td class="num">4,778,630,011</td>
-                                <td class="num">4,817,283,098</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5307</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Strip Weeding Chemis</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">34,540</td>
-                                <td class="num">2,342,050,059</td>
-                                <td class="num">3,013,267,086</td>
-                                <td class="num">5,355,317,145</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5302</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Perencek/Memotong Batang-Banting</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5308</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">TM - Transport Tenaga</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">242,100</td>
-                                <td class="num">171,172,029</td>
-                                <td class="num">171,415,029</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr class="row-subtotal">
-                                <td colspan="4" class="label-cell" style="text-align:right; padding-right:8px;">Jumlah Biaya Pengendalian Gulma</td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">56,110</td>
-                                <td class="num">3,715,988,155</td>
-                                <td class="num">17,314,124,234</td>
-                                <td class="num">21,030,112,389</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-
-                            <!-- ====== COLLECTION ====== -->
-                            <tr>
-                                <td class="norek-cell">5501</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Collectori/CHL</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5503</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Kekeringan Alur Sadap - Kerok &amp; Lumas</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">10</td>
-                                <td class="num">1,489,971</td>
-                                <td class="num">1,180,000</td>
-                                <td class="num">2,658,971</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5504</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Jamur Upas</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5505</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Bark Nicrosis (BN)</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5506</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Moudrot</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <!-- ====== COLLECTION (lanjutan) ====== -->
-                            <tr>
-                                <td class="norek-cell">5507</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Stimulasi</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">21</td>
-                                <td class="num">3,876,318</td>
-                                <td class="num">87,862,883</td>
-                                <td class="num">91,939,116</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5508</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">OC-3 Getah AFP</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">172,168</td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">172,168</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5509</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Pengendalian Hama Lainnya</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">62,381</td>
-                                <td class="num">27,956,848</td>
-                                <td class="num">46,780,441</td>
-                                <td class="num">74,738,441</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5509</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">TM Pengendalian Penyakit/HLDPV</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">112</td>
-                                <td class="num">4,111,876</td>
-                                <td class="num">1,763,852</td>
-                                <td class="num">15,780,470</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5510</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">TM Pengendalian Penyakit Lainnya</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5511</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Pengendalian Hama dan Penyakit</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">9601</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Alokasi GC Pemel</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr class="row-subtotal">
-                                <td colspan="4" class="label-cell" style="text-align:right; padding-right:8px;">Jumlah Biaya Pemberantasan Hama dan Penyakit</td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">96,815</td>
-                                <td class="num">1,324,479,560</td>
-                                <td class="num">481,018,347</td>
-                                <td class="num">1,554,496,939</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-
-                            <!-- ======================================================= -->
-                            <!-- ====== PEMUPUKAN ====== -->
-                            <!-- ======================================================= -->
-                            <tr>
-                                <td class="norek-cell">5401</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Pembuatan Piringan/Tanaman Baru</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">159,263</td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">20,471,558,232</td>
-                                <td class="num">186,600,404,754</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5402</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Penyiangan DTS (DS)</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">2,276,108</td>
-                                <td class="num">3,196,559,709</td>
-                                <td class="num">285,463,477,019</td>
-                                <td class="num">180,640,036,741</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5403</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Snap Dif</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">362,803</td>
-                                <td class="num">1,990,000</td>
-                                <td class="num">2,352,803</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5404</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Strip Topang</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">393</td>
-                                <td class="num">1,304,592</td>
-                                <td class="num">5,144,199,913</td>
-                                <td class="num">3,109,227,486</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5405</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Penyemprotan Panel Sadap/Panen</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">1,097,262</td>
-                                <td class="num">13,504,562</td>
-                                <td class="num">3,565,469,913</td>
-                                <td class="num">5,899,237,655</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5406</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Sadap D/S Tess IS TP/I</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">58,761</td>
-                                <td class="num">3,542,782,003</td>
-                                <td class="num">23,067,009,838</td>
-                                <td class="num">23,647,469,388</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5407</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Sadap UTS Super Tapping (Sistem)</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell"></td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Bukan Sadap</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">110,427</td>
-                                <td class="num">311,866,498</td>
-                                <td class="num">110,779,803</td>
-                                <td class="num">110,779,803</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell"></td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Sadap Panel</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">110,773,883</td>
-                                <td class="num">110,773,883</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell"></td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Cap Basin</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell"></td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Kelengkapan Alat Sadap/Panen</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">3,008,056</td>
-                                <td class="num">3,818,872,713</td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">3,064,691,416</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell"></td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">TM - Pengawas/Mandor Panen</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">34,766,489,885</td>
-                                <td class="num">34,786,489,985</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell"></td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Pengawas/Mandor Panen</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">1,046,209</td>
-                                <td class="num">1,046,209</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">9601</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Alokasi GC Panen</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">3,067,140,082</td>
-                                <td class="num">3,067,140,082</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr class="row-subtotal">
-                                <td colspan="4" class="label-cell" style="text-align:right; padding-right:8px;">Jumlah Biaya Tanaman SADAP</td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">8,151,863</td>
-                                <td class="num">8,238,158,711</td>
-                                <td class="num">283,830,462,473</td>
-                                <td class="num">241,398,440,197</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-
-                            <!-- ======================================================= -->
-                            <!-- ====== STIMULASI GAS ====== -->
-                            <!-- ======================================================= -->
-                            <tr>
-                                <td class="norek-cell">5801</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Stimulasi GAS - Bahan</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">4,199</td>
-                                <td class="num">61,946,900</td>
-                                <td class="num">662,832,300</td>
-                                <td class="num">648,031,784</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5802</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Stimulasi GAS - Pasang Aplikator</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">17,300</td>
-                                <td class="num">130,889,000</td>
-                                <td class="num">851,719,850</td>
-                                <td class="num">722,410,450</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5803</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Stimulasi GAS - RE GAS</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">1,787,750</td>
-                                <td class="num">1,787,750</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5804</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Stimulasi GAS - Pasang BUTON</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5805</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Stimulasi GAS - Lepas Aplikator</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr class="row-subtotal">
-                                <td colspan="4" class="label-cell" style="text-align:right; padding-right:8px;">Jumlah Biaya Stimulasi Gas</td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">11,305</td>
-                                <td class="num">192,835,900</td>
-                                <td class="num">40,748,199,809</td>
-                                <td class="num">738,319,658</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-
-                            <!-- ======================================================= -->
-                            <!-- ====== PUPUK DASAR / PEMUPUKAN ====== -->
-                            <!-- ======================================================= -->
-                            <tr>
-                                <td class="norek-cell">5452</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Pemupukan Pokok Tugal</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">71,860</td>
-                                <td class="num">779,348,726</td>
-                                <td class="num">68,437,087</td>
-                                <td class="num">652,440,636</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5453</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Pemupukan Daun Anorganik</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">7,285,469</td>
-                                <td class="num">7,285,469</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5454</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Pemupukan Pupuk</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">9601</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Alokasi GC Pemel</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr class="row-subtotal">
-                                <td colspan="4" class="label-cell" style="text-align:right; padding-right:8px;">Jumlah Biaya Pemupukan</td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">71,860</td>
-                                <td class="num">779,348,726</td>
-                                <td class="num">75,722,556</td>
-                                <td class="num">661,446,780</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-
-                            <!-- ======================================================= -->
-                            <!-- ====== PEMBERANTASAN PENYAKIT LAINNYA / PENGEMBANGAN ====== -->
-                            <!-- ======================================================= -->
-                            <tr>
-                                <td class="norek-cell">5457</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Pemupukan Lanjut (Ross dan Tanah)</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">71,860</td>
-                                <td class="num">779,348,726</td>
-                                <td class="num">67,813,306</td>
-                                <td class="num">847,443,768</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr class="row-subtotal">
-                                <td colspan="4" class="label-cell" style="font-size:10px; text-align:right; padding-right:8px;">Jumlah Biaya Pemupukan Anorganik Lanjut dan Ross</td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">71,860</td>
-                                <td class="num">779,348,726</td>
-                                <td class="num">67,813,306</td>
-                                <td class="num">847,443,768</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-
-                            <!-- ======================================================= -->
-                            <!-- ====== BIAYA PEMELIHARAAN LAIN-LAIN ====== -->
-                            <!-- ======================================================= -->
-                            <tr>
-                                <td class="norek-cell">5157</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Pemeliharaan Bangunan</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">4,278</td>
-                                <td class="num">37,748,651</td>
-                                <td class="num">14,767,004,251</td>
-                                <td class="num">33,878,270,984</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5158</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Pengangkutan Sawit/Kopi/Teh dan Lain-Lain</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">5159</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">TM - Pengangkutan Sawit dan Lain-Lain</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">4,119,865,601</td>
-                                <td class="num">4,119,865,601</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr>
-                                <td class="norek-cell">9601</td>
-                                <td class="norek-cell"></td>
-                                <td class="label-cell indent">Alokasi GC Pemel</td>
-                                <td class="norek-cell"></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">1,646,090</td>
-                                <td class="num">1,646,090</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                            <tr class="row-subtotal">
-                                <td colspan="4" class="label-cell" style="font-size:10px; text-align:right; padding-right:8px;">Jumlah Biaya Pemeliharaan Lainnya dan Lain-Lain</td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">4,278</td>
-                                <td class="num">37,748,651</td>
-                                <td class="num">38,254,321,251</td>
-                                <td class="num">37,999,782,675</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-
-                            <!-- ======================================================= -->
-                            <!-- ====== GRAND TOTAL ====== -->
-                            <!-- ======================================================= -->
-                            <tr class="row-total">
-                                <td colspan="4" class="label-cell" style="text-align:center; font-size:12px; font-weight:800; letter-spacing:0.08em;">
-                                    JUMLAH BIAYA TANAMAN
-                                </td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num"><span class="dash">-</span></td>
-                                <td class="num">8,396,792</td>
-                                <td class="num">36,234,214,217</td>
-                                <td class="num">608,826,924,313</td>
-                                <td class="num">488,529,476,068</td>
-                                <td class="num"><span class="dash">-</span></td>
-                            </tr>
-                        </tbody>
-
-                    </table>
+                    <div id="tableLoading" style="display:none; text-align:center; padding:24px; color:#6b7280;">
+                        <i class="fas fa-spinner fa-spin"></i> Memuat data...
+                    </div>
+                    <div id="tableError" style="display:none; padding:16px 20px; color:#dc2626; font-size:13px;"></div>
+                    <div id="tableResult"></div>
                 </div>
             </div>
 
@@ -1723,19 +535,24 @@
     </div>
 
     <script>
+        // Data mentah untuk export Excel (disimpan saat data diterima)
+        let _exportData = null;
+
         document.addEventListener('DOMContentLoaded', function () {
             const tahunSel = document.getElementById('tahunFilter');
             const bulanSel = document.getElementById('bulanFilter');
 
-            const bulanNames = ['','Januari','Februari','Maret','April','Mei','Juni',
-                                'Juli','Agustus','September','Oktober','November','Desember'];
+            const bulanNames = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
             function updateLabels() {
-                const yr  = parseInt(tahunSel.value)  || new Date().getFullYear();
-                const bln = parseInt(bulanSel.value)   || 0;
+                const yr = parseInt(tahunSel.value) || new Date().getFullYear();
+                const bln = parseInt(bulanSel.value) || 0;
 
-                document.getElementById('tblYearLabel').textContent  = yr;
-                document.getElementById('tblBulanLabel').textContent = bln ? bulanNames[bln] : '-';
+                const lblYear = document.getElementById('tblYearLabel');
+                const lblBulan = document.getElementById('tblBulanLabel');
+                if (lblYear) lblYear.textContent = yr;
+                if (lblBulan) lblBulan.textContent = bln ? bulanNames[bln] : '-';
             }
 
             // Init on page load
@@ -1745,20 +562,729 @@
             tahunSel.addEventListener('change', updateLabels);
             bulanSel.addEventListener('change', updateLabels);
 
+            // ── Fetch + Render data dari route get_data_lm14 ─────────────────
+            function get_data_lm14(plant, tahun, bulan, komoditi) {
+                const card = document.getElementById('resultCard');
+                const loading = document.getElementById('tableLoading');
+                const errBox = document.getElementById('tableError');
+                const result = document.getElementById('tableResult');
+                const info = document.getElementById('resultInfo');
+
+                // Tampilkan card + loading
+                card.style.display = '';
+                loading.style.display = '';
+                errBox.style.display = 'none';
+                result.innerHTML = '';
+                info.textContent = '';
+
+                const params = new URLSearchParams({ plant, tahun, bulan, komoditi });
+                fetch(`{{ route('get_data_lm14') }}?${params}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        loading.style.display = 'none';
+                        if (data.status !== 'success') {
+                            errBox.style.display = '';
+                            errBox.textContent = '⚠️ ' + (data.message || 'Terjadi kesalahan.');
+                            return;
+                        }
+                        const rows = data.data;
+                        info.textContent = `${data.total} baris ditemukan`;
+
+                        if (!rows || rows.length === 0) {
+                            result.innerHTML = '<p style="padding:16px 20px;color:#6b7280;font-size:13px;">Tidak ada data untuk filter yang dipilih.</p>';
+                            return;
+                        }
+
+                        // Ambil semua key dari baris pertama sebagai header
+                        const headers = Object.keys(rows[0]);
+
+                        // ── Kolom yang disubtotal (partial match nama kolom) ──────────
+                        const SUBTOTAL_COLS = ['barang_bahan', 'biaya_pemeliharaan', 'biaya_total'];
+                        const isSubtotalCol = h => SUBTOTAL_COLS.some(k => h.toLowerCase().includes(k));
+
+                        // ── Helper: format angka ID ───────────────────────────────────
+                        const fmt = v => {
+                            if (v === null || v === '' || v === undefined) return '-';
+                            const n = parseFloat(v);
+                            return isNaN(n) ? (v ?? '-') : n.toLocaleString('id-ID');
+                        };
+                        // Format 2 desimal — khusus biaya_per_ha
+                        const fmt2 = v => {
+                            if (v === null || v === '' || v === undefined) return '-';
+                            const n = parseFloat(v);
+                            return isNaN(n) ? (v ?? '-') : n.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        };
+                        const isNum = v => v !== null && v !== '' && v !== undefined && !isNaN(parseFloat(v));
+
+                        // ── Judul dinamis dari nilai filter ──────────────────────────
+                        const bulanNames = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei',
+                            'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+                        const plantSel = document.getElementById('plantFilter');
+                        const bulanSel2 = document.getElementById('bulanFilter');
+                        const tahunSel2 = document.getElementById('tahunFilter');
+                        const komoSel = document.getElementById('komoditasFilter');
+
+                        const plantText = plantSel.selectedIndex >= 0 && plantSel.value
+                            ? plantSel.options[plantSel.selectedIndex].text
+                            : 'Semua Kebun';
+                        const bulanText = bulanSel2.value ? bulanNames[parseInt(bulanSel2.value)] : 'Semua Bulan';
+                        const tahunText = tahunSel2.value || 'Semua Tahun';
+                        const komoText = komoSel.value ? komoSel.options[komoSel.selectedIndex].text : 'Semua Komoditas';
+
+                        const judulLaporan = `LM14  ${plantText}  Komoditas: ${komoText}  ${bulanText}  ${tahunText}`;
+
+                        // Simpan data mentah untuk export ─────────────────────────────
+                        _exportData = {
+                            rows,
+                            headers: Object.keys(rows[0]),
+                            judul: judulLaporan,
+                            subtotalCols: SUBTOTAL_COLS,
+                        };
+
+                        // ── Identifikasi tipe kolom (teks vs angka) ─────────────────
+                        const colTypes = {};
+                        const sampleSize = Math.min(10, rows.length);
+                        headers.forEach(h => {
+                            colTypes[h] = rows.slice(0, sampleSize).some(r => isNum(r[h])) ? 'num' : 'text';
+                        });
+                        const textColsList = headers.filter(h => colTypes[h] === 'text');
+                        const numColsList  = headers.filter(h => colTypes[h] === 'num');
+
+                        // Distribusi lebar kolom proporsional (persentase)
+                        const textPct = textColsList.length > 0
+                            ? Math.min(22, Math.floor(50 / textColsList.length))
+                            : 20;
+                        const usedPct = textPct * textColsList.length;
+                        const numPct  = numColsList.length > 0
+                            ? Math.max(4, Math.floor((100 - usedPct) / numColsList.length))
+                            : Math.floor(100 / headers.length);
+
+                        // ── Header ───────────────────────────────────────────────────
+                        let html = '<table class="report-table" style="font-size:10.5px; table-layout:fixed; width:100%;">';
+
+                        // colgroup — atur lebar setiap kolom
+                        html += '<colgroup>';
+                        headers.forEach(h => {
+                            html += `<col style="width:${colTypes[h] === 'text' ? textPct : numPct}%">`;
+                        });
+                        html += '</colgroup>';
+
+                        html += '<thead>';
+                        // Baris judul (full colspan)
+                        html += `<tr>
+                                    <th colspan="${headers.length}" style="
+                                        background:#ffffff; color:#111827;
+                                        text-align:center; font-size:12px;
+                                        font-weight:800; padding:8px 12px;
+                                        letter-spacing:0.04em; border-bottom:2px solid #16a34a;">
+                                        ${judulLaporan}
+                                    </th>
+                                </tr>`;
+                        // Baris kolom header
+                        html += '<tr>';
+                        headers.forEach(h => {
+                            const isText = colTypes[h] === 'text';
+                            html += `<th style="text-align:${isText ? 'left' : 'center'}; padding:5px 4px; background:#15803d; color:#fff; white-space:normal; overflow:hidden; word-break:break-word;">${h.replace(/_/g, ' ').toUpperCase()}</th>`;
+                        });
+                        html += '</tr></thead>';
+
+                        // ── Body dengan subtotal ─────────────────────────────────────
+                        html += '<tbody>';
+
+                        // Akumulator subtotal
+                        const initAcc = () => Object.fromEntries(headers.map(h => [h, 0]));
+                        const addToAcc = (acc, row) => headers.forEach(h => { if (isSubtotalCol(h) && isNum(row[h])) acc[h] += parseFloat(row[h]); });
+
+                        let acc2 = initAcc(), key2 = '', acc1 = initAcc(), key1 = '';
+                        let accTotal = initAcc();
+
+                        // ── Luas Areal: ambil dari baris kode='0'/'00', kolom qty ────────
+                        // Kode bisa berupa integer 0, string '0', atau string '00'
+                        const row00 = rows.find(r => {
+                            const k = (r['kode'] ?? r['kdbe'] ?? r['KODE'] ?? r['Kode'] ?? '').toString().trim();
+                            const u = (r['uraian'] ?? r['URAIAN'] ?? '').toString().toLowerCase();
+                            return k === '00' || k === '0' || parseInt(k) === 0 || u.includes('luas areal');
+                        });
+
+                        // Semua kolom biaya_per_ha & biaya_total & qty (urutan dari headers)
+                        const perHaCols    = headers.filter(h => h.toLowerCase().includes('biaya_per_ha'));
+                        const biayaTotCols = headers.filter(h => h.toLowerCase().includes('biaya_total'));
+                        const qtyCols      = headers.filter(h => h.toLowerCase().includes('qty'));
+
+                        // Luas areal: nilai qty dari baris kode='00' per indeks kolom
+                        // Index 0 = qty tahun ini, index 1 = qty tahun lalu (atau sebaliknya)
+                        const luasArr = qtyCols.map(col => {
+                            if (!row00) return 0;
+                            const v = parseFloat(row00[col]);
+                            return isNaN(v) ? 0 : v;
+                        });
+
+                        // Pairing by index: perHaCols[i] ↔ biayaTotCols[i] ↔ qtyCols[i]
+                        const perHaMapping = {}; // { perHaCol: { totalCol, luas } }
+                        perHaCols.forEach((perHaCol, i) => {
+                            perHaMapping[perHaCol] = {
+                                totalCol: biayaTotCols[i] ?? biayaTotCols[0],
+                                luas:     luasArr[i]      ?? luasArr[0] ?? 0,
+                            };
+                        });
+
+                        // Debug — hapus setelah confirmed working
+                        console.log('[LM14] row00:', row00);
+                        console.log('[LM14] qtyCols:', qtyCols, '→ luasArr:', luasArr);
+                        console.log('[LM14] perHaMapping:', perHaMapping);
+
+                        // Helper hitung biaya_per_ha dari akumulator
+                        const calcPerHa = (acc, perHaCol) => {
+                            const { totalCol, luas } = perHaMapping[perHaCol] || {};
+                            if (!totalCol || !luas) return 0;
+                            const total = acc[totalCol] || 0;
+                            return luas > 0 ? total / luas : 0;
+                        };
+
+                        const subtotalRow = (label, acc, bgColor, fontWeight, borderTop) => {
+                            let r = `<tr style="background:${bgColor}; font-weight:${fontWeight}; border-top:${borderTop};">`;
+                            headers.forEach((h, idx) => {
+                                if (idx === 0) {
+                                    r += `<td colspan="2" style="padding:4px 6px; border:1px solid #d1fae5; text-align:right; font-style:italic; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${label}</td>`;
+                                } else if (idx === 1) {
+                                    return; // sudah di-colspan
+                                } else if (h.toLowerCase().includes('biaya_per_ha') && perHaMapping[h]) {
+                                    // Hitung dari akumulasi biaya_total / luas_areal
+                                    const perHaVal = calcPerHa(acc, h);
+                                    r += `<td style="padding:4px 6px; border:1px solid #d1fae5; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${fmt2(perHaVal)}</td>`;
+                                } else if (isSubtotalCol(h)) {
+                                    r += `<td style="padding:4px 6px; border:1px solid #d1fae5; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${fmt(acc[h])}</td>`;
+                                } else {
+                                    r += `<td style="padding:4px 6px; border:1px solid #d1fae5;"></td>`;
+                                }
+                            });
+                            r += '</tr>';
+                            return r;
+                        };
+
+                        rows.forEach((row, i) => {
+                            const kode = (row['kode'] || row['kdbe'] || row['KODE'] || '').toString();
+                            const grp2 = kode.substring(0, 2).toUpperCase();
+                            const grp1 = kode.substring(0, 1).toUpperCase();
+
+                            // Deteksi pergantian grup 2-char
+                            if (key2 && grp2 !== key2) {
+                                html += subtotalRow(`Jumlah ${key2}`, acc2, '#f0fdf4', '700', '2px solid #bbf7d0');
+                                acc2 = initAcc();
+                                if (grp1 !== key1) {
+                                    html += subtotalRow(`Jumlah ${key1}`, acc1, '#dcfce7', '800', '2px solid #16a34a');
+                                    acc1 = initAcc();
+                                }
+                            } else if (!key2) {
+                                acc2 = initAcc();
+                                acc1 = initAcc();
+                            }
+
+                            key2 = grp2;
+                            key1 = grp1;
+                            addToAcc(acc2, row);
+                            addToAcc(acc1, row);
+                            addToAcc(accTotal, row);
+
+                            // Baris data biasa
+                            const bg = i % 2 === 0 ? '#fff' : '#f9fafb';
+                            html += `<tr style="background:${bg};">`;
+                            headers.forEach(h => {
+                                const val = row[h];
+                                const num = isNum(val);
+                                const isTextCol = colTypes[h] === 'text';
+                                const isPerHa = h.toLowerCase().includes('biaya_per_ha');
+                                html += `<td style="padding:3px 5px; border:1px solid #e5e7eb; text-align:${num ? 'right' : 'left'}; ${isTextCol ? 'overflow:hidden; text-overflow:ellipsis; white-space:nowrap;' : 'white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'}">${isPerHa ? fmt2(val) : fmt(val)}</td>`;
+                            });
+                            html += '</tr>';
+                        });
+
+                        // Subtotal terakhir (sisa grup yang belum di-flush)
+                        if (key2) html += subtotalRow(`Jumlah ${key2}`, acc2, '#f0fdf4', '700', '2px solid #bbf7d0');
+                        if (key1) html += subtotalRow(`Jumlah ${key1}`, acc1, '#dcfce7', '800', '2px solid #16a34a');
+
+                        // ── Grand Total ───────────────────────────────────────────────
+                        let gt = `<tr style="background:#14532d; color:#fff; font-weight:900; border-top:3px solid #052e16;">`;
+                        headers.forEach((h, idx) => {
+                            if (idx === 0) {
+                                gt += `<td colspan="2" style="padding:6px 6px; border:1px solid #166534; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#fff;">JUMLAH TOTAL</td>`;
+                            } else if (idx === 1) {
+                                return;
+                            } else if (h.toLowerCase().includes('biaya_per_ha') && perHaMapping[h]) {
+                                const perHaVal = calcPerHa(accTotal, h);
+                                gt += `<td style="padding:6px 6px; border:1px solid #166534; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#fff;">${fmt2(perHaVal)}</td>`;
+                            } else if (isSubtotalCol(h)) {
+                                gt += `<td style="padding:6px 6px; border:1px solid #166534; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#fff;">${fmt(accTotal[h])}</td>`;
+                            } else {
+                                gt += `<td style="padding:6px 6px; border:1px solid #166534; color:#fff;"></td>`;
+                            }
+                        });
+                        gt += '</tr>';
+                        html += gt;
+
+                        html += '</tbody></table>';
+
+                        result.innerHTML = html;
+
+                        // ── Auto-scale font jika tabel masih terlalu lebar ───────────
+                        const tblEl = result.querySelector('table');
+                        const wrapEl = document.getElementById('tableResult');
+                        if (tblEl && tblEl.scrollWidth > wrapEl.offsetWidth) {
+                            let fs = 10.5;
+                            while (tblEl.scrollWidth > wrapEl.offsetWidth && fs > 7) {
+                                fs -= 0.5;
+                                tblEl.style.fontSize = fs + 'px';
+                            }
+                            if (fs <= 8) {
+                                tblEl.querySelectorAll('td, th').forEach(el => {
+                                    el.style.padding = '2px 3px';
+                                });
+                            }
+                        }
+                    })
+                    .catch(err => {
+                        loading.style.display = 'none';
+                        errBox.style.display = '';
+                        errBox.textContent = '⚠️ Gagal menghubungi server: ' + err.message;
+                    });
+            }
+
             // Filter form submit
             document.getElementById('filterForm').addEventListener('submit', function (e) {
                 e.preventDefault();
+                const plant = document.getElementById('plantFilter').value;
+                const regional = document.getElementById('regionalFilter').value;
+                const komoditas = document.getElementById('komoditasFilter').value;
+                const tahun = document.getElementById('tahunFilter').value;
+                const bulan = document.getElementById('bulanFilter').value;
                 updateLabels();
+                get_data_lm14(plant, tahun, bulan, komoditas);
             });
 
-            // Reset
+            // Reset — gunakan tahun berjalan dari server
             document.getElementById('btnReset').addEventListener('click', function () {
                 setTimeout(function () {
-                    tahunSel.value = '2025';
+                    tahunSel.value = '{{ $tahunSekarang }}';
                     bulanSel.value = '';
+                    // Reset Select2
+                    $('#plantFilter').val('').trigger('change');
+                    resultCard.style.display = 'none';
                     updateLabels();
                 }, 50);
             });
         });
+    </script>
+
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#plantFilter').select2({
+                placeholder: '-- Semua Kebun --',
+                allowClear: true,
+                width: '100%',
+            });
+        });
+    </script>
+
+    <!-- ExcelJS (Excel export dengan styling penuh) -->
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+    <!-- jsPDF + autoTable (PDF export) -->
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+
+    <script>
+        // ── Ambil judul laporan dari tabel yang sudah dirender ────────────────
+        function getJudulLaporan() {
+            const th = document.querySelector('#tableResult table thead tr:first-child th');
+            return th ? th.textContent.trim() : 'LM14';
+        }
+
+        // ── Export Excel (ExcelJS — angka asli + styling penuh) ───────────────
+        async function exportExcel() {
+            if (!_exportData) { alert('Belum ada data untuk diekspor.'); return; }
+
+            const { rows, headers, judul, subtotalCols } = _exportData;
+            const isSubCol = h => subtotalCols.some(k => h.toLowerCase().includes(k));
+            const isNum = v => v !== null && v !== '' && v !== undefined && !isNaN(parseFloat(v));
+
+            const workbook = new ExcelJS.Workbook();
+            const ws = workbook.addWorksheet('LM14');
+
+            // ── Lebar kolom otomatis ─────────────────────────────────────────────
+            ws.columns = headers.map(h => ({
+                key: h,
+                width: h.toLowerCase().includes('uraian') ? 30
+                    : isSubCol(h) ? 18 : 14,
+            }));
+
+            // ── Styling helpers ─────────────────────────────────────────────────
+            const border = (style = 'thin') => ({
+                top: { style }, left: { style }, bottom: { style }, right: { style }
+            });
+            const fillSolid = argb => ({ type: 'pattern', pattern: 'solid', fgColor: { argb } });
+
+            // ── Baris 1: Judul ───────────────────────────────────────────────────
+            ws.mergeCells(1, 1, 1, headers.length);
+            const titleCell = ws.getCell(1, 1);
+            titleCell.value = judul;
+            titleCell.font = { bold: true, size: 12, color: { argb: 'FF111827' } };
+            titleCell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+            titleCell.fill = fillSolid('FFFFFFFF');
+            titleCell.border = border();
+            ws.getRow(1).height = 22;
+
+            // ── Baris 2: Header kolom ────────────────────────────────────────────
+            const hRow = ws.addRow(headers.map(h => h.replace(/_/g, ' ').toUpperCase()));
+            hRow.eachCell(cell => {
+                cell.fill = fillSolid('FF15803D');
+                cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 9 };
+                cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+                cell.border = border();
+            });
+            ws.getRow(2).height = 18;
+
+            // perHaMapping — pasangkan biaya_per_ha => biaya_total + luas areal
+            const _row00 = rows.find(r => {
+                const k = (r['kode'] ?? r['kdbe'] ?? r['KODE'] ?? r['Kode'] ?? '').toString().trim();
+                const u = (r['uraian'] ?? r['URAIAN'] ?? '').toString().toLowerCase();
+                return k === '00' || k === '0' || parseInt(k) === 0 || u.includes('luas areal');
+            });
+            const _phCols  = headers.filter(h => h.toLowerCase().includes('biaya_per_ha'));
+            const _btCols  = headers.filter(h => h.toLowerCase().includes('biaya_total'));
+            const _qtyCols = headers.filter(h => h.toLowerCase().includes('qty'));
+            const _luasArr = _qtyCols.map(col => {
+                if (!_row00) return 0;
+                const v = parseFloat(_row00[col]);
+                return isNaN(v) ? 0 : v;
+            });
+            const _phMap = {};
+            _phCols.forEach((col, i) => {
+                _phMap[col] = { totalCol: _btCols[i] ?? _btCols[0], luas: _luasArr[i] ?? _luasArr[0] ?? 0 };
+            });
+            const _calcPH = (acc, col) => {
+                const { totalCol, luas } = _phMap[col] || {};
+                if (!totalCol || !luas) return null;
+                const t = acc[totalCol] || 0;
+                return luas > 0 ? t / luas : null;
+            };
+
+            // ── Helper: tambah baris subtotal ────────────────────────────────────
+            const addSubRow = (label, acc, bgArgb) => {
+                const rowData = headers.map((h, idx) => {
+                    if (idx === 0) return label;
+                    if (idx === 1) return null;
+                    if (h.toLowerCase().includes('biaya_per_ha') && _phMap[h]) {
+                        const v = _calcPH(acc, h);
+                        return v !== null ? parseFloat(v.toFixed(2)) : null;
+                    }
+                    return isSubCol(h) && isNum(acc[h]) ? parseFloat(acc[h]) : null;
+                });
+                const r = ws.addRow(rowData);
+                const rNum = ws.rowCount;
+                r.eachCell({ includeEmpty: true }, (cell, colNum) => {
+                    cell.fill = fillSolid(bgArgb);
+                    cell.font = { bold: true, italic: true, size: 9, color: { argb: 'FF111827' } };
+                    cell.border = border();
+                    const h = headers[colNum - 1];
+                    if (colNum > 2 && h) {
+                        if (h.toLowerCase().includes('biaya_per_ha')) {
+                            cell.numFmt = '#,##0.00'; cell.alignment = { horizontal: 'right' };
+                        } else if (isSubCol(h)) {
+                            cell.numFmt = '#,##0'; cell.alignment = { horizontal: 'right' };
+                        }
+                    }
+                });
+                try { ws.mergeCells(rNum, 1, rNum, 2); } catch (e) { }
+                ws.getCell(rNum, 1).alignment = { horizontal: 'right', vertical: 'middle', italic: true };
+            };
+
+            // ── Akumulator ───────────────────────────────────────────────────────
+            const initAcc = () => Object.fromEntries(headers.map(h => [h, 0]));
+            const addToAcc = (acc, row) => headers.forEach(h => {
+                if (isSubCol(h) && isNum(row[h])) acc[h] += parseFloat(row[h]);
+            });
+
+            let acc2 = initAcc(), key2 = '', acc1 = initAcc(), key1 = '';
+            let accTotal = initAcc();
+            let rowIdx = 0;
+
+            // ── Iterasi baris data ────────────────────────────────────────────────
+            for (const row of rows) {
+                const kode = (row['kode'] || row['kdbe'] || row['KODE'] || '').toString();
+                const grp2 = kode.substring(0, 2).toUpperCase();
+                const grp1 = kode.substring(0, 1).toUpperCase();
+
+                if (key2 && grp2 !== key2) {
+                    addSubRow(`Jumlah ${key2}`, acc2, 'FFF0FDF4');
+                    acc2 = initAcc();
+                    if (grp1 !== key1) {
+                        addSubRow(`Jumlah ${key1}`, acc1, 'FFDCFCE7');
+                        acc1 = initAcc();
+                    }
+                }
+                key2 = grp2; key1 = grp1;
+                addToAcc(acc2, row); addToAcc(acc1, row); addToAcc(accTotal, row);
+
+                // Baris data
+                const rowData = headers.map(h => {
+                    const v = row[h];
+                    return isNum(v) ? parseFloat(v) : (v ?? '');
+                });
+                const exRow = ws.addRow(rowData);
+                const bg = rowIdx % 2 === 0 ? 'FFFFFFFF' : 'FFF9FAFB';
+                exRow.eachCell({ includeEmpty: true }, (cell, colNum) => {
+                    cell.fill = fillSolid(bg);
+                    cell.font = { size: 9 };
+                    cell.border = border();
+                    const h = headers[colNum - 1];
+                    if (h && isNum(row[h])) {
+                        cell.numFmt = h.toLowerCase().includes('biaya_per_ha') ? '#,##0.00' : '#,##0';
+                        cell.alignment = { horizontal: 'right' };
+                    } else {
+                        cell.alignment = { horizontal: 'left' };
+                    }
+                });
+                rowIdx++;
+            }
+
+            // Subtotal terakhir
+            if (key2) addSubRow(`Jumlah ${key2}`, acc2, 'FFF0FDF4');
+            if (key1) addSubRow(`Jumlah ${key1}`, acc1, 'FFDCFCE7');
+
+            // ── Grand Total ──────────────────────────────────────────────────────
+            const gtData = headers.map((h, idx) => {
+                if (idx === 0) return 'JUMLAH TOTAL';
+                if (idx === 1) return null;
+                if (h.toLowerCase().includes('biaya_per_ha') && _phMap[h]) {
+                    const v = _calcPH(accTotal, h);
+                    return v !== null ? parseFloat(v.toFixed(2)) : null;
+                }
+                return isSubCol(h) && isNum(accTotal[h]) ? parseFloat(accTotal[h]) : null;
+            });
+            const gtRow = ws.addRow(gtData);
+            const gtNum = ws.rowCount;
+            gtRow.eachCell({ includeEmpty: true }, (cell, colNum) => {
+                cell.fill = fillSolid('FF14532D');
+                cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 10 };
+                cell.border = border('medium');
+                const h = headers[colNum - 1];
+                if (colNum > 2 && h) {
+                    if (h.toLowerCase().includes('biaya_per_ha')) {
+                        cell.numFmt = '#,##0.00'; cell.alignment = { horizontal: 'right' };
+                    } else if (isSubCol(h)) {
+                        cell.numFmt = '#,##0'; cell.alignment = { horizontal: 'right' };
+                    }
+                }
+            });
+            try { ws.mergeCells(gtNum, 1, gtNum, 2); } catch (e) { }
+            ws.getCell(gtNum, 1).alignment = { horizontal: 'right', vertical: 'middle' };
+
+            // ── Simpan file ──────────────────────────────────────────────────────
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], {
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${judul}.xlsx`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // ── Export PDF ────────────────────────────────────────────────────────
+        function exportPdf() {
+            if (!_exportData) { alert('Belum ada data untuk diekspor.'); return; }
+
+            const { rows, headers, judul, subtotalCols } = _exportData;
+            const isSubCol = h => subtotalCols.some(k => h.toLowerCase().includes(k));
+            const isNum    = v => v !== null && v !== '' && v !== undefined && !isNaN(parseFloat(v));
+
+            // ── Format helpers ────────────────────────────────────────────────
+            const fmtNum  = v => isNum(v) ? parseFloat(v).toLocaleString('id-ID') : (v ?? '');
+            const fmtDec2 = v => isNum(v) ? parseFloat(v).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : (v ?? '');
+
+            // ── perHaMapping sama seperti Excel ──────────────────────────────
+            const _row00 = rows.find(r => {
+                const k = (r['kode'] ?? r['kdbe'] ?? r['KODE'] ?? r['Kode'] ?? '').toString().trim();
+                const u = (r['uraian'] ?? r['URAIAN'] ?? '').toString().toLowerCase();
+                return k === '00' || k === '0' || parseInt(k) === 0 || u.includes('luas areal');
+            });
+            const _phCols  = headers.filter(h => h.toLowerCase().includes('biaya_per_ha'));
+            const _btCols  = headers.filter(h => h.toLowerCase().includes('biaya_total'));
+            const _qtyCols = headers.filter(h => h.toLowerCase().includes('qty'));
+            const _luasArr = _qtyCols.map(col => {
+                if (!_row00) return 0;
+                const v = parseFloat(_row00[col]);
+                return isNaN(v) ? 0 : v;
+            });
+            const _phMap = {};
+            _phCols.forEach((col, i) => {
+                _phMap[col] = { totalCol: _btCols[i] ?? _btCols[0], luas: _luasArr[i] ?? _luasArr[0] ?? 0 };
+            });
+            const _calcPH = (acc, col) => {
+                const { totalCol, luas } = _phMap[col] || {};
+                if (!totalCol || !luas) return null;
+                const t = acc[totalCol] || 0;
+                return luas > 0 ? t / luas : null;
+            };
+
+            // ── Tentukan lebar kolom (proporsi) ──────────────────────────────
+            // Kolom teks (kode, uraian, sat) lebih lebar; angka lebih sempit
+            const colWidths = headers.map(h => {
+                const lower = h.toLowerCase();
+                if (lower.includes('uraian'))  return 60;
+                if (lower.includes('kode') || lower.includes('sat')) return 12;
+                return 24; // kolom angka
+            });
+            const totalW = colWidths.reduce((a, b) => a + b, 0);
+            const colPcts = colWidths.map(w => w / totalW * 100);
+
+            // ── Helper build row cells ───────────────────────────────────────
+            const buildCells = (values, styles) =>
+                values.map((v, i) => ({
+                    content: v ?? '',
+                    styles: {
+                        halign: (typeof v === 'number' || isNum(v)) &&
+                                !headers[i]?.toLowerCase().includes('kode') ? 'right' : 'left',
+                        ...styles,
+                    },
+                }));
+
+            // ── Akumulasi + build body ───────────────────────────────────────
+            const initAcc = () => Object.fromEntries(headers.map(h => [h, 0]));
+            const addToAcc = (acc, row) => headers.forEach(h => {
+                if (isSubCol(h) && isNum(row[h])) acc[h] += parseFloat(row[h]);
+            });
+
+            const body = [];
+            let acc2 = initAcc(), key2 = '', acc1 = initAcc(), key1 = '';
+            let accTotal = initAcc();
+
+            const makeSubRow = (label, acc, fillRgb, bold) => {
+                const cells = headers.map((h, idx) => {
+                    let val = '';
+                    if (idx === 0) val = label;
+                    else if (idx === 1) val = '';
+                    else if (h.toLowerCase().includes('biaya_per_ha') && _phMap[h]) {
+                        const v = _calcPH(acc, h);
+                        val = v !== null ? fmtDec2(v) : '';
+                    } else if (isSubCol(h)) {
+                        val = fmtNum(acc[h]);
+                    }
+                    return {
+                        content: val,
+                        styles: {
+                            halign: idx >= 2 && val !== '' && val !== label ? 'right' : (idx === 0 ? 'right' : 'left'),
+                            fontStyle: bold ? 'bold' : 'bold',
+                            fillColor: fillRgb,
+                            textColor: [20, 83, 45],
+                            fontSize: 6.5,
+                        },
+                    };
+                });
+                body.push(cells);
+            };
+
+            for (const row of rows) {
+                const kode = (row['kode'] || row['kdbe'] || row['KODE'] || '').toString();
+                const grp2 = kode.substring(0, 2).toUpperCase();
+                const grp1 = kode.substring(0, 1).toUpperCase();
+
+                if (key2 && grp2 !== key2) {
+                    makeSubRow(`Jumlah ${key2}`, acc2, [240, 253, 244]);
+                    acc2 = initAcc();
+                    if (grp1 !== key1) {
+                        makeSubRow(`Jumlah ${key1}`, acc1, [220, 252, 231]);
+                        acc1 = initAcc();
+                    }
+                }
+                key2 = grp2; key1 = grp1;
+                addToAcc(acc2, row); addToAcc(acc1, row); addToAcc(accTotal, row);
+
+                // Baris data
+                const cells = headers.map((h, idx) => {
+                    const v = row[h];
+                    const isPerHa = h.toLowerCase().includes('biaya_per_ha');
+                    const display = isPerHa ? fmtDec2(v) : (isNum(v) ? fmtNum(v) : (v ?? ''));
+                    return {
+                        content: display,
+                        styles: {
+                            halign: isNum(v) && !h.toLowerCase().includes('kode') ? 'right' : 'left',
+                            fontSize: 6.5,
+                        },
+                    };
+                });
+                body.push(cells);
+            }
+
+            // Subtotal terakhir
+            if (key2) makeSubRow(`Jumlah ${key2}`, acc2, [240, 253, 244]);
+            if (key1) makeSubRow(`Jumlah ${key1}`, acc1, [220, 252, 231]);
+
+            // Grand Total
+            const gtCells = headers.map((h, idx) => {
+                let val = '';
+                if (idx === 0) val = 'JUMLAH TOTAL';
+                else if (idx === 1) val = '';
+                else if (h.toLowerCase().includes('biaya_per_ha') && _phMap[h]) {
+                    const v = _calcPH(accTotal, h);
+                    val = v !== null ? fmtDec2(v) : '';
+                } else if (isSubCol(h)) {
+                    val = fmtNum(accTotal[h]);
+                }
+                return {
+                    content: val,
+                    styles: {
+                        halign: idx >= 2 && val !== '' && val !== 'JUMLAH TOTAL' ? 'right' : (idx === 0 ? 'right' : 'left'),
+                        fontStyle: 'bold',
+                        fillColor: [20, 83, 45],
+                        textColor: [255, 255, 255],
+                        fontSize: 7,
+                    },
+                };
+            });
+            body.push(gtCells);
+
+            // ── Buat PDF ─────────────────────────────────────────────────────
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a3' });
+
+            const pageW = doc.internal.pageSize.getWidth();
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text(judul, pageW / 2, 28, { align: 'center' });
+
+            doc.autoTable({
+                head: [headers.map(h => h.replace(/_/g, ' ').toUpperCase())],
+                body,
+                startY: 42,
+                styles: {
+                    fontSize: 6.5,
+                    cellPadding: 2.5,
+                    lineWidth: 0.3,
+                    lineColor: [209, 250, 229],
+                    overflow: 'ellipsize',
+                },
+                headStyles: {
+                    fillColor: [21, 128, 61],
+                    textColor: 255,
+                    fontStyle: 'bold',
+                    fontSize: 6.5,
+                    halign: 'center',
+                    cellPadding: 3,
+                },
+                alternateRowStyles: { fillColor: [249, 250, 251] },
+                columnStyles: Object.fromEntries(
+                    headers.map((h, i) => [i, { cellWidth: 'auto' }])
+                ),
+                margin: { top: 42, left: 18, right: 18 },
+                tableWidth: 'auto',
+            });
+
+            doc.save(`${judul}.pdf`);
+        }
     </script>
 @endsection
