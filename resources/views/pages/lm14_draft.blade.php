@@ -563,7 +563,7 @@
             bulanSel.addEventListener('change', updateLabels);
 
             // ── Fetch + Render data dari route get_data_lm14 ─────────────────
-            function get_data_lm14(plant, tahun, bulan) {
+            function get_data_lm14(plant, tahun, bulan, komoditi) {
                 const card = document.getElementById('resultCard');
                 const loading = document.getElementById('tableLoading');
                 const errBox = document.getElementById('tableError');
@@ -577,7 +577,7 @@
                 result.innerHTML = '';
                 info.textContent = '';
 
-                const params = new URLSearchParams({ plant, tahun, bulan });
+                const params = new URLSearchParams({ plant, tahun, bulan, komoditi });
                 fetch(`{{ route('get_data_lm14') }}?${params}`)
                     .then(res => res.json())
                     .then(data => {
@@ -607,6 +607,12 @@
                             if (v === null || v === '' || v === undefined) return '-';
                             const n = parseFloat(v);
                             return isNaN(n) ? (v ?? '-') : n.toLocaleString('id-ID');
+                        };
+                        // Format 2 desimal — khusus biaya_per_ha
+                        const fmt2 = v => {
+                            if (v === null || v === '' || v === undefined) return '-';
+                            const n = parseFloat(v);
+                            return isNaN(n) ? (v ?? '-') : n.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                         };
                         const isNum = v => v !== null && v !== '' && v !== undefined && !isNaN(parseFloat(v));
 
@@ -691,7 +697,50 @@
                         const addToAcc = (acc, row) => headers.forEach(h => { if (isSubtotalCol(h) && isNum(row[h])) acc[h] += parseFloat(row[h]); });
 
                         let acc2 = initAcc(), key2 = '', acc1 = initAcc(), key1 = '';
-                        let accTotal = initAcc();  // ← Grand total
+                        let accTotal = initAcc();
+
+                        // ── Luas Areal: ambil dari baris kode='0'/'00', kolom qty ────────
+                        // Kode bisa berupa integer 0, string '0', atau string '00'
+                        const row00 = rows.find(r => {
+                            const k = (r['kode'] ?? r['kdbe'] ?? r['KODE'] ?? r['Kode'] ?? '').toString().trim();
+                            const u = (r['uraian'] ?? r['URAIAN'] ?? '').toString().toLowerCase();
+                            return k === '00' || k === '0' || parseInt(k) === 0 || u.includes('luas areal');
+                        });
+
+                        // Semua kolom biaya_per_ha & biaya_total & qty (urutan dari headers)
+                        const perHaCols    = headers.filter(h => h.toLowerCase().includes('biaya_per_ha'));
+                        const biayaTotCols = headers.filter(h => h.toLowerCase().includes('biaya_total'));
+                        const qtyCols      = headers.filter(h => h.toLowerCase().includes('qty'));
+
+                        // Luas areal: nilai qty dari baris kode='00' per indeks kolom
+                        // Index 0 = qty tahun ini, index 1 = qty tahun lalu (atau sebaliknya)
+                        const luasArr = qtyCols.map(col => {
+                            if (!row00) return 0;
+                            const v = parseFloat(row00[col]);
+                            return isNaN(v) ? 0 : v;
+                        });
+
+                        // Pairing by index: perHaCols[i] ↔ biayaTotCols[i] ↔ qtyCols[i]
+                        const perHaMapping = {}; // { perHaCol: { totalCol, luas } }
+                        perHaCols.forEach((perHaCol, i) => {
+                            perHaMapping[perHaCol] = {
+                                totalCol: biayaTotCols[i] ?? biayaTotCols[0],
+                                luas:     luasArr[i]      ?? luasArr[0] ?? 0,
+                            };
+                        });
+
+                        // Debug — hapus setelah confirmed working
+                        console.log('[LM14] row00:', row00);
+                        console.log('[LM14] qtyCols:', qtyCols, '→ luasArr:', luasArr);
+                        console.log('[LM14] perHaMapping:', perHaMapping);
+
+                        // Helper hitung biaya_per_ha dari akumulator
+                        const calcPerHa = (acc, perHaCol) => {
+                            const { totalCol, luas } = perHaMapping[perHaCol] || {};
+                            if (!totalCol || !luas) return 0;
+                            const total = acc[totalCol] || 0;
+                            return luas > 0 ? total / luas : 0;
+                        };
 
                         const subtotalRow = (label, acc, bgColor, fontWeight, borderTop) => {
                             let r = `<tr style="background:${bgColor}; font-weight:${fontWeight}; border-top:${borderTop};">`;
@@ -700,6 +749,10 @@
                                     r += `<td colspan="2" style="padding:4px 6px; border:1px solid #d1fae5; text-align:right; font-style:italic; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${label}</td>`;
                                 } else if (idx === 1) {
                                     return; // sudah di-colspan
+                                } else if (h.toLowerCase().includes('biaya_per_ha') && perHaMapping[h]) {
+                                    // Hitung dari akumulasi biaya_total / luas_areal
+                                    const perHaVal = calcPerHa(acc, h);
+                                    r += `<td style="padding:4px 6px; border:1px solid #d1fae5; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${fmt2(perHaVal)}</td>`;
                                 } else if (isSubtotalCol(h)) {
                                     r += `<td style="padding:4px 6px; border:1px solid #d1fae5; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${fmt(acc[h])}</td>`;
                                 } else {
@@ -741,7 +794,8 @@
                                 const val = row[h];
                                 const num = isNum(val);
                                 const isTextCol = colTypes[h] === 'text';
-                                html += `<td style="padding:3px 5px; border:1px solid #e5e7eb; text-align:${num ? 'right' : 'left'}; ${isTextCol ? 'overflow:hidden; text-overflow:ellipsis; white-space:nowrap;' : 'white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'}">${fmt(val)}</td>`;
+                                const isPerHa = h.toLowerCase().includes('biaya_per_ha');
+                                html += `<td style="padding:3px 5px; border:1px solid #e5e7eb; text-align:${num ? 'right' : 'left'}; ${isTextCol ? 'overflow:hidden; text-overflow:ellipsis; white-space:nowrap;' : 'white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'}">${isPerHa ? fmt2(val) : fmt(val)}</td>`;
                             });
                             html += '</tr>';
                         });
@@ -757,6 +811,9 @@
                                 gt += `<td colspan="2" style="padding:6px 6px; border:1px solid #166534; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#fff;">JUMLAH TOTAL</td>`;
                             } else if (idx === 1) {
                                 return;
+                            } else if (h.toLowerCase().includes('biaya_per_ha') && perHaMapping[h]) {
+                                const perHaVal = calcPerHa(accTotal, h);
+                                gt += `<td style="padding:6px 6px; border:1px solid #166534; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#fff;">${fmt2(perHaVal)}</td>`;
                             } else if (isSubtotalCol(h)) {
                                 gt += `<td style="padding:6px 6px; border:1px solid #166534; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#fff;">${fmt(accTotal[h])}</td>`;
                             } else {
@@ -802,7 +859,7 @@
                 const tahun = document.getElementById('tahunFilter').value;
                 const bulan = document.getElementById('bulanFilter').value;
                 updateLabels();
-                get_data_lm14(plant, tahun, bulan);
+                get_data_lm14(plant, tahun, bulan, komoditas);
             });
 
             // Reset — gunakan tahun berjalan dari server

@@ -1590,6 +1590,22 @@ class PageController extends Controller
 
     public function get_data_lm14(Request $request)
     {
+        $komoditi = strtolower($request->komoditi);
+        $nama_sp = '';
+        if ($komoditi == 'kr') {
+            $nama_sp = 'sp_laporan_lm14_karet';
+        } else if ($komoditi == 'th') {
+            $nama_sp = 'sp_laporan_lm14_teh';
+        } else if ($komoditi == 'kp') {
+            $nama_sp = 'sp_laporan_lm14_kopi';
+        }
+
+        if (empty($nama_sp)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Komoditi tidak valid. Pilih salah satu Komoditi',
+            ], 400);
+        }
         $plant = $request->plant;
         $tahun = $request->tahun;
         $bulan = $request->bulan;
@@ -1602,7 +1618,7 @@ class PageController extends Controller
         $tahun_periode = $tahun . $bulan;
         try {
             $query = "
-            CALL `dashboard-cockpit.data_dash.sp_laporan_lm14_karet`(
+            CALL `dashboard-cockpit.data_dash.$nama_sp`(
                 '$plant',
                 '$tahun',
                 '$bulan'
