@@ -58,7 +58,7 @@ class SkyviewController extends Controller
             ], 422);
         }
 
-        $skyview = Skyview::create($request->only('kebun_unit', 'tanggal', 'link_youtube'));
+        $skyview = Skyview::create($request->only('kebun_unit', 'tanggal', 'link_youtube', 'keterangan'));
 
         return response()->json([
             'success' => true,
@@ -101,7 +101,7 @@ class SkyviewController extends Controller
             ], 422);
         }
 
-        $skyview->update($request->only('kebun_unit', 'tanggal', 'link_youtube'));
+        $skyview->update($request->only('kebun_unit', 'tanggal', 'link_youtube', 'keterangan'));
 
         return response()->json([
             'success' => true,

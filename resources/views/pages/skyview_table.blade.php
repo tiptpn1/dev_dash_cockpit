@@ -604,6 +604,12 @@ const CSRF = "{{ csrf_token() }}";
 @endphp
 const SKYVIEW_DATA = {!! json_encode($skyviewMap) !!};
 
+// ─── CSRF EXPIRY HANDLER ─────────────────────────────────────────────────────
+function handleCsrfExpiry() {
+    showToast('Sesi Anda telah habis. Halaman akan dimuat ulang…', 'error');
+    setTimeout(() => location.reload(), 2000);
+}
+
 // ─── TOAST ───────────────────────────────────────────────────────────────────
 function showToast(msg, type = 'success') {
     const wrap = document.getElementById('toast-wrap');
@@ -687,7 +693,10 @@ function submitForm(e) {
     document.getElementById('btn-save-text').textContent = 'Menyimpan…';
 
     fetch(url, { method, headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body })
-        .then(r => r.json())
+        .then(r => {
+            if (r.status === 419) { handleCsrfExpiry(); throw new Error('csrf'); }
+            return r.json();
+        })
         .then(data => {
             document.getElementById('btn-save-text').textContent = 'Simpan';
             if (!data.success) {
@@ -704,7 +713,8 @@ function submitForm(e) {
             showToast(data.message);
             setTimeout(() => location.reload(), 800);
         })
-        .catch(() => {
+        .catch(err => {
+            if (err.message === 'csrf') return;
             document.getElementById('btn-save-text').textContent = 'Simpan';
             showToast('Terjadi kesalahan. Coba lagi.', 'error');
         });
@@ -732,7 +742,10 @@ function executeDelete() {
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: new URLSearchParams({ _token: CSRF, _method: 'DELETE' }),
     })
-    .then(r => r.json())
+    .then(r => {
+        if (r.status === 419) { handleCsrfExpiry(); throw new Error('csrf'); }
+        return r.json();
+    })
     .then(data => {
         document.getElementById('confirm-backdrop').classList.remove('show');
         if (data.success) {
@@ -748,7 +761,7 @@ function executeDelete() {
         }
         _deleteId = null;
     })
-    .catch(() => { showToast('Terjadi kesalahan.', 'error'); _deleteId = null; });
+    .catch(err => { if (err.message !== 'csrf') showToast('Terjadi kesalahan.', 'error'); _deleteId = null; });
 }
 
 function updateRowNumbers() {
