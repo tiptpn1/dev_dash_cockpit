@@ -281,7 +281,7 @@
         }
 
         .table-wrapper {
-            overflow-x: auto;
+            overflow-x: hidden;
             width: 100%;
         }
 
@@ -636,23 +636,50 @@
                             subtotalCols: SUBTOTAL_COLS,
                         };
 
+                        // ── Identifikasi tipe kolom (teks vs angka) ─────────────────
+                        const colTypes = {};
+                        const sampleSize = Math.min(10, rows.length);
+                        headers.forEach(h => {
+                            colTypes[h] = rows.slice(0, sampleSize).some(r => isNum(r[h])) ? 'num' : 'text';
+                        });
+                        const textColsList = headers.filter(h => colTypes[h] === 'text');
+                        const numColsList  = headers.filter(h => colTypes[h] === 'num');
+
+                        // Distribusi lebar kolom proporsional (persentase)
+                        const textPct = textColsList.length > 0
+                            ? Math.min(22, Math.floor(50 / textColsList.length))
+                            : 20;
+                        const usedPct = textPct * textColsList.length;
+                        const numPct  = numColsList.length > 0
+                            ? Math.max(4, Math.floor((100 - usedPct) / numColsList.length))
+                            : Math.floor(100 / headers.length);
+
                         // ── Header ───────────────────────────────────────────────────
-                        let html = '<table class="report-table" style="font-size:12.5px;">';
+                        let html = '<table class="report-table" style="font-size:10.5px; table-layout:fixed; width:100%;">';
+
+                        // colgroup — atur lebar setiap kolom
+                        html += '<colgroup>';
+                        headers.forEach(h => {
+                            html += `<col style="width:${colTypes[h] === 'text' ? textPct : numPct}%">`;
+                        });
+                        html += '</colgroup>';
+
                         html += '<thead>';
                         // Baris judul (full colspan)
                         html += `<tr>
-                                                    <th colspan="${headers.length}" style="
-                                                        background:#ffffff; color:#111827;
-                                                        text-align:center; font-size:13px;
-                                                        font-weight:800; padding:10px 16px;
-                                                        letter-spacing:0.05em; border-bottom:2px solid #16a34a;">
-                                                        ${judulLaporan}
-                                                    </th>
-                                                </tr>`;
+                                    <th colspan="${headers.length}" style="
+                                        background:#ffffff; color:#111827;
+                                        text-align:center; font-size:12px;
+                                        font-weight:800; padding:8px 12px;
+                                        letter-spacing:0.04em; border-bottom:2px solid #16a34a;">
+                                        ${judulLaporan}
+                                    </th>
+                                </tr>`;
                         // Baris kolom header
                         html += '<tr>';
                         headers.forEach(h => {
-                            html += `<th style="text-align:left; padding:8px 12px; background:#15803d; color:#fff; white-space:nowrap;">${h.replace(/_/g, ' ').toUpperCase()}</th>`;
+                            const isText = colTypes[h] === 'text';
+                            html += `<th style="text-align:${isText ? 'left' : 'center'}; padding:5px 4px; background:#15803d; color:#fff; white-space:normal; overflow:hidden; word-break:break-word;">${h.replace(/_/g, ' ').toUpperCase()}</th>`;
                         });
                         html += '</tr></thead>';
 
@@ -670,13 +697,13 @@
                             let r = `<tr style="background:${bgColor}; font-weight:${fontWeight}; border-top:${borderTop};">`;
                             headers.forEach((h, idx) => {
                                 if (idx === 0) {
-                                    r += `<td colspan="2" style="padding:5px 12px; border:1px solid #d1fae5; text-align:right; font-style:italic; white-space:nowrap;">${label}</td>`;
+                                    r += `<td colspan="2" style="padding:4px 6px; border:1px solid #d1fae5; text-align:right; font-style:italic; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${label}</td>`;
                                 } else if (idx === 1) {
                                     return; // sudah di-colspan
                                 } else if (isSubtotalCol(h)) {
-                                    r += `<td style="padding:5px 12px; border:1px solid #d1fae5; text-align:right; white-space:nowrap;">${fmt(acc[h])}</td>`;
+                                    r += `<td style="padding:4px 6px; border:1px solid #d1fae5; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${fmt(acc[h])}</td>`;
                                 } else {
-                                    r += `<td style="padding:5px 12px; border:1px solid #d1fae5;"></td>`;
+                                    r += `<td style="padding:4px 6px; border:1px solid #d1fae5;"></td>`;
                                 }
                             });
                             r += '</tr>';
@@ -690,11 +717,8 @@
 
                             // Deteksi pergantian grup 2-char
                             if (key2 && grp2 !== key2) {
-                                // Subtotal level-2
                                 html += subtotalRow(`Jumlah ${key2}`, acc2, '#f0fdf4', '700', '2px solid #bbf7d0');
                                 acc2 = initAcc();
-
-                                // Deteksi pergantian grup 1-char
                                 if (grp1 !== key1) {
                                     html += subtotalRow(`Jumlah ${key1}`, acc1, '#dcfce7', '800', '2px solid #16a34a');
                                     acc1 = initAcc();
@@ -708,7 +732,7 @@
                             key1 = grp1;
                             addToAcc(acc2, row);
                             addToAcc(acc1, row);
-                            addToAcc(accTotal, row);  // ← akumulasi grand total
+                            addToAcc(accTotal, row);
 
                             // Baris data biasa
                             const bg = i % 2 === 0 ? '#fff' : '#f9fafb';
@@ -716,7 +740,8 @@
                             headers.forEach(h => {
                                 const val = row[h];
                                 const num = isNum(val);
-                                html += `<td style="padding:5px 12px; border:1px solid #e5e7eb; text-align:${num ? 'right' : 'left'}; white-space:nowrap;">${fmt(val)}</td>`;
+                                const isTextCol = colTypes[h] === 'text';
+                                html += `<td style="padding:3px 5px; border:1px solid #e5e7eb; text-align:${num ? 'right' : 'left'}; ${isTextCol ? 'overflow:hidden; text-overflow:ellipsis; white-space:nowrap;' : 'white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'}">${fmt(val)}</td>`;
                             });
                             html += '</tr>';
                         });
@@ -729,13 +754,13 @@
                         let gt = `<tr style="background:#14532d; color:#fff; font-weight:900; border-top:3px solid #052e16;">`;
                         headers.forEach((h, idx) => {
                             if (idx === 0) {
-                                gt += `<td colspan="2" style="padding:7px 12px; border:1px solid #166534; text-align:right; white-space:nowrap; color:#fff;">JUMLAH TOTAL</td>`;
+                                gt += `<td colspan="2" style="padding:6px 6px; border:1px solid #166534; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#fff;">JUMLAH TOTAL</td>`;
                             } else if (idx === 1) {
                                 return;
                             } else if (isSubtotalCol(h)) {
-                                gt += `<td style="padding:7px 12px; border:1px solid #166534; text-align:right; white-space:nowrap; color:#fff;">${fmt(accTotal[h])}</td>`;
+                                gt += `<td style="padding:6px 6px; border:1px solid #166534; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#fff;">${fmt(accTotal[h])}</td>`;
                             } else {
-                                gt += `<td style="padding:7px 12px; border:1px solid #166534; color:#fff;"></td>`;
+                                gt += `<td style="padding:6px 6px; border:1px solid #166534; color:#fff;"></td>`;
                             }
                         });
                         gt += '</tr>';
@@ -744,6 +769,22 @@
                         html += '</tbody></table>';
 
                         result.innerHTML = html;
+
+                        // ── Auto-scale font jika tabel masih terlalu lebar ───────────
+                        const tblEl = result.querySelector('table');
+                        const wrapEl = document.getElementById('tableResult');
+                        if (tblEl && tblEl.scrollWidth > wrapEl.offsetWidth) {
+                            let fs = 10.5;
+                            while (tblEl.scrollWidth > wrapEl.offsetWidth && fs > 7) {
+                                fs -= 0.5;
+                                tblEl.style.fontSize = fs + 'px';
+                            }
+                            if (fs <= 8) {
+                                tblEl.querySelectorAll('td, th').forEach(el => {
+                                    el.style.padding = '2px 3px';
+                                });
+                            }
+                        }
                     })
                     .catch(err => {
                         loading.style.display = 'none';
