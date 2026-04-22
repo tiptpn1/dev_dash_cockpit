@@ -91,7 +91,7 @@ Route::middleware('auth:custom')->group(function () {
 
     Route::get('/lm13', [PageController::class, 'lm13'])->name('lm13');
     Route::get('/lm14', [PageController::class, 'lm14'])->name('lm14');
-    Route::get('/lm16_draft', [PageController::class, 'lm16_draft'])->name('lm16_draft');
+    Route::get('/lm16', [PageController::class, 'lm16'])->name('lm16');
     Route::get('/under_construction', [PageController::class, 'under_construction'])->name('under_construction');
 
 

@@ -968,33 +968,135 @@
 
         // ── Export PDF ────────────────────────────────────────────────────────
         function exportPdf() {
-            const tbl = document.querySelector('#tableResult table');
-            if (!tbl) { alert('Belum ada data untuk diekspor.'); return; }
+            if (!_exportData) { alert('Belum ada data untuk diekspor.'); return; }
 
+            const { rows, headers, judul, numericCols } = _exportData;
+            const isNum = v => v !== null && v !== '' && v !== undefined && !isNaN(parseFloat(v));
+
+            // Rebuild numericCols jika perlu
+            const numCols = numericCols instanceof Set ? numericCols : new Set(
+                headers.filter(h => { const v = rows[0]?.[h]; return isNum(v); })
+            );
+            const isSubCol = h => numCols.has(h);
+
+            // Format angka lokal ID
+            const fmtNum = v => isNum(v) ? parseFloat(v).toLocaleString('id-ID') : (v ?? '');
+
+            // ── Akumulasi + build body ───────────────────────────────────────
+            const initAcc = () => Object.fromEntries(headers.map(h => [h, 0]));
+            const addToAcc = (acc, row) => headers.forEach(h => {
+                if (isSubCol(h) && isNum(row[h])) acc[h] += parseFloat(row[h]);
+            });
+
+            const body = [];
+            let acc2 = initAcc(), key2 = '', acc1 = initAcc(), key1 = '';
+            let accTotal = initAcc();
+
+            const makeSubRow = (label, acc, fillRgb) => {
+                const cells = headers.map((h, idx) => {
+                    let val = '';
+                    if (idx === 0) val = label;
+                    else if (idx === 1) val = '';
+                    else if (isSubCol(h)) val = fmtNum(acc[h]);
+                    return {
+                        content: val,
+                        styles: {
+                            halign: idx >= 2 && val !== '' ? 'right' : (idx === 0 ? 'right' : 'left'),
+                            fontStyle: 'bold',
+                            fillColor: fillRgb,
+                            textColor: [20, 83, 45],
+                            fontSize: 6.5,
+                        },
+                    };
+                });
+                body.push(cells);
+            };
+
+            for (const row of rows) {
+                const kode = (row['kode'] || row['kdbe'] || row['KODE'] || '').toString();
+                const grp2 = kode.substring(0, 2).toUpperCase();
+                const grp1 = kode.substring(0, 1).toUpperCase();
+
+                if (key2 && grp2 !== key2) {
+                    makeSubRow(`Jumlah ${key2}`, acc2, [240, 253, 244]);
+                    acc2 = initAcc();
+                    if (grp1 !== key1) {
+                        makeSubRow(`Jumlah ${key1}`, acc1, [220, 252, 231]);
+                        acc1 = initAcc();
+                    }
+                }
+                key2 = grp2; key1 = grp1;
+                addToAcc(acc2, row); addToAcc(acc1, row); addToAcc(accTotal, row);
+
+                // Baris data
+                const cells = headers.map((h, idx) => {
+                    const v = row[h];
+                    const display = isNum(v) ? fmtNum(v) : (v ?? '');
+                    return {
+                        content: display,
+                        styles: {
+                            halign: isNum(v) && !h.toLowerCase().includes('kode') ? 'right' : 'left',
+                            fontSize: 6.5,
+                        },
+                    };
+                });
+                body.push(cells);
+            }
+
+            // Subtotal terakhir
+            if (key2) makeSubRow(`Jumlah ${key2}`, acc2, [240, 253, 244]);
+            if (key1) makeSubRow(`Jumlah ${key1}`, acc1, [220, 252, 231]);
+
+            // Grand Total
+            const gtCells = headers.map((h, idx) => {
+                let val = '';
+                if (idx === 0) val = 'JUMLAH TOTAL';
+                else if (idx === 1) val = '';
+                else if (isSubCol(h)) val = fmtNum(accTotal[h]);
+                return {
+                    content: val,
+                    styles: {
+                        halign: idx >= 2 && val !== '' ? 'right' : (idx === 0 ? 'right' : 'left'),
+                        fontStyle: 'bold',
+                        fillColor: [20, 83, 45],
+                        textColor: [255, 255, 255],
+                        fontSize: 7,
+                    },
+                };
+            });
+            body.push(gtCells);
+
+            // ── Buat PDF ─────────────────────────────────────────────────────
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a3' });
 
-            const judul = getJudulLaporan();
-            doc.setFontSize(11);
+            const pageW = doc.internal.pageSize.getWidth();
+            doc.setFontSize(10);
             doc.setFont('helvetica', 'bold');
-            doc.text(judul, doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
+            doc.text(judul, pageW / 2, 28, { align: 'center' });
 
             doc.autoTable({
-                html: tbl,
-                startY: 45,
-                styles: { fontSize: 7, cellPadding: 3 },
-                headStyles: { fillColor: [21, 128, 61], textColor: 255, fontStyle: 'bold' },
-                // Baris 0 = judul colspan → skip dari autoTable head
-                didParseCell: (data) => {
-                    if (data.row.index === 0 && data.section === 'head') {
-                        data.cell.styles.fillColor = [255, 255, 255];
-                        data.cell.styles.textColor = [17, 24, 39];
-                        data.cell.styles.fontStyle = 'bold';
-                        data.cell.styles.halign = 'center';
-                    }
+                head: [headers.map(h => h.replace(/_/g, ' ').toUpperCase())],
+                body,
+                startY: 42,
+                styles: {
+                    fontSize: 6.5,
+                    cellPadding: 2.5,
+                    lineWidth: 0.3,
+                    lineColor: [209, 250, 229],
+                    overflow: 'ellipsize',
+                },
+                headStyles: {
+                    fillColor: [21, 128, 61],
+                    textColor: 255,
+                    fontStyle: 'bold',
+                    fontSize: 6.5,
+                    halign: 'center',
+                    cellPadding: 3,
                 },
                 alternateRowStyles: { fillColor: [249, 250, 251] },
-                margin: { top: 50, left: 20, right: 20 },
+                margin: { top: 42, left: 18, right: 18 },
+                tableWidth: 'auto',
             });
 
             doc.save(`${judul}.pdf`);

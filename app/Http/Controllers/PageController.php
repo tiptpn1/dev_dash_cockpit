@@ -1568,14 +1568,14 @@ class PageController extends Controller
         return view('pages/lm14', compact('plantList', 'regionalList', 'tahunList', 'tahunSekarang'));
     }
 
-    public function lm16_draft()
+    public function lm16()
     {
         $plantList = Plant::orderBy('plant', 'asc')->get();
         $regionalList = Plant::distinct()->orderBy('regional', 'asc')->get(['regional']);
         $tahunSekarang = (int) date('Y');
         $tahunList = range($tahunSekarang, $tahunSekarang + 9); // [2026, 2027, ..., 2035]
 
-        return view('pages/lm16_draft', compact('plantList', 'regionalList', 'tahunList', 'tahunSekarang'));
+        return view('pages/lm16', compact('plantList', 'regionalList', 'tahunList', 'tahunSekarang'));
     }
 
     public function under_construction()
