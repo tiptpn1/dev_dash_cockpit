@@ -451,8 +451,8 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">Plant</label>
-                            <select class="form-select select2-plant" id="plantFilter" style="width:100%;">
-                                <option value="">-- Semua Kebun --</option>
+                            <select class="form-select select2-plant" id="plantFilter" style="width:100%;" disabled>
+                                <option value="">-- Pilih Regional dulu --</option>
                                 @foreach ($plantList as $item)
                                     <option value="{{ $item->plant }}">{{ $item->plant }} - {{ $item->nama }}</option>
                                 @endforeach
@@ -491,7 +491,8 @@
                         <button type="reset" class="btn-reset" id="btnReset">
                             <i class="fas fa-redo"></i> Reset
                         </button>
-                        <button type="submit" class="btn-filter" id="btnFilter">
+                        <button type="submit" class="btn-filter" id="btnFilter" disabled
+                            style="opacity:0.45; cursor:not-allowed;">
                             <i class="fas fa-search"></i> Cari
                         </button>
                     </div>
@@ -507,17 +508,17 @@
                     <div style="display:flex; align-items:center; gap:8px;">
                         <span id="resultInfo" style="color:#93c5fd; font-size:12px;"></span>
                         <button id="btnExportExcel" onclick="exportExcel()" style="
-                                                display:inline-flex; align-items:center; gap:5px;
-                                                padding:6px 14px; background:#16a34a; color:#fff;
-                                                border:none; border-radius:6px; font-size:12px;
-                                                font-weight:700; cursor:pointer;">
+                                                    display:inline-flex; align-items:center; gap:5px;
+                                                    padding:6px 14px; background:#16a34a; color:#fff;
+                                                    border:none; border-radius:6px; font-size:12px;
+                                                    font-weight:700; cursor:pointer;">
                             <i class="fas fa-file-excel"></i> Excel
                         </button>
                         <button id="btnExportPdf" onclick="exportPdf()" style="
-                                                display:inline-flex; align-items:center; gap:5px;
-                                                padding:6px 14px; background:#dc2626; color:#fff;
-                                                border:none; border-radius:6px; font-size:12px;
-                                                font-weight:700; cursor:pointer;">
+                                                    display:inline-flex; align-items:center; gap:5px;
+                                                    padding:6px 14px; background:#dc2626; color:#fff;
+                                                    border:none; border-radius:6px; font-size:12px;
+                                                    font-weight:700; cursor:pointer;">
                             <i class="fas fa-file-pdf"></i> PDF
                         </button>
                     </div>
@@ -538,6 +539,9 @@
         // Data mentah untuk export Excel (disimpan saat data diterima)
         let _exportData = null;
 
+        // Semua plant dari server (untuk filter dinamis)
+        const allPlants = @json($plantList->map(fn($p) => ['plant' => $p->plant, 'nama' => $p->nama, 'regional' => $p->regional]));
+
         document.addEventListener('DOMContentLoaded', function () {
             const tahunSel = document.getElementById('tahunFilter');
             const bulanSel = document.getElementById('bulanFilter');
@@ -555,6 +559,56 @@
                 if (lblBulan) lblBulan.textContent = bln ? bulanNames[bln] : '-';
             }
 
+            // ── Filter plant by regional ──────────────────────────────────────
+            function rebuildPlantFilter(selectedRegional) {
+                const plantSel = document.getElementById('plantFilter');
+                const currentVal = plantSel.value;
+                const filtered = selectedRegional
+                    ? allPlants.filter(p => p.regional === selectedRegional)
+                    : [];
+
+                if (selectedRegional) {
+                    // Aktifkan select plant
+                    plantSel.disabled = false;
+                    plantSel.style.opacity = '1';
+                    plantSel.style.cursor = 'pointer';
+                    plantSel.innerHTML = '<option value="">-- Semua Kebun --</option>';
+                    filtered.forEach(p => {
+                        const opt = document.createElement('option');
+                        opt.value = p.plant;
+                        opt.textContent = `${p.plant} - ${p.nama}`;
+                        if (p.plant === currentVal) opt.selected = true;
+                        plantSel.appendChild(opt);
+                    });
+                } else {
+                    // Disable dan reset select plant
+                    plantSel.disabled = true;
+                    plantSel.style.opacity = '0.5';
+                    plantSel.style.cursor = 'not-allowed';
+                    plantSel.innerHTML = '<option value="">-- Pilih Regional dulu --</option>';
+                }
+
+                $('#plantFilter').val('').trigger('change');
+            }
+
+            document.getElementById('regionalFilter').addEventListener('change', function () {
+                rebuildPlantFilter(this.value);
+            });
+
+            // ── Enable tombol Cari hanya jika Tahun & Bulan sudah dipilih ────────
+            const btnFilter = document.getElementById('btnFilter');
+            function checkEnableSearch() {
+                const tahunOk = !!document.getElementById('tahunFilter').value;
+                const bulanOk = !!document.getElementById('bulanFilter').value;
+                const ok = tahunOk && bulanOk;
+                btnFilter.disabled = !ok;
+                btnFilter.style.opacity = ok ? '1' : '0.45';
+                btnFilter.style.cursor = ok ? 'pointer' : 'not-allowed';
+            }
+            document.getElementById('tahunFilter').addEventListener('change', checkEnableSearch);
+            document.getElementById('bulanFilter').addEventListener('change', checkEnableSearch);
+            checkEnableSearch(); // init
+
             // Init on page load
             updateLabels();
 
@@ -563,7 +617,7 @@
             bulanSel.addEventListener('change', updateLabels);
 
             // ── Fetch + Render data dari route get_data_lm14 ─────────────────
-            function get_data_lm16(plant, tahun, bulan) {
+            function get_data_lm16(komoditas, region, plant, tahun, bulan) {
                 const card = document.getElementById('resultCard');
                 const loading = document.getElementById('tableLoading');
                 const errBox = document.getElementById('tableError');
@@ -577,7 +631,7 @@
                 result.innerHTML = '';
                 info.textContent = '';
 
-                const params = new URLSearchParams({ plant, tahun, bulan });
+                const params = new URLSearchParams({ komoditi: komoditas, region, plant, tahun, bulan });
                 fetch(`{{ route('get_data_lm16') }}?${params}`)
                     .then(res => res.json())
                     .then(data => {
@@ -647,14 +701,14 @@
                         html += '<thead>';
                         // Baris judul (full colspan)
                         html += `<tr>
-                                                                    <th colspan="${headers.length}" style="
-                                                                        background:#ffffff; color:#111827;
-                                                                        text-align:center; font-size:13px;
-                                                                        font-weight:800; padding:10px 16px;
-                                                                        letter-spacing:0.05em; border-bottom:2px solid #16a34a;">
-                                                                        ${judulLaporan}
-                                                                    </th>
-                                                                </tr>`;
+                                                                        <th colspan="${headers.length}" style="
+                                                                            background:#ffffff; color:#111827;
+                                                                            text-align:center; font-size:13px;
+                                                                            font-weight:800; padding:10px 16px;
+                                                                            letter-spacing:0.05em; border-bottom:2px solid #16a34a;">
+                                                                            ${judulLaporan}
+                                                                        </th>
+                                                                    </tr>`;
                         // Baris kolom header
                         html += '<tr>';
                         headers.forEach(h => {
@@ -767,18 +821,20 @@
                 const tahun = document.getElementById('tahunFilter').value;
                 const bulan = document.getElementById('bulanFilter').value;
                 updateLabels();
-                get_data_lm16(plant, tahun, bulan);
+                get_data_lm16(komoditas, regional, plant, tahun, bulan);
             });
 
             // Reset — gunakan tahun berjalan dari server
             document.getElementById('btnReset').addEventListener('click', function () {
                 setTimeout(function () {
-                    tahunSel.value = '{{ $tahunSekarang }}';
+                    tahunSel.value = '';
                     bulanSel.value = '';
-                    // Reset Select2
+                    document.getElementById('regionalFilter').value = '';
+                    rebuildPlantFilter(''); // tampilkan semua plant
                     $('#plantFilter').val('').trigger('change');
                     resultCard.style.display = 'none';
                     updateLabels();
+                    checkEnableSearch(); // disable tombol Cari kembali
                 }, 50);
             });
         });

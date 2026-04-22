@@ -1560,8 +1560,9 @@ class PageController extends Controller
 
     public function lm14()
     {
-        $plantList = Plant::orderBy('plant', 'asc')->get();
+
         $regionalList = Plant::distinct()->orderBy('regional', 'asc')->get(['regional']);
+        $plantList = Plant::orderBy('plant', 'asc')->get();
         $tahunSekarang = (int) date('Y');
         $tahunList = range($tahunSekarang, $tahunSekarang + 9); // [2026, 2027, ..., 2035]
 
@@ -1601,6 +1602,7 @@ class PageController extends Controller
                 'message' => 'Komoditi tidak valid. Pilih salah satu Komoditi',
             ], 400);
         }
+        $region = $request->region;
         $plant = $request->plant;
         $tahun = $request->tahun;
         $bulan = $request->bulan;
@@ -1614,6 +1616,7 @@ class PageController extends Controller
         try {
             $query = "
             CALL `dashboard-cockpit.data_dash.$nama_sp`(
+                '$region',
                 '$plant',
                 '$tahun',
                 '$bulan'
@@ -1668,6 +1671,23 @@ class PageController extends Controller
 
     public function get_data_lm16(Request $request)
     {
+        $komoditi = strtolower($request->komoditi);
+        $nama_sp = '';
+        if ($komoditi == 'kr') {
+            $nama_sp = 'sp_laporan_lm16_karet';
+        } else if ($komoditi == 'th') {
+            $nama_sp = 'sp_laporan_lm16_teh';
+        } else if ($komoditi == 'kp') {
+            $nama_sp = 'sp_laporan_lm16_kopi';
+        }
+
+        if (empty($nama_sp)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Komoditi tidak valid. Pilih salah satu Komoditi',
+            ], 400);
+        }
+        $region = $request->region;
         $plant = $request->plant;
         $tahun = $request->tahun;
         $bulan = $request->bulan;
@@ -1680,7 +1700,8 @@ class PageController extends Controller
         $tahun_periode = $tahun . $bulan;
         try {
             $query = "
-            CALL `dashboard-cockpit.data_dash.sp_laporan_lm16_karet`(
+            CALL `dashboard-cockpit.data_dash.$nama_sp`(
+                '$region',
                 '$plant',
                 '$tahun',
                 '$bulan'
