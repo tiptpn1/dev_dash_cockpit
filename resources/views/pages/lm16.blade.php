@@ -508,17 +508,17 @@
                     <div style="display:flex; align-items:center; gap:8px;">
                         <span id="resultInfo" style="color:#93c5fd; font-size:12px;"></span>
                         <button id="btnExportExcel" onclick="exportExcel()" style="
-                                                    display:inline-flex; align-items:center; gap:5px;
-                                                    padding:6px 14px; background:#16a34a; color:#fff;
-                                                    border:none; border-radius:6px; font-size:12px;
-                                                    font-weight:700; cursor:pointer;">
+                                                                    display:inline-flex; align-items:center; gap:5px;
+                                                                    padding:6px 14px; background:#16a34a; color:#fff;
+                                                                    border:none; border-radius:6px; font-size:12px;
+                                                                    font-weight:700; cursor:pointer;">
                             <i class="fas fa-file-excel"></i> Excel
                         </button>
                         <button id="btnExportPdf" onclick="exportPdf()" style="
-                                                    display:inline-flex; align-items:center; gap:5px;
-                                                    padding:6px 14px; background:#dc2626; color:#fff;
-                                                    border:none; border-radius:6px; font-size:12px;
-                                                    font-weight:700; cursor:pointer;">
+                                                                    display:inline-flex; align-items:center; gap:5px;
+                                                                    padding:6px 14px; background:#dc2626; color:#fff;
+                                                                    border:none; border-radius:6px; font-size:12px;
+                                                                    font-weight:700; cursor:pointer;">
                             <i class="fas fa-file-pdf"></i> PDF
                         </button>
                     </div>
@@ -674,19 +674,22 @@
                         const bulanNames = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei',
                             'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
+                        const regionalSel = document.getElementById('regionalFilter');
                         const plantSel = document.getElementById('plantFilter');
                         const bulanSel2 = document.getElementById('bulanFilter');
                         const tahunSel2 = document.getElementById('tahunFilter');
                         const komoSel = document.getElementById('komoditasFilter');
-
+                        const regionalText = regionalSel.selectedIndex >= 0 && regionalSel.value
+                            ? 'Regional ' + regionalSel.options[regionalSel.selectedIndex].text
+                            : 'Semua Regional';
                         const plantText = plantSel.selectedIndex >= 0 && plantSel.value
                             ? plantSel.options[plantSel.selectedIndex].text
                             : 'Semua Kebun';
-                        const bulanText = bulanSel2.value ? bulanNames[parseInt(bulanSel2.value)] : 'Semua Bulan';
+                        const bulanText = bulanSel2.value ? 'Periode ' + bulanNames[parseInt(bulanSel2.value)] : 'Semua Bulan';
                         const tahunText = tahunSel2.value || 'Semua Tahun';
                         const komoText = komoSel.value ? komoSel.options[komoSel.selectedIndex].text : 'Semua Komoditas';
 
-                        const judulLaporan = `LM16  ${plantText}  Komoditas: ${komoText}  ${bulanText}  ${tahunText}`;
+                        const judulLaporan = `LM16 - ${regionalText} - ${plantText} - Komoditas: ${komoText}  ${bulanText}  ${tahunText}`;
 
                         // Simpan data mentah untuk export ─────────────────────────────
                         _exportData = {
@@ -701,14 +704,14 @@
                         html += '<thead>';
                         // Baris judul (full colspan)
                         html += `<tr>
-                                                                        <th colspan="${headers.length}" style="
-                                                                            background:#ffffff; color:#111827;
-                                                                            text-align:center; font-size:13px;
-                                                                            font-weight:800; padding:10px 16px;
-                                                                            letter-spacing:0.05em; border-bottom:2px solid #16a34a;">
-                                                                            ${judulLaporan}
-                                                                        </th>
-                                                                    </tr>`;
+                                                                                        <th colspan="${headers.length}" style="
+                                                                                            background:#ffffff; color:#111827;
+                                                                                            text-align:center; font-size:13px;
+                                                                                            font-weight:800; padding:10px 16px;
+                                                                                            letter-spacing:0.05em; border-bottom:2px solid #16a34a;">
+                                                                                            ${judulLaporan}
+                                                                                        </th>
+                                                                                    </tr>`;
                         // Baris kolom header
                         html += '<tr>';
                         headers.forEach(h => {
@@ -783,23 +786,23 @@
 
                         // Subtotal terakhir (sisa grup yang belum di-flush)
                         if (key2) html += subtotalRow(`Jumlah ${key2}`, acc2, '#f0fdf4', '700', '2px solid #bbf7d0');
-                        if (key1) html += subtotalRow(`Jumlah ${key1}`, acc1, '#dcfce7', '800', '2px solid #16a34a');
+                        if (key1) html += subtotalRow(`Jumlah ${key1}`, acc1, '#dcfce7', '800', '2px solid #166534');
 
                         // ── Grand Total ───────────────────────────────────────────────
-                        let gt = `<tr style="background:#14532d; color:#fff; font-weight:900; border-top:3px solid #052e16;">`;
-                        headers.forEach((h, idx) => {
-                            if (idx === 0) {
-                                gt += `<td colspan="2" style="padding:7px 12px; border:1px solid #166534; text-align:right; white-space:nowrap; color:#fff;">JUMLAH TOTAL</td>`;
-                            } else if (idx === 1) {
-                                return;
-                            } else if (isSubtotalCol(h)) {
-                                gt += `<td style="padding:7px 12px; border:1px solid #166534; text-align:right; white-space:nowrap; color:#fff;">${fmt(accTotal[h])}</td>`;
-                            } else {
-                                gt += `<td style="padding:7px 12px; border:1px solid #166534; color:#fff;"></td>`;
-                            }
-                        });
-                        gt += '</tr>';
-                        html += gt;
+                        // let gt = `<tr style="background:#14532d; color:#fff; font-weight:900; border-top:3px solid #052e16;">`;
+                        // headers.forEach((h, idx) => {
+                        //     if (idx === 0) {
+                        //         gt += `<td colspan="2" style="padding:7px 12px; border:1px solid #166534; text-align:right; white-space:nowrap; color:#fff;">JUMLAH TOTAL</td>`;
+                        //     } else if (idx === 1) {
+                        //         return;
+                        //     } else if (isSubtotalCol(h)) {
+                        //         gt += `<td style="padding:7px 12px; border:1px solid #166534; text-align:right; white-space:nowrap; color:#fff;">${fmt(accTotal[h])}</td>`;
+                        //     } else {
+                        //         gt += `<td style="padding:7px 12px; border:1px solid #166534; color:#fff;"></td>`;
+                        //     }
+                        // });
+                        // gt += '</tr>';
+                        // html += gt;
 
                         html += '</tbody></table>';
 

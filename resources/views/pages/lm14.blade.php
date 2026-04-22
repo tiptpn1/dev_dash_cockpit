@@ -491,7 +491,8 @@
                         <button type="reset" class="btn-reset" id="btnReset">
                             <i class="fas fa-redo"></i> Reset
                         </button>
-                        <button type="submit" class="btn-filter" id="btnFilter" disabled style="opacity:0.45; cursor:not-allowed;">
+                        <button type="submit" class="btn-filter" id="btnFilter" disabled
+                            style="opacity:0.45; cursor:not-allowed;">
                             <i class="fas fa-search"></i> Cari
                         </button>
                     </div>
@@ -507,17 +508,17 @@
                     <div style="display:flex; align-items:center; gap:8px;">
                         <span id="resultInfo" style="color:#93c5fd; font-size:12px;"></span>
                         <button id="btnExportExcel" onclick="exportExcel()" style="
-                                display:inline-flex; align-items:center; gap:5px;
-                                padding:6px 14px; background:#16a34a; color:#fff;
-                                border:none; border-radius:6px; font-size:12px;
-                                font-weight:700; cursor:pointer;">
+                                                        display:inline-flex; align-items:center; gap:5px;
+                                                        padding:6px 14px; background:#16a34a; color:#fff;
+                                                        border:none; border-radius:6px; font-size:12px;
+                                                        font-weight:700; cursor:pointer;">
                             <i class="fas fa-file-excel"></i> Excel
                         </button>
                         <button id="btnExportPdf" onclick="exportPdf()" style="
-                                display:inline-flex; align-items:center; gap:5px;
-                                padding:6px 14px; background:#dc2626; color:#fff;
-                                border:none; border-radius:6px; font-size:12px;
-                                font-weight:700; cursor:pointer;">
+                                                        display:inline-flex; align-items:center; gap:5px;
+                                                        padding:6px 14px; background:#dc2626; color:#fff;
+                                                        border:none; border-radius:6px; font-size:12px;
+                                                        font-weight:700; cursor:pointer;">
                             <i class="fas fa-file-pdf"></i> PDF
                         </button>
                     </div>
@@ -566,7 +567,7 @@
                 const ok = tahunOk && bulanOk;
                 btnFilter.disabled = !ok;
                 btnFilter.style.opacity = ok ? '1' : '0.45';
-                btnFilter.style.cursor  = ok ? 'pointer' : 'not-allowed';
+                btnFilter.style.cursor = ok ? 'pointer' : 'not-allowed';
             }
             document.getElementById('tahunFilter').addEventListener('change', checkEnableSearch);
             document.getElementById('bulanFilter').addEventListener('change', checkEnableSearch);
@@ -673,19 +674,23 @@
                         const bulanNames = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei',
                             'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
+                        const regionalSel = document.getElementById('regionalFilter');
                         const plantSel = document.getElementById('plantFilter');
                         const bulanSel2 = document.getElementById('bulanFilter');
                         const tahunSel2 = document.getElementById('tahunFilter');
                         const komoSel = document.getElementById('komoditasFilter');
 
+                        const regionalText = regionalSel.selectedIndex >= 0 && regionalSel.value
+                            ? 'Regional ' + regionalSel.options[regionalSel.selectedIndex].text
+                            : 'Semua Regional';
                         const plantText = plantSel.selectedIndex >= 0 && plantSel.value
                             ? plantSel.options[plantSel.selectedIndex].text
                             : 'Semua Kebun';
-                        const bulanText = bulanSel2.value ? bulanNames[parseInt(bulanSel2.value)] : 'Semua Bulan';
+                        const bulanText = bulanSel2.value ? 'Periode ' + bulanNames[parseInt(bulanSel2.value)] : 'Semua Bulan';
                         const tahunText = tahunSel2.value || 'Semua Tahun';
                         const komoText = komoSel.value ? komoSel.options[komoSel.selectedIndex].text : 'Semua Komoditas';
 
-                        const judulLaporan = `LM14  ${plantText}  Komoditas: ${komoText}  ${bulanText}  ${tahunText}`;
+                        const judulLaporan = `LM14 - ${regionalText} - ${plantText} - Komoditas: ${komoText}  ${bulanText}  ${tahunText}`;
 
                         // Simpan data mentah untuk export ─────────────────────────────
                         _exportData = {
@@ -702,14 +707,14 @@
                             colTypes[h] = rows.slice(0, sampleSize).some(r => isNum(r[h])) ? 'num' : 'text';
                         });
                         const textColsList = headers.filter(h => colTypes[h] === 'text');
-                        const numColsList  = headers.filter(h => colTypes[h] === 'num');
+                        const numColsList = headers.filter(h => colTypes[h] === 'num');
 
                         // Distribusi lebar kolom proporsional (persentase)
                         const textPct = textColsList.length > 0
                             ? Math.min(22, Math.floor(50 / textColsList.length))
                             : 20;
                         const usedPct = textPct * textColsList.length;
-                        const numPct  = numColsList.length > 0
+                        const numPct = numColsList.length > 0
                             ? Math.max(4, Math.floor((100 - usedPct) / numColsList.length))
                             : Math.floor(100 / headers.length);
 
@@ -726,14 +731,14 @@
                         html += '<thead>';
                         // Baris judul (full colspan)
                         html += `<tr>
-                                    <th colspan="${headers.length}" style="
-                                        background:#ffffff; color:#111827;
-                                        text-align:center; font-size:12px;
-                                        font-weight:800; padding:8px 12px;
-                                        letter-spacing:0.04em; border-bottom:2px solid #16a34a;">
-                                        ${judulLaporan}
-                                    </th>
-                                </tr>`;
+                                                            <th colspan="${headers.length}" style="
+                                                                background:#ffffff; color:#111827;
+                                                                text-align:center; font-size:12px;
+                                                                font-weight:800; padding:8px 12px;
+                                                                letter-spacing:0.04em; border-bottom:2px solid #16a34a;">
+                                                                ${judulLaporan}
+                                                            </th>
+                                                        </tr>`;
                         // Baris kolom header
                         html += '<tr>';
                         headers.forEach(h => {
@@ -761,9 +766,9 @@
                         });
 
                         // Semua kolom biaya_per_ha & biaya_total & qty (urutan dari headers)
-                        const perHaCols    = headers.filter(h => h.toLowerCase().includes('biaya_per_ha'));
+                        const perHaCols = headers.filter(h => h.toLowerCase().includes('biaya_per_ha'));
                         const biayaTotCols = headers.filter(h => h.toLowerCase().includes('biaya_total'));
-                        const qtyCols      = headers.filter(h => h.toLowerCase().includes('qty'));
+                        const qtyCols = headers.filter(h => h.toLowerCase().includes('qty'));
 
                         // Luas areal: nilai qty dari baris kode='00' per indeks kolom
                         // Index 0 = qty tahun ini, index 1 = qty tahun lalu (atau sebaliknya)
@@ -778,7 +783,7 @@
                         perHaCols.forEach((perHaCol, i) => {
                             perHaMapping[perHaCol] = {
                                 totalCol: biayaTotCols[i] ?? biayaTotCols[0],
-                                luas:     luasArr[i]      ?? luasArr[0] ?? 0,
+                                luas: luasArr[i] ?? luasArr[0] ?? 0,
                             };
                         });
 
@@ -1006,8 +1011,8 @@
                 const u = (r['uraian'] ?? r['URAIAN'] ?? '').toString().toLowerCase();
                 return k === '00' || k === '0' || parseInt(k) === 0 || u.includes('luas areal');
             });
-            const _phCols  = headers.filter(h => h.toLowerCase().includes('biaya_per_ha'));
-            const _btCols  = headers.filter(h => h.toLowerCase().includes('biaya_total'));
+            const _phCols = headers.filter(h => h.toLowerCase().includes('biaya_per_ha'));
+            const _btCols = headers.filter(h => h.toLowerCase().includes('biaya_total'));
             const _qtyCols = headers.filter(h => h.toLowerCase().includes('qty'));
             const _luasArr = _qtyCols.map(col => {
                 if (!_row00) return 0;
@@ -1155,10 +1160,10 @@
 
             const { rows, headers, judul, subtotalCols } = _exportData;
             const isSubCol = h => subtotalCols.some(k => h.toLowerCase().includes(k));
-            const isNum    = v => v !== null && v !== '' && v !== undefined && !isNaN(parseFloat(v));
+            const isNum = v => v !== null && v !== '' && v !== undefined && !isNaN(parseFloat(v));
 
             // ── Format helpers ────────────────────────────────────────────────
-            const fmtNum  = v => isNum(v) ? parseFloat(v).toLocaleString('id-ID') : (v ?? '');
+            const fmtNum = v => isNum(v) ? parseFloat(v).toLocaleString('id-ID') : (v ?? '');
             const fmtDec2 = v => isNum(v) ? parseFloat(v).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : (v ?? '');
 
             // ── perHaMapping sama seperti Excel ──────────────────────────────
@@ -1167,8 +1172,8 @@
                 const u = (r['uraian'] ?? r['URAIAN'] ?? '').toString().toLowerCase();
                 return k === '00' || k === '0' || parseInt(k) === 0 || u.includes('luas areal');
             });
-            const _phCols  = headers.filter(h => h.toLowerCase().includes('biaya_per_ha'));
-            const _btCols  = headers.filter(h => h.toLowerCase().includes('biaya_total'));
+            const _phCols = headers.filter(h => h.toLowerCase().includes('biaya_per_ha'));
+            const _btCols = headers.filter(h => h.toLowerCase().includes('biaya_total'));
             const _qtyCols = headers.filter(h => h.toLowerCase().includes('qty'));
             const _luasArr = _qtyCols.map(col => {
                 if (!_row00) return 0;
@@ -1190,7 +1195,7 @@
             // Kolom teks (kode, uraian, sat) lebih lebar; angka lebih sempit
             const colWidths = headers.map(h => {
                 const lower = h.toLowerCase();
-                if (lower.includes('uraian'))  return 60;
+                if (lower.includes('uraian')) return 60;
                 if (lower.includes('kode') || lower.includes('sat')) return 12;
                 return 24; // kolom angka
             });
@@ -1203,7 +1208,7 @@
                     content: v ?? '',
                     styles: {
                         halign: (typeof v === 'number' || isNum(v)) &&
-                                !headers[i]?.toLowerCase().includes('kode') ? 'right' : 'left',
+                            !headers[i]?.toLowerCase().includes('kode') ? 'right' : 'left',
                         ...styles,
                     },
                 }));
