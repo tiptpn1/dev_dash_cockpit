@@ -652,13 +652,14 @@
                         // Ambil semua key dari baris pertama sebagai header
                         const headers = Object.keys(rows[0]);
 
-                        // ── Kolom yang disubtotal: auto-detect semua kolom numerik ────
-                        // Cek dari row pertama kolom mana yang nilainya numerik
+                        // ── Kolom yang disubtotal: scan SEMUA baris agar kolom yg null di row[0] tetap terdeteksi ────
                         const NUMERIC_COLS = new Set(
-                            headers.filter(h => {
-                                const v = rows[0][h];
-                                return v !== null && v !== '' && v !== undefined && !isNaN(parseFloat(v));
-                            })
+                            headers.filter(h =>
+                                rows.some(r => {
+                                    const v = r[h];
+                                    return v !== null && v !== '' && v !== undefined && !isNaN(parseFloat(v));
+                                })
+                            )
                         );
                         const isSubtotalCol = h => NUMERIC_COLS.has(h);
 
@@ -666,7 +667,13 @@
                         const fmt = v => {
                             if (v === null || v === '' || v === undefined) return '-';
                             const n = parseFloat(v);
-                            return isNaN(n) ? (v ?? '-') : n.toLocaleString('id-ID');
+                            if (isNaN(n)) return v ?? '-';
+                            // Jika nilai asli dari BigQuery punya desimal → paksa 2 digit di belakang koma
+                            const hasDecimal = String(v).includes('.');
+                            return n.toLocaleString('id-ID', {
+                                minimumFractionDigits: hasDecimal ? 2 : 0,
+                                maximumFractionDigits: 2,
+                            });
                         };
                         const isNum = v => v !== null && v !== '' && v !== undefined && !isNaN(parseFloat(v));
 
@@ -738,6 +745,10 @@
                                     return; // sudah di-colspan
                                 } else if (isSubtotalCol(h)) {
                                     r += `<td style="padding:5px 12px; border:1px solid #d1fae5; text-align:right; white-space:nowrap;">${fmt(acc[h])}</td>`;
+                                } else if (RATIO_COLS.has(h)) {
+                                    // Kolom rasio: hitung ulang dari akumulator
+                                    const ratioVal = calcRatioVal(h, acc);
+                                    r += `<td style="padding:5px 12px; border:1px solid #d1fae5; text-align:right; white-space:nowrap;">${ratioVal !== null ? fmt(ratioVal) : '-'}</td>`;
                                 } else {
                                     r += `<td style="padding:5px 12px; border:1px solid #d1fae5;"></td>`;
                                 }
@@ -877,7 +888,10 @@
             const isNum = v => v !== null && v !== '' && v !== undefined && !isNaN(parseFloat(v));
 
             const workbook = new ExcelJS.Workbook();
-            const ws = workbook.addWorksheet('LM14');
+            const ws = workbook.addWorksheet('LM16');
+
+            // ── Pastikan worksheet TIDAK diproteksi ──────────────────────────────
+            ws.properties = ws.properties || {};
 
             // ── Lebar kolom otomatis ─────────────────────────────────────────────
             ws.columns = headers.map(h => ({
@@ -900,6 +914,7 @@
             titleCell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
             titleCell.fill = fillSolid('FFFFFFFF');
             titleCell.border = border();
+            titleCell.protection = { locked: false };
             ws.getRow(1).height = 22;
 
             // ── Baris 2: Header kolom ────────────────────────────────────────────
@@ -909,6 +924,7 @@
                 cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 9 };
                 cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
                 cell.border = border();
+                cell.protection = { locked: false };
             });
             ws.getRow(2).height = 18;
 
@@ -925,6 +941,7 @@
                     cell.fill = fillSolid(bgArgb);
                     cell.font = { bold: true, italic: true, size: 9, color: { argb: 'FF111827' } };
                     cell.border = border();
+                    cell.protection = { locked: false };
                     const h = headers[colNum - 1];
                     if (colNum > 2 && numericColsExport.has(h)) {
                         cell.numFmt = '#,##0';
@@ -977,6 +994,7 @@
                     cell.fill = fillSolid(bg);
                     cell.font = { size: 9 };
                     cell.border = border();
+                    cell.protection = { locked: false };
                     const h = headers[colNum - 1];
                     if (h && isNum(row[h])) {
                         cell.numFmt = '#,##0';
@@ -1004,6 +1022,7 @@
                 cell.fill = fillSolid('FF14532D');
                 cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 10 };
                 cell.border = border('medium');
+                cell.protection = { locked: false };
                 if (colNum > 2 && numericColsExport.has(headers[colNum - 1])) {
                     cell.numFmt = '#,##0';
                     cell.alignment = { horizontal: 'right' };

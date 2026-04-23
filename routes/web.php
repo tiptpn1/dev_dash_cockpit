@@ -105,6 +105,7 @@ Route::middleware('auth:custom')->group(function () {
     Route::put('/skyview-table/{skyview}', [SkyviewController::class, 'update'])->name('skyview.update');
     Route::delete('/skyview-table/{skyview}', [SkyviewController::class, 'destroy'])->name('skyview.destroy');
 
+    Route::get('/get_data_lm13', [PageController::class, 'get_data_lm13'])->name('get_data_lm13');
     Route::get('/get_data_lm14', [PageController::class, 'get_data_lm14'])->name('get_data_lm14');
     Route::get('/get_data_lm16', [PageController::class, 'get_data_lm16'])->name('get_data_lm16');
 

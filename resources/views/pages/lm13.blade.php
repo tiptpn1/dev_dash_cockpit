@@ -1,8 +1,71 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('styles')
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <style>
-        /* ===== SCROLL FIX â€” override Tailwind h-screen di body ===== */
+        /* ===== Select2 — sesuaikan dengan tema hijau ===== */
+        .select2-container--default .select2-selection--single {
+            height: 36px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background-color: #fff;
+            color: #1f2937;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 36px;
+            padding-left: 0;
+            color: #111827 !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__placeholder {
+            color: #6b7280 !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 34px;
+        }
+
+        .select2-container--default.select2-container--focus .select2-selection--single,
+        .select2-container--default.select2-container--open .select2-selection--single {
+            border-color: #166534;
+            box-shadow: 0 0 0 2px rgba(22, 101, 52, 0.12);
+            outline: none;
+        }
+
+        .select2-container--default .select2-results__option {
+            color: #111827 !important;
+        }
+
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: #166534;
+            color: #fff !important;
+        }
+
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 12px;
+            color: #111827 !important;
+        }
+
+        .select2-dropdown {
+            border: 1px solid #166534;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .select2-container {
+            width: 100% !important;
+        }
+
+        /* ===== SCROLL FIX — override Tailwind h-screen di body ===== */
         html,
         body {
             height: auto !important;
@@ -10,7 +73,7 @@
             overflow-y: auto !important;
         }
 
-        /* Override padding dari layout .main-content */
+        /* Override padding dari layout .main-content agar tidak ada space aneh */
         .lm13-container.main-content {
             padding: 0 !important;
             margin-left: 0 !important;
@@ -28,12 +91,12 @@
             font-family: inherit;
         }
 
-        /* ===== PAGE HEADER â€” mirip gudang_utilisasi ===== */
+        /* ===== PAGE HEADER — mirip gudang_utilisasi ===== */
         .lm-page-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 8px 50px 8px 50px;
+            padding: 8px 50px;
             background: #fff;
             border-bottom: 1px solid #e5e7eb;
             min-height: 56px;
@@ -66,7 +129,6 @@
             font-weight: 700;
             color: #166534;
             margin: 0;
-            line-height: 1.2;
         }
 
         .lm-header-right {
@@ -231,14 +293,14 @@
         }
 
         .report-table thead th {
-            background: #166534;
+            background: #15803d;
             color: #fff;
             font-weight: 700;
             font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             padding: 9px 12px;
-            border: 1px solid #14532d;
+            border: 1px solid #166534;
             text-align: center;
             white-space: nowrap;
         }
@@ -251,22 +313,12 @@
         }
 
         .report-table thead th.col-label {
-            background: #15803d;
-            color: #dcfce7;
-            font-size: 11.5px;
-            border-bottom: 2px solid #166534;
-
             text-align: left;
             white-space: normal;
             min-width: 180px;
         }
 
         .report-table thead th.col-norek {
-            background: #15803d;
-            color: #dcfce7;
-            font-size: 11.5px;
-            border-bottom: 2px solid #166534;
-
             min-width: 55px;
             width: 55px;
         }
@@ -346,213 +398,782 @@
             color: #9ca3af;
             font-size: 11px;
         }
-
-        /* ===== EXPORT BUTTONS ===== */
-        .export-btn-group {
-            display: flex; align-items: center; gap: 8px;
-        }
-        .btn-export {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 6px 14px;
-            border: none; border-radius: 6px;
-            font-size: 12px; font-weight: 700;
-            cursor: pointer; transition: all 0.2s;
-            text-decoration: none; white-space: nowrap;
-        }
-        .btn-export-excel {
-            background: #16a34a; color: #fff;
-            box-shadow: 0 2px 6px rgba(22,163,74,0.35);
-        }
-        .btn-export-excel:hover { background: #15803d; transform: translateY(-1px); }
-        .btn-export-pdf {
-            background: #dc2626; color: #fff;
-            box-shadow: 0 2px 6px rgba(220,38,38,0.35);
-        }
-        .btn-export-pdf:hover { background: #b91c1c; transform: translateY(-1px); }
-
+    </style>
 @endsection
-    @section('content')
-        <div class="lm13-container main-content">< !-- Page Header â€” sama seperti gudang_utilisasi --><header class="lm-page-header"><div class="lm-header-logo"><img src="{{ asset('danantara.png') }}" alt="Danantara"></div><div class="lm-header-center"><svg style="width:28px;height:28px;color:#22c55e;flex-shrink:0;" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 14H7v-2h5v2zm5-4H7v-2h10v2zm0-4H7V7h10v2z" /></svg><h1>LM 13 &mdash;
-        Biaya Produksi</h1></div><div class="lm-header-right"><img src="{{ asset('ptpn1.png') }}" alt="PTPN 1"></div></header>< !-- Main Content --><div class="content-section">< !-- Filter Section --><div class="filter-card"><div class="filter-title"><i class="fas fa-sliders-h"></i>Filter Data </div><form id="filterForm"><div class="filter-grid"><div class="form-group"><label class="form-label">Komoditas</label><select class="form-select" id="komoditasFilter"><option value="">-- Pilih Komoditas --</option><option value="karet">Karet</option><option value="teh">Teh</option><option value="kopi">Kopi</option><option value="tembakau">Tembakau</option></select></div><div class="form-group"><label class="form-label">Regional</label><select class="form-select" id="regionalFilter"><option value="">-- Pilih Regional --</option><option value="regional-1">Regional 1</option><option value="regional-2">Regional 2</option><option value="regional-3">Regional 3</option><option value="regional-4">Regional 4</option><option value="regional-5">Regional 5</option><option value="regional-6">Regional 6</option><option value="regional-7">Regional 7</option><option value="regional-8">Regional 8</option></select></div><div class="form-group"><label class="form-label">Tahun</label><select class="form-select" id="tahunFilter"><option value="">-- Pilih Tahun --</option><option value="2024" selected>2024</option><option value="2023">2023</option><option value="2022">2022</option><option value="2021">2021</option></select></div><div class="form-group"><label class="form-label">Bulan</label><select class="form-select" id="bulanFilter"><option value="">-- Pilih Bulan --</option><option value="01">Januari</option><option value="02">Februari</option><option value="03">Maret</option><option value="04">April</option><option value="05">Mei</option><option value="06">Juni</option><option value="07">Juli</option><option value="08">Agustus</option><option value="09">September</option><option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option></select></div></div><div class="button-group"><button type="reset" class="btn-reset" id="btnReset"><i class="fas fa-redo"></i>Reset </button><button type="submit" class="btn-filter"><i class="fas fa-search"></i>Cari </button></div></form></div>< !--======PRODUCTION REPORT TABLE======--><div class="table-card"><div class="table-header"><div class="table-title"><i class="fas fa-file-invoice-dollar"></i>Laporan Biaya Produksi â€” LM 13 </div><div class="export-btn-group"><span style="color:#dcfce7;font-size:12px;">s/d Bulan ini &mdash; Tahun <strong id="tblYearLabel">2024</strong></span><button class="btn-export btn-export-excel" onclick="exportExcel()" title="Export ke Excel"><svg viewBox="0 0 24 24" fill="currentColor" style="width:13px;height:13px;"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM9.5 17.5l2-3-2-3h1.5l1.25 2 1.25-2H15l-2 3 2 3h-1.5L12.25 15 11 17.5H9.5zM13 9V3.5L18.5 9H13z"/></svg> Excel</button><button class="btn-export btn-export-pdf" onclick="exportPdf()" title="Export ke PDF"><svg viewBox="0 0 24 24" fill="currentColor" style="width:13px;height:13px;"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM12 17H8v-2h4v2zm3-4H8v-2h7v2zm0-4H8V7h7v2zM13 9V3.5L18.5 9H13z"/></svg> PDF</button></div></div><div class="table-wrapper"><table class="report-table" id="reportTable"><thead>< !-- Row 1: top group labels --><tr><th rowspan="3" class="col-norek" style="vertical-align:middle; width:70px;">Nomor<br>Rekening</th><th rowspan="3" class="col-label"
-        style="text-align:left; vertical-align:middle; min-width:270px;">Uraian</th><th colspan="3" class="col-group">Jumlah Kilogram &mdash;
-        s/d Bulan ini</th><th colspan="3" class="col-group">Kilogram per Hektar &mdash;
-        s/d Bulan ini</th></tr>< !-- Row 2: sub-year labels for first block --><tr><th class="col-group" style="font-size:10px; padding:5px 8px;">Real <span class="dyn-year-prev">2023</span></th><th class="col-group" style="font-size:10px; padding:5px 8px;">Real <span class="dyn-year">2024</span></th><th class="col-group" style="font-size:10px; padding:5px 8px;">RKAP <span class="dyn-year">2024</span></th><th class="col-group" style="font-size:10px; padding:5px 8px;">Real <span class="dyn-year-prev">2023</span></th><th class="col-group" style="font-size:10px; padding:5px 8px;">Real <span class="dyn-year">2024</span></th><th class="col-group" style="font-size:10px; padding:5px 8px;">RKAP <span class="dyn-year">2024</span></th></tr></thead><tbody>< !--======PRODUKSI======--><tr><td class="norek-cell"></td><td class="label-cell indent">Produksi Kebun Sendiri yang Diolah (Kering)</td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td></tr><tr><td class="norek-cell"></td><td class="label-cell indent">Di Pabrik Sendiri</td><td class="num"><span class="dash">-</span></td><td class="num">6,
-        163,
-        857</td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num">324</td><td class="num"><span class="dash">-</span></td></tr><tr><td class="norek-cell"></td><td class="label-cell indent">Kebun Sendiri</td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td></tr><tr><td class="norek-cell"></td><td class="label-cell indent">Pihak Ke III</td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td></tr><tr class="row-subtotal"><td class="norek-cell"></td><td class="label-cell" style="text-align:right; padding-right:10px;">Jumlah Produksi Diolah </td><td class="num"><span class="dash">-</span></td><td class="num">6,
-        163,
-        857</td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td></tr></tbody></table></div><div class="table-wrapper"><table class="report-table" id="reportTable"><thead>< !-- Row 1: top group labels --><tr><th rowspan="3" class="col-norek" style="vertical-align:middle; width:70px;">Nomor<br>Rekening</th><th rowspan="3" class="col-label"
-        style="text-align:left; vertical-align:middle; min-width:270px;">Uraian</th><th colspan="3" class="col-group">Jumlah Kilogram &mdash;
-        s/d Bulan ini</th><th colspan="3" class="col-group">Kilogram per Hektar &mdash;
 
-        s/d Bulan ini</th></tr>< !-- Row 2: sub-year labels for first block --><tr><th class="col-group" style="font-size:10px; padding:5px 8px;">Real <span class="dyn-year-prev">2023</span></th><th class="col-group" style="font-size:10px; padding:5px 8px;">Real <span class="dyn-year">2024</span></th><th class="col-group" style="font-size:10px; padding:5px 8px;">RKAP <span class="dyn-year">2024</span></th><th class="col-group" style="font-size:10px; padding:5px 8px;">Real <span class="dyn-year-prev">2023</span></th><th class="col-group" style="font-size:10px; padding:5px 8px;">Real <span class="dyn-year">2024</span></th><th class="col-group" style="font-size:10px; padding:5px 8px;">RKAP <span class="dyn-year">2024</span></th></tr></thead><tbody>< !--======BEBAN PRODUKSI â€” section header======-->< !--======BEBAN TANAMAN======--><tr><td class="norek-cell">5.1.1</td><td class="label-cell indent">Gaji dan Tunjangan Kary. Pimpinan</td><td class="num"><span class="dash">-</span></td><td class="num">7,
-        843,
-        792,
-        621</td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num">1,
-        273</td><td class="num"><span class="dash">-</span></td></tr><tr><td class="norek-cell">5.1.2</td><td class="label-cell indent">Gaji dan Tunjangan Kary. Pelaksana</td><td class="num"><span class="dash">-</span></td><td class="num">6,
-        973,
-        083,
-        197</td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num">1,
-        131</td><td class="num"><span class="dash">-</span></td></tr><tr><td class="norek-cell">5.1.3</td><td class="label-cell indent">Pemeliharaan Tan. Menghasilkan</td><td class="num"><span class="dash">-</span></td><td class="num">5,
-        022,
-        156,
-        709</td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num">815</td><td class="num"><span class="dash">-</span></td></tr><tr><td class="norek-cell">5.1.4</td><td class="label-cell indent">Pemupukan</td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td></tr><tr><td class="norek-cell">5.1.5</td><td class="label-cell indent">Panen</td><td class="num"><span class="dash">-</span></td><td class="num">96,
-        434,
-        855,
-        359</td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num">15,
-        645</td><td class="num"><span class="dash">-</span></td></tr><tr><td class="norek-cell">5.1.6</td><td class="label-cell indent">Pengangkutan ke Pabrik</td><td class="num"><span class="dash">-</span></td><td class="num">9,
-        188,
-        052,
-        848</td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num">1,
-        491</td><td class="num"><span class="dash">-</span></td></tr><tr><td class="norek-cell">5.1.7</td><td class="label-cell indent">Beban Overhead</td><td class="num"><span class="dash">-</span></td><td class="num">20,
-        655,
-        041,
-        594</td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num">3,
-        351</td><td class="num"><span class="dash">-</span></td></tr><tr class="row-subtotal"><td class="norek-cell"></td><td class="label-cell" style="text-align:right; padding-right:10px;">Jumlah Beban Tanaman : </td><td class="num"><span class="dash">-</span></td><td class="num">146,
-        116,
-        982,
-        328</td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num">23,
-        705</td><td class="num"><span class="dash">-</span></td></tr>< !--======BEBAN PENGOLAHAN======--><tr><td class="norek-cell">5.2.1</td><td class="label-cell indent">Beban Overhead Kebun</td><td class="num"><span class="dash">-</span></td><td class="num">91,
-        771,
-        890</td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num">15</td><td class="num"><span class="dash">-</span></td></tr><tr><td class="norek-cell">5.2.2</td><td class="label-cell indent">Beban Langsung Pengolahan</td><td class="num"><span class="dash">-</span></td><td class="num">18,
-        942,
-        119,
-        584</td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num">3,
-        073</td><td class="num"><span class="dash">-</span></td></tr><tr class="row-subtotal"><td class="norek-cell"></td><td class="label-cell" style="text-align:right; padding-right:10px;">Jumlah Beban Pengolahan :</td><td class="num"><span class="dash">-</span></td><td class="num">19,
-        033,
-        891,
-        474</td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num">3,
-        088</td><td class="num"><span class="dash">-</span></td></tr>< !--======EXCL. PENYUSUTAN======--><tr class="row-subtotal"><td class="norek-cell"></td><td class="label-cell" style="text-align:right; padding-right:10px;">Jumlah Beban Produksi. Excl. Penyst :</td><td class="num"><span class="dash">-</span></td><td class="num">165,
-        150,
-        873,
-        802</td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num">26,
-        793</td><td class="num"><span class="dash">-</span></td></tr>< !--======BEBAN PENYUSUTAN======--><tr><td class="norek-cell">5.3.1</td><td class="label-cell indent">Beban Penyst. Overhead Kebun</td><td class="num"><span class="dash">-</span></td><td class="num">23,
-        080,
-        584,
-        130</td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num">3,
-        745</td><td class="num"><span class="dash">-</span></td></tr><tr><td class="norek-cell">5.3.2</td><td class="label-cell indent">Beban Penyst. Pengolahan</td><td class="num"><span class="dash">-</span></td><td class="num">1,
-        257,
-        131,
-        309</td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num">204</td><td class="num"><span class="dash">-</span></td></tr><tr class="row-subtotal"><td class="norek-cell"></td><td class="label-cell" style="text-align:right; padding-right:10px;">Jumlah Beban Produksi Kebun Inti :</td><td class="num"><span class="dash">-</span></td><td class="num">189,
-        488,
-        589,
-        241</td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num">30,
-        538</td><td class="num"><span class="dash">-</span></td></tr><tr class="row-subtotal"><td class="norek-cell"></td><td class="label-cell" style="text-align:right; padding-right:10px;">Jumlah Beban Produksi Excl.By Admin :</td><td class="num"><span class="dash">-</span></td><td class="num">168,
-        833,
-        547,
-        647</td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num">26,
-        793</td><td class="num"><span class="dash">-</span></td></tr>< !--======BEBAN PIHAK KE III======--><tr><td class="norek-cell">5.4</td><td class="label-cell indent">Beban Pihak Ke III</td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td></tr>< !--======JUMLAH TOTAL======--><tr class="row-total"><td class="norek-cell"></td><td class="label-cell" style="text-align:center; font-size:13px; padding-left:14px;">Jumlah Beban Produksi</td><td class="num"><span class="dash">-</span></td><td class="num">189,
-        488,
-        589,
-        241</td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num">30,
-        742</td><td class="num"><span class="dash">-</span></td></tr>< !--======INFO PER HEKTAR======--><tr class="row-info"><td class="norek-cell"></td><td class="label-cell indent">Biaya Tanaman per Ha</td><td class="num"><span class="dash">-</span></td><td class="num">7,
-        687,
-        163.16</td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td></tr><tr class="row-info"><td class="norek-cell"></td><td class="label-cell indent">Biaya Produksi excl. Penyust. per Ha</td><td class="num"><span class="dash">-</span></td><td class="num">8,
-        688,
-        529.51</td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td></tr><tr class="row-info"><td class="norek-cell"></td><td class="label-cell indent">Biaya Produksi excl. By Admi. per Ha</td><td class="num"><span class="dash">-</span></td><td class="num">8,
-        882,
-        273.69</td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td><td class="num"><span class="dash">-</span></td></tr></tbody></table></div></div>< !--======END TABLE======--></div></div><script>document.addEventListener('DOMContentLoaded', function () {
-                const tahunSel=document.getElementById('tahunFilter');
+@section('content')
+    <div class="lm13-container main-content">
+        <!-- Page Header — sama seperti gudang_utilisasi -->
+        <header class="lm-page-header">
+            <div class="lm-header-logo">
+                <img src="{{ asset('danantara.png') }}" alt="Danantara">
+            </div>
+            <div class="lm-header-center">
+                <svg style="width:28px;height:28px;color:#22c55e;flex-shrink:0;" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3A5 5 0 008 22c12 0 15-17 15-17-1 2-8 2-13 3-5 1-6 7-6 7s5.5-2 8.5-2 5 2 5 2-3-5-3-5 3 5 3 5-5 3-5 3 2 3 2 6-2 6-2 6 3-3 3-6-2-6-2-6z" />
+                </svg>
+                <h1>LM 13 &mdash; Biaya Produksi</h1>
+            </div>
+            <div class="lm-header-right">
+                <img src="{{ asset('ptpn1.png') }}" alt="PTPN 1">
+            </div>
+        </header>
 
-                function updateYearLabels() {
-                    const yr=parseInt(tahunSel.value) || new Date().getFullYear();
-                    const yrP=yr - 1;
+        <!-- Main Content -->
+        <div class="content-section">
 
-                    document.querySelectorAll('.dyn-year').forEach(el=> el.textContent=yr);
-                    document.querySelectorAll('.dyn-year-prev').forEach(el=> el.textContent=yrP);
-                    document.getElementById('tblYearLabel').textContent=yr;
+            <!-- Filter Section -->
+            <div class="filter-card">
+                <div class="filter-title">
+                    <i class="fas fa-sliders-h"></i> Filter Data
+                </div>
+                <form id="filterForm">
+                    <div class="filter-grid">
+                        <div class="form-group">
+                            <label class="form-label">Komoditas</label>
+                            <select class="form-select" id="komoditasFilter">
+                                <option value="">-- Pilih Komoditas --</option>
+                                <option value="KR">Karet</option>
+                                <option value="TH">Teh</option>
+                                <option value="KP">Kopi</option>
+                                <option value="TB">Tembakau</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Regional</label>
+                            <select class="form-select" id="regionalFilter">
+                                <option value="">-- Semua Regional --</option>
+                                @foreach ($regionalList as $item)
+                                    <option value="{{ $item->regional }}">{{ $item->regional }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Plant</label>
+                            <select class="form-select select2-plant" id="plantFilter" style="width:100%;" disabled>
+                                <option value="">-- Pilih Regional dulu --</option>
+                                @foreach ($plantList as $item)
+                                    <option value="{{ $item->plant }}">{{ $item->plant }} - {{ $item->nama }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Tahun</label>
+                            <select class="form-select" id="tahunFilter">
+                                <option value="">-- Pilih Tahun --</option>
+                                @foreach ($tahunList as $thn)
+                                    <option value="{{ $thn }}">{{ $thn }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Bulan</label>
+                            <select class="form-select" id="bulanFilter">
+                                <option value="">-- Pilih Bulan --</option>
+                                <option value="1">Januari</option>
+                                <option value="2">Februari</option>
+                                <option value="3">Maret</option>
+                                <option value="4">April</option>
+                                <option value="5">Mei</option>
+                                <option value="6">Juni</option>
+                                <option value="7">Juli</option>
+                                <option value="8">Agustus</option>
+                                <option value="9">September</option>
+                                <option value="10">Oktober</option>
+                                <option value="11">November</option>
+                                <option value="12">Desember</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="button-group">
+                        <button type="reset" class="btn-reset" id="btnReset">
+                            <i class="fas fa-redo"></i> Reset
+                        </button>
+                        <button type="submit" class="btn-filter" id="btnFilter" disabled
+                            style="opacity:0.45; cursor:not-allowed;">
+                            <i class="fas fa-search"></i> Cari
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- ====== LM14 REPORT TABLE ====== -->
+            <div class="table-card" id="resultCard" style="display:none;">
+                <div class="table-header">
+                    <div class="table-title">
+                        <i class="fas fa-seedling"></i> Hasil Data LM13
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span id="resultInfo" style="color:#93c5fd; font-size:12px;"></span>
+                        <button id="btnExportExcel" onclick="exportExcel()" style="
+                                                                            display:inline-flex; align-items:center; gap:5px;
+                                                                            padding:6px 14px; background:#16a34a; color:#fff;
+                                                                            border:none; border-radius:6px; font-size:12px;
+                                                                            font-weight:700; cursor:pointer;">
+                            <i class="fas fa-file-excel"></i> Excel
+                        </button>
+                        <button id="btnExportPdf" onclick="exportPdf()" style="
+                                                                            display:inline-flex; align-items:center; gap:5px;
+                                                                            padding:6px 14px; background:#dc2626; color:#fff;
+                                                                            border:none; border-radius:6px; font-size:12px;
+                                                                            font-weight:700; cursor:pointer;">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </button>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <div id="tableLoading" style="display:none; text-align:center; padding:24px; color:#6b7280;">
+                        <i class="fas fa-spinner fa-spin"></i> Memuat data...
+                    </div>
+                    <div id="tableError" style="display:none; padding:16px 20px; color:#dc2626; font-size:13px;"></div>
+                    <div id="tableResult"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Data mentah untuk export Excel (disimpan saat data diterima)
+        let _exportData = null;
+
+        // Semua plant dari server (untuk filter dinamis)
+        const allPlants = @json($plantList->map(fn($p) => ['plant' => $p->plant, 'nama' => $p->nama, 'regional' => $p->regional]));
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const tahunSel = document.getElementById('tahunFilter');
+            const bulanSel = document.getElementById('bulanFilter');
+
+            const bulanNames = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+            function updateLabels() {
+                const yr = parseInt(tahunSel.value) || new Date().getFullYear();
+                const bln = parseInt(bulanSel.value) || 0;
+
+                const lblYear = document.getElementById('tblYearLabel');
+                const lblBulan = document.getElementById('tblBulanLabel');
+                if (lblYear) lblYear.textContent = yr;
+                if (lblBulan) lblBulan.textContent = bln ? bulanNames[bln] : '-';
+            }
+
+            // ── Filter plant by regional ──────────────────────────────────────
+            function rebuildPlantFilter(selectedRegional) {
+                const plantSel = document.getElementById('plantFilter');
+                const currentVal = plantSel.value;
+                const filtered = selectedRegional
+                    ? allPlants.filter(p => p.regional === selectedRegional)
+                    : [];
+
+                if (selectedRegional) {
+                    // Aktifkan select plant
+                    plantSel.disabled = false;
+                    plantSel.style.opacity = '1';
+                    plantSel.style.cursor = 'pointer';
+                    plantSel.innerHTML = '<option value="">-- Semua Kebun --</option>';
+                    filtered.forEach(p => {
+                        const opt = document.createElement('option');
+                        opt.value = p.plant;
+                        opt.textContent = `${p.plant} - ${p.nama}`;
+                        if (p.plant === currentVal) opt.selected = true;
+                        plantSel.appendChild(opt);
+                    });
+                } else {
+                    // Disable dan reset select plant
+                    plantSel.disabled = true;
+                    plantSel.style.opacity = '0.5';
+                    plantSel.style.cursor = 'not-allowed';
+                    plantSel.innerHTML = '<option value="">-- Pilih Regional dulu --</option>';
                 }
 
-                // Init on page load
-                updateYearLabels();
+                $('#plantFilter').val('').trigger('change');
+            }
 
-                // Update on change
-                tahunSel.addEventListener('change', updateYearLabels);
-
-                // Filter form submit
-                document.getElementById('filterForm').addEventListener('submit', function (e) {
-                        e.preventDefault();
-                        updateYearLabels();
-                    });
-
-                // Export Excel
-                window.exportExcel = function() {
-                    if (typeof XLSX === 'undefined') {
-                        alert('Library SheetJS belum dimuat. Coba beberapa saat lagi.');
-                        return;
-                    }
-                    const yr = document.getElementById('tblYearLabel').textContent;
-                    const wb = XLSX.utils.book_new();
-                    const tables = document.querySelectorAll('.report-table');
-                    const allRows = [];
-                    // Title rows
-                    allRows.push(['LM 13 â€” Laporan Biaya Produksi']);
-                    allRows.push(['s/d Bulan ini â€” Tahun ' + yr]);
-                    allRows.push([]);
-
-                    tables.forEach(function(tbl, idx) {
-                        // Get header rows
-                        tbl.querySelectorAll('thead tr').forEach(function(tr) {
-                            const row = [];
-                            tr.querySelectorAll('th').forEach(function(th) { row.push(th.innerText.replace(/\s+/g, ' ').trim()); });
-                            allRows.push(row);
-                        });
-                        // Get body rows
-                        tbl.querySelectorAll('tbody tr').forEach(function(tr) {
-                            const row = [];
-                            tr.querySelectorAll('td').forEach(function(td) { row.push(td.innerText.replace(/\s+/g, ' ').trim()); });
-                            allRows.push(row);
-                        });
-                        if (idx < tables.length - 1) allRows.push([]); // separator
-                    });
-
-                    const ws = XLSX.utils.aoa_to_sheet(allRows);
-                    ws['!cols'] = [{wch:14},{wch:42},{wch:18},{wch:18},{wch:18},{wch:18},{wch:18},{wch:18}];
-                    XLSX.utils.book_append_sheet(wb, ws, 'LM13');
-                    XLSX.writeFile(wb, 'LM13_Biaya_Produksi_' + yr + '.xlsx');
-                };
-
-                // Export PDF
-                window.exportPdf = function() {
-                    if (typeof window.jspdf === 'undefined') {
-                        alert('Library jsPDF belum dimuat. Coba beberapa saat lagi.');
-                        return;
-                    }
-                    const { jsPDF } = window.jspdf;
-                    const yr = document.getElementById('tblYearLabel').textContent;
-                    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a3' });
-
-                    doc.setFontSize(14);
-                    doc.setTextColor(22, 101, 52);
-                    doc.text('LM 13 â€” Laporan Biaya Produksi', 14, 18);
-                    doc.setFontSize(10);
-                    doc.setTextColor(100);
-                    doc.text('s/d Bulan ini â€” Tahun ' + yr, 14, 26);
-
-                    let startY = 32;
-                    document.querySelectorAll('.report-table').forEach(function(tbl, idx) {
-                        if (idx > 0) startY += 6;
-                        doc.autoTable({
-                            html: tbl,
-                            startY: startY,
-                            styles: { fontSize: 7, cellPadding: 2 },
-                            headStyles: { fillColor: [22, 101, 52], textColor: 255, fontStyle: 'bold' },
-                            alternateRowStyles: { fillColor: [240, 253, 244] },
-                            didDrawPage: function(d) { startY = d.cursor.y; }
-                        });
-                        startY = doc.lastAutoTable.finalY;
-                    });
-
-                    doc.save('LM13_Biaya_Produksi_' + yr + '.pdf');
-                };
-
+            document.getElementById('regionalFilter').addEventListener('change', function () {
+                rebuildPlantFilter(this.value);
             });
+
+            // ── Enable tombol Cari hanya jika Tahun & Bulan sudah dipilih ────────
+            const btnFilter = document.getElementById('btnFilter');
+            function checkEnableSearch() {
+                const tahunOk = !!document.getElementById('tahunFilter').value;
+                const bulanOk = !!document.getElementById('bulanFilter').value;
+                const ok = tahunOk && bulanOk;
+                btnFilter.disabled = !ok;
+                btnFilter.style.opacity = ok ? '1' : '0.45';
+                btnFilter.style.cursor = ok ? 'pointer' : 'not-allowed';
+            }
+            document.getElementById('tahunFilter').addEventListener('change', checkEnableSearch);
+            document.getElementById('bulanFilter').addEventListener('change', checkEnableSearch);
+            checkEnableSearch(); // init
+
+            // Init on page load
+            updateLabels();
+
+            // Update on change
+            tahunSel.addEventListener('change', updateLabels);
+            bulanSel.addEventListener('change', updateLabels);
+
+            // ── Fetch + Render data dari route get_data_lm14 ─────────────────
+            function get_data_lm13(komoditas, region, plant, tahun, bulan) {
+                const card = document.getElementById('resultCard');
+                const loading = document.getElementById('tableLoading');
+                const errBox = document.getElementById('tableError');
+                const result = document.getElementById('tableResult');
+                const info = document.getElementById('resultInfo');
+
+                // Tampilkan card + loading
+                card.style.display = '';
+                loading.style.display = '';
+                errBox.style.display = 'none';
+                result.innerHTML = '';
+                info.textContent = '';
+
+                const params = new URLSearchParams({ komoditi: komoditas, region, plant, tahun, bulan });
+                fetch(`{{ route('get_data_lm13') }}?${params}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        loading.style.display = 'none';
+                        if (data.status !== 'success') {
+                            errBox.style.display = '';
+                            errBox.textContent = '⚠️ ' + (data.message || 'Terjadi kesalahan.');
+                            return;
+                        }
+                        const rows = data.data;
+                        info.textContent = `${data.total} baris ditemukan`;
+
+                        if (!rows || rows.length === 0) {
+                            result.innerHTML = '<p style="padding:16px 20px;color:#6b7280;font-size:13px;">Tidak ada data untuk filter yang dipilih.</p>';
+                            return;
+                        }
+
+                        // Ambil semua key dari baris pertama sebagai header
+                        const headers = Object.keys(rows[0]);
+
+                        // ── Kolom yang disubtotal: scan SEMUA baris agar kolom yg null di row[0] tetap terdeteksi ────
+                        const NUMERIC_COLS = new Set(
+                            headers.filter(h =>
+                                rows.some(r => {
+                                    const v = r[h];
+                                    return v !== null && v !== '' && v !== undefined && !isNaN(parseFloat(v));
+                                })
+                            )
+                        );
+                        const isSubtotalCol = h => NUMERIC_COLS.has(h);
+
+                        // ── Helper: format angka ID ───────────────────────────────────
+                        const fmt = v => {
+                            if (v === null || v === '' || v === undefined) return '-';
+                            const n = parseFloat(v);
+                            if (isNaN(n)) return v ?? '-';
+                            // Jika nilai asli dari BigQuery punya desimal → paksa 2 digit di belakang koma
+                            const hasDecimal = String(v).includes('.');
+                            return n.toLocaleString('id-ID', {
+                                minimumFractionDigits: hasDecimal ? 2 : 0,
+                                maximumFractionDigits: 2,
+                            });
+                        };
+                        const isNum = v => v !== null && v !== '' && v !== undefined && !isNaN(parseFloat(v));
+
+                        // ── Judul dinamis dari nilai filter ──────────────────────────
+                        const bulanNames = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei',
+                            'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+                        const regionalSel = document.getElementById('regionalFilter');
+                        const plantSel = document.getElementById('plantFilter');
+                        const bulanSel2 = document.getElementById('bulanFilter');
+                        const tahunSel2 = document.getElementById('tahunFilter');
+                        const komoSel = document.getElementById('komoditasFilter');
+                        const regionalText = regionalSel.selectedIndex >= 0 && regionalSel.value
+                            ? 'Regional ' + regionalSel.options[regionalSel.selectedIndex].text
+                            : 'Semua Regional';
+                        const plantText = plantSel.selectedIndex >= 0 && plantSel.value
+                            ? plantSel.options[plantSel.selectedIndex].text
+                            : 'Semua Kebun';
+                        const bulanText = bulanSel2.value ? 'Periode ' + bulanNames[parseInt(bulanSel2.value)] : 'Semua Bulan';
+                        const tahunText = tahunSel2.value || 'Semua Tahun';
+                        const komoText = komoSel.value ? komoSel.options[komoSel.selectedIndex].text : 'Semua Komoditas';
+
+                        const judulLaporan = `LM13 - ${regionalText} - ${plantText} - Komoditas: ${komoText}  ${bulanText}  ${tahunText}`;
+
+                        // Simpan data mentah untuk export ─────────────────────────────
+                        _exportData = {
+                            rows,
+                            headers: Object.keys(rows[0]),
+                            judul: judulLaporan,
+                            numericCols: NUMERIC_COLS,
+                        };
+
+                        // ── Header ───────────────────────────────────────────────────
+                        let html = '<table class="report-table" style="font-size:12.5px;">';
+                        html += '<thead>';
+                        // Baris judul (full colspan)
+                        html += `<tr>
+                                                                                                <th colspan="${headers.length}" style="
+                                                                                                    background:#ffffff; color:#111827;
+                                                                                                    text-align:center; font-size:13px;
+                                                                                                    font-weight:800; padding:10px 16px;
+                                                                                                    letter-spacing:0.05em; border-bottom:2px solid #16a34a;">
+                                                                                                    ${judulLaporan}
+                                                                                                </th>
+                                                                                            </tr>`;
+                        // Baris kolom header
+                        html += '<tr>';
+                        headers.forEach(h => {
+                            html += `<th style="text-align:left; padding:8px 12px; background:#15803d; color:#fff; white-space:nowrap;">${h.replace(/_/g, ' ').toUpperCase()}</th>`;
+                        });
+                        html += '</tr></thead>';
+
+                        // ── Body dengan subtotal ─────────────────────────────────────
+                        html += '<tbody>';
+
+                        // Akumulator subtotal
+                        const initAcc = () => Object.fromEntries(headers.map(h => [h, 0]));
+                        const addToAcc = (acc, row) => headers.forEach(h => { if (isSubtotalCol(h) && isNum(row[h])) acc[h] += parseFloat(row[h]); });
+
+                        let acc2 = initAcc(), key2 = '', acc1 = initAcc(), key1 = '';
+                        let accTotal = initAcc();  // ← Grand total
+
+                        const subtotalRow = (label, acc, bgColor, fontWeight, borderTop) => {
+                            let r = `<tr style="background:${bgColor}; font-weight:${fontWeight}; border-top:${borderTop};">`;
+                            headers.forEach((h, idx) => {
+                                if (idx === 0) {
+                                    r += `<td colspan="2" style="padding:5px 12px; border:1px solid #d1fae5; text-align:right; font-style:italic; white-space:nowrap;">${label}</td>`;
+                                } else if (idx === 1) {
+                                    return; // sudah di-colspan
+                                } else if (isSubtotalCol(h)) {
+                                    r += `<td style="padding:5px 12px; border:1px solid #d1fae5; text-align:right; white-space:nowrap;">${fmt(acc[h])}</td>`;
+                                } else {
+                                    r += `<td style="padding:5px 12px; border:1px solid #d1fae5;"></td>`;
+                                }
+                            });
+                            r += '</tr>';
+                            return r;
+                        };
+
+                        rows.forEach((row, i) => {
+                            const kode = (row['kode'] || row['kdbe'] || row['KODE'] || '').toString();
+                            const grp2 = kode.substring(0, 2).toUpperCase();
+                            const grp1 = kode.substring(0, 1).toUpperCase();
+
+                            // Deteksi pergantian grup 2-char
+                            if (key2 && grp2 !== key2) {
+                                // Subtotal level-2
+                                html += subtotalRow(`Jumlah ${key2}`, acc2, '#f0fdf4', '700', '2px solid #bbf7d0');
+                                acc2 = initAcc();
+
+                                // Deteksi pergantian grup 1-char
+                                if (grp1 !== key1) {
+                                    html += subtotalRow(`Jumlah ${key1}`, acc1, '#dcfce7', '800', '2px solid #16a34a');
+                                    acc1 = initAcc();
+                                }
+                            } else if (!key2) {
+                                acc2 = initAcc();
+                                acc1 = initAcc();
+                            }
+
+                            key2 = grp2;
+                            key1 = grp1;
+                            addToAcc(acc2, row);
+                            addToAcc(acc1, row);
+                            addToAcc(accTotal, row);  // ← akumulasi grand total
+
+                            // Baris data biasa
+                            const bg = i % 2 === 0 ? '#fff' : '#f9fafb';
+                            html += `<tr style="background:${bg};">`;
+                            headers.forEach(h => {
+                                const val = row[h];
+                                const num = isNum(val);
+                                html += `<td style="padding:5px 12px; border:1px solid #e5e7eb; text-align:${num ? 'right' : 'left'}; white-space:nowrap;">${fmt(val)}</td>`;
+                            });
+                            html += '</tr>';
+                        });
+
+                        // Subtotal terakhir (sisa grup yang belum di-flush)
+                        if (key2) html += subtotalRow(`Jumlah ${key2}`, acc2, '#f0fdf4', '700', '2px solid #bbf7d0');
+                        if (key1) html += subtotalRow(`Jumlah ${key1}`, acc1, '#dcfce7', '800', '2px solid #166534');
+
+                        // ── Grand Total ───────────────────────────────────────────────
+                        // let gt = `<tr style="background:#14532d; color:#fff; font-weight:900; border-top:3px solid #052e16;">`;
+                        // headers.forEach((h, idx) => {
+                        //     if (idx === 0) {
+                        //         gt += `<td colspan="2" style="padding:7px 12px; border:1px solid #166534; text-align:right; white-space:nowrap; color:#fff;">JUMLAH TOTAL</td>`;
+                        //     } else if (idx === 1) {
+                        //         return;
+                        //     } else if (isSubtotalCol(h)) {
+                        //         gt += `<td style="padding:7px 12px; border:1px solid #166534; text-align:right; white-space:nowrap; color:#fff;">${fmt(accTotal[h])}</td>`;
+                        //     } else {
+                        //         gt += `<td style="padding:7px 12px; border:1px solid #166534; color:#fff;"></td>`;
+                        //     }
+                        // });
+                        // gt += '</tr>';
+                        // html += gt;
+
+                        html += '</tbody></table>';
+
+                        result.innerHTML = html;
+                    })
+                    .catch(err => {
+                        loading.style.display = 'none';
+                        errBox.style.display = '';
+                        errBox.textContent = '⚠️ Gagal menghubungi server: ' + err.message;
+                    });
+            }
+
+            // Filter form submit
+            document.getElementById('filterForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                const plant = document.getElementById('plantFilter').value;
+                const regional = document.getElementById('regionalFilter').value;
+                const komoditas = document.getElementById('komoditasFilter').value;
+                const tahun = document.getElementById('tahunFilter').value;
+                const bulan = document.getElementById('bulanFilter').value;
+                updateLabels();
+                get_data_lm13(komoditas, regional, plant, tahun, bulan);
+            });
+
+            // Reset — gunakan tahun berjalan dari server
+            document.getElementById('btnReset').addEventListener('click', function () {
+                setTimeout(function () {
+                    tahunSel.value = '';
+                    bulanSel.value = '';
+                    document.getElementById('regionalFilter').value = '';
+                    rebuildPlantFilter(''); // tampilkan semua plant
+                    $('#plantFilter').val('').trigger('change');
+                    resultCard.style.display = 'none';
+                    updateLabels();
+                    checkEnableSearch(); // disable tombol Cari kembali
+                }, 50);
+            });
+        });
     </script>
 
-@section('scripts')
-    {{-- SheetJS untuk Export Excel --}}
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
-    {{-- jsPDF + AutoTable untuk Export PDF --}}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-@endsection
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#plantFilter').select2({
+                placeholder: '-- Semua Kebun --',
+                allowClear: true,
+                width: '100%',
+            });
+        });
+    </script>
+
+    <!-- ExcelJS (Excel export dengan styling penuh) -->
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+    <!-- jsPDF + autoTable (PDF export) -->
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+
+    <script>
+        // ── Ambil judul laporan dari tabel yang sudah dirender ────────────────
+        function getJudulLaporan() {
+            const th = document.querySelector('#tableResult table thead tr:first-child th');
+            return th ? th.textContent.trim() : 'LM14';
+        }
+
+        // ── Export Excel (ExcelJS — angka asli + styling penuh) ───────────────
+        async function exportExcel() {
+            if (!_exportData) { alert('Belum ada data untuk diekspor.'); return; }
+
+            const { rows, headers, judul, numericCols } = _exportData;
+            const isSubCol = h => numericCols && numericCols.has(h);
+            const isNum = v => v !== null && v !== '' && v !== undefined && !isNaN(parseFloat(v));
+
+            const workbook = new ExcelJS.Workbook();
+            const ws = workbook.addWorksheet('LM13');
+
+            // ── Pastikan worksheet TIDAK diproteksi ──────────────────────────────
+            ws.properties = ws.properties || {};
+
+            // ── Lebar kolom otomatis ─────────────────────────────────────────────
+            ws.columns = headers.map(h => ({
+                key: h,
+                width: h.toLowerCase().includes('uraian') ? 30
+                    : isSubCol(h) ? 18 : 14,
+            }));
+
+            // ── Styling helpers ─────────────────────────────────────────────────
+            const border = (style = 'thin') => ({
+                top: { style }, left: { style }, bottom: { style }, right: { style }
+            });
+            const fillSolid = argb => ({ type: 'pattern', pattern: 'solid', fgColor: { argb } });
+
+            // ── Baris 1: Judul ───────────────────────────────────────────────────
+            ws.mergeCells(1, 1, 1, headers.length);
+            const titleCell = ws.getCell(1, 1);
+            titleCell.value = judul;
+            titleCell.font = { bold: true, size: 12, color: { argb: 'FF111827' } };
+            titleCell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+            titleCell.fill = fillSolid('FFFFFFFF');
+            titleCell.border = border();
+            titleCell.protection = { locked: false };
+            ws.getRow(1).height = 22;
+
+            // ── Baris 2: Header kolom ────────────────────────────────────────────
+            const hRow = ws.addRow(headers.map(h => h.replace(/_/g, ' ').toUpperCase()));
+            hRow.eachCell(cell => {
+                cell.fill = fillSolid('FF15803D');
+                cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 9 };
+                cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+                cell.border = border();
+                cell.protection = { locked: false };
+            });
+            ws.getRow(2).height = 18;
+
+            // ── Helper: tambah baris subtotal ────────────────────────────────────
+            const addSubRow = (label, acc, bgArgb) => {
+                const rowData = headers.map((h, idx) => {
+                    if (idx === 0) return label;
+                    if (idx === 1) return null;
+                    return isSubCol(h) && isNum(acc[h]) ? parseFloat(acc[h]) : null;
+                });
+                const r = ws.addRow(rowData);
+                const rNum = ws.rowCount;
+                r.eachCell({ includeEmpty: true }, (cell, colNum) => {
+                    cell.fill = fillSolid(bgArgb);
+                    cell.font = { bold: true, italic: true, size: 9, color: { argb: 'FF111827' } };
+                    cell.border = border();
+                    cell.protection = { locked: false };
+                    const h = headers[colNum - 1];
+                    if (colNum > 2 && numericColsExport.has(h)) {
+                        cell.numFmt = '#,##0';
+                        cell.alignment = { horizontal: 'right' };
+                    }
+                });
+                try { ws.mergeCells(rNum, 1, rNum, 2); } catch (e) { }
+                ws.getCell(rNum, 1).alignment = { horizontal: 'right', vertical: 'middle', italic: true };
+            };
+
+            // ── Akumulator ───────────────────────────────────────────────────────
+            const numericColsExport = numericCols || new Set(headers.filter(h => {
+                const v = rows[0][h];
+                return v !== null && v !== '' && v !== undefined && !isNaN(parseFloat(v));
+            }));
+            const initAcc = () => Object.fromEntries(headers.map(h => [h, 0]));
+            const addToAcc = (acc, row) => headers.forEach(h => {
+                if (numericColsExport.has(h) && isNum(row[h])) acc[h] += parseFloat(row[h]);
+            });
+
+            let acc2 = initAcc(), key2 = '', acc1 = initAcc(), key1 = '';
+            let accTotal = initAcc();
+            let rowIdx = 0;
+
+            // ── Iterasi baris data ────────────────────────────────────────────────
+            for (const row of rows) {
+                const kode = (row['kode'] || row['kdbe'] || row['KODE'] || '').toString();
+                const grp2 = kode.substring(0, 2).toUpperCase();
+                const grp1 = kode.substring(0, 1).toUpperCase();
+
+                if (key2 && grp2 !== key2) {
+                    addSubRow(`Jumlah ${key2}`, acc2, 'FFF0FDF4');
+                    acc2 = initAcc();
+                    if (grp1 !== key1) {
+                        addSubRow(`Jumlah ${key1}`, acc1, 'FFDCFCE7');
+                        acc1 = initAcc();
+                    }
+                }
+                key2 = grp2; key1 = grp1;
+                addToAcc(acc2, row); addToAcc(acc1, row); addToAcc(accTotal, row);
+
+                // Baris data
+                const rowData = headers.map(h => {
+                    const v = row[h];
+                    return isNum(v) ? parseFloat(v) : (v ?? '');
+                });
+                const exRow = ws.addRow(rowData);
+                const bg = rowIdx % 2 === 0 ? 'FFFFFFFF' : 'FFF9FAFB';
+                exRow.eachCell({ includeEmpty: true }, (cell, colNum) => {
+                    cell.fill = fillSolid(bg);
+                    cell.font = { size: 9 };
+                    cell.border = border();
+                    cell.protection = { locked: false };
+                    const h = headers[colNum - 1];
+                    if (h && isNum(row[h])) {
+                        cell.numFmt = '#,##0';
+                        cell.alignment = { horizontal: 'right' };
+                    } else {
+                        cell.alignment = { horizontal: 'left' };
+                    }
+                });
+                rowIdx++;
+            }
+
+            // Subtotal terakhir
+            if (key2) addSubRow(`Jumlah ${key2}`, acc2, 'FFF0FDF4');
+            if (key1) addSubRow(`Jumlah ${key1}`, acc1, 'FFDCFCE7');
+
+            // ── Grand Total ──────────────────────────────────────────────────────
+            const gtData = headers.map((h, idx) => {
+                if (idx === 0) return 'JUMLAH TOTAL';
+                if (idx === 1) return null;
+                return isSubCol(h) && isNum(accTotal[h]) ? parseFloat(accTotal[h]) : null;
+            });
+            const gtRow = ws.addRow(gtData);
+            const gtNum = ws.rowCount;
+            gtRow.eachCell({ includeEmpty: true }, (cell, colNum) => {
+                cell.fill = fillSolid('FF14532D');
+                cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 10 };
+                cell.border = border('medium');
+                cell.protection = { locked: false };
+                if (colNum > 2 && numericColsExport.has(headers[colNum - 1])) {
+                    cell.numFmt = '#,##0';
+                    cell.alignment = { horizontal: 'right' };
+                }
+            });
+            try { ws.mergeCells(gtNum, 1, gtNum, 2); } catch (e) { }
+            ws.getCell(gtNum, 1).alignment = { horizontal: 'right', vertical: 'middle' };
+
+            // ── Simpan file ──────────────────────────────────────────────────────
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], {
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${judul}.xlsx`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // ── Export PDF ────────────────────────────────────────────────────────
+        function exportPdf() {
+            if (!_exportData) { alert('Belum ada data untuk diekspor.'); return; }
+
+            const { rows, headers, judul, numericCols } = _exportData;
+            const isNum = v => v !== null && v !== '' && v !== undefined && !isNaN(parseFloat(v));
+
+            // Rebuild numericCols jika perlu
+            const numCols = numericCols instanceof Set ? numericCols : new Set(
+                headers.filter(h => { const v = rows[0]?.[h]; return isNum(v); })
+            );
+            const isSubCol = h => numCols.has(h);
+
+            // Format angka lokal ID
+            const fmtNum = v => isNum(v) ? parseFloat(v).toLocaleString('id-ID') : (v ?? '');
+
+            // ── Akumulasi + build body ───────────────────────────────────────
+            const initAcc = () => Object.fromEntries(headers.map(h => [h, 0]));
+            const addToAcc = (acc, row) => headers.forEach(h => {
+                if (isSubCol(h) && isNum(row[h])) acc[h] += parseFloat(row[h]);
+            });
+
+            const body = [];
+            let acc2 = initAcc(), key2 = '', acc1 = initAcc(), key1 = '';
+            let accTotal = initAcc();
+
+            const makeSubRow = (label, acc, fillRgb) => {
+                const cells = headers.map((h, idx) => {
+                    let val = '';
+                    if (idx === 0) val = label;
+                    else if (idx === 1) val = '';
+                    else if (isSubCol(h)) val = fmtNum(acc[h]);
+                    return {
+                        content: val,
+                        styles: {
+                            halign: idx >= 2 && val !== '' ? 'right' : (idx === 0 ? 'right' : 'left'),
+                            fontStyle: 'bold',
+                            fillColor: fillRgb,
+                            textColor: [20, 83, 45],
+                            fontSize: 6.5,
+                        },
+                    };
+                });
+                body.push(cells);
+            };
+
+            for (const row of rows) {
+                const kode = (row['kode'] || row['kdbe'] || row['KODE'] || '').toString();
+                const grp2 = kode.substring(0, 2).toUpperCase();
+                const grp1 = kode.substring(0, 1).toUpperCase();
+
+                if (key2 && grp2 !== key2) {
+                    makeSubRow(`Jumlah ${key2}`, acc2, [240, 253, 244]);
+                    acc2 = initAcc();
+                    if (grp1 !== key1) {
+                        makeSubRow(`Jumlah ${key1}`, acc1, [220, 252, 231]);
+                        acc1 = initAcc();
+                    }
+                }
+                key2 = grp2; key1 = grp1;
+                addToAcc(acc2, row); addToAcc(acc1, row); addToAcc(accTotal, row);
+
+                // Baris data
+                const cells = headers.map((h, idx) => {
+                    const v = row[h];
+                    const display = isNum(v) ? fmtNum(v) : (v ?? '');
+                    return {
+                        content: display,
+                        styles: {
+                            halign: isNum(v) && !h.toLowerCase().includes('kode') ? 'right' : 'left',
+                            fontSize: 6.5,
+                        },
+                    };
+                });
+                body.push(cells);
+            }
+
+            // Subtotal terakhir
+            if (key2) makeSubRow(`Jumlah ${key2}`, acc2, [240, 253, 244]);
+            if (key1) makeSubRow(`Jumlah ${key1}`, acc1, [220, 252, 231]);
+
+            // Grand Total
+            const gtCells = headers.map((h, idx) => {
+                let val = '';
+                if (idx === 0) val = 'JUMLAH TOTAL';
+                else if (idx === 1) val = '';
+                else if (isSubCol(h)) val = fmtNum(accTotal[h]);
+                return {
+                    content: val,
+                    styles: {
+                        halign: idx >= 2 && val !== '' ? 'right' : (idx === 0 ? 'right' : 'left'),
+                        fontStyle: 'bold',
+                        fillColor: [20, 83, 45],
+                        textColor: [255, 255, 255],
+                        fontSize: 7,
+                    },
+                };
+            });
+            body.push(gtCells);
+
+            // ── Buat PDF ─────────────────────────────────────────────────────
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a3' });
+
+            const pageW = doc.internal.pageSize.getWidth();
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text(judul, pageW / 2, 28, { align: 'center' });
+
+            doc.autoTable({
+                head: [headers.map(h => h.replace(/_/g, ' ').toUpperCase())],
+                body,
+                startY: 42,
+                styles: {
+                    fontSize: 6.5,
+                    cellPadding: 2.5,
+                    lineWidth: 0.3,
+                    lineColor: [209, 250, 229],
+                    overflow: 'ellipsize',
+                },
+                headStyles: {
+                    fillColor: [21, 128, 61],
+                    textColor: 255,
+                    fontStyle: 'bold',
+                    fontSize: 6.5,
+                    halign: 'center',
+                    cellPadding: 3,
+                },
+                alternateRowStyles: { fillColor: [249, 250, 251] },
+                margin: { top: 42, left: 18, right: 18 },
+                tableWidth: 'auto',
+            });
+
+            doc.save(`${judul}.pdf`);
+        }
+    </script>
 @endsection
