@@ -282,6 +282,8 @@
 
         .table-wrapper {
             overflow-x: auto;
+            overflow-y: auto;
+            max-height: 70vh;
             width: 100%;
         }
 
@@ -303,6 +305,10 @@
             border: 1px solid #166534;
             text-align: center;
             white-space: nowrap;
+            /* ── Freeze panes ── */
+            position: sticky;
+            top: 0;
+            z-index: 2;
         }
 
         .report-table thead th.col-group {
@@ -437,7 +443,7 @@
                                 <option value="KR">Karet</option>
                                 <option value="TH">Teh</option>
                                 <option value="KP">Kopi</option>
-                                <option value="TB">Tembakau</option>
+
                             </select>
                         </div>
                         <div class="form-group">
@@ -508,17 +514,17 @@
                     <div style="display:flex; align-items:center; gap:8px;">
                         <span id="resultInfo" style="color:#93c5fd; font-size:12px;"></span>
                         <button id="btnExportExcel" onclick="exportExcel()" style="
-                                                                    display:inline-flex; align-items:center; gap:5px;
-                                                                    padding:6px 14px; background:#16a34a; color:#fff;
-                                                                    border:none; border-radius:6px; font-size:12px;
-                                                                    font-weight:700; cursor:pointer;">
+                                                                        display:inline-flex; align-items:center; gap:5px;
+                                                                        padding:6px 14px; background:#16a34a; color:#fff;
+                                                                        border:none; border-radius:6px; font-size:12px;
+                                                                        font-weight:700; cursor:pointer;">
                             <i class="fas fa-file-excel"></i> Excel
                         </button>
                         <button id="btnExportPdf" onclick="exportPdf()" style="
-                                                                    display:inline-flex; align-items:center; gap:5px;
-                                                                    padding:6px 14px; background:#dc2626; color:#fff;
-                                                                    border:none; border-radius:6px; font-size:12px;
-                                                                    font-weight:700; cursor:pointer;">
+                                                                        display:inline-flex; align-items:center; gap:5px;
+                                                                        padding:6px 14px; background:#dc2626; color:#fff;
+                                                                        border:none; border-radius:6px; font-size:12px;
+                                                                        font-weight:700; cursor:pointer;">
                             <i class="fas fa-file-pdf"></i> PDF
                         </button>
                     </div>
@@ -711,14 +717,14 @@
                         html += '<thead>';
                         // Baris judul (full colspan)
                         html += `<tr>
-                                                                                        <th colspan="${headers.length}" style="
-                                                                                            background:#ffffff; color:#111827;
-                                                                                            text-align:center; font-size:13px;
-                                                                                            font-weight:800; padding:10px 16px;
-                                                                                            letter-spacing:0.05em; border-bottom:2px solid #16a34a;">
-                                                                                            ${judulLaporan}
-                                                                                        </th>
-                                                                                    </tr>`;
+                                                                                            <th colspan="${headers.length}" style="
+                                                                                                background:#ffffff; color:#111827;
+                                                                                                text-align:center; font-size:13px;
+                                                                                                font-weight:800; padding:10px 16px;
+                                                                                                letter-spacing:0.05em; border-bottom:2px solid #16a34a;">
+                                                                                                ${judulLaporan}
+                                                                                            </th>
+                                                                                        </tr>`;
                         // Baris kolom header
                         html += '<tr>';
                         headers.forEach(h => {
