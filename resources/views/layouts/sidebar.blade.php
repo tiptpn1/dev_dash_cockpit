@@ -19,9 +19,6 @@ if (isset($user)) {
         <a href="{{url('')}}" class="menu-item" id="overview"><i class="fa-solid fa-house menu-icon"></i>Overview</a>
         @if($user && $user->mrc)
             <a href="{{url('')}}/mrc" class="menu-item" id="mrc"><i class="fa-solid fa-calendar-days menu-icon"></i>MRC</a>
-            <a href="{{url('')}}/skyview-table" class="menu-item" id='skyview'><i
-                    class="fa-solid fa-map-location-dot menu-icon"></i>AGRO Skyview</a>
-
         @endif
         @if($username != 'mrc')
                 @if($user && $user->operasional)
@@ -102,9 +99,9 @@ if (isset($user)) {
                     </div>
                 @endif
                 @if($user && $user->legal)
-                    <a href="#agraria" id="aset" class="parent"><i class="fa-solid fa-scale-balanced menu-icon"></i>Legal & Agraria
+                    <a href="#agraria" id="legal" class="parent"><i class="fa-solid fa-scale-balanced menu-icon"></i>Legal & Agraria
                         <span class="toggle-icon">&#9654;</span></a>
-                    <div class="submenu" id="asetSubmenu">
+                    <div class="submenu" id="legalSubmenu">
                         <a href="{{url('')}}/agraria_tax"><i class="fa-solid fa-percent menu-icon"></i>Tax Relaxation BPHTP 0%</a>
                         <a href="{{url('')}}/agraria"><i class="fa-solid fa-file-contract menu-icon"></i>Agraria</a>
                     </div>
@@ -113,14 +110,14 @@ if (isset($user)) {
                     <!-- <a href="{{url('')}}/pengadaan" class="menu-item" id="pengadaan">Pengadaan</a> -->
                     <a href="#capaian" id="capaian" class="parent"><i class="fa-solid fa-chart-line menu-icon"></i>Capaian Progres
                         <span class="toggle-icon">&#9654;</span></a>
-                    <div class="submenu" id="asetSubmenu">
+                    <div class="submenu" id="capaianSubmenu">
                         <a href="{{url('')}}/sla"><i class="fa-solid fa-clock menu-icon"></i>SLA</a>
                     </div>
                 @endif
                 @if($user && $user->pengadaan)
                     <a href="#pengadaan" id="pengadaan" class="parent"><i
                             class="fa-solid fa-cart-shopping menu-icon"></i>Pengadaan<span class="toggle-icon">&#9654;</span></a>
-                    <div class="submenu" id="asetSubmenu">
+                    <div class="submenu" id="pengadaanSubmenu">
                         <a href="{{url('')}}/prapengadaan"><i class="fa-solid fa-clipboard-check menu-icon"></i>Pra Pengadaan</a>
                         <a href="{{url('')}}/prosespengadaan"><i class="fa-solid fa-spinner menu-icon"></i>Proses Pengadaan</a>
                         <a href="{{url('')}}/kontrakpengadaan"><i class="fa-solid fa-file-signature menu-icon"></i>Kontrak
@@ -129,8 +126,10 @@ if (isset($user)) {
                     </div>
                 @endif
                 @if($user && $user->carbon)
-                    <div class="submenu" id="asetSubmenu">
-                        <a href="{{url('')}}/dashemisi"><i class="fa-solid fa-smog menu-icon"></i>Dashboard Emisi</a>
+                    <a href="#carbon" id="carbon" class="parent"><i class="fa-solid fa-smog menu-icon"></i>Carbon
+                        <span class="toggle-icon">&#9654;</span></a>
+                    <div class="submenu" id="carbonSubmenu">
+                        <a href="{{url('')}}/dashboardemisi"><i class="fa-solid fa-smog menu-icon"></i>Dashboard Emisi</a>
                     </div>
                 @endif
                 @if($user && $user->gis)
@@ -138,11 +137,11 @@ if (isset($user)) {
                             class="toggle-icon">&#9654;</span></a>
                     <div class="submenu" id="gisSubmenu">
                         <a href="https://gis.ptpn1.co.id/tree.php?id=0&token=eofkp4456432oewkf465oew#" target="_blank"
-                            rel="noopener noreferrer" class="menu-item" id="gis"><i class="fa-solid fa-map menu-icon"></i>AREAL</a>
+                            rel="noopener noreferrer" class="menu-item" id="gis-areal"><i class="fa-solid fa-map menu-icon"></i>AREAL</a>
                         <a href="http://gis.ptpn1.co.id/mbtiles/tree5.php?id=0&token=eofkp4456432oewkf465oew" target='_blank'
-                            class="menu-item" id="gis"><i class="fa-solid fa-satellite-dish menu-icon"></i>NDVI</a>
+                            class="menu-item" id="gis-ndvi"><i class="fa-solid fa-satellite-dish menu-icon"></i>NDVI</a>
                         <a href="http://aset-dives-dev.ptpn1.co.id/weather?token=234kjjlksflk8y98ksafdklj23" target='_blank'
-                            class="menu-item" id="gis"><i class="fa-solid fa-cloud-sun menu-icon"></i>CUACA</a>
+                            class="menu-item" id="gis-cuaca"><i class="fa-solid fa-cloud-sun menu-icon"></i>CUACA</a>
                     </div>
                 @endif
                 @if($user && $user->skyview)
@@ -152,17 +151,17 @@ if (isset($user)) {
                             class="fa-solid fa-map-location-dot menu-icon"></i>Exec Summary</a>
 
                 @endif
+                @if($user && $user->lm)
+                    <a href="#lm" id="lm" class="parent"><i class="fa-solid fa-book menu-icon"></i>LM <span
+                            class="toggle-icon">&#9654;</span></a>
+                    <div class="submenu" id="lmSubmenu">
+                        <a href="{{url('')}}/lm13"><i class="fa-solid fa-book-open menu-icon"></i>LM13</a>
+                        <a href="{{url('')}}/lm14"><i class="fa-solid fa-book-open menu-icon"></i>LM14</a>
+                        <a href="{{url('')}}/lm16"><i class="fa-solid fa-book-open menu-icon"></i>LM16</a>
+                    </div>
+                @endif
 
             </div>
-            @if($user && $user->lm)
-                <a href="#lm" id="lm" class="parent"><i class="fa-solid fa-book menu-icon"></i>LM <span
-                        class="toggle-icon">&#9654;</span></a>
-                <div class="submenu" id="lmSubmenu">
-                    <a href="{{url('')}}/lm13"><i class="fa-solid fa-book-open menu-icon"></i>LM13</a>
-                    <a href="{{url('')}}/lm14"><i class="fa-solid fa-book-open menu-icon"></i>LM14</a>
-                    <a href="{{url('')}}/lm16"><i class="fa-solid fa-book-open menu-icon"></i>LM16</a>
-                </div>
-            @endif
 
         @endif
 
