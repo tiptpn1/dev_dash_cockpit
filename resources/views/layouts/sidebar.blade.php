@@ -26,17 +26,17 @@ if (isset($user)) {
                         <span class="toggle-icon">&#9654;</span></a>
                     <div class="submenu" id="operasionalSubmenu">
                         <!-- <a href="#" id="karetSubmenu" class="parents"><i class="fa-solid fa-leaf menu-icon"></i>Karet<span
-                                                                                                                                class="toggle-icon">&#9654;</span></a>
-                                                                                                                        <div class="submenu subsub">
-                                                                                                                            <a href="{{url('')}}/onfarmkaret"><i class="fa-solid fa-tree menu-icon"></i>On Farm</a>
-                                                                                                                            <a href="{{url('')}}/offfarmkaret"><i class="fa-solid fa-truck menu-icon"></i>Off Farm</a>
-                                                                                                                        </div>
-                                                                                                                        <a href="#" id="tehSubmenu" class="parents"><i class="fa-solid fa-mug-hot menu-icon"></i>Teh<span
-                                                                                                                                class="toggle-icon">&#9654;</span></a>
-                                                                                                                        <div class="submenu subsub">
-                                                                                                                            <a href="{{url('')}}/onfarmteh"><i class="fa-solid fa-tree menu-icon"></i>On Farm</a>
-                                                                                                                            <a href="{{url('')}}/offfarmteh"><i class="fa-solid fa-truck menu-icon"></i>Off Farm</a>
-                                                                                                                        </div> -->
+                                                                                                                                            class="toggle-icon">&#9654;</span></a>
+                                                                                                                                    <div class="submenu subsub">
+                                                                                                                                        <a href="{{url('')}}/onfarmkaret"><i class="fa-solid fa-tree menu-icon"></i>On Farm</a>
+                                                                                                                                        <a href="{{url('')}}/offfarmkaret"><i class="fa-solid fa-truck menu-icon"></i>Off Farm</a>
+                                                                                                                                    </div>
+                                                                                                                                    <a href="#" id="tehSubmenu" class="parents"><i class="fa-solid fa-mug-hot menu-icon"></i>Teh<span
+                                                                                                                                            class="toggle-icon">&#9654;</span></a>
+                                                                                                                                    <div class="submenu subsub">
+                                                                                                                                        <a href="{{url('')}}/onfarmteh"><i class="fa-solid fa-tree menu-icon"></i>On Farm</a>
+                                                                                                                                        <a href="{{url('')}}/offfarmteh"><i class="fa-solid fa-truck menu-icon"></i>Off Farm</a>
+                                                                                                                                    </div> -->
                         <!-- <a href="{{url('')}}/onfarmkopi"><i class="fa-solid fa-mug-hot menu-icon"></i>Kopi</a> -->
                         <!-- <a href="{{url('')}}/iot"><i class="fa-solid fa-microchip menu-icon"></i>IOT</a> -->
                         <a href="{{url('')}}/amanah"><i class="fa-solid fa-building menu-icon"></i>AMANAH</a>
@@ -137,7 +137,8 @@ if (isset($user)) {
                             class="toggle-icon">&#9654;</span></a>
                     <div class="submenu" id="gisSubmenu">
                         <a href="https://gis.ptpn1.co.id/tree.php?id=0&token=eofkp4456432oewkf465oew#" target="_blank"
-                            rel="noopener noreferrer" class="menu-item" id="gis-areal"><i class="fa-solid fa-map menu-icon"></i>AREAL</a>
+                            rel="noopener noreferrer" class="menu-item" id="gis-areal"><i
+                                class="fa-solid fa-map menu-icon"></i>AREAL</a>
                         <a href="http://gis.ptpn1.co.id/mbtiles/tree5.php?id=0&token=eofkp4456432oewkf465oew" target='_blank'
                             class="menu-item" id="gis-ndvi"><i class="fa-solid fa-satellite-dish menu-icon"></i>NDVI</a>
                         <a href="http://aset-dives-dev.ptpn1.co.id/weather?token=234kjjlksflk8y98ksafdklj23" target='_blank'
@@ -158,6 +159,7 @@ if (isset($user)) {
                         <a href="{{url('')}}/lm13"><i class="fa-solid fa-book-open menu-icon"></i>LM13</a>
                         <a href="{{url('')}}/lm14"><i class="fa-solid fa-book-open menu-icon"></i>LM14</a>
                         <a href="{{url('')}}/lm16"><i class="fa-solid fa-book-open menu-icon"></i>LM16</a>
+                        <a href="{{url('')}}/lm34"><i class="fa-solid fa-book-open menu-icon"></i>LM34</a>
                     </div>
                 @endif
 

@@ -93,8 +93,9 @@ Route::middleware('auth:custom')->group(function () {
     Route::get('/lm13', [PageController::class, 'lm13'])->name('lm13');
     Route::get('/lm14', [PageController::class, 'lm14'])->name('lm14');
     Route::get('/lm16', [PageController::class, 'lm16'])->name('lm16');
-    Route::get('/under_construction', [PageController::class, 'under_construction'])->name('under_construction');
+    Route::get('/lm34', [PageController::class, 'lm34'])->name('lm34');
 
+    Route::get('/under_construction', [PageController::class, 'under_construction'])->name('under_construction');
 
     Route::get('/skyview', [PageController::class, 'skyview'])->name('skyview');
     Route::get('/exec_summary', [PageController::class, 'exec_summary'])->name('exec_summary');
@@ -109,7 +110,7 @@ Route::middleware('auth:custom')->group(function () {
     Route::get('/get_data_lm13', [BigQueryController::class, 'get_data_lm13'])->name('get_data_lm13');
     Route::get('/get_data_lm14', [BigQueryController::class, 'get_data_lm14'])->name('get_data_lm14');
     Route::get('/get_data_lm16', [BigQueryController::class, 'get_data_lm16'])->name('get_data_lm16');
-
+    Route::get('/get_data_lm34', [BigQueryController::class, 'get_data_lm34'])->name('get_data_lm34');
 
     // AI Response Route
     Route::post('/ai/response', [AiResponseController::class, 'aiResponse']);
