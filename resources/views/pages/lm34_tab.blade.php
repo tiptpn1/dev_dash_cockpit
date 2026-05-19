@@ -65,7 +65,8 @@
             width: 100% !important;
         }
 
-        html, body {
+        html,
+        body {
             height: auto !important;
             min-height: 100vh;
             overflow-y: auto !important;
@@ -403,8 +404,13 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0.8; }
-            to { opacity: 1; }
+            from {
+                opacity: 0.8;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
     </style>
 @endsection
@@ -418,7 +424,8 @@
             </div>
             <div class="lm-header-center">
                 <svg style="width:28px;height:28px;color:#22c55e;flex-shrink:0;" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3A5 5 0 008 22c12 0 15-17 15-17-1 2-8 2-13 3-5 1-6 7-6 7s5.5-2 8.5-2 5 2 5 2-3-5-3-5 3 5 3 5-5 3-5 3 2 3 2 6-2 6-2 6 3-3 3-6-2-6-2-6z" />
+                    <path
+                        d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3A5 5 0 008 22c12 0 15-17 15-17-1 2-8 2-13 3-5 1-6 7-6 7s5.5-2 8.5-2 5 2 5 2-3-5-3-5 3 5 3 5-5 3-5 3 2 3 2 6-2 6-2 6 3-3 3-6-2-6-2-6z" />
                 </svg>
                 <h1>LM 34 &mdash; Laporan Realisasi Penjualan</h1>
             </div>
@@ -433,7 +440,7 @@
             <!-- Tab Navigation -->
             <div class="lm-tab-nav">
                 <button class="lm-tab-btn active" onclick="switchTab('kebun')">
-                    <i class="fas fa-leaf"></i> LM34 by Kebun
+                    <i class="fas fa-leaf"></i> LM34 by Material
                 </button>
                 <button class="lm-tab-btn" onclick="switchTab('negara')">
                     <i class="fas fa-globe"></i> LM34 by Negara
@@ -472,7 +479,8 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Plant</label>
-                                <select class="form-select select2-plant" id="plantFilter-kebun" style="width:100%;" disabled>
+                                <select class="form-select select2-plant" id="plantFilter-kebun" style="width:100%;"
+                                    disabled>
                                     <option value="">-- Pilih Regional dulu --</option>
                                     @foreach ($plantList as $item)
                                         <option value="{{ $item->plant }}">{{ $item->plant }} - {{ $item->nama }}</option>
@@ -511,7 +519,8 @@
                             <button type="reset" class="btn-reset" id="btnReset-kebun">
                                 <i class="fas fa-redo"></i> Reset
                             </button>
-                            <button type="submit" class="btn-filter" id="btnFilter-kebun" disabled style="opacity:0.45; cursor:not-allowed;">
+                            <button type="submit" class="btn-filter" id="btnFilter-kebun" disabled
+                                style="opacity:0.45; cursor:not-allowed;">
                                 <i class="fas fa-search"></i> Cari
                             </button>
                         </div>
@@ -540,7 +549,8 @@
                         <div id="tableLoading-kebun" style="display:none; text-align:center; padding:24px; color:#6b7280;">
                             <i class="fas fa-spinner fa-spin"></i> Memuat data...
                         </div>
-                        <div id="tableError-kebun" style="display:none; padding:16px 20px; color:#dc2626; font-size:13px;"></div>
+                        <div id="tableError-kebun" style="display:none; padding:16px 20px; color:#dc2626; font-size:13px;">
+                        </div>
                         <div id="tableResult-kebun"></div>
                     </div>
                 </div>
@@ -575,7 +585,8 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Plant</label>
-                                <select class="form-select select2-plant" id="plantFilter-negara" style="width:100%;" disabled>
+                                <select class="form-select select2-plant" id="plantFilter-negara" style="width:100%;"
+                                    disabled>
                                     <option value="">-- Pilih Regional dulu --</option>
                                     @foreach ($plantList as $item)
                                         <option value="{{ $item->plant }}">{{ $item->plant }} - {{ $item->nama }}</option>
@@ -614,7 +625,8 @@
                             <button type="reset" class="btn-reset" id="btnReset-negara">
                                 <i class="fas fa-redo"></i> Reset
                             </button>
-                            <button type="submit" class="btn-filter" id="btnFilter-negara" disabled style="opacity:0.45; cursor:not-allowed;">
+                            <button type="submit" class="btn-filter" id="btnFilter-negara" disabled
+                                style="opacity:0.45; cursor:not-allowed;">
                                 <i class="fas fa-search"></i> Cari
                             </button>
                         </div>
@@ -643,7 +655,8 @@
                         <div id="tableLoading-negara" style="display:none; text-align:center; padding:24px; color:#6b7280;">
                             <i class="fas fa-spinner fa-spin"></i> Memuat data...
                         </div>
-                        <div id="tableError-negara" style="display:none; padding:16px 20px; color:#dc2626; font-size:13px;"></div>
+                        <div id="tableError-negara" style="display:none; padding:16px 20px; color:#dc2626; font-size:13px;">
+                        </div>
                         <div id="tableResult-negara"></div>
                     </div>
                 </div>
@@ -678,7 +691,8 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Plant</label>
-                                <select class="form-select select2-plant" id="plantFilter-customer" style="width:100%;" disabled>
+                                <select class="form-select select2-plant" id="plantFilter-customer" style="width:100%;"
+                                    disabled>
                                     <option value="">-- Pilih Regional dulu --</option>
                                     @foreach ($plantList as $item)
                                         <option value="{{ $item->plant }}">{{ $item->plant }} - {{ $item->nama }}</option>
@@ -717,7 +731,8 @@
                             <button type="reset" class="btn-reset" id="btnReset-customer">
                                 <i class="fas fa-redo"></i> Reset
                             </button>
-                            <button type="submit" class="btn-filter" id="btnFilter-customer" disabled style="opacity:0.45; cursor:not-allowed;">
+                            <button type="submit" class="btn-filter" id="btnFilter-customer" disabled
+                                style="opacity:0.45; cursor:not-allowed;">
                                 <i class="fas fa-search"></i> Cari
                             </button>
                         </div>
@@ -743,10 +758,12 @@
                         </div>
                     </div>
                     <div class="table-wrapper">
-                        <div id="tableLoading-customer" style="display:none; text-align:center; padding:24px; color:#6b7280;">
+                        <div id="tableLoading-customer"
+                            style="display:none; text-align:center; padding:24px; color:#6b7280;">
                             <i class="fas fa-spinner fa-spin"></i> Memuat data...
                         </div>
-                        <div id="tableError-customer" style="display:none; padding:16px 20px; color:#dc2626; font-size:13px;"></div>
+                        <div id="tableError-customer"
+                            style="display:none; padding:16px 20px; color:#dc2626; font-size:13px;"></div>
                         <div id="tableResult-customer"></div>
                     </div>
                 </div>
@@ -855,7 +872,7 @@
                 const plant = plantSel.value;
                 const tahun = tahunSel.value;
                 const bulan = bulanSel.value;
-                
+
                 fetchData(tabName, komoditas, regional, plant, tahun, bulan);
             });
 
@@ -1057,10 +1074,10 @@
             if (!_exportData[tabName]) { alert('Belum ada data untuk diekspor.'); return; }
 
             const { rows, headers, judul, numericCols, subtotalCols } = _exportData[tabName];
-            const isIdCol    = h => /(_id$|^id_|_id_|material|prodheir|kdbe|norek|^kode|^no$|^plant|^regional|_desc$|uraian|^nama)/i.test(h);
+            const isIdCol = h => /(_id$|^id_|_id_|material|prodheir|kdbe|norek|^kode|^no$|^plant|^regional|_desc$|uraian|^nama)/i.test(h);
             const isHargaCol = h => /harga|price|rate|satuan/i.test(h);
             const isStrictNum = v => { if (v === null || v === '' || v === undefined) return false; return /^-?\d+(\.\d+)?$/.test(String(v).trim()); };
-            const isNumericCol  = h => numericCols  && numericCols.has(h);
+            const isNumericCol = h => numericCols && numericCols.has(h);
             const isSubtotalCol = h => subtotalCols && subtotalCols.has(h);
 
             let leadingNonNum = 0;
@@ -1076,23 +1093,23 @@
                 width: isIdCol(h) ? 14 : h.toLowerCase().includes('desc') ? 28 : isHargaCol(h) ? 16 : isSubtotalCol(h) ? 18 : 14,
             }));
 
-            const bdr  = (s='thin') => ({ top:{style:s}, left:{style:s}, bottom:{style:s}, right:{style:s} });
-            const fill = argb => ({ type:'pattern', pattern:'solid', fgColor:{argb} });
+            const bdr = (s = 'thin') => ({ top: { style: s }, left: { style: s }, bottom: { style: s }, right: { style: s } });
+            const fill = argb => ({ type: 'pattern', pattern: 'solid', fgColor: { argb } });
 
             // Row 1: Title
             ws.mergeCells(1, 1, 1, headers.length);
-            const tc = ws.getCell(1,1);
-            tc.value = judul; tc.font = {bold:true, size:11};
-            tc.alignment = {horizontal:'center', vertical:'middle', wrapText:true};
+            const tc = ws.getCell(1, 1);
+            tc.value = judul; tc.font = { bold: true, size: 11 };
+            tc.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
             tc.fill = fill('FFFFFFFF'); tc.border = bdr();
             ws.getRow(1).height = 24;
 
             // Row 2: Column headers
-            const hRow = ws.addRow(headers.map(h => h.replace(/_/g,' ').toUpperCase()));
+            const hRow = ws.addRow(headers.map(h => h.replace(/_/g, ' ').toUpperCase()));
             hRow.eachCell((cell, colNum) => {
                 cell.fill = fill('FF15803D');
-                cell.font = {bold:true, color:{argb:'FFFFFFFF'}, size:9};
-                cell.alignment = {horizontal: isNumericCol(headers[colNum-1]) ? 'right' : 'center', vertical:'middle', wrapText:true};
+                cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 9 };
+                cell.alignment = { horizontal: isNumericCol(headers[colNum - 1]) ? 'right' : 'center', vertical: 'middle', wrapText: true };
                 cell.border = bdr();
             });
             ws.getRow(2).height = 18;
@@ -1115,14 +1132,14 @@
                 });
                 const exRow = ws.addRow(rowData);
                 const bg = rowIdx % 2 === 0 ? 'FFFFFFFF' : 'FFF9FAFB';
-                exRow.eachCell({includeEmpty:true}, (cell, colNum) => {
-                    const h = headers[colNum-1];
-                    cell.fill = fill(bg); cell.font = {size:9}; cell.border = bdr();
+                exRow.eachCell({ includeEmpty: true }, (cell, colNum) => {
+                    const h = headers[colNum - 1];
+                    cell.fill = fill(bg); cell.font = { size: 9 }; cell.border = bdr();
                     if (isNumericCol(h)) {
                         cell.numFmt = isHargaCol(h) ? '#,##0.00' : '#,##0';
-                        cell.alignment = {horizontal:'right'};
+                        cell.alignment = { horizontal: 'right' };
                     } else {
-                        cell.alignment = {horizontal:'left'};
+                        cell.alignment = { horizontal: 'left' };
                     }
                 });
                 rowIdx++;
@@ -1137,21 +1154,21 @@
             });
             const gtRow = ws.addRow(gtData);
             const gtn = ws.rowCount;
-            gtRow.eachCell({includeEmpty:true}, (cell, colNum) => {
-                const h = headers[colNum-1];
+            gtRow.eachCell({ includeEmpty: true }, (cell, colNum) => {
+                const h = headers[colNum - 1];
                 cell.fill = fill('FF14532D');
-                cell.font = {bold:true, size:9, color:{argb:'FFFFFFFF'}};
+                cell.font = { bold: true, size: 9, color: { argb: 'FFFFFFFF' } };
                 cell.border = bdr('medium');
                 if (colNum - 1 >= labelSpan) {
-                    if (isSubtotalCol(h)) { cell.numFmt = '#,##0'; cell.alignment = {horizontal:'right'}; }
-                    else if (isNumericCol(h)) { cell.numFmt = isHargaCol(h) ? '#,##0.00' : '#,##0'; cell.alignment = {horizontal:'right'}; }
+                    if (isSubtotalCol(h)) { cell.numFmt = '#,##0'; cell.alignment = { horizontal: 'right' }; }
+                    else if (isNumericCol(h)) { cell.numFmt = isHargaCol(h) ? '#,##0.00' : '#,##0'; cell.alignment = { horizontal: 'right' }; }
                 }
             });
-            try { ws.mergeCells(gtn, 1, gtn, labelSpan); } catch(e) {}
-            ws.getCell(gtn, 1).alignment = {horizontal:'right', vertical:'middle'};
+            try { ws.mergeCells(gtn, 1, gtn, labelSpan); } catch (e) { }
+            ws.getCell(gtn, 1).alignment = { horizontal: 'right', vertical: 'middle' };
 
             const buffer = await workbook.xlsx.writeBuffer();
-            const blob = new Blob([buffer], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url; a.download = `${judul}.xlsx`; a.click();
@@ -1162,10 +1179,10 @@
             if (!_exportData[tabName]) { alert('Belum ada data untuk diekspor.'); return; }
 
             const { rows, headers, judul, numericCols, subtotalCols } = _exportData[tabName];
-            const isIdCol    = h => /(_id$|^id_|_id_|material|prodheir|kdbe|norek|^kode|^no$|^plant|^regional|_desc$|uraian|^nama)/i.test(h);
+            const isIdCol = h => /(_id$|^id_|_id_|material|prodheir|kdbe|norek|^kode|^no$|^plant|^regional|_desc$|uraian|^nama)/i.test(h);
             const isHargaCol = h => /harga|price|rate|satuan/i.test(h);
             const isStrictNum = v => { if (v === null || v === '' || v === undefined) return false; return /^-?\d+(\.\d+)?$/.test(String(v).trim()); };
-            const isNumericCol  = h => numericCols  && numericCols.has(h);
+            const isNumericCol = h => numericCols && numericCols.has(h);
             const isSubtotalCol = h => subtotalCols && subtotalCols.has(h);
 
             let leadingNonNum = 0;
@@ -1174,7 +1191,7 @@
             }
             const labelSpan = Math.max(leadingNonNum, 1);
 
-            const fmtNum = (v, colName='') => {
+            const fmtNum = (v, colName = '') => {
                 if (isIdCol(colName)) return (v === null || v === undefined || v === '') ? '' : String(v);
                 if (v === null || v === '' || v === undefined) return isHargaCol(colName) ? '0,00' : '-';
                 if (!isStrictNum(v)) return String(v);
@@ -1208,25 +1225,25 @@
                 if (idx === 0) { val = 'JUMLAH TOTAL'; halign = 'right'; }
                 else if (idx < labelSpan) { val = ''; }
                 else if (isSubtotalCol(h)) { val = fmtNum(accTotal[h], h); halign = 'right'; }
-                else if (isNumericCol(h))  { val = ''; halign = 'right'; }
-                return { content: val, styles: { halign, fontStyle:'bold', fillColor:[20,83,45], textColor:[255,255,255], fontSize:6.5 } };
+                else if (isNumericCol(h)) { val = ''; halign = 'right'; }
+                return { content: val, styles: { halign, fontStyle: 'bold', fillColor: [20, 83, 45], textColor: [255, 255, 255], fontSize: 6.5 } };
             }));
 
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({ orientation:'landscape', unit:'pt', format:'a3' });
+            const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a3' });
             const pageW = doc.internal.pageSize.getWidth();
-            doc.setFontSize(10); doc.setFont('helvetica','bold');
-            doc.text(judul, pageW/2, 28, {align:'center'});
+            doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+            doc.text(judul, pageW / 2, 28, { align: 'center' });
 
             doc.autoTable({
-                head: [headers.map(h => h.replace(/_/g,' ').toUpperCase())],
+                head: [headers.map(h => h.replace(/_/g, ' ').toUpperCase())],
                 body,
                 startY: 42,
-                styles: { fontSize:6.5, cellPadding:2.5, lineWidth:0.3, lineColor:[209,250,229], overflow:'ellipsize' },
-                headStyles: { fillColor:[21,128,61], textColor:255, fontStyle:'bold', fontSize:6.5, halign:'center', cellPadding:3 },
-                columnStyles: Object.fromEntries(headers.map((h,i) => [i, { halign: isNumericCol(h) ? 'right' : 'left' }])),
-                alternateRowStyles: { fillColor:[249,250,251] },
-                margin: { top:42, left:18, right:18 },
+                styles: { fontSize: 6.5, cellPadding: 2.5, lineWidth: 0.3, lineColor: [209, 250, 229], overflow: 'ellipsize' },
+                headStyles: { fillColor: [21, 128, 61], textColor: 255, fontStyle: 'bold', fontSize: 6.5, halign: 'center', cellPadding: 3 },
+                columnStyles: Object.fromEntries(headers.map((h, i) => [i, { halign: isNumericCol(h) ? 'right' : 'left' }])),
+                alternateRowStyles: { fillColor: [249, 250, 251] },
+                margin: { top: 42, left: 18, right: 18 },
                 tableWidth: 'auto',
             });
 
