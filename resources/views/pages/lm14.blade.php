@@ -514,17 +514,17 @@
                     <div style="display:flex; align-items:center; gap:8px;">
                         <span id="resultInfo" style="color:#93c5fd; font-size:12px;"></span>
                         <button id="btnExportExcel" onclick="exportExcel()" style="
-                                                            display:inline-flex; align-items:center; gap:5px;
-                                                            padding:6px 14px; background:#16a34a; color:#fff;
-                                                            border:none; border-radius:6px; font-size:12px;
-                                                            font-weight:700; cursor:pointer;">
+                                                                display:inline-flex; align-items:center; gap:5px;
+                                                                padding:6px 14px; background:#16a34a; color:#fff;
+                                                                border:none; border-radius:6px; font-size:12px;
+                                                                font-weight:700; cursor:pointer;">
                             <i class="fas fa-file-excel"></i> Excel
                         </button>
                         <button id="btnExportPdf" onclick="exportPdf()" style="
-                                                            display:inline-flex; align-items:center; gap:5px;
-                                                            padding:6px 14px; background:#dc2626; color:#fff;
-                                                            border:none; border-radius:6px; font-size:12px;
-                                                            font-weight:700; cursor:pointer;">
+                                                                display:inline-flex; align-items:center; gap:5px;
+                                                                padding:6px 14px; background:#dc2626; color:#fff;
+                                                                border:none; border-radius:6px; font-size:12px;
+                                                                font-weight:700; cursor:pointer;">
                             <i class="fas fa-file-pdf"></i> PDF
                         </button>
                     </div>
@@ -737,14 +737,14 @@
                         html += '<thead>';
                         // Baris judul (full colspan)
                         html += `<tr>
-                                                                <th colspan="${headers.length}" style="
-                                                                    background:#ffffff; color:#111827;
-                                                                    text-align:center; font-size:12px;
-                                                                    font-weight:800; padding:8px 12px;
-                                                                    letter-spacing:0.04em; border-bottom:2px solid #16a34a;">
-                                                                    ${judulLaporan}
-                                                                </th>
-                                                            </tr>`;
+                                                                    <th colspan="${headers.length}" style="
+                                                                        background:#ffffff; color:#111827;
+                                                                        text-align:center; font-size:12px;
+                                                                        font-weight:800; padding:8px 12px;
+                                                                        letter-spacing:0.04em; border-bottom:2px solid #16a34a;">
+                                                                        ${judulLaporan}
+                                                                    </th>
+                                                                </tr>`;
                         // Baris kolom header
                         html += '<tr>';
                         headers.forEach(h => {
@@ -792,11 +792,6 @@
                                 luas: luasArr[i] ?? luasArr[0] ?? 0,
                             };
                         });
-
-                        // Debug — hapus setelah confirmed working
-                        console.log('[LM14] row00:', row00);
-                        console.log('[LM14] qtyCols:', qtyCols, '→ luasArr:', luasArr);
-                        console.log('[LM14] perHaMapping:', perHaMapping);
 
                         // Helper hitung biaya_per_ha dari akumulator
                         const calcPerHa = (acc, perHaCol) => {

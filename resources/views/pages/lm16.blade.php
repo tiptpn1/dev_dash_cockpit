@@ -670,12 +670,15 @@
                         const isSubtotalCol = h => NUMERIC_COLS.has(h);
 
                         // ── Helper: format angka ID ───────────────────────────────────
-                        const fmt = v => {
+                        // Kolom biaya_per_kg selalu ditampilkan dengan 2 desimal karena
+                        // merupakan hasil bagi (bisa integer jika SP tidak mengembalikan titik desimal)
+                        const ALWAYS_DECIMAL_COLS = ['biaya_per_kg_tahun_lalu', 'biaya_per_kg_tahun_ini'];
+                        const fmt = (v, colName = '') => {
                             if (v === null || v === '' || v === undefined) return '-';
                             const n = parseFloat(v);
                             if (isNaN(n)) return v ?? '-';
-                            // Jika nilai asli dari BigQuery punya desimal → paksa 2 digit di belakang koma
-                            const hasDecimal = String(v).includes('.');
+                            // Paksa 2 desimal untuk kolom per_kg, atau jika nilai memang punya desimal
+                            const hasDecimal = ALWAYS_DECIMAL_COLS.includes(colName) || String(v).includes('.');
                             return n.toLocaleString('id-ID', {
                                 minimumFractionDigits: hasDecimal ? 2 : 0,
                                 maximumFractionDigits: 2,
@@ -751,10 +754,6 @@
                                     return; // sudah di-colspan
                                 } else if (isSubtotalCol(h)) {
                                     r += `<td style="padding:5px 12px; border:1px solid #d1fae5; text-align:right; white-space:nowrap;">${fmt(acc[h])}</td>`;
-                                } else if (RATIO_COLS.has(h)) {
-                                    // Kolom rasio: hitung ulang dari akumulator
-                                    const ratioVal = calcRatioVal(h, acc);
-                                    r += `<td style="padding:5px 12px; border:1px solid #d1fae5; text-align:right; white-space:nowrap;">${ratioVal !== null ? fmt(ratioVal) : '-'}</td>`;
                                 } else {
                                     r += `<td style="padding:5px 12px; border:1px solid #d1fae5;"></td>`;
                                 }
@@ -796,7 +795,7 @@
                             headers.forEach(h => {
                                 const val = row[h];
                                 const num = isNum(val);
-                                html += `<td style="padding:5px 12px; border:1px solid #e5e7eb; text-align:${num ? 'right' : 'left'}; white-space:nowrap;">${fmt(val)}</td>`;
+                                html += `<td style="padding:5px 12px; border:1px solid #e5e7eb; text-align:${num ? 'right' : 'left'}; white-space:nowrap;">${fmt(val, h)}</td>`;
                             });
                             html += '</tr>';
                         });

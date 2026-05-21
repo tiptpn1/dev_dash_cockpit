@@ -35,12 +35,13 @@ class PageController extends Controller
     }
     public function onfarmkaret()
     {
-        $linkiframe = 'https://lookerstudio.google.com/embed/reporting/0c40fa91-90ba-474a-becc-f1b48ccd7553/page/p_fjvzqqpxmd';
+        // $linkiframe = 'https://lookerstudio.google.com/embed/reporting/0c40fa91-90ba-474a-becc-f1b48ccd7553/page/p_fjvzqqpxmd';
+        $linkiframe = 'https://datastudio.google.com/embed/reporting/b17761d1-5bbe-42f5-bf3f-d036385e7b0c/page/p_fjvzqqpxmd';
         return view('pages/overview_page', compact('linkiframe'));
     }
     public function onfarmteh()
     {
-        $linkiframe = 'https://lookerstudio.google.com/embed/reporting/e825898d-0a18-4e28-a258-9b4e83aff7b1/page/p_hsaddeiwmd';
+        $linkiframe = 'https://datastudio.google.com/embed/reporting/e825898d-0a18-4e28-a258-9b4e83aff7b1/page/p_hsaddeiwmd';
         return view('pages/overview_page', compact('linkiframe'));
     }
     public function onfarmkopi()
@@ -50,12 +51,12 @@ class PageController extends Controller
     }
     public function offfarmkaret()
     {
-        $linkiframe = 'https://lookerstudio.google.com/embed/reporting/b3d7816f-810b-4609-9d64-2db9bd818301/page/p_y59zpdpxmd';
+        $linkiframe = 'https://datastudio.google.com/embed/reporting/b3d7816f-810b-4609-9d64-2db9bd818301/page/p_y59zpdpxmd';
         return view('pages/overview_page', compact('linkiframe'));
     }
     public function offfarmteh()
     {
-        $linkiframe = 'https://lookerstudio.google.com/embed/reporting/f0f0edeb-4e91-4306-910e-64389351f433/page/p_o6yw3alxmd';
+        $linkiframe = 'https://datastudio.google.com/embed/reporting/f0f0edeb-4e91-4306-910e-64389351f433/page/p_o6yw3alxmd';
         return view('pages/overview_page', compact('linkiframe'));
     }
     public function offfarmkopi()
