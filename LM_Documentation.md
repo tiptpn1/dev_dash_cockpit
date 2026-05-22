@@ -397,3 +397,72 @@ Jika tim data mengubah struktur SP (nama kolom, penambahan parameter, dll):
 | `resources/views/pages/lm34.blade.php` | View LM34 |
 | `resources/views/pages/lm34_tab.blade.php` | View LM34 (versi tab) |
 | `routes/web.php` | Route halaman + API endpoint LM |
+
+---
+
+## 📋 Changelog — Riwayat Perubahan Kode LM
+
+> Setiap perubahan kode yang menyangkut fitur LM **wajib** dicatat di sini.
+> Format entry: `[YYYY-MM-DD] | [File yang berubah] | [Deskripsi singkat perubahan]`
+
+### Panduan Pengisian
+
+| Field | Keterangan |
+|-------|------------|
+| **Tanggal** | Format `YYYY-MM-DD` |
+| **File** | Path relatif dari root project, pisahkan dengan koma jika lebih dari 1 file |
+| **Tipe** | `FIX` / `FEAT` / `REFACTOR` / `STYLE` / `DOCS` / `SP` (perubahan di BigQuery SP) |
+| **Deskripsi** | Penjelasan singkat apa yang berubah dan alasannya |
+
+---
+
+### Entri Perubahan
+
+#### 2026-05-21 — Fix: BigQuery CALL via `runBigQueryCall()` (Child Job Iterator)
+
+| Field | Detail |
+|-------|--------|
+| **Tipe** | FIX |
+| **File** | `app/Http/Controllers/BigQueryController.php` |
+| **Masalah** | Library `google/cloud-bigquery` v1.36 tidak mengembalikan rows pada parent job untuk statement `CALL`. `PHP Warning: Undefined array key "schema"` |
+| **Fix** | Ganti `runQuery()` → `startQuery()` + `waitUntilComplete()`. Iterasi semua child jobs, ambil rows dari child job terakhir yang memiliki schema/rows |
+| **Dampak** | Semua endpoint LM (`get_data_lm13`, `lm14`, `lm16`, `lm34`, dll.) kini menggunakan `runBigQueryCall()` yang sudah diperbaiki |
+
+#### 2026-05-21 — Fix: LM16 Data Kosong karena SP Diakhiri DML
+
+| Field | Detail |
+|-------|--------|
+| **Tipe** | FIX + SP |
+| **File** | `resources/views/pages/lm16.blade.php` + SP BigQuery `sp_laporan_lm16_*` |
+| **Masalah** | SP LM16 sebelumnya diakhiri `CREATE TEMP TABLE AS SELECT`, bukan `SELECT`. Child job terakhir adalah DDL → tidak ada rows yang bisa dibaca |
+| **Fix** | Tambahkan `SELECT * FROM temp_result` di baris terakhir setiap SP LM16 (karet/teh/kopi) di BigQuery console |
+| **Dampak** | Data LM16 muncul setelah SP diperbaiki |
+
+#### 2026-05-21 — Fix: JS Error `RATIO_COLS is not defined` di LM16
+
+| Field | Detail |
+|-------|--------|
+| **Tipe** | FIX |
+| **File** | `resources/views/pages/lm16.blade.php` |
+| **Masalah** | Referensi ke variabel `RATIO_COLS` yang tidak pernah dideklarasikan menyebabkan JS error |
+| **Fix** | Hapus/ganti referensi variabel tersebut |
+
+---
+
+<!-- 
+========================================================
+  TEMPLATE ENTRY BARU — copy-paste di atas baris ini
+========================================================
+
+#### YYYY-MM-DD — [Tipe]: [Judul singkat perubahan]
+
+| Field | Detail |
+|-------|--------|
+| **Tipe** | FIX / FEAT / REFACTOR / STYLE / SP |
+| **File** | `path/ke/file.php`, `path/ke/file.blade.php` |
+| **Masalah / Latar belakang** | Jelaskan konteks / bug / kebutuhan |
+| **Perubahan** | Apa yang diubah secara teknis |
+| **Dampak** | Halaman / endpoint / SP mana yang terpengaruh |
+
+======================================================== 
+-->

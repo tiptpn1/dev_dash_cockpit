@@ -26,17 +26,17 @@ if (isset($user)) {
                         <span class="toggle-icon">&#9654;</span></a>
                     <div class="submenu" id="operasionalSubmenu">
                         <!-- <a href="#" id="karetSubmenu" class="parents"><i class="fa-solid fa-leaf menu-icon"></i>Karet<span
-                                            class="toggle-icon">&#9654;</span></a>
-                                    <div class="submenu subsub">
-                                        <a href="{{url('')}}/onfarmkaret"><i class="fa-solid fa-tree menu-icon"></i>On Farm</a>
-                                        <a href="{{url('')}}/offfarmkaret"><i class="fa-solid fa-truck menu-icon"></i>Off Farm</a>
-                                    </div>
-                                    <a href="#" id="tehSubmenu" class="parents"><i class="fa-solid fa-mug-hot menu-icon"></i>Teh<span
-                                            class="toggle-icon">&#9654;</span></a>
-                                    <div class="submenu subsub">
-                                        <a href="{{url('')}}/onfarmteh"><i class="fa-solid fa-tree menu-icon"></i>On Farm</a>
-                                        <a href="{{url('')}}/offfarmteh"><i class="fa-solid fa-truck menu-icon"></i>Off Farm</a>
-                                    </div> -->
+                                                                                                        class="toggle-icon">&#9654;</span></a>
+                                                                                                <div class="submenu subsub">
+                                                                                                    <a href="{{url('')}}/onfarmkaret"><i class="fa-solid fa-tree menu-icon"></i>On Farm</a>
+                                                                                                    <a href="{{url('')}}/offfarmkaret"><i class="fa-solid fa-truck menu-icon"></i>Off Farm</a>
+                                                                                                </div>
+                                                                                                <a href="#" id="tehSubmenu" class="parents"><i class="fa-solid fa-mug-hot menu-icon"></i>Teh<span
+                                                                                                        class="toggle-icon">&#9654;</span></a>
+                                                                                                <div class="submenu subsub">
+                                                                                                    <a href="{{url('')}}/onfarmteh"><i class="fa-solid fa-tree menu-icon"></i>On Farm</a>
+                                                                                                    <a href="{{url('')}}/offfarmteh"><i class="fa-solid fa-truck menu-icon"></i>Off Farm</a>
+                                                                                                </div> -->
                         <!-- <a href="{{url('')}}/onfarmkopi"><i class="fa-solid fa-mug-hot menu-icon"></i>Kopi</a> -->
                         <!-- <a href="{{url('')}}/iot"><i class="fa-solid fa-microchip menu-icon"></i>IOT</a> -->
                         <a href="{{url('')}}/amanah"><i class="fa-solid fa-building menu-icon"></i>AMANAH</a>
@@ -47,14 +47,16 @@ if (isset($user)) {
                         <!-- <a href="{{url('')}}/gudangutilisasi">Dashboard Utilisasi Gudang</a> -->
                     </div>
                 @endif
-                <a href="#pica" id="pica" class="parent"><i class="fa-solid fa-clipboard-list menu-icon"></i>PICA
-                    <span class="toggle-icon">&#9654;</span></a>
-                <div class="submenu" id="picaSubmenu">
-                    <a href="{{ route('pica.kuadran_problem_identifications') }}"><i
-                            class="fa-solid fa-table-cells-large menu-icon"></i>Kuadran Problem Identifications</a>
-                    <a href="{{ route('pica.list_corrective_actions') }}"><i class="fa-solid fa-list-check menu-icon"></i>List
-                        Corrective Actions</a>
-                </div>
+                @if($user && $user->pica)
+                    <a href="#pica" id="pica" class="parent"><i class="fa-solid fa-clipboard-list menu-icon"></i>PICA
+                        <span class="toggle-icon">&#9654;</span></a>
+                    <div class="submenu" id="picaSubmenu">
+                        <a href="{{ route('pica.kuadran_problem_identifications') }}"><i
+                                class="fa-solid fa-table-cells-large menu-icon"></i>Kuadran Problem Identifications</a>
+                        <a href="{{ route('pica.list_corrective_actions') }}"><i class="fa-solid fa-list-check menu-icon"></i>List
+                            Corrective Actions</a>
+                    </div>
+                @endif
                 @if($user && $user->warehouse)
                     <a href="{{url('')}}/gudangutilisasi" class="menu-item" id='warehouse'><i
                             class="fa-solid fa-warehouse menu-icon"></i>Warehouse</a>
@@ -162,7 +164,6 @@ if (isset($user)) {
                         <a href="{{url('')}}/lm34_tab"><i class="fa-solid fa-book-open menu-icon"></i>LM34</a>
                     </div>
                 @endif
-
             </div>
 
         @endif
@@ -176,12 +177,20 @@ if (isset($user)) {
             <a href="{{url('')}}/gardai" class="menu-item" id="gardai"><i
                     class="fa-solid fa-fire-flame-curved menu-icon"></i>Garda AI</a>
         @endif
-        <a href="{{url('')}}/portalaplikasi" class="menu-item" id="portalaplikasi"><i
-                class="fa-solid fa-th-large menu-icon"></i>Portal Aplikasi</a>
+        @if($user && $user->portalaplikasi)
+            <a href="{{url('')}}/portalaplikasi" class="menu-item" id="portalaplikasi"><i
+                    class="fa-solid fa-th-large menu-icon"></i>Portal Aplikasi</a>
+        @endif
 
     @endif
-    <a href="{{url('')}}/evaluasi-aplikasi" class="menu-item" id="evaluasiaplikasi"><i
-            class="fa-solid fa-clipboard-check menu-icon"></i>Evaluasi Aplikasi</a>
+
+    @if($username == 'hris')
+        @if($user && $user->evaluasi_aplikasi)
+            <a href="{{url('')}}/evaluasi-aplikasi" class="menu-item" id="evaluasiaplikasi"><i
+                    class="fa-solid fa-clipboard-check menu-icon"></i>Evaluasi Aplikasi</a>
+        @endif
+    @endif
+
     <a href="{{url('')}}/logout" class="menu-item" id="logout"><i
             class="fa-solid fa-right-from-bracket menu-icon"></i>Logout</a>
 </div>

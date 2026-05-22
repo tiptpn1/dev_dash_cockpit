@@ -66,9 +66,23 @@ class CustomUser extends Model implements AuthenticatableContract
     public function __get($key)
     {
         $features = [
-            'mrc', 'gis', 'lm', 'aigr1', 'garda', 'skyview',
-            'operasional', 'aset', 'finansial', 'hr', 'sales',
-            'legal', 'progress', 'pengadaan', 'carbon', 'warehouse',
+            'mrc',
+            'gis',
+            'lm',
+            'aigr1',
+            'garda',
+            'skyview',
+            'operasional',
+            'aset',
+            'finansial',
+            'hr',
+            'sales',
+            'legal',
+            'progress',
+            'pengadaan',
+            'carbon',
+            'warehouse',
+            'evaluasi_aplikasi'
         ];
 
         if (in_array($key, $features)) {
