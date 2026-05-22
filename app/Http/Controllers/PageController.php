@@ -1610,4 +1610,745 @@ class PageController extends Controller
         return view('pages/under-construction');
     }
 
+    public function evaluasi_aplikasi()
+    {
+        return view('pages/evaluasi');
+    }
+
+    private const HRIS_REGIONAL_FILTER = 'SuppCo HO';
+
+    /** Jenis absen yang dihitung sebagai absensi */
+    private const HRIS_JENIS_ABSENSI = ['WFO', 'WFH', 'IZIN', 'DINAS'];
+
+    public function evaluasi_hris_data(Request $request)
+    {
+        $periode = $request->get('periode', date('Y-m'));
+        if (!preg_match('/^\d{4}-\d{2}$/', $periode)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Format periode tidak valid (gunakan YYYY-MM).',
+            ], 400);
+        }
+
+        [$tahun, $bulan] = array_map('intval', explode('-', $periode));
+
+        try {
+            $rows = $this->fetchRekapAbsenHrisByDivisi($tahun, $bulan);
+            $summary = $this->fetchRekapAbsenRegionalSummary($tahun, $bulan);
+
+            return response()->json([
+                'status' => 'success',
+                'periode' => $periode,
+                'regional' => self::HRIS_REGIONAL_FILTER,
+                'total' => count($rows),
+                'summary' => $summary,
+                'data' => $rows,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function evaluasi_hris_detail(Request $request)
+    {
+        $periode = $request->get('periode', date('Y-m'));
+        $divisi = trim((string) $request->get('divisi', ''));
+
+        if (!preg_match('/^\d{4}-\d{2}$/', $periode)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Format periode tidak valid (gunakan YYYY-MM).',
+            ], 400);
+        }
+
+        if ($divisi === '') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Parameter divisi wajib diisi.',
+            ], 400);
+        }
+
+        [$tahun, $bulan] = array_map('intval', explode('-', $periode));
+
+        try {
+            $rows = $this->fetchRekapAbsenHrisByPegawai($tahun, $bulan, $divisi);
+
+            return response()->json([
+                'status' => 'success',
+                'periode' => $periode,
+                'divisi' => $divisi,
+                'regional' => self::HRIS_REGIONAL_FILTER,
+                'total' => count($rows),
+                'data' => $rows,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function evaluasi_hris_divisi(Request $request)
+    {
+        $periode = $request->get('periode', date('Y-m'));
+        if (!preg_match('/^\d{4}-\d{2}$/', $periode)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Format periode tidak valid (gunakan YYYY-MM).',
+            ], 400);
+        }
+
+        try {
+            $rows = $this->fetchDivisiList(self::HRIS_REGIONAL_FILTER);
+
+            return response()->json([
+                'status' => 'success',
+                'periode' => $periode,
+                'regional' => self::HRIS_REGIONAL_FILTER,
+                'data' => $rows,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function evaluasi_hris_harian(Request $request)
+    {
+        $periode = $request->get('periode', date('Y-m'));
+        $divisi = trim((string) $request->get('divisi', ''));
+        $tanggal = trim((string) $request->get('tanggal', ''));
+
+        if (!preg_match('/^\d{4}-\d{2}$/', $periode)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Format periode tidak valid (gunakan YYYY-MM).',
+            ], 400);
+        }
+
+        if ($divisi === '' || $tanggal === '') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Parameter divisi dan tanggal wajib diisi.',
+            ], 400);
+        }
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Format tanggal tidak valid (gunakan YYYY-MM-DD).',
+            ], 400);
+        }
+
+        [$tahun, $bulan] = array_map('intval', explode('-', $periode));
+        $periodePrefix = sprintf('%04d-%02d', $tahun, $bulan);
+        if (strpos($tanggal, $periodePrefix) !== 0) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Tanggal harus berada dalam periode yang dipilih.',
+            ], 400);
+        }
+
+        try {
+            $rows = $this->fetchAbsenHarian($tahun, $bulan, $divisi, $tanggal);
+
+            return response()->json([
+                'status' => 'success',
+                'periode' => $periode,
+                'divisi' => $divisi,
+                'tanggal' => $tanggal,
+                'regional' => self::HRIS_REGIONAL_FILTER,
+                'total' => count($rows),
+                'data' => $rows,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    private function periodeYmToHris(int $tahun, int $bulan): string
+    {
+        return str_pad((string) $bulan, 2, '0', STR_PAD_LEFT) . $tahun;
+    }
+
+    private function hrisUsesImportData(string $periodeHris): bool
+    {
+        $importCount = DB::connection('hris')
+            ->selectOne('SELECT COUNT(*) AS c FROM absensi_import WHERE periode = ?', [$periodeHris]);
+
+        return ($importCount->c ?? 0) > 0;
+    }
+
+    private function fetchDivisiList(string $regional): array
+    {
+        return DB::connection('hris')->select("
+            SELECT DISTINCT TRIM(divisi) AS divisi
+            FROM pegawai
+            WHERE TRIM(regional) = ?
+              AND NULLIF(TRIM(divisi), '') IS NOT NULL
+            ORDER BY divisi ASC
+        ", [$regional]);
+    }
+
+    private function fetchRekapAbsenHrisByDivisi(int $tahun, int $bulan): array
+    {
+        $periodeHris = $this->periodeYmToHris($tahun, $bulan);
+
+        if ($this->hrisUsesImportData($periodeHris)) {
+            return $this->fetchRekapAbsenFromImport($periodeHris);
+        }
+
+        return $this->fetchRekapAbsenFromAbsensi($periodeHris);
+    }
+
+    private function fetchRekapAbsenRegionalSummary(int $tahun, int $bulan): ?object
+    {
+        $periodeHris = $this->periodeYmToHris($tahun, $bulan);
+
+        if ($this->hrisUsesImportData($periodeHris)) {
+            return $this->fetchRegionalSummaryFromImport($periodeHris);
+        }
+
+        return $this->fetchRegionalSummaryFromAbsensi($periodeHris);
+    }
+
+    private function fetchRegionalSummaryFromImport(string $periodeHris): ?object
+    {
+        $regional = self::HRIS_REGIONAL_FILTER;
+
+        $rows = DB::connection('hris')->select("
+            SELECT
+                COUNT(DISTINCT p.pegawai_id) AS jumlah_pegawai,
+                ROUND(AVG(b.hari_kerja), 0) AS hari_kerja,
+                ROUND(AVG(
+                    CASE WHEN COALESCE(b.hari_kerja, 0) > 0
+                    THEN COALESCE(att.check_in, 0) / b.hari_kerja * 100
+                    ELSE 0 END
+                ), 1) AS persentase_kehadiran
+            FROM pegawai p
+            LEFT JOIN (
+                SELECT
+                    pegawai_id,
+                    SUM(CASE WHEN checkin_time IS NULL OR TRIM(checkin_time) = '' THEN 0 ELSE 1 END) AS check_in
+                FROM absensi_import
+                WHERE periode = ?
+                GROUP BY pegawai_id
+            ) att ON p.pegawai_id = att.pegawai_id
+            LEFT JOIN absensi_periode b
+                ON p.regional_kode = b.regional_kode
+                AND p.area_kode = b.area_kode
+                AND b.periode = ?
+            WHERE TRIM(p.regional) = ?
+              AND NULLIF(TRIM(p.divisi), '') IS NOT NULL
+        ", [$periodeHris, $periodeHris, $regional]);
+
+        return $this->formatRegionalSummary($rows[0] ?? null);
+    }
+
+    private function fetchRegionalSummaryFromAbsensi(string $periodeHris): ?object
+    {
+        $regional = self::HRIS_REGIONAL_FILTER;
+
+        $rows = DB::connection('hris')->select("
+            SELECT
+                COUNT(DISTINCT p.pegawai_id) AS jumlah_pegawai,
+                ROUND(AVG(b.hari_kerja), 0) AS hari_kerja,
+                ROUND(AVG(
+                    CASE WHEN COALESCE(b.hari_kerja, 0) > 0
+                    THEN COALESCE(att.check_in, 0) / b.hari_kerja * 100
+                    ELSE 0 END
+                ), 1) AS persentase_kehadiran
+            FROM pegawai p
+            LEFT JOIN (
+                SELECT pegawai_id, COUNT(DISTINCT DATE(jam)) AS check_in
+                FROM absensi
+                WHERE DATE_FORMAT(jam, '%m%Y') = ?
+                GROUP BY pegawai_id
+            ) att ON p.pegawai_id = att.pegawai_id
+            LEFT JOIN absensi_periode b
+                ON p.regional_kode = b.regional_kode
+                AND p.area_kode = b.area_kode
+                AND b.periode = ?
+            WHERE TRIM(p.regional) = ?
+              AND NULLIF(TRIM(p.divisi), '') IS NOT NULL
+        ", [$periodeHris, $periodeHris, $regional]);
+
+        return $this->formatRegionalSummary($rows[0] ?? null);
+    }
+
+    private function formatRegionalSummary(?object $row): ?object
+    {
+        if (!$row || ($row->jumlah_pegawai ?? 0) == 0) {
+            return null;
+        }
+
+        return (object) [
+            'divisi' => 'RATA-RATA KESELURUHAN — ' . self::HRIS_REGIONAL_FILTER,
+            'hari_kerja' => $row->hari_kerja,
+            'jumlah_pegawai' => $row->jumlah_pegawai,
+            'persentase_kehadiran' => $row->persentase_kehadiran,
+            'is_summary' => true,
+        ];
+    }
+
+    private function fetchRekapAbsenHrisByPegawai(int $tahun, int $bulan, string $divisi): array
+    {
+        $periodeHris = $this->periodeYmToHris($tahun, $bulan);
+
+        if ($this->hrisUsesImportData($periodeHris)) {
+            return $this->fetchDetailAbsenFromImport($periodeHris, $divisi);
+        }
+
+        return $this->fetchDetailAbsenFromAbsensi($periodeHris, $divisi);
+    }
+
+    private function fetchAbsenHarian(int $tahun, int $bulan, string $divisi, string $tanggal): array
+    {
+        $periodeHris = $this->periodeYmToHris($tahun, $bulan);
+
+        if ($this->hrisUsesImportData($periodeHris)) {
+            return $this->fetchHarianFromImport($periodeHris, $divisi, $tanggal);
+        }
+
+        return $this->fetchHarianFromAbsensi($periodeHris, $divisi, $tanggal);
+    }
+
+    private function fetchRekapAbsenFromImport(string $periodeHris): array
+    {
+        $regional = self::HRIS_REGIONAL_FILTER;
+
+        $sql = "
+            SELECT
+                TRIM(p.divisi) AS divisi,
+                MAX(b.hari_kerja) AS hari_kerja,
+                COUNT(DISTINCT p.pegawai_id) AS jumlah_pegawai,
+                ROUND(AVG(
+                    CASE WHEN COALESCE(b.hari_kerja, 0) > 0
+                    THEN COALESCE(att.check_in, 0) / b.hari_kerja * 100
+                    ELSE 0 END
+                ), 1) AS persentase_kehadiran
+            FROM pegawai p
+            LEFT JOIN (
+                SELECT
+                    pegawai_id,
+                    SUM(CASE WHEN checkin_time IS NULL OR TRIM(checkin_time) = '' THEN 0 ELSE 1 END) AS check_in
+                FROM absensi_import
+                WHERE periode = ?
+                GROUP BY pegawai_id
+            ) att ON p.pegawai_id = att.pegawai_id
+            LEFT JOIN absensi_periode b
+                ON p.regional_kode = b.regional_kode
+                AND p.area_kode = b.area_kode
+                AND b.periode = ?
+            WHERE TRIM(p.regional) = ?
+              AND NULLIF(TRIM(p.divisi), '') IS NOT NULL
+            GROUP BY TRIM(p.divisi)
+            ORDER BY divisi ASC
+        ";
+
+        return DB::connection('hris')->select($sql, [$periodeHris, $periodeHris, $regional]);
+    }
+
+    private function fetchRekapAbsenFromAbsensi(string $periodeHris): array
+    {
+        $regional = self::HRIS_REGIONAL_FILTER;
+
+        $sql = "
+            SELECT
+                TRIM(p.divisi) AS divisi,
+                MAX(b.hari_kerja) AS hari_kerja,
+                COUNT(DISTINCT p.pegawai_id) AS jumlah_pegawai,
+                ROUND(AVG(
+                    CASE WHEN COALESCE(b.hari_kerja, 0) > 0
+                    THEN COALESCE(att.check_in, 0) / b.hari_kerja * 100
+                    ELSE 0 END
+                ), 1) AS persentase_kehadiran
+            FROM pegawai p
+            LEFT JOIN (
+                SELECT pegawai_id, COUNT(DISTINCT DATE(jam)) AS check_in
+                FROM absensi
+                WHERE DATE_FORMAT(jam, '%m%Y') = ?
+                GROUP BY pegawai_id
+            ) att ON p.pegawai_id = att.pegawai_id
+            LEFT JOIN absensi_periode b
+                ON p.regional_kode = b.regional_kode
+                AND p.area_kode = b.area_kode
+                AND b.periode = ?
+            WHERE TRIM(p.regional) = ?
+              AND NULLIF(TRIM(p.divisi), '') IS NOT NULL
+            GROUP BY TRIM(p.divisi)
+            ORDER BY divisi ASC
+        ";
+
+        return DB::connection('hris')->select($sql, [$periodeHris, $periodeHris, $regional]);
+    }
+
+    private function fetchDetailAbsenFromImport(string $periodeHris, string $divisi): array
+    {
+        $regional = self::HRIS_REGIONAL_FILTER;
+
+                $sql = "
+            SELECT
+                p.pegawai_id,
+                COALESCE(NULLIF(TRIM(p.nik), ''), '-') AS pegawai_nik,
+                p.nama,
+                p.jabatan,
+                b.hari_kerja,
+                COALESCE(att.absensi, 0) AS absensi,
+                COALESCE(att.cnt_wfo, 0) AS cnt_wfo,
+                COALESCE(att.cnt_wfh, 0) AS cnt_wfh,
+                COALESCE(att.cnt_izin, 0) AS cnt_izin,
+                COALESCE(att.cnt_dinas, 0) AS cnt_dinas,
+                ROUND(
+                    CASE WHEN COALESCE(b.hari_kerja, 0) > 0
+                    THEN COALESCE(att.absensi, 0) / b.hari_kerja * 100
+                    ELSE 0 END, 1
+                ) AS persentase_kehadiran,
+                CASE WHEN COALESCE(att.absensi, 0) = 0 THEN 1 ELSE 0 END AS belum_absen
+            FROM pegawai p
+            LEFT JOIN (
+                SELECT
+                    pegawai_id,
+                    SUM(CASE WHEN UPPER(TRIM(jenis_absen)) IN ('WFO', 'WFH', 'IZIN', 'DINAS') THEN 1 ELSE 0 END) AS absensi,
+                    SUM(CASE WHEN UPPER(TRIM(jenis_absen)) = 'WFO' THEN 1 ELSE 0 END) AS cnt_wfo,
+                    SUM(CASE WHEN UPPER(TRIM(jenis_absen)) = 'WFH' THEN 1 ELSE 0 END) AS cnt_wfh,
+                    SUM(CASE WHEN UPPER(TRIM(jenis_absen)) IN ('IZIN', 'IJIN') THEN 1 ELSE 0 END) AS cnt_izin,
+                    SUM(CASE WHEN UPPER(TRIM(jenis_absen)) = 'DINAS' THEN 1 ELSE 0 END) AS cnt_dinas
+                FROM absensi_import
+                WHERE periode = ?
+                GROUP BY pegawai_id
+            ) att ON p.pegawai_id = att.pegawai_id
+            LEFT JOIN absensi_periode b
+                ON p.regional_kode = b.regional_kode
+                AND p.area_kode = b.area_kode
+                AND b.periode = ?
+            WHERE TRIM(p.regional) = ?
+              AND TRIM(p.divisi) = ?
+            ORDER BY belum_absen DESC, persentase_kehadiran ASC, p.nama ASC
+        ";
+
+        return DB::connection('hris')->select($sql, [$periodeHris, $periodeHris, $regional, $divisi]);
+    }
+
+    private function fetchDetailAbsenFromAbsensi(string $periodeHris, string $divisi): array
+    {
+        $regional = self::HRIS_REGIONAL_FILTER;
+
+        $sql = "
+            SELECT
+                p.pegawai_id,
+                COALESCE(NULLIF(TRIM(p.nik), ''), '-') AS pegawai_nik,
+                p.nama,
+                p.jabatan,
+                b.hari_kerja,
+                COALESCE(att.absensi, 0) AS absensi,
+                COALESCE(att.cnt_wfo, 0) AS cnt_wfo,
+                COALESCE(att.cnt_wfh, 0) AS cnt_wfh,
+                COALESCE(att.cnt_izin, 0) AS cnt_izin,
+                COALESCE(att.cnt_dinas, 0) AS cnt_dinas,
+                ROUND(
+                    CASE WHEN COALESCE(b.hari_kerja, 0) > 0
+                    THEN COALESCE(att.absensi, 0) / b.hari_kerja * 100
+                    ELSE 0 END, 1
+                ) AS persentase_kehadiran,
+                CASE WHEN COALESCE(att.absensi, 0) = 0 THEN 1 ELSE 0 END AS belum_absen
+            FROM pegawai p
+            LEFT JOIN (
+                SELECT
+                    pegawai_id,
+                    COUNT(DISTINCT CASE WHEN UPPER(TRIM(jenis_absen)) IN ('WFO', 'WFH', 'IZIN', 'DINAS') THEN DATE(jam) END) AS absensi,
+                    COUNT(DISTINCT CASE WHEN UPPER(TRIM(jenis_absen)) = 'WFO' THEN DATE(jam) END) AS cnt_wfo,
+                    COUNT(DISTINCT CASE WHEN UPPER(TRIM(jenis_absen)) = 'WFH' THEN DATE(jam) END) AS cnt_wfh,
+                    COUNT(DISTINCT CASE WHEN UPPER(TRIM(jenis_absen)) IN ('IZIN', 'IJIN') THEN DATE(jam) END) AS cnt_izin,
+                    COUNT(DISTINCT CASE WHEN UPPER(TRIM(jenis_absen)) = 'DINAS' THEN DATE(jam) END) AS cnt_dinas
+                FROM absensi
+                WHERE DATE_FORMAT(jam, '%m%Y') = ?
+                GROUP BY pegawai_id
+            ) att ON p.pegawai_id = att.pegawai_id
+            LEFT JOIN absensi_periode b
+                ON p.regional_kode = b.regional_kode
+                AND p.area_kode = b.area_kode
+                AND b.periode = ?
+            WHERE TRIM(p.regional) = ?
+              AND TRIM(p.divisi) = ?
+            ORDER BY belum_absen DESC, persentase_kehadiran ASC, p.nama ASC
+        ";
+
+        return DB::connection('hris')->select($sql, [$periodeHris, $periodeHris, $regional, $divisi]);
+    }
+
+    private function fetchHarianFromImport(string $periodeHris, string $divisi, string $tanggal): array
+    {
+        $regional = self::HRIS_REGIONAL_FILTER;
+
+        $sql = "
+            SELECT
+                p.nama,
+                COALESCE(NULLIF(TRIM(p.nik), ''), '-') AS pegawai_nik,
+                p.jabatan,
+                ? AS tanggal,
+                COALESCE(NULLIF(TRIM(ai.hari_kerja), ''), CAST(b.hari_kerja AS CHAR), '-') AS hari_kerja,
+                COALESCE(NULLIF(TRIM(ai.checkin_time), ''), '-') AS checkin_time,
+                COALESCE(NULLIF(TRIM(ai.checkout_time), ''), '-') AS checkout_time,
+                COALESCE(NULLIF(TRIM(ai.alamat), ''), NULLIF(TRIM(ai.psa), ''), '-') AS lokasi,
+                COALESCE(NULLIF(TRIM(ai.jenis_absen), ''), '-') AS jenis_absen,
+                CONCAT(
+                    COALESCE(NULLIF(TRIM(ai.mood_in), ''), '-'),
+                    ' / ',
+                    COALESCE(NULLIF(TRIM(ai.mood_out), ''), '-')
+                ) AS mood
+            FROM pegawai p
+            LEFT JOIN absensi_import ai
+                ON ai.pegawai_id = p.pegawai_id
+                AND ai.tanggal_date = ?
+                AND ai.periode = ?
+            LEFT JOIN absensi_periode b
+                ON p.regional_kode = b.regional_kode
+                AND p.area_kode = b.area_kode
+                AND b.periode = ?
+            WHERE TRIM(p.regional) = ?
+              AND TRIM(p.divisi) = ?
+            ORDER BY p.nama ASC
+        ";
+
+        return DB::connection('hris')->select($sql, [
+            $tanggal, $tanggal, $periodeHris, $periodeHris, $regional, $divisi,
+        ]);
+    }
+
+    private function fetchHarianFromAbsensi(string $periodeHris, string $divisi, string $tanggal): array
+    {
+        $regional = self::HRIS_REGIONAL_FILTER;
+
+        $sql = "
+            SELECT
+                p.nama,
+                COALESCE(NULLIF(TRIM(p.nik), ''), '-') AS pegawai_nik,
+                p.jabatan,
+                ? AS tanggal,
+                CAST(COALESCE(b.hari_kerja, 0) AS CHAR) AS hari_kerja,
+                COALESCE(DATE_FORMAT(MIN(a.jam), '%H:%i:%s'), '-') AS checkin_time,
+                COALESCE(
+                    CASE WHEN COUNT(a.jam) > 1 THEN DATE_FORMAT(MAX(a.jam), '%H:%i:%s') ELSE '-' END,
+                    '-'
+                ) AS checkout_time,
+                COALESCE(MAX(NULLIF(TRIM(a.alamat), '')), '-') AS lokasi,
+                COALESCE(NULLIF(GROUP_CONCAT(DISTINCT a.jenis_absen ORDER BY a.jenis_absen SEPARATOR ', '), ''), '-') AS jenis_absen,
+                '-' AS mood
+            FROM pegawai p
+            LEFT JOIN absensi a
+                ON a.pegawai_id = p.pegawai_id
+                AND DATE(a.jam) = ?
+            LEFT JOIN absensi_periode b
+                ON p.regional_kode = b.regional_kode
+                AND p.area_kode = b.area_kode
+                AND b.periode = ?
+            WHERE TRIM(p.regional) = ?
+              AND TRIM(p.divisi) = ?
+            GROUP BY p.pegawai_id, p.nama, p.nik, p.jabatan, b.hari_kerja
+            ORDER BY p.nama ASC
+        ";
+
+        return DB::connection('hris')->select($sql, [
+            $tanggal, $tanggal, $periodeHris, $regional, $divisi,
+        ]);
+    }
+
+    public function evaluasi_hris_regional_list()
+    {
+        return response()->json([
+            'status' => 'success',
+            'data' => self::HRIS_REGIONAL_FILTER,
+        ]);
+    }
+
+    public function evaluasi_hris_pegawai_list(Request $request)
+    {
+        $search = trim((string) $request->get('search', ''));
+        $regional = trim((string) $request->get('regional', ''));
+
+        if (strlen($search) < 3) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Minimal 3 huruf untuk pencarian',
+            ], 400);
+        }
+
+        try {
+            $sql = "
+                SELECT
+                    p.pegawai_id,
+                    p.nama,
+                    p.nik,
+                    p.divisi,
+                    p.jabatan
+                FROM pegawai p
+                WHERE TRIM(p.regional) = ?
+                  AND (p.nama LIKE ? OR p.nik LIKE ?)
+                ORDER BY p.nama ASC
+                LIMIT 20
+            ";
+
+            $searchPattern = '%' . $search . '%';
+            $rows = DB::connection('hris')->select($sql, [$regional, $searchPattern, $searchPattern]);
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $rows,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function evaluasi_hris_perkaryawan(Request $request)
+    {
+        $pegawai_id = trim((string) $request->get('pegawai_id', ''));
+        $tanggal_awal = trim((string) $request->get('tanggal_awal', ''));
+        $tanggal_akhir = trim((string) $request->get('tanggal_akhir', ''));
+        $periode = $request->get('periode', date('Y-m'));
+
+        if (!preg_match('/^\d{4}-\d{2}$/', $periode)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Format periode tidak valid (gunakan YYYY-MM).',
+            ], 400);
+        }
+
+        if ($pegawai_id === '' || $tanggal_awal === '' || $tanggal_akhir === '') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Parameter pegawai_id, tanggal_awal, dan tanggal_akhir wajib diisi.',
+            ], 400);
+        }
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal_awal) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal_akhir)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Format tanggal tidak valid (gunakan YYYY-MM-DD).',
+            ], 400);
+        }
+
+        [$tahun, $bulan] = array_map('intval', explode('-', $periode));
+        $periodePrefix = sprintf('%04d-%02d', $tahun, $bulan);
+
+        if (strpos($tanggal_awal, $periodePrefix) !== 0 || strpos($tanggal_akhir, $periodePrefix) !== 0) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Tanggal harus berada dalam periode yang dipilih.',
+            ], 400);
+        }
+
+        try {
+            $regional = self::HRIS_REGIONAL_FILTER;
+            $periodeHris = $this->periodeYmToHris($tahun, $bulan);
+
+            if ($this->hrisUsesImportData($periodeHris)) {
+                $rows = $this->fetchPerKaryawanFromImport($periodeHris, $pegawai_id, $tanggal_awal, $tanggal_akhir, $regional);
+            } else {
+                $rows = $this->fetchPerKaryawanFromAbsensi($periodeHris, $pegawai_id, $tanggal_awal, $tanggal_akhir, $regional);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'periode' => $periode,
+                'pegawai_id' => $pegawai_id,
+                'tanggal_awal' => $tanggal_awal,
+                'tanggal_akhir' => $tanggal_akhir,
+                'total' => count($rows),
+                'data' => $rows,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    private function fetchPerKaryawanFromAbsensi(string $periodeHris, string $pegawai_id, string $tanggal_awal, string $tanggal_akhir, string $regional): array
+    {
+        $sql = "
+            SELECT
+                p.nama,
+                COALESCE(NULLIF(TRIM(p.nik), ''), '-') AS pegawai_nik,
+                p.jabatan,
+                DATE(a.jam) AS tanggal,
+                CAST(COALESCE(b.hari_kerja, 0) AS CHAR) AS hari_kerja,
+                COALESCE(DATE_FORMAT(MIN(a.jam), '%H:%i:%s'), '-') AS checkin_time,
+                COALESCE(
+                    CASE WHEN COUNT(a.jam) > 1 THEN DATE_FORMAT(MAX(a.jam), '%H:%i:%s') ELSE '-' END,
+                    '-'
+                ) AS checkout_time,
+                COALESCE(MAX(NULLIF(TRIM(a.alamat), '')), '-') AS lokasi,
+                COALESCE(NULLIF(GROUP_CONCAT(DISTINCT a.jenis_absen ORDER BY a.jenis_absen SEPARATOR ', '), ''), '-') AS jenis_absen,
+                '-' AS mood
+            FROM pegawai p
+            LEFT JOIN absensi a
+                ON a.pegawai_id = p.pegawai_id
+                AND DATE(a.jam) BETWEEN ? AND ?
+            LEFT JOIN absensi_periode b
+                ON p.regional_kode = b.regional_kode
+                AND p.area_kode = b.area_kode
+                AND b.periode = ?
+            WHERE p.pegawai_id = ?
+              AND TRIM(p.regional) = ?
+            GROUP BY p.pegawai_id, p.nama, p.nik, p.jabatan, DATE(a.jam), b.hari_kerja
+            ORDER BY DATE(a.jam) DESC
+        ";
+
+        return DB::connection('hris')->select($sql, [
+            $tanggal_awal, $tanggal_akhir, $periodeHris, $pegawai_id, $regional,
+        ]);
+    }
+
+    private function fetchPerKaryawanFromImport(string $periodeHris, string $pegawai_id, string $tanggal_awal, string $tanggal_akhir, string $regional): array
+    {
+        $sql = "
+            SELECT
+                p.nama,
+                COALESCE(NULLIF(TRIM(p.nik), ''), '-') AS pegawai_nik,
+                p.jabatan,
+                ai.tanggal_date AS tanggal,
+                COALESCE(NULLIF(TRIM(ai.hari_kerja), ''), CAST(b.hari_kerja AS CHAR), '-') AS hari_kerja,
+                COALESCE(NULLIF(TRIM(ai.checkin_time), ''), '-') AS checkin_time,
+                COALESCE(NULLIF(TRIM(ai.checkout_time), ''), '-') AS checkout_time,
+                COALESCE(NULLIF(TRIM(ai.alamat), ''), NULLIF(TRIM(ai.psa), ''), '-') AS lokasi,
+                COALESCE(NULLIF(TRIM(ai.jenis_absen), ''), '-') AS jenis_absen,
+                CONCAT(
+                    COALESCE(NULLIF(TRIM(ai.mood_in), ''), '-'),
+                    ' / ',
+                    COALESCE(NULLIF(TRIM(ai.mood_out), ''), '-')
+                ) AS mood
+            FROM pegawai p
+            LEFT JOIN absensi_import ai
+                ON ai.pegawai_id = p.pegawai_id
+                AND ai.tanggal_date BETWEEN ? AND ?
+                AND ai.periode = ?
+            LEFT JOIN absensi_periode b
+                ON p.regional_kode = b.regional_kode
+                AND p.area_kode = b.area_kode
+                AND b.periode = ?
+            WHERE p.pegawai_id = ?
+              AND TRIM(p.regional) = ?
+            ORDER BY ai.tanggal_date DESC
+        ";
+
+        return DB::connection('hris')->select($sql, [
+            $tanggal_awal, $tanggal_akhir, $periodeHris, $periodeHris, $pegawai_id, $regional,
+        ]);
+    }
+
 }

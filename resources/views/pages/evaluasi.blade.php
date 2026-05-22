@@ -1,0 +1,1566 @@
+@extends('layouts.app')
+
+@section('styles')
+<style>
+    /* ===== SCROLL FIX — override Tailwind h-screen di body ===== */
+    html,
+    body {
+        height: auto !important;
+        min-height: 100vh;
+        overflow-y: auto !important;
+        background-color: #f8fafc !important;
+        color: #1f2937;
+        font-family: 'Google Sans', 'Inter', sans-serif;
+    }
+
+    /* Override padding dari layout .main-content agar tidak ada space aneh */
+    .evaluasi-container.main-content {
+        padding: 0 !important;
+        margin-left: 0 !important;
+        background-color: #f8fafc;
+        min-height: 100vh;
+    }
+
+    /* ===== MAIN CONTAINER ===== */
+    .evaluasi-container {
+        padding: 0;
+        margin: 0;
+        width: 100%;
+        min-height: 100vh;
+        background: #f8fafc;
+        overflow-x: hidden;
+        box-sizing: border-box;
+    }
+
+    /* ===== PAGE HEADER ===== */
+    .lm-page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 50px;
+        background: #fff;
+        border-bottom: 1px solid #e5e7eb;
+        min-height: 56px;
+    }
+
+    .lm-header-logo {
+        width: 130px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+    }
+
+    .lm-header-logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .lm-header-center {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .lm-header-center h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #166534;
+        margin: 0;
+    }
+
+    .lm-header-right {
+        display: flex;
+        align-items: center;
+    }
+
+    .lm-header-right img {
+        height: 44px;
+        width: auto;
+        object-fit: contain;
+    }
+
+    .content-section {
+        max-width: 100%;
+        margin: 0;
+        padding: 18px 50px 32px;
+    }
+
+    /* ===== FILTER CARD ===== */
+    .filter-card {
+        background: #fff;
+        border: 1px solid #d1fae5;
+        border-left: 4px solid #166534;
+        border-radius: 8px;
+        padding: 18px 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 1px 4px rgba(22, 101, 52, 0.08);
+    }
+
+    .filter-title {
+        color: #166534;
+        font-size: 14px;
+        font-weight: 700;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-label {
+        color: #374151;
+        font-size: 11px;
+        font-weight: 700;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .form-select, .form-input {
+        width: 100%;
+        padding: 8px 10px;
+        background-color: #fff;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        color: #1f2937;
+        font-size: 13px;
+        transition: border-color 0.2s;
+    }
+
+    .form-select:focus, .form-input:focus {
+        outline: none;
+        border-color: #166534;
+        box-shadow: 0 0 0 2px rgba(22, 101, 52, 0.12);
+    }
+
+    /* ===== TABLE CARD ===== */
+    .table-card {
+        background: #fff;
+        border: 2px solid #166534;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(22, 101, 52, 0.10);
+    }
+
+    .table-header {
+        background: #166534;
+        padding: 12px 20px;
+        border-bottom: 2px solid #14532d;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .table-title {
+        color: #fff;
+        font-size: 14px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        letter-spacing: 0.02em;
+    }
+
+    .table-count {
+        background: rgba(255, 255, 255, 0.15);
+        color: #fff;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+        width: 100%;
+    }
+
+    .report-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12.5px;
+        color: #1f2937;
+    }
+
+    .report-table thead th {
+        background: #15803d;
+        color: #fff;
+        font-weight: 700;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 9px 12px;
+        border: 1px solid #166534;
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    .report-table tbody td {
+        padding: 8px 12px;
+        border: 1px solid #e5e7eb;
+        vertical-align: middle;
+        color: #1f2937;
+    }
+
+    .report-table tbody tr:hover td {
+        background-color: #f0fdf4;
+    }
+
+    .progress-bar-bg {
+        background: #e2e8f0;
+        border-radius: 9999px;
+        overflow: hidden;
+    }
+
+    /* Empty state styling */
+    .empty-state {
+        text-align: center;
+        padding: 48px 24px;
+        color: #6b7280;
+    }
+
+    .empty-icon {
+        font-size: 2.5rem;
+        color: #d1d5db;
+        margin-bottom: 12px;
+    }
+
+    .loading-row td {
+        text-align: center;
+        padding: 32px;
+        color: #6b7280;
+        font-size: 13px;
+    }
+
+    .error-banner {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+        padding: 12px 16px;
+        margin: 12px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+    }
+
+    .divisi-row {
+        cursor: pointer;
+        transition: background-color 0.15s;
+    }
+
+    .divisi-row:hover td {
+        background-color: #ecfdf5 !important;
+    }
+
+    .divisi-row.active td {
+        background-color: #dcfce7 !important;
+    }
+
+    .divisi-row .expand-icon {
+        color: #166534;
+        margin-right: 6px;
+        font-size: 10px;
+        transition: transform 0.2s;
+    }
+
+    .divisi-row.active .expand-icon {
+        transform: rotate(90deg);
+    }
+
+    .detail-row td {
+        background: #f8fafc !important;
+        padding: 0 !important;
+        border-left: 3px solid #166534;
+    }
+
+    .detail-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+        margin: 0;
+    }
+
+    .detail-table thead th {
+        background: #f0fdf4;
+        color: #166534;
+        font-size: 11px;
+        padding: 8px 12px;
+        border: 1px solid #d1fae5;
+        text-align: center;
+    }
+
+    .detail-table tbody td {
+        padding: 7px 12px;
+        border: 1px solid #e5e7eb;
+        background: #fff;
+    }
+
+    .regional-badge {
+        display: inline-block;
+        background: #ecfdf5;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-left: 8px;
+    }
+
+    .hris-tabs {
+        display: flex;
+        gap: 0;
+        border-bottom: 2px solid #e5e7eb;
+        padding: 0 16px;
+        background: #f9fafb;
+    }
+
+    .hris-tab-btn {
+        padding: 10px 18px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #6b7280;
+        background: transparent;
+        border: none;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        cursor: pointer;
+        transition: color 0.15s, border-color 0.15s;
+    }
+
+    .hris-tab-btn.active {
+        color: #166534;
+        border-bottom-color: #166534;
+        background: #fff;
+    }
+
+    .hris-tab-panel {
+        display: none;
+    }
+
+    .hris-tab-panel.active {
+        display: block;
+    }
+
+    .belum-absen-badge {
+        display: inline-block;
+        background: #fef2f2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: 700;
+        margin-left: 6px;
+    }
+
+    .filter-card-tab2 {
+        margin: 16px 16px 0;
+        padding: 14px 16px;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+    }
+
+    .filter-grid-tab2 {
+        display: grid;
+        grid-template-columns: 140px 1fr 140px 140px;
+        gap: 12px;
+        align-items: end;
+    }
+
+    .regional-summary-row td {
+        background: linear-gradient(90deg, #14532d 0%, #166534 100%) !important;
+        color: #fff !important;
+        border-color: #14532d !important;
+        font-weight: 700;
+    }
+
+    .regional-summary-row:hover td {
+        background: linear-gradient(90deg, #14532d 0%, #166534 100%) !important;
+    }
+
+    .regional-summary-row .summary-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .regional-summary-row .summary-label i {
+        color: #bbf7d0;
+    }
+
+    .regional-summary-row .progress-bar-bg {
+        background: rgba(255, 255, 255, 0.25) !important;
+    }
+
+    .regional-summary-row .summary-pct-badge {
+        background: rgba(255, 255, 255, 0.2) !important;
+        color: #fff !important;
+        border: 1px solid rgba(255, 255, 255, 0.35) !important;
+    }
+
+    .absensi-info-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
+        margin-left: 4px;
+        padding: 0;
+        border: none;
+        background: #dbeafe;
+        color: #1d4ed8;
+        border-radius: 50%;
+        font-size: 10px;
+        cursor: pointer;
+        vertical-align: middle;
+        line-height: 1;
+    }
+
+    .absensi-info-btn:hover {
+        background: #bfdbfe;
+    }
+
+    .absensi-popup-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .absensi-popup-overlay.show {
+        display: flex;
+    }
+
+    .absensi-popup {
+        background: #fff;
+        border-radius: 8px;
+        max-width: 400px;
+        width: 100%;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+        overflow: hidden;
+    }
+
+    .absensi-popup-header {
+        background: #166534;
+        color: #fff;
+        padding: 12px 16px;
+        font-size: 14px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .absensi-popup-body {
+        padding: 16px;
+        font-size: 13px;
+        color: #374151;
+        line-height: 1.6;
+    }
+
+    .absensi-popup-body ul {
+        margin: 10px 0 0;
+        padding-left: 20px;
+    }
+
+    .absensi-popup-body li {
+        margin-bottom: 6px;
+    }
+
+    .absensi-popup-breakdown {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid #e5e7eb;
+        font-size: 12px;
+    }
+
+    .absensi-popup-close {
+        background: transparent;
+        border: none;
+        color: #fff;
+        font-size: 18px;
+        cursor: pointer;
+        padding: 0 4px;
+        line-height: 1;
+    }
+
+    /* ===== DROPDOWN STYLES ===== */
+    .dropdown-list {
+        background-color: #fff;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .dropdown-item {
+        padding: 10px 12px;
+        cursor: pointer;
+        border-bottom: 1px solid #e5e7eb;
+        transition: background-color 0.15s;
+    }
+
+    .dropdown-item:last-child {
+        border-bottom: none;
+    }
+
+    .dropdown-item:hover {
+        background-color: #f3f4f6;
+    }
+
+    #perkaryawan_nama_search {
+        margin: 0 !important;
+    }
+
+    #perkaryawan_nama_dropdown {
+        margin-top: 0 !important;
+    }
+
+    #perkaryawan_selected_nama {
+        margin-top: 4px !important;
+    }
+
+    /* ===== MAP POPUP STYLES ===== */
+    .map-popup-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .map-popup-overlay.show {
+        display: flex;
+    }
+
+    .map-popup-container {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        width: 100%;
+        max-width: 600px;
+        max-height: 90vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .map-popup-header {
+        background: #166534;
+        color: #fff;
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .map-popup-header h2 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .map-popup-close {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: #fff;
+        font-size: 20px;
+        cursor: pointer;
+        padding: 0 6px;
+        border-radius: 4px;
+        transition: background 0.2s;
+    }
+
+    .map-popup-close:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    .map-popup-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    #mapContainer {
+        width: 100%;
+        height: 400px;
+        background: #f0f0f0;
+    }
+
+    .map-info-panel {
+        padding: 16px 20px;
+        background: #f9fafb;
+        border-top: 1px solid #e5e7eb;
+        font-size: 12px;
+        color: #6b7280;
+    }
+
+    .map-info-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        align-items: center;
+    }
+
+    .map-info-row:last-child {
+        margin-bottom: 0;
+    }
+
+    .map-info-label {
+        font-weight: 600;
+        color: #374151;
+        min-width: 100px;
+    }
+
+    .map-info-value {
+        color: #1f2937;
+        word-break: break-word;
+    }
+
+    .map-pin-icon {
+        cursor: pointer;
+        color: #166534;
+        font-size: 16px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        transition: background 0.2s;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .map-pin-icon:hover {
+        background: rgba(22, 101, 52, 0.1);
+        color: #14532d;
+    }
+</style>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+@endsection
+
+
+@section('content')
+<div class="evaluasi-container main-content">
+    
+    <!-- Page Header -->
+    <header class="lm-page-header">
+        <div class="lm-header-logo">
+            <img src="{{ asset('danantara.png') }}" alt="Danantara">
+        </div>
+        <div class="lm-header-center">
+            <svg style="width:28px;height:28px;color:#22c55e;flex-shrink:0;" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3A5 5 0 008 22c12 0 15-17 15-17-1 2-8 2-13 3-5 1-6 7-6 7s5.5-2 8.5-2 5 2 5 2-3-5-3-5 3 5 3 5-5 3-5 3 2 3 2 6-2 6-2 6 3-3 3-6-2-6-2-6z" />
+            </svg>
+            <h1 class="text-white">Evaluasi Kinerja Aplikasi</h1>
+        </div>
+        <div class="lm-header-right">
+            <img src="{{ asset('ptpn1.png') }}" alt="PTPN 1">
+        </div>
+    </header>
+
+    <!-- Main Content Section -->
+    <div class="content-section">
+        
+        <!-- Filter Card -->
+        <div class="filter-card">
+            <div class="filter-title">
+                <i class="fas fa-sliders-h"></i> Filter Parameter
+            </div>
+            <div class="filter-grid">
+                <div class="form-group">
+                    <label class="form-label">Nama Aplikasi</label>
+                    <select id="app_select" class="form-select">
+                        <option value="Digital Farming">Digital Farming</option>
+                        <option value="HRIS" selected>HRIS</option>
+                        <option value="MAIA">MAIA</option>
+                        <option value="MONIKA">MONIKA</option>
+                        <option value="SAPA-Amanah">SAPA-Amanah</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Periode</label>
+                    <input type="month" id="periode_select" class="form-input" value="{{ date('Y-m') }}">
+                </div>
+            </div>
+        </div>
+
+        <!-- Table Card -->
+        <div class="table-card">
+            <div class="table-header">
+                <div class="table-title">
+                    <i class="fas fa-table"></i> <span id="table-title">Data Evaluasi Aplikasi</span>
+                    <span id="regional-badge" class="regional-badge" style="display:none;">SuppCo HO</span>
+                </div>
+                <span id="data-count-badge" class="table-count">-- Data</span>
+            </div>
+
+            <div id="hris-tabs-wrap" style="display: none;">
+                <div class="hris-tabs">
+                    <button type="button" class="hris-tab-btn active" data-tab="rekap">
+                        <i class="fas fa-chart-bar"></i> Rekap Kehadiran
+                    </button>
+                    <button type="button" class="hris-tab-btn" data-tab="harian">
+                        <i class="fas fa-calendar-day"></i> Detail Harian
+                    </button>
+                    <button type="button" class="hris-tab-btn" data-tab="perkaryawan">
+                        <i class="fas fa-user"></i> Detail per Karyawan
+                    </button>
+                </div>
+
+                <div id="hris-error" class="error-banner" style="display: none;"></div>
+
+                <!-- Tab 1: Rekap -->
+                <div id="tab-rekap" class="hris-tab-panel active">
+                    <div class="table-wrapper">
+                        <table id="hris-table" class="report-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 60px;">No</th>
+                                    <th style="text-align: left;">Divisi <span style="font-weight:400;text-transform:none;">(klik untuk detail karyawan)</span></th>
+                                    <th style="width: 200px;">Jumlah Hari Kerja</th>
+                                    <th style="width: 320px;">Persentase Kehadiran</th>
+                                </tr>
+                            </thead>
+                            <tbody id="hris-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Detail Harian -->
+                <div id="tab-harian" class="hris-tab-panel">
+                    <div class="filter-card-tab2">
+                        <div class="filter-grid-tab2">
+                            <div class="form-group">
+                                <label class="form-label">Divisi</label>
+                                <select id="harian_divisi_select" class="form-select">
+                                    <option value="">-- Pilih Divisi --</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Tanggal (Hari)</label>
+                                <input type="date" id="harian_tanggal_select" class="form-input">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table id="harian-table" class="report-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:40px;">No</th>
+                                    <th style="text-align:left;">Nama Karyawan</th>
+                                    <th style="width:100px;">NIK</th>
+                                    <th style="width:90px;">Hari Kerja</th>
+                                    <th style="width:100px;">Check In</th>
+                                    <th style="width:100px;">Check Out</th>
+                                    <th style="text-align:left;min-width:180px;">Lokasi</th>
+                                    <th style="width:90px;">Jenis Absen</th>
+                                    <th style="width:110px;">Mood</th>
+                                </tr>
+                            </thead>
+                            <tbody id="harian-tbody">
+                                <tr class="loading-row"><td colspan="9">Pilih divisi dan tanggal untuk menampilkan data.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Detail per Karyawan -->
+                <div id="tab-perkaryawan" class="hris-tab-panel">
+                    <div class="filter-card-tab2">
+                        <div class="filter-grid-tab2">
+                            <div class="form-group">
+                                <label class="form-label">Regional</label>
+                                <select id="perkaryawan_regional_select" class="form-select">
+                                    <option value="">-- Pilih Regional --</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Nama Karyawan</label>
+                                <div style="position: relative;">
+                                    <input type="text" id="perkaryawan_nama_search" class="form-input" placeholder="Ketik minimal 3 huruf..." autocomplete="off">
+                                    <div id="perkaryawan_nama_dropdown" class="dropdown-list" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ddd; max-height: 300px; overflow-y: auto; z-index: 1000; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                    </div>
+                                </div>
+                                <input type="hidden" id="perkaryawan_pegawai_id" value="">
+                                <div id="perkaryawan_selected_nama" style="margin-top: 8px; font-size: 12px; color: #6b7280;"></div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Tanggal Awal</label>
+                                <input type="date" id="perkaryawan_tanggal_awal" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Tanggal Akhir</label>
+                                <input type="date" id="perkaryawan_tanggal_akhir" class="form-input">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table id="perkaryawan-table" class="report-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:40px;">No</th>
+                                    <th style="text-align:left;">Tanggal Absensi</th>
+                                    <th style="width:100px;">NIK</th>
+                                    <th style="width:90px;">Hari Kerja</th>
+                                    <th style="width:100px;">Check In</th>
+                                    <th style="width:100px;">Check Out</th>
+                                    <th style="text-align:left;min-width:180px;">Lokasi</th>
+                                    <th style="width:90px;">Jenis Absen</th>
+                                    <th style="width:110px;">Mood</th>
+                                </tr>
+                            </thead>
+                            <tbody id="perkaryawan-tbody">
+                                <tr class="loading-row"><td colspan="9">Pilih regional, karyawan, dan range tanggal untuk menampilkan data.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-wrapper" id="non-hris-wrapper">
+                <!-- Placeholder / Empty State -->
+                <div id="placeholder-state" class="empty-state" style="display: none;">
+                    <div class="empty-icon">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                    <h4 style="font-size: 14px; font-weight: 700; color: #374151;" id="placeholder-title">Data Belum Tersedia</h4>
+                    <p style="font-size: 12px; color: #6b7280; margin-top: 4px;" id="placeholder-desc">Data evaluasi untuk aplikasi ini sedang dalam proses pengumpulan.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Popup info Absensi -->
+<div id="absensi-popup-overlay" class="absensi-popup-overlay" role="dialog" aria-modal="true">
+    <div class="absensi-popup">
+        <div class="absensi-popup-header">
+            <span><i class="fas fa-info-circle"></i> Ketentuan Absensi</span>
+            <button type="button" class="absensi-popup-close" id="absensi-popup-close" aria-label="Tutup">&times;</button>
+        </div>
+        <div class="absensi-popup-body" id="absensi-popup-body">
+            <p>Yang termasuk dalam perhitungan <strong>Absensi</strong>:</p>
+            <ul>
+                <li><strong>WFO</strong> — Work From Office</li>
+                <li><strong>WFH</strong> — Work From Home</li>
+                <li><strong>Izin</strong></li>
+                <li><strong>Dinas</strong></li>
+            </ul>
+            <div id="absensi-popup-breakdown" class="absensi-popup-breakdown" style="display:none;"></div>
+        </div>
+    </div>
+
+    <!-- Map Popup -->
+    <div id="mapPopupOverlay" class="map-popup-overlay">
+        <div class="map-popup-container">
+            <div class="map-popup-header">
+                <h2>
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span id="mapPopupTitle">Lokasi Absensi</span>
+                </h2>
+                <button type="button" class="map-popup-close" id="mapPopupClose" aria-label="Tutup">&times;</button>
+            </div>
+            <div class="map-popup-content">
+                <div id="mapContainer"></div>
+                <div class="map-info-panel">
+                    <div class="map-info-row">
+                        <span class="map-info-label">Lokasi:</span>
+                        <span class="map-info-value" id="mapInfoLokasi">-</span>
+                    </div>
+                    <div class="map-info-row">
+                        <span class="map-info-label">Latitude:</span>
+                        <span class="map-info-value" id="mapInfoLatitude">-</span>
+                    </div>
+                    <div class="map-info-row">
+                        <span class="map-info-label">Longitude:</span>
+                        <span class="map-info-value" id="mapInfoLongitude">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@section('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const appSelect = document.getElementById('app_select');
+        const periodeSelect = document.getElementById('periode_select');
+        const hrisTable = document.getElementById('hris-table');
+        const placeholderState = document.getElementById('placeholder-state');
+        const tableTitle = document.getElementById('table-title');
+        const dataCountBadge = document.getElementById('data-count-badge');
+        const hrisTbody = document.getElementById('hris-tbody');
+
+        const hrisError = document.getElementById('hris-error');
+        const regionalBadge = document.getElementById('regional-badge');
+        const hrisTabsWrap = document.getElementById('hris-tabs-wrap');
+        const nonHrisWrapper = document.getElementById('non-hris-wrapper');
+        const harianDivisiSelect = document.getElementById('harian_divisi_select');
+        const harianTanggalSelect = document.getElementById('harian_tanggal_select');
+        const harianTbody = document.getElementById('harian-tbody');
+        const perkaryawanRegionalSelect = document.getElementById('perkaryawan_regional_select');
+        const perkaryawanNamaSearch = document.getElementById('perkaryawan_nama_search');
+        const perkaryawanNamaDropdown = document.getElementById('perkaryawan_nama_dropdown');
+        const perkaryawanPegawaiId = document.getElementById('perkaryawan_pegawai_id');
+        const perkaryawanSelectedNama = document.getElementById('perkaryawan_selected_nama');
+        const perkaryawanTanggalAwal = document.getElementById('perkaryawan_tanggal_awal');
+        const perkaryawanTanggalAkhir = document.getElementById('perkaryawan_tanggal_akhir');
+        const perkaryawanTbody = document.getElementById('perkaryawan-tbody');
+        const hrisDataUrl = @json(route('evaluasi_hris_data'));
+        const hrisDetailUrl = @json(route('evaluasi_hris_detail'));
+        const hrisDivisiUrl = @json(route('evaluasi_hris_divisi'));
+        const hrisHarianUrl = @json(route('evaluasi_hris_harian'));
+        const hrisPerKaryawanUrl = @json(route('evaluasi_hris_perkaryawan'));
+        const hrisPegawaiListUrl = @json(route('evaluasi_hris_pegawai_list'));
+        const hrisRegionalListUrl = @json(route('evaluasi_hris_regional_list'));
+        let activeDivisi = null;
+        let currentPeriode = null;
+        let activeHrisTab = 'rekap';
+
+        const monthNames = [
+            "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+            "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+        ];
+
+        function formatPeriodLabel(periodVal) {
+            const parts = periodVal.split('-');
+            const year = parseInt(parts[0]) || new Date().getFullYear();
+            const month = parseInt(parts[1], 10) - 1;
+            return `${monthNames[month] || ''} ${year}`;
+        }
+
+        function getAttendanceStyle(attendance) {
+            const pct = parseFloat(attendance);
+            if (pct >= 98.0) {
+                return {
+                    badgeStyle: 'background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0;',
+                    barColor: '#16a34a',
+                };
+            }
+            if (pct >= 95.0) {
+                return {
+                    badgeStyle: 'background-color: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe;',
+                    barColor: '#2563eb',
+                };
+            }
+            return {
+                badgeStyle: 'background-color: #fef3c7; color: #92400e; border: 1px solid #fde68a;',
+                barColor: '#d97706',
+            };
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text ?? '';
+            return div.innerHTML;
+        }
+
+        const absensiPopupOverlay = document.getElementById('absensi-popup-overlay');
+        const absensiPopupBreakdown = document.getElementById('absensi-popup-breakdown');
+
+        function openAbsensiPopup(employee) {
+            if (employee) {
+                absensiPopupBreakdown.style.display = 'block';
+                absensiPopupBreakdown.innerHTML = `
+                    <strong>${escapeHtml(employee.nama)}</strong><br>
+                    WFO: ${employee.cnt_wfo ?? 0} hari &bull;
+                    WFH: ${employee.cnt_wfh ?? 0} hari &bull;
+                    Izin: ${employee.cnt_izin ?? 0} hari &bull;
+                    Dinas: ${employee.cnt_dinas ?? 0} hari
+                    <br><span style="color:#6b7280;">Total absensi: ${employee.absensi ?? 0} / ${employee.hari_kerja ?? '-'} hari kerja</span>
+                `;
+            } else {
+                absensiPopupBreakdown.style.display = 'none';
+                absensiPopupBreakdown.innerHTML = '';
+            }
+            absensiPopupOverlay.classList.add('show');
+        }
+
+        function closeAbsensiPopup() {
+            absensiPopupOverlay.classList.remove('show');
+        }
+
+        document.getElementById('absensi-popup-close').addEventListener('click', closeAbsensiPopup);
+        absensiPopupOverlay.addEventListener('click', (e) => {
+            if (e.target === absensiPopupOverlay) closeAbsensiPopup();
+        });
+
+        function absensiColumnHeaderHtml() {
+            return `Absensi
+                <button type="button" class="absensi-info-btn" title="Info ketentuan absensi" onclick="event.stopPropagation(); openAbsensiPopup(null);">
+                    <i class="fas fa-info"></i>
+                </button>`;
+        }
+
+        function renderAbsensiCell(emp) {
+            const total = emp.absensi ?? 0;
+            const hariKerja = emp.hari_kerja ?? '-';
+            return `<span>${total} / ${hariKerja} hari</span>`;
+        }
+
+        window.openAbsensiPopup = openAbsensiPopup;
+
+        function renderAttendanceCell(attendance) {
+            const { badgeStyle, barColor } = getAttendanceStyle(attendance);
+            return `
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div class="progress-bar-bg" style="flex-grow: 1; height: 8px;">
+                        <div style="background-color: ${barColor}; height: 8px; width: ${Math.min(attendance, 100)}%; border-radius: 9999px;"></div>
+                    </div>
+                    <span style="display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; min-width: 50px; text-align: center; ${badgeStyle}">
+                        ${attendance}%
+                    </span>
+                </div>
+            `;
+        }
+
+        function renderRegionalSummaryRow(summary) {
+            const hariKerja = summary.hari_kerja ?? '-';
+            const jumlahPegawai = summary.jumlah_pegawai ?? 0;
+            const attendance = parseFloat(summary.persentase_kehadiran ?? 0).toFixed(1);
+            const barColor = '#bbf7d0';
+
+            const tr = document.createElement('tr');
+            tr.className = 'regional-summary-row';
+            tr.innerHTML = `
+                <td style="text-align: center;"><i class="fas fa-building" style="color:#bbf7d0;"></i></td>
+                <td>
+                    <div class="summary-label">
+                        <i class="fas fa-chart-line"></i>
+                        <span>${escapeHtml(summary.divisi)}</span>
+                        <span style="font-size:11px;font-weight:500;opacity:0.9;">(${jumlahPegawai} karyawan)</span>
+                    </div>
+                </td>
+                <td style="text-align: center;">${hariKerja} Hari</td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div class="progress-bar-bg" style="flex-grow: 1; height: 8px;">
+                            <div style="background-color: ${barColor}; height: 8px; width: ${Math.min(attendance, 100)}%; border-radius: 9999px;"></div>
+                        </div>
+                        <span class="summary-pct-badge" style="display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; min-width: 50px; text-align: center;">
+                            ${attendance}%
+                        </span>
+                    </div>
+                </td>
+            `;
+            return tr;
+        }
+
+        function renderHrisRow(row, index) {
+            const divisi = row.divisi || '-';
+            const hariKerja = row.hari_kerja ?? '-';
+            const jumlahPegawai = row.jumlah_pegawai ?? 0;
+            const attendance = parseFloat(row.persentase_kehadiran ?? 0).toFixed(1);
+
+            const tr = document.createElement('tr');
+            tr.className = 'divisi-row';
+            tr.dataset.divisi = divisi;
+            tr.innerHTML = `
+                <td style="text-align: center; font-weight: 700; color: #94a3b8;">${index + 1}</td>
+                <td style="text-align: left; font-weight: 600; color: #1f2937;">
+                    <i class="fas fa-chevron-right expand-icon"></i>${escapeHtml(divisi)}
+                    <span style="font-size:11px;color:#6b7280;font-weight:500;margin-left:6px;">(${jumlahPegawai} karyawan)</span>
+                </td>
+                <td style="text-align: center; color: #4b5563;">${hariKerja} Hari</td>
+                <td>${renderAttendanceCell(attendance)}</td>
+            `;
+
+            tr.addEventListener('click', () => toggleDivisiDetail(tr, divisi));
+            return tr;
+        }
+
+        function renderDetailRow(divisi, employees, isLoading, errorMsg) {
+            const tr = document.createElement('tr');
+            tr.className = 'detail-row';
+            tr.dataset.detailFor = divisi;
+
+            let inner = '';
+            if (isLoading) {
+                inner = '<div style="padding:16px;text-align:center;color:#6b7280;"><i class="fas fa-spinner fa-spin"></i> Memuat karyawan...</div>';
+            } else if (errorMsg) {
+                inner = `<div style="padding:16px;color:#991b1b;">⚠️ ${escapeHtml(errorMsg)}</div>`;
+            } else if (!employees.length) {
+                inner = '<div style="padding:16px;color:#6b7280;">Tidak ada data karyawan.</div>';
+            } else {
+                const rows = employees.map((emp, i) => {
+                    const pct = parseFloat(emp.persentase_kehadiran ?? 0).toFixed(1);
+                    const belumAbsen = (emp.belum_absen == 1 || (emp.absensi ?? 0) == 0);
+                    const belumBadge = belumAbsen ? '<span class="belum-absen-badge">Belum absen</span>' : '';
+                    return `
+                        <tr style="${belumAbsen ? 'background:#fffbfb;' : ''}">
+                            <td style="text-align:center;">${i + 1}</td>
+                            <td style="text-align:left;font-weight:600;">${escapeHtml(emp.nama)}${belumBadge}</td>
+                            <td style="text-align:center;">${escapeHtml(emp.pegawai_nik)}</td>
+                            <td style="text-align:left;">${escapeHtml(emp.jabatan || '-')}</td>
+                            <td style="text-align:center;">${renderAbsensiCell(emp)}</td>
+                            <td>${renderAttendanceCell(pct)}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+                inner = `
+                    <div style="padding:12px 16px 16px 32px;">
+                        <div style="font-size:12px;font-weight:700;color:#166534;margin-bottom:8px;">
+                            Detail Karyawan &mdash; ${escapeHtml(divisi)}
+                        </div>
+                        <table class="detail-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:40px;">No</th>
+                                    <th style="text-align:left;">Nama Karyawan</th>
+                                    <th style="width:110px;">NIK</th>
+                                    <th style="text-align:left;">Jabatan</th>
+                                    <th style="width:140px;">${absensiColumnHeaderHtml()}</th>
+                                    <th style="width:220px;">Persentase</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            tr.innerHTML = `<td colspan="4">${inner}</td>`;
+            return tr;
+        }
+
+        function removeDetailRow(divisi) {
+            const existing = hrisTbody.querySelector(`tr.detail-row[data-detail-for="${CSS.escape(divisi)}"]`);
+            if (existing) existing.remove();
+        }
+
+        function fetchHrisDetail(periode, divisi) {
+            const params = new URLSearchParams({ periode, divisi });
+            return fetch(`${hrisDetailUrl}?${params}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status !== 'success') {
+                        throw new Error(data.message || 'Gagal memuat detail karyawan.');
+                    }
+                    return data.data;
+                });
+        }
+
+        function toggleDivisiDetail(divisiRow, divisi) {
+            const isActive = divisiRow.classList.contains('active');
+
+            hrisTbody.querySelectorAll('.divisi-row.active').forEach(r => r.classList.remove('active'));
+            hrisTbody.querySelectorAll('.detail-row').forEach(r => r.remove());
+
+            if (isActive && activeDivisi === divisi) {
+                activeDivisi = null;
+                return;
+            }
+
+            divisiRow.classList.add('active');
+            activeDivisi = divisi;
+
+            const detailRow = renderDetailRow(divisi, [], true);
+            divisiRow.insertAdjacentElement('afterend', detailRow);
+
+            fetchHrisDetail(currentPeriode, divisi)
+                .then(employees => {
+                    const updated = renderDetailRow(divisi, employees, false);
+                    detailRow.replaceWith(updated);
+                })
+                .catch(err => {
+                    const updated = renderDetailRow(divisi, [], false, err.message);
+                    detailRow.replaceWith(updated);
+                });
+        }
+
+        function showHrisLoading() {
+            hrisError.style.display = 'none';
+            hrisTbody.innerHTML = '<tr class="loading-row"><td colspan="4"><i class="fas fa-spinner fa-spin"></i> Memuat data HRIS...</td></tr>';
+            dataCountBadge.textContent = 'Memuat...';
+        }
+
+        function setHrisTab(tab) {
+            activeHrisTab = tab;
+            document.querySelectorAll('.hris-tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === tab);
+            });
+            document.getElementById('tab-rekap').classList.toggle('active', tab === 'rekap');
+            document.getElementById('tab-harian').classList.toggle('active', tab === 'harian');
+            document.getElementById('tab-perkaryawan').classList.toggle('active', tab === 'perkaryawan');
+        }
+
+        document.querySelectorAll('.hris-tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => setHrisTab(btn.dataset.tab));
+        });
+
+        function updateHarianDateBounds() {
+            if (!currentPeriode) return;
+            const [y, m] = currentPeriode.split('-');
+            const lastDay = new Date(parseInt(y), parseInt(m), 0).getDate();
+            const min = `${y}-${m}-01`;
+            const max = `${y}-${m}-${String(lastDay).padStart(2, '0')}`;
+            harianTanggalSelect.min = min;
+            harianTanggalSelect.max = max;
+
+            const today = new Date();
+            const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+            if (todayStr >= min && todayStr <= max) {
+                harianTanggalSelect.value = todayStr;
+            } else if (todayStr > max) {
+                harianTanggalSelect.value = max;
+            } else {
+                harianTanggalSelect.value = min;
+            }
+        }
+
+        function loadHarianDivisiOptions(periode) {
+            return fetch(`${hrisDivisiUrl}?periode=${encodeURIComponent(periode)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status !== 'success') throw new Error(data.message);
+                    const prev = harianDivisiSelect.value;
+                    harianDivisiSelect.innerHTML = '<option value="">-- Pilih Divisi --</option>';
+                    data.data.forEach(row => {
+                        const opt = document.createElement('option');
+                        opt.value = row.divisi;
+                        opt.textContent = row.divisi;
+                        harianDivisiSelect.appendChild(opt);
+                    });
+                    if (prev) harianDivisiSelect.value = prev;
+                });
+        }
+
+        function loadHarianData() {
+            const divisi = harianDivisiSelect.value;
+            const tanggal = harianTanggalSelect.value;
+            if (!divisi || !tanggal || !currentPeriode) {
+                harianTbody.innerHTML = '<tr class="loading-row"><td colspan="9">Pilih divisi dan tanggal untuk menampilkan data.</td></tr>';
+                return;
+            }
+
+            harianTbody.innerHTML = '<tr class="loading-row"><td colspan="9"><i class="fas fa-spinner fa-spin"></i> Memuat detail harian...</td></tr>';
+            const params = new URLSearchParams({ periode: currentPeriode, divisi, tanggal });
+            fetch(`${hrisHarianUrl}?${params}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status !== 'success') throw new Error(data.message);
+                    if (!data.data.length) {
+                        harianTbody.innerHTML = '<tr class="loading-row"><td colspan="9">Tidak ada karyawan di divisi ini.</td></tr>';
+                        return;
+                    }
+                    harianTbody.innerHTML = '';
+                    data.data.forEach((row, i) => {
+                        const tr = document.createElement('tr');
+                        const noAbsen = row.checkin_time === '-' && row.checkout_time === '-';
+                        if (noAbsen) tr.style.background = '#fffbfb';
+                        tr.innerHTML = `
+                            <td style="text-align:center;">${i + 1}</td>
+                            <td style="text-align:left;font-weight:600;">${escapeHtml(row.nama)}${noAbsen ? '<span class="belum-absen-badge">Belum absen</span>' : ''}</td>
+                            <td style="text-align:center;">${escapeHtml(row.pegawai_nik)}</td>
+                            <td style="text-align:center;">${escapeHtml(row.hari_kerja)}</td>
+                            <td style="text-align:center;">${escapeHtml(row.checkin_time)}</td>
+                            <td style="text-align:center;">${escapeHtml(row.checkout_time)}</td>
+                            <td style="text-align:left;font-size:11px;">${escapeHtml(row.lokasi)} <i class="fas fa-map-marker-alt map-pin-icon" data-lat="${row.latitude}" data-lng="${row.longitude}" title="Lihat peta"></i></td>
+                            <td style="text-align:center;">${escapeHtml(row.jenis_absen)}</td>
+                            <td style="text-align:center;font-size:11px;">${escapeHtml(row.mood)}</td>
+                        `;
+                        harianTbody.appendChild(tr);
+                    });
+                })
+                .catch(err => {
+                    harianTbody.innerHTML = `<tr class="loading-row"><td colspan="9" style="color:#991b1b;">⚠️ ${escapeHtml(err.message)}</td></tr>`;
+                });
+        }
+
+        harianDivisiSelect.addEventListener('change', loadHarianData);
+        harianTanggalSelect.addEventListener('change', loadHarianData);
+
+        function loadPerKaryawanData() {
+            const regional = perkaryawanRegionalSelect.value;
+            const pegawai_id = perkaryawanPegawaiId.value;
+            const tanggal_awal = perkaryawanTanggalAwal.value;
+            const tanggal_akhir = perkaryawanTanggalAkhir.value;
+
+            if (!regional || !pegawai_id || !tanggal_awal || !tanggal_akhir || !currentPeriode) {
+                perkaryawanTbody.innerHTML = '<tr class="loading-row"><td colspan="9">Pilih regional, karyawan, dan range tanggal untuk menampilkan data.</td></tr>';
+                return;
+            }
+
+            perkaryawanTbody.innerHTML = '<tr class="loading-row"><td colspan="9"><i class="fas fa-spinner fa-spin"></i> Memuat detail per karyawan...</td></tr>';
+            const params = new URLSearchParams({ periode: currentPeriode, pegawai_id, tanggal_awal, tanggal_akhir });
+            fetch(`${hrisPerKaryawanUrl}?${params}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status !== 'success') throw new Error(data.message);
+                    if (!data.data.length) {
+                        perkaryawanTbody.innerHTML = '<tr class="loading-row"><td colspan="9">Tidak ada data absensi untuk periode yang dipilih.</td></tr>';
+                        return;
+                    }
+                    perkaryawanTbody.innerHTML = '';
+                    data.data.forEach((row, i) => {
+                        const tr = document.createElement('tr');
+                        const noAbsen = row.checkin_time === '-' && row.checkout_time === '-';
+                        if (noAbsen) tr.style.background = '#fffbfb';
+                        tr.innerHTML = `
+                            <td style="text-align:center;">${i + 1}</td>
+                            <td style="text-align:left;font-weight:600;">${escapeHtml(row.tanggal)}${noAbsen ? '<span class="belum-absen-badge">Belum absen</span>' : ''}</td>
+                            <td style="text-align:center;">${escapeHtml(row.pegawai_nik)}</td>
+                            <td style="text-align:center;">${escapeHtml(row.hari_kerja)}</td>
+                            <td style="text-align:center;">${escapeHtml(row.checkin_time)}</td>
+                            <td style="text-align:center;">${escapeHtml(row.checkout_time)}</td>
+                            <td style="text-align:left;font-size:11px;">${escapeHtml(row.lokasi)} <i class="fas fa-map-marker-alt map-pin-icon" data-lat="${row.latitude}" data-lng="${row.longitude}" title="Lihat peta"></i></td>
+                            <td style="text-align:center;">${escapeHtml(row.jenis_absen)}</td>
+                            <td style="text-align:center;font-size:11px;">${escapeHtml(row.mood)}</td>
+                        `;
+                        perkaryawanTbody.appendChild(tr);
+                    });
+                })
+                .catch(err => {
+                    perkaryawanTbody.innerHTML = `<tr class="loading-row"><td colspan="9" style="color:#991b1b;">⚠️ ${escapeHtml(err.message)}</td></tr>`;
+                });
+        }
+
+        perkaryawanRegionalSelect.addEventListener('change', () => {
+            perkaryawanNamaSearch.value = '';
+            perkaryawanPegawaiId.value = '';
+            perkaryawanSelectedNama.textContent = '';
+            perkaryawanNamaDropdown.style.display = 'none';
+            perkaryawanTbody.innerHTML = '<tr class="loading-row"><td colspan="9">Pilih regional, karyawan, dan range tanggal untuk menampilkan data.</td></tr>';
+        });
+
+        perkaryawanNamaSearch.addEventListener('input', (e) => {
+            const search = e.target.value.trim();
+            const regional = perkaryawanRegionalSelect.value;
+
+            if (search.length < 3) {
+                perkaryawanNamaDropdown.style.display = 'none';
+                return;
+            }
+
+            if (!regional) {
+                perkaryawanNamaDropdown.innerHTML = '<div style="padding:8px;color:#991b1b;">Pilih regional terlebih dahulu</div>';
+                perkaryawanNamaDropdown.style.display = 'block';
+                return;
+            }
+
+            const params = new URLSearchParams({ search, regional });
+            fetch(`${hrisPegawaiListUrl}?${params}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status !== 'success') throw new Error(data.message);
+                    if (!data.data.length) {
+                        perkaryawanNamaDropdown.innerHTML = '<div style="padding:8px;color:#6b7280;">Tidak ada karyawan ditemukan</div>';
+                        perkaryawanNamaDropdown.style.display = 'block';
+                        return;
+                    }
+                    perkaryawanNamaDropdown.innerHTML = data.data.map(emp => `
+                        <div class="dropdown-item" data-pegawai-id="${escapeHtml(emp.pegawai_id)}" data-nama="${escapeHtml(emp.nama)}" style="padding:10px;border-bottom:1px solid #e5e7eb;cursor:pointer;hover:background:#f3f4f6;">
+                            <div style="font-weight:600;">${escapeHtml(emp.nama)}</div>
+                            <div style="font-size:11px;color:#6b7280;">${escapeHtml(emp.nik)} - ${escapeHtml(emp.divisi)}</div>
+                        </div>
+                    `).join('');
+                    perkaryawanNamaDropdown.style.display = 'block';
+
+                    document.querySelectorAll('.dropdown-item').forEach(item => {
+                        item.addEventListener('click', () => {
+                            const pegawaiId = item.dataset.pegawaiId;
+                            const nama = item.dataset.nama;
+                            perkaryawanPegawaiId.value = pegawaiId;
+                            perkaryawanNamaSearch.value = nama;
+                            perkaryawanSelectedNama.textContent = `✓ ${nama}`;
+                            perkaryawanNamaDropdown.style.display = 'none';
+                        });
+                    });
+                })
+                .catch(err => {
+                    perkaryawanNamaDropdown.innerHTML = `<div style="padding:8px;color:#991b1b;">⚠️ ${escapeHtml(err.message)}</div>`;
+                    perkaryawanNamaDropdown.style.display = 'block';
+                });
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#perkaryawan_nama_search') && !e.target.closest('.dropdown-list')) {
+                perkaryawanNamaDropdown.style.display = 'none';
+            }
+        });
+
+        perkaryawanTanggalAwal.addEventListener('change', loadPerKaryawanData);
+        perkaryawanTanggalAkhir.addEventListener('change', loadPerKaryawanData);
+
+        function loadRegionalList() {
+            fetch(hrisRegionalListUrl)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status !== 'success') throw new Error(data.message);
+                    const regionalValue = data.data;
+                    // Populate regional select for per-karyawan tab
+                    const currentOption = perkaryawanRegionalSelect.querySelector(`option[value="${regionalValue}"]`);
+                    if (!currentOption) {
+                        const option = document.createElement('option');
+                        option.value = regionalValue;
+                        option.textContent = regionalValue;
+                        perkaryawanRegionalSelect.appendChild(option);
+                    }
+                    perkaryawanRegionalSelect.value = regionalValue;
+                })
+                .catch(err => {
+                    console.error('Error loading regional list:', err);
+                });
+        }
+
+        function fetchHrisData(periode) {
+            showHrisLoading();
+
+            const params = new URLSearchParams({ periode });
+            return fetch(`${hrisDataUrl}?${params}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status !== 'success') {
+                        throw new Error(data.message || 'Gagal memuat data HRIS.');
+                    }
+                    return data;
+                });
+        }
+
+        function updateDashboard() {
+            const selectedApp = appSelect.value;
+            const periodVal = periodeSelect.value;
+            const formattedPeriod = formatPeriodLabel(periodVal);
+
+            tableTitle.textContent = `Hasil Evaluasi Aplikasi ${selectedApp} &mdash; Periode ${formattedPeriod}`;
+
+            if (selectedApp === 'HRIS') {
+                currentPeriode = periodVal;
+                activeDivisi = null;
+                regionalBadge.style.display = 'inline-block';
+                hrisTabsWrap.style.display = 'block';
+                nonHrisWrapper.style.display = 'none';
+                placeholderState.style.display = 'none';
+                updateHarianDateBounds();
+                loadHarianDivisiOptions(periodVal).catch(() => {});
+                loadRegionalList();
+
+                fetchHrisData(periodVal)
+                    .then(data => {
+                        hrisError.style.display = 'none';
+                        hrisTbody.innerHTML = '';
+
+                        if (!data.data || data.data.length === 0) {
+                            hrisTbody.innerHTML = '<tr class="loading-row"><td colspan="4">Tidak ada data SuppCo HO untuk periode ini.</td></tr>';
+                            dataCountBadge.textContent = '0 Divisi';
+                            return;
+                        }
+
+                        if (data.summary) {
+                            hrisTbody.appendChild(renderRegionalSummaryRow(data.summary));
+                        }
+
+                        data.data.forEach((row, index) => {
+                            hrisTbody.appendChild(renderHrisRow(row, index));
+                        });
+                        dataCountBadge.textContent = `${data.total} Divisi`;
+                    })
+                    .catch(err => {
+                        hrisTbody.innerHTML = '';
+                        hrisError.style.display = 'block';
+                        hrisError.textContent = '⚠️ ' + err.message;
+                        dataCountBadge.textContent = 'Error';
+                    });
+
+                if (activeHrisTab === 'harian' && harianDivisiSelect.value && harianTanggalSelect.value) {
+                    loadHarianData();
+                }
+                return;
+            }
+
+            hrisError.style.display = 'none';
+            regionalBadge.style.display = 'none';
+            hrisTabsWrap.style.display = 'none';
+            nonHrisWrapper.style.display = 'block';
+            placeholderState.style.display = 'block';
+            activeDivisi = null;
+
+            document.getElementById('placeholder-title').textContent = `Evaluasi Aplikasi ${selectedApp} Belum Tersedia`;
+            document.getElementById('placeholder-desc').textContent = `Data evaluasi dan rekapan performa untuk aplikasi ${selectedApp} untuk periode ${formattedPeriod} sedang dipersiapkan.`;
+
+            dataCountBadge.textContent = '0 Data';
+        }
+
+        appSelect.addEventListener('change', updateDashboard);
+        periodeSelect.addEventListener('change', updateDashboard);
+
+        updateDashboard();
+
+        // Map popup functionality
+        const mapPopupOverlay = document.getElementById('mapPopupOverlay');
+        const mapPopupClose = document.getElementById('mapPopupClose');
+        const mapInfoLokasi = document.getElementById('mapInfoLokasi');
+        const mapInfoLatitude = document.getElementById('mapInfoLatitude');
+        const mapInfoLongitude = document.getElementById('mapInfoLongitude');
+        const mapContainer = document.getElementById('mapContainer');
+        let mapInstance = null;
+        let mapMarker = null;
+
+        function openMapPopup(lat, lng, lokasi) {
+            if (!lat || !lng) {
+                alert('Koordinat tidak tersedia.');
+                return;
+            }
+            mapPopupOverlay.classList.add('show');
+            if (!mapInstance) {
+                mapInstance = L.map('mapContainer').setView([lat, lng], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(mapInstance);
+                mapMarker = L.marker([lat, lng]).addTo(mapInstance);
+            } else {
+                mapInstance.setView([lat, lng], 13);
+                mapMarker.setLatLng([lat, lng]);
+            }
+            mapInfoLokasi.textContent = lokasi || '-';
+            mapInfoLatitude.textContent = lat;
+            mapInfoLongitude.textContent = lng;
+        }
+
+        mapPopupClose.addEventListener('click', () => {
+            mapPopupOverlay.classList.remove('show');
+        });
+
+        // Delegate click for map pin icons
+        document.addEventListener('click', function(e) {
+            const target = e.target;
+            if (target.classList.contains('map-pin-icon')) {
+                const lat = target.dataset.lat;
+                const lng = target.dataset.lng;
+                const lokasi = target.parentElement.textContent.trim();
+                openMapPopup(lat, lng, lokasi);
+            }
+        });
+    });
+</script>
+@endsection
+

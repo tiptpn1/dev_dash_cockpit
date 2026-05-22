@@ -180,6 +180,8 @@ if (isset($user)) {
                 class="fa-solid fa-th-large menu-icon"></i>Portal Aplikasi</a>
 
     @endif
+    <a href="{{url('')}}/evaluasi-aplikasi" class="menu-item" id="evaluasiaplikasi"><i
+            class="fa-solid fa-clipboard-check menu-icon"></i>Evaluasi Aplikasi</a>
     <a href="{{url('')}}/logout" class="menu-item" id="logout"><i
             class="fa-solid fa-right-from-bracket menu-icon"></i>Logout</a>
 </div>

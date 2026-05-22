@@ -117,4 +117,14 @@ Route::middleware('auth:custom')->group(function () {
 
     // AI Response Route
     Route::post('/ai/response', [AiResponseController::class, 'aiResponse']);
+
+    // Evaluasi Aplikasi Route
+    Route::get('/evaluasi-aplikasi', [PageController::class, 'evaluasi_aplikasi'])->name('evaluasi_aplikasi');
+    Route::get('/evaluasi-aplikasi/hris-data', [PageController::class, 'evaluasi_hris_data'])->name('evaluasi_hris_data');
+    Route::get('/evaluasi-aplikasi/hris-detail', [PageController::class, 'evaluasi_hris_detail'])->name('evaluasi_hris_detail');
+    Route::get('/evaluasi-aplikasi/hris-divisi', [PageController::class, 'evaluasi_hris_divisi'])->name('evaluasi_hris_divisi');
+    Route::get('/evaluasi-aplikasi/hris-harian', [PageController::class, 'evaluasi_hris_harian'])->name('evaluasi_hris_harian');
+    Route::get('/evaluasi-aplikasi/hris-perkaryawan', [PageController::class, 'evaluasi_hris_perkaryawan'])->name('evaluasi_hris_perkaryawan');
+    Route::get('/evaluasi-aplikasi/hris-pegawai-list', [PageController::class, 'evaluasi_hris_pegawai_list'])->name('evaluasi_hris_pegawai_list');
+    Route::get('/evaluasi-aplikasi/hris-regional-list', [PageController::class, 'evaluasi_hris_regional_list'])->name('evaluasi_hris_regional_list');
 });
