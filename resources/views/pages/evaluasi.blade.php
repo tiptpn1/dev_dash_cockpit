@@ -384,9 +384,37 @@
 
     .filter-grid-tab2-harian {
         display: grid;
-        grid-template-columns: 1fr 180px 140px;
+        grid-template-columns: 1fr 180px 140px auto;
         gap: 12px;
         align-items: end;
+    }
+
+    .btn-export-excel {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 8px 14px;
+        background-color: #16a34a;
+        color: #fff;
+        border: 1px solid #15803d;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        height: 35px;
+    }
+
+    .btn-export-excel:hover {
+        background-color: #15803d;
+        border-color: #166534;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-export-excel:active {
+        background-color: #166534;
     }
 
     .regional-summary-row td {
@@ -779,6 +807,11 @@
                                 <label class="form-label">Tanggal (Hari)</label>
                                 <input type="date" id="harian_tanggal_select" class="form-input">
                             </div>
+                            <div class="form-group">
+                                <button type="button" id="btnExportExcelHarian" class="btn-export-excel">
+                                    <i class="fas fa-file-excel"></i> Excel
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div class="table-wrapper">
@@ -924,6 +957,8 @@
 @endsection
 
 @section('scripts')
+<!-- ExcelJS for Export Excel feature -->
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const appSelect = document.getElementById('app_select');
@@ -960,6 +995,7 @@
         let activeDivisi = null;
         let currentPeriode = null;
         let activeHrisTab = 'rekap';
+        let _harianData = [];
 
         const monthNames = [
             "Januari", "Februari", "Maret", "April", "Mei", "Juni",
@@ -997,6 +1033,13 @@
             const div = document.createElement('div');
             div.textContent = text ?? '';
             return div.innerHTML;
+        }
+
+        function hasValidCoordinates(row) {
+            if (!row.latitude || !row.longitude) return false;
+            const lat = row.latitude.toString().trim();
+            const lng = row.longitude.toString().trim();
+            return lat !== '' && lat !== '-' && lat !== '0' && lng !== '' && lng !== '-' && lng !== '0';
         }
 
         const absensiPopupOverlay = document.getElementById('absensi-popup-overlay');
@@ -1275,6 +1318,7 @@
             const divisi = harianDivisiSelect.value;
             const tanggal = harianTanggalSelect.value;
             const status = harianStatusSelect.value;
+            _harianData = [];
             if (!divisi || !tanggal || !currentPeriode) {
                 harianTbody.innerHTML = '<tr class="loading-row"><td colspan="10">Pilih divisi dan tanggal untuk menampilkan data.</td></tr>';
                 return;
@@ -1286,7 +1330,8 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.status !== 'success') throw new Error(data.message);
-                    if (!data.data.length) {
+                    _harianData = data.data || [];
+                    if (!_harianData.length) {
                         harianTbody.innerHTML = '<tr class="loading-row"><td colspan="10">Tidak ada karyawan di divisi ini.</td></tr>';
                         return;
                     }
@@ -1300,6 +1345,10 @@
                             ? `<span style="display: inline-block; background-color: #fef2f2; color: #991b1b; border: 1px solid #fecaca; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; width: 100%; text-align: center;">BELUM ABSEN</span>`
                             : `<span style="display: inline-block; background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; width: 100%; text-align: center;">SUDAH ABSEN</span>`;
 
+                        const mapPinHtml = hasValidCoordinates(row)
+                            ? ` <i class="fas fa-map-marker-alt map-pin-icon" data-lat="${row.latitude}" data-lng="${row.longitude}" title="Lihat peta"></i>`
+                            : '';
+
                         tr.innerHTML = `
                             <td style="text-align:center;">${i + 1}</td>
                             <td style="text-align:left;font-weight:600;">${escapeHtml(row.nama)}</td>
@@ -1308,7 +1357,7 @@
                             <td style="text-align:center;">${escapeHtml(row.hari_kerja)}</td>
                             <td style="text-align:center;">${escapeHtml(row.checkin_time)}</td>
                             <td style="text-align:center;">${escapeHtml(row.checkout_time)}</td>
-                            <td style="text-align:left;font-size:11px;">${escapeHtml(row.lokasi)} <i class="fas fa-map-marker-alt map-pin-icon" data-lat="${row.latitude}" data-lng="${row.longitude}" title="Lihat peta"></i></td>
+                            <td style="text-align:left;font-size:11px;">${escapeHtml(row.lokasi)}${mapPinHtml}</td>
                             <td style="text-align:center;">${escapeHtml(row.jenis_absen)}</td>
                             <td style="text-align:center;font-size:11px;">${escapeHtml(row.mood)}</td>
                         `;
@@ -1323,6 +1372,146 @@
         harianDivisiSelect.addEventListener('change', loadHarianData);
         harianStatusSelect.addEventListener('change', loadHarianData);
         harianTanggalSelect.addEventListener('change', loadHarianData);
+
+        const btnExportExcelHarian = document.getElementById('btnExportExcelHarian');
+        if (btnExportExcelHarian) {
+            btnExportExcelHarian.addEventListener('click', exportHarianExcel);
+        }
+
+        async function exportHarianExcel() {
+            if (!_harianData || !_harianData.length) {
+                alert('Tidak ada data detail harian untuk diekspor.');
+                return;
+            }
+
+            const divisi = harianDivisiSelect.value || '-';
+            const tanggal = harianTanggalSelect.value || '-';
+            const statusVal = harianStatusSelect.value || 'SEMUA';
+            const statusLabel = statusVal === 'sudah' ? 'SUDAH ABSEN' : (statusVal === 'belum' ? 'BELUM ABSEN' : 'SEMUA');
+
+            // Format date to local ID format (DD-MM-YYYY)
+            let formattedDate = tanggal;
+            if (tanggal && tanggal !== '-') {
+                const d = new Date(tanggal);
+                if (!isNaN(d.getTime())) {
+                    formattedDate = `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
+                }
+            }
+
+            const workbook = new ExcelJS.Workbook();
+            const ws = workbook.addWorksheet('Detail Harian');
+
+            const headers = [
+                'No', 'Nama Karyawan', 'NIK', 'Status Absen', 'Hari Kerja', 
+                'Check In', 'Check Out', 'Lokasi', 'Jenis Absen', 'Mood'
+            ];
+
+            ws.columns = [
+                { key: 'no', width: 6 },
+                { key: 'nama', width: 28 },
+                { key: 'nik', width: 14 },
+                { key: 'status_absen', width: 16 },
+                { key: 'hari_kerja', width: 12 },
+                { key: 'check_in', width: 12 },
+                { key: 'check_out', width: 12 },
+                { key: 'lokasi', width: 45 },
+                { key: 'jenis_absen', width: 15 },
+                { key: 'mood', width: 12 }
+            ];
+
+            const borderStyle = {
+                top: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+                left: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+                bottom: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+                right: { style: 'thin', color: { argb: 'FFE5E7EB' } }
+            };
+            const fillSolid = argb => ({ type: 'pattern', pattern: 'solid', fgColor: { argb } });
+
+            // Title Row
+            ws.mergeCells(1, 1, 1, 10);
+            const titleCell = ws.getCell(1, 1);
+            titleCell.value = 'DETAIL ABSENSI HARIAN KARYAWAN';
+            titleCell.font = { bold: true, size: 14, color: { argb: 'FF166534' } };
+            titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+            ws.getRow(1).height = 28;
+
+            // Subtitle / Filters Row
+            ws.mergeCells(2, 1, 2, 10);
+            const subTitleCell = ws.getCell(2, 1);
+            subTitleCell.value = `Divisi: ${divisi}   |   Tanggal: ${formattedDate}   |   Status: ${statusLabel}`;
+            subTitleCell.font = { italic: true, size: 10, color: { argb: 'FF4B5563' } };
+            subTitleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+            ws.getRow(2).height = 20;
+
+            // Empty row
+            ws.addRow([]);
+
+            // Header Row (Row 4)
+            const hRow = ws.addRow(headers);
+            hRow.height = 22;
+            hRow.eachCell(cell => {
+                cell.fill = fillSolid('FF166534');
+                cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 10 };
+                cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FF14532D' } },
+                    left: { style: 'thin', color: { argb: 'FF14532D' } },
+                    bottom: { style: 'medium', color: { argb: 'FF14532D' } },
+                    right: { style: 'thin', color: { argb: 'FF14532D' } }
+                };
+            });
+
+            // Data Rows
+            _harianData.forEach((row, i) => {
+                const noAbsen = row.checkin_time === '-' && row.checkout_time === '-';
+                const statusText = noAbsen ? 'BELUM ABSEN' : 'SUDAH ABSEN';
+
+                const rowData = [
+                    i + 1,
+                    row.nama,
+                    row.pegawai_nik,
+                    statusText,
+                    row.hari_kerja,
+                    row.checkin_time,
+                    row.checkout_time,
+                    row.lokasi,
+                    row.jenis_absen,
+                    row.mood
+                ];
+
+                const exRow = ws.addRow(rowData);
+                exRow.height = 20;
+
+                const bg = noAbsen ? 'FFFFF5F5' : (i % 2 === 0 ? 'FFFFFFFF' : 'FFF9FAFB');
+
+                exRow.eachCell({ includeEmpty: true }, (cell, colNum) => {
+                    cell.fill = fillSolid(bg);
+                    cell.font = { size: 9.5 };
+                    cell.border = borderStyle;
+                    
+                    // Alignments
+                    if (colNum === 1 || colNum === 3 || colNum === 5 || colNum === 6 || colNum === 7 || colNum === 9 || colNum === 10) {
+                        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                    } else if (colNum === 4) {
+                        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                        cell.font = { bold: true, size: 9.5, color: { argb: noAbsen ? 'FF991B1B' : 'FF166534' } };
+                    } else {
+                        cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: colNum === 8 };
+                    }
+                });
+            });
+
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], {
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Detail_Harian_${divisi.replace(/[^a-zA-Z0-9]/g, '_')}_${tanggal}.xlsx`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
 
         function loadPerKaryawanData() {
             const regional = perkaryawanRegionalSelect.value;
@@ -1350,6 +1539,10 @@
                         const tr = document.createElement('tr');
                         const noAbsen = row.checkin_time === '-' && row.checkout_time === '-';
                         if (noAbsen) tr.style.background = '#fffbfb';
+                        const mapPinHtml = hasValidCoordinates(row)
+                            ? ` <i class="fas fa-map-marker-alt map-pin-icon" data-lat="${row.latitude}" data-lng="${row.longitude}" title="Lihat peta"></i>`
+                            : '';
+
                         tr.innerHTML = `
                             <td style="text-align:center;">${i + 1}</td>
                             <td style="text-align:left;font-weight:600;">${escapeHtml(row.tanggal)}${noAbsen ? '<span class="belum-absen-badge">Belum absen</span>' : ''}</td>
@@ -1357,7 +1550,7 @@
                             <td style="text-align:center;">${escapeHtml(row.hari_kerja)}</td>
                             <td style="text-align:center;">${escapeHtml(row.checkin_time)}</td>
                             <td style="text-align:center;">${escapeHtml(row.checkout_time)}</td>
-                            <td style="text-align:left;font-size:11px;">${escapeHtml(row.lokasi)} <i class="fas fa-map-marker-alt map-pin-icon" data-lat="${row.latitude}" data-lng="${row.longitude}" title="Lihat peta"></i></td>
+                            <td style="text-align:left;font-size:11px;">${escapeHtml(row.lokasi)}${mapPinHtml}</td>
                             <td style="text-align:center;">${escapeHtml(row.jenis_absen)}</td>
                             <td style="text-align:center;font-size:11px;">${escapeHtml(row.mood)}</td>
                         `;
@@ -1555,16 +1748,34 @@
                 alert('Koordinat tidak tersedia.');
                 return;
             }
+
+            let latitude = parseFloat(lat);
+            let longitude = parseFloat(lng);
+
+            if (isNaN(latitude) || isNaN(longitude)) {
+                alert('Koordinat tidak valid.');
+                return;
+            }
+
+            // Detect and correct swapped coordinates
+            // In Indonesia, longitude is positive and large (~95 to 141), latitude is small (~-11 to 6).
+            // If latitude is outside [-90, 90] (e.g. 106.xxx or 110.xxx) and longitude is inside [-90, 90] (e.g. -6.xxx), swap them.
+            if (latitude > 90 || latitude < -90) {
+                const temp = latitude;
+                latitude = longitude;
+                longitude = temp;
+            }
+
             mapPopupOverlay.classList.add('show');
             if (!mapInstance) {
-                mapInstance = L.map('mapContainer').setView([lat, lng], 13);
+                mapInstance = L.map('mapContainer').setView([latitude, longitude], 13);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '&copy; OpenStreetMap contributors'
                 }).addTo(mapInstance);
-                mapMarker = L.marker([lat, lng]).addTo(mapInstance);
+                mapMarker = L.marker([latitude, longitude]).addTo(mapInstance);
             } else {
-                mapInstance.setView([lat, lng], 13);
-                mapMarker.setLatLng([lat, lng]);
+                mapInstance.setView([latitude, longitude], 13);
+                mapMarker.setLatLng([latitude, longitude]);
             }
             setTimeout(() => {
                 if (mapInstance) {
@@ -1572,8 +1783,8 @@
                 }
             }, 250);
             mapInfoLokasi.textContent = lokasi || '-';
-            mapInfoLatitude.textContent = lat;
-            mapInfoLongitude.textContent = lng;
+            mapInfoLatitude.textContent = latitude;
+            mapInfoLongitude.textContent = longitude;
         }
 
         mapPopupClose.addEventListener('click', () => {
@@ -1583,10 +1794,12 @@
         // Delegate click for map pin icons
         document.addEventListener('click', function(e) {
             const target = e.target;
-            if (target.classList.contains('map-pin-icon')) {
-                const lat = target.dataset.lat;
-                const lng = target.dataset.lng;
-                const lokasi = target.parentElement.textContent.trim();
+            const mapPin = target.closest('.map-pin-icon');
+            if (mapPin) {
+                const lat = mapPin.dataset.lat;
+                const lng = mapPin.dataset.lng;
+                const td = mapPin.closest('td');
+                const lokasi = td ? td.textContent.trim() : '';
                 openMapPopup(lat, lng, lokasi);
             }
         });
