@@ -1758,6 +1758,20 @@ class PageController extends Controller
         try {
             $rows = $this->fetchAbsenHarian($tahun, $bulan, $divisi, $tanggal);
 
+            // Filter by status if requested
+            $status = trim((string) $request->get('status', ''));
+            if ($status !== '') {
+                $rows = array_values(array_filter($rows, function($row) use ($status) {
+                    $isBelumAbsen = ($row->checkin_time === '-' && $row->checkout_time === '-');
+                    if (strtolower($status) === 'sudah') {
+                        return !$isBelumAbsen;
+                    } elseif (strtolower($status) === 'belum') {
+                        return $isBelumAbsen;
+                    }
+                    return true;
+                }));
+            }
+
             return response()->json([
                 'status' => 'success',
                 'periode' => $periode,
@@ -2099,6 +2113,8 @@ class PageController extends Controller
                 COALESCE(NULLIF(TRIM(ai.hari_kerja), ''), CAST(b.hari_kerja AS CHAR), '-') AS hari_kerja,
                 COALESCE(NULLIF(TRIM(ai.checkin_time), ''), '-') AS checkin_time,
                 COALESCE(NULLIF(TRIM(ai.checkout_time), ''), '-') AS checkout_time,
+                COALESCE(ai.checkin_lat, '') AS latitude,
+                COALESCE(ai.checkin_long, '') AS longitude,
                 COALESCE(NULLIF(TRIM(ai.alamat), ''), NULLIF(TRIM(ai.psa), ''), '-') AS lokasi,
                 COALESCE(NULLIF(TRIM(ai.jenis_absen), ''), '-') AS jenis_absen,
                 CONCAT(
@@ -2141,6 +2157,8 @@ class PageController extends Controller
                     CASE WHEN COUNT(a.jam) > 1 THEN DATE_FORMAT(MAX(a.jam), '%H:%i:%s') ELSE '-' END,
                     '-'
                 ) AS checkout_time,
+                COALESCE(MAX(a.latitude), '') AS latitude,
+                COALESCE(MAX(a.longitude), '') AS longitude,
                 COALESCE(MAX(NULLIF(TRIM(a.alamat), '')), '-') AS lokasi,
                 COALESCE(NULLIF(GROUP_CONCAT(DISTINCT a.jenis_absen ORDER BY a.jenis_absen SEPARATOR ', '), ''), '-') AS jenis_absen,
                 '-' AS mood
@@ -2292,6 +2310,8 @@ class PageController extends Controller
                     CASE WHEN COUNT(a.jam) > 1 THEN DATE_FORMAT(MAX(a.jam), '%H:%i:%s') ELSE '-' END,
                     '-'
                 ) AS checkout_time,
+                COALESCE(MAX(a.latitude), '') AS latitude,
+                COALESCE(MAX(a.longitude), '') AS longitude,
                 COALESCE(MAX(NULLIF(TRIM(a.alamat), '')), '-') AS lokasi,
                 COALESCE(NULLIF(GROUP_CONCAT(DISTINCT a.jenis_absen ORDER BY a.jenis_absen SEPARATOR ', '), ''), '-') AS jenis_absen,
                 '-' AS mood
@@ -2325,6 +2345,8 @@ class PageController extends Controller
                 COALESCE(NULLIF(TRIM(ai.hari_kerja), ''), CAST(b.hari_kerja AS CHAR), '-') AS hari_kerja,
                 COALESCE(NULLIF(TRIM(ai.checkin_time), ''), '-') AS checkin_time,
                 COALESCE(NULLIF(TRIM(ai.checkout_time), ''), '-') AS checkout_time,
+                COALESCE(ai.checkin_lat, '') AS latitude,
+                COALESCE(ai.checkin_long, '') AS longitude,
                 COALESCE(NULLIF(TRIM(ai.alamat), ''), NULLIF(TRIM(ai.psa), ''), '-') AS lokasi,
                 COALESCE(NULLIF(TRIM(ai.jenis_absen), ''), '-') AS jenis_absen,
                 CONCAT(

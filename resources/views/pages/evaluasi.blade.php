@@ -377,7 +377,14 @@
 
     .filter-grid-tab2 {
         display: grid;
-        grid-template-columns: 140px 1fr 140px 140px;
+        grid-template-columns: 160px 1fr 150px 150px;
+        gap: 12px;
+        align-items: start;
+    }
+
+    .filter-grid-tab2-harian {
+        display: grid;
+        grid-template-columns: 1fr 180px 140px;
         gap: 12px;
         align-items: end;
     }
@@ -753,11 +760,19 @@
                 <!-- Tab 2: Detail Harian -->
                 <div id="tab-harian" class="hris-tab-panel">
                     <div class="filter-card-tab2">
-                        <div class="filter-grid-tab2">
+                        <div class="filter-grid-tab2-harian">
                             <div class="form-group">
                                 <label class="form-label">Divisi</label>
                                 <select id="harian_divisi_select" class="form-select">
                                     <option value="">-- Pilih Divisi --</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Status</label>
+                                <select id="harian_status_select" class="form-select">
+                                    <option value="">SEMUA</option>
+                                    <option value="sudah">SUDAH ABSEN</option>
+                                    <option value="belum">BELUM ABSEN</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -773,6 +788,7 @@
                                     <th style="width:40px;">No</th>
                                     <th style="text-align:left;">Nama Karyawan</th>
                                     <th style="width:100px;">NIK</th>
+                                    <th style="width:120px;">Status Absen</th>
                                     <th style="width:90px;">Hari Kerja</th>
                                     <th style="width:100px;">Check In</th>
                                     <th style="width:100px;">Check Out</th>
@@ -782,7 +798,7 @@
                                 </tr>
                             </thead>
                             <tbody id="harian-tbody">
-                                <tr class="loading-row"><td colspan="9">Pilih divisi dan tanggal untuk menampilkan data.</td></tr>
+                                <tr class="loading-row"><td colspan="10">Pilih divisi dan tanggal untuk menampilkan data.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -923,6 +939,7 @@
         const hrisTabsWrap = document.getElementById('hris-tabs-wrap');
         const nonHrisWrapper = document.getElementById('non-hris-wrapper');
         const harianDivisiSelect = document.getElementById('harian_divisi_select');
+        const harianStatusSelect = document.getElementById('harian_status_select');
         const harianTanggalSelect = document.getElementById('harian_tanggal_select');
         const harianTbody = document.getElementById('harian-tbody');
         const perkaryawanRegionalSelect = document.getElementById('perkaryawan_regional_select');
@@ -1257,19 +1274,20 @@
         function loadHarianData() {
             const divisi = harianDivisiSelect.value;
             const tanggal = harianTanggalSelect.value;
+            const status = harianStatusSelect.value;
             if (!divisi || !tanggal || !currentPeriode) {
-                harianTbody.innerHTML = '<tr class="loading-row"><td colspan="9">Pilih divisi dan tanggal untuk menampilkan data.</td></tr>';
+                harianTbody.innerHTML = '<tr class="loading-row"><td colspan="10">Pilih divisi dan tanggal untuk menampilkan data.</td></tr>';
                 return;
             }
 
-            harianTbody.innerHTML = '<tr class="loading-row"><td colspan="9"><i class="fas fa-spinner fa-spin"></i> Memuat detail harian...</td></tr>';
-            const params = new URLSearchParams({ periode: currentPeriode, divisi, tanggal });
+            harianTbody.innerHTML = '<tr class="loading-row"><td colspan="10"><i class="fas fa-spinner fa-spin"></i> Memuat detail harian...</td></tr>';
+            const params = new URLSearchParams({ periode: currentPeriode, divisi, tanggal, status });
             fetch(`${hrisHarianUrl}?${params}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.status !== 'success') throw new Error(data.message);
                     if (!data.data.length) {
-                        harianTbody.innerHTML = '<tr class="loading-row"><td colspan="9">Tidak ada karyawan di divisi ini.</td></tr>';
+                        harianTbody.innerHTML = '<tr class="loading-row"><td colspan="10">Tidak ada karyawan di divisi ini.</td></tr>';
                         return;
                     }
                     harianTbody.innerHTML = '';
@@ -1277,10 +1295,16 @@
                         const tr = document.createElement('tr');
                         const noAbsen = row.checkin_time === '-' && row.checkout_time === '-';
                         if (noAbsen) tr.style.background = '#fffbfb';
+
+                        const statusBadge = noAbsen 
+                            ? `<span style="display: inline-block; background-color: #fef2f2; color: #991b1b; border: 1px solid #fecaca; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; width: 100%; text-align: center;">BELUM ABSEN</span>`
+                            : `<span style="display: inline-block; background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; width: 100%; text-align: center;">SUDAH ABSEN</span>`;
+
                         tr.innerHTML = `
                             <td style="text-align:center;">${i + 1}</td>
-                            <td style="text-align:left;font-weight:600;">${escapeHtml(row.nama)}${noAbsen ? '<span class="belum-absen-badge">Belum absen</span>' : ''}</td>
+                            <td style="text-align:left;font-weight:600;">${escapeHtml(row.nama)}</td>
                             <td style="text-align:center;">${escapeHtml(row.pegawai_nik)}</td>
+                            <td style="text-align:center;">${statusBadge}</td>
                             <td style="text-align:center;">${escapeHtml(row.hari_kerja)}</td>
                             <td style="text-align:center;">${escapeHtml(row.checkin_time)}</td>
                             <td style="text-align:center;">${escapeHtml(row.checkout_time)}</td>
@@ -1292,11 +1316,12 @@
                     });
                 })
                 .catch(err => {
-                    harianTbody.innerHTML = `<tr class="loading-row"><td colspan="9" style="color:#991b1b;">⚠️ ${escapeHtml(err.message)}</td></tr>`;
+                    harianTbody.innerHTML = `<tr class="loading-row"><td colspan="10" style="color:#991b1b;">⚠️ ${escapeHtml(err.message)}</td></tr>`;
                 });
         }
 
         harianDivisiSelect.addEventListener('change', loadHarianData);
+        harianStatusSelect.addEventListener('change', loadHarianData);
         harianTanggalSelect.addEventListener('change', loadHarianData);
 
         function loadPerKaryawanData() {
@@ -1541,6 +1566,11 @@
                 mapInstance.setView([lat, lng], 13);
                 mapMarker.setLatLng([lat, lng]);
             }
+            setTimeout(() => {
+                if (mapInstance) {
+                    mapInstance.invalidateSize();
+                }
+            }, 250);
             mapInfoLokasi.textContent = lokasi || '-';
             mapInfoLatitude.textContent = lat;
             mapInfoLongitude.textContent = lng;
