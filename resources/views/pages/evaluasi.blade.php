@@ -538,6 +538,31 @@
         line-height: 1;
     }
 
+    /* ===== TOKEN MODE READONLY STYLES ===== */
+    .token-mode-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 3px 10px;
+        background: #fef9c3;
+        color: #92400e;
+        border: 1px solid #fde68a;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 700;
+        margin-left: 8px;
+        vertical-align: middle;
+    }
+
+    select.select-locked {
+        background-color: #f3f4f6;
+        color: #374151;
+        cursor: not-allowed;
+        pointer-events: none;
+        border-color: #d1d5db;
+        opacity: 0.85;
+    }
+
     /* ===== DROPDOWN STYLES ===== */
     .dropdown-list {
         background-color: #fff;
@@ -727,14 +752,27 @@
             </div>
             <div class="filter-grid">
                 <div class="form-group">
-                    <label class="form-label">Nama Aplikasi</label>
-                    <select id="app_select" class="form-select">
-                        <option value="Digital Farming">Digital Farming</option>
-                        <option value="HRIS" selected>HRIS</option>
-                        <option value="MAIA">MAIA</option>
-                        <option value="MONIKA">MONIKA</option>
-                        <option value="SAPA-Amanah">SAPA-Amanah</option>
-                    </select>
+                    <label class="form-label">
+                        Nama Aplikasi
+                        @if($tokenMode)
+                            <span class="token-mode-badge"><i class="fas fa-lock"></i> Readonly</span>
+                        @endif
+                    </label>
+                    @if($tokenMode)
+                        {{-- Token mode: hanya HRIS, tidak bisa diubah --}}
+                        <select id="app_select" class="form-select select-locked" disabled>
+                            <option value="HRIS" selected>HRIS</option>
+                        </select>
+                        <input type="hidden" id="app_select_hidden" value="HRIS">
+                    @else
+                        <select id="app_select" class="form-select">
+                            <option value="Digital Farming">Digital Farming</option>
+                            <option value="HRIS" selected>HRIS</option>
+                            <option value="MAIA">MAIA</option>
+                            <option value="MONIKA">MONIKA</option>
+                            <option value="SAPA-Amanah">SAPA-Amanah</option>
+                        </select>
+                    @endif
                 </div>
                 <div class="form-group">
                     <label class="form-label">Periode</label>
@@ -1726,6 +1764,30 @@
             document.getElementById('placeholder-desc').textContent = `Data evaluasi dan rekapan performa untuk aplikasi ${selectedApp} untuk periode ${formattedPeriod} sedang dipersiapkan.`;
 
             dataCountBadge.textContent = '0 Data';
+        }
+
+        // ===== TOKEN MODE GUARD =====
+        const isTokenMode = @json($tokenMode);
+        if (isTokenMode) {
+            // Sembunyikan sidebar agar tampilan bersih saat embed/token access
+            const sidebar = document.getElementById('sidebar');
+            const menuIcon = document.getElementById('menuIcon');
+            if (sidebar) sidebar.style.display = 'none';
+            if (menuIcon) menuIcon.style.display = 'none';
+
+            // Paksa mainContent full width
+            const mainContent = document.querySelector('.evaluasi-container.main-content');
+            if (mainContent) {
+                mainContent.style.marginLeft = '0';
+                mainContent.style.width = '100%';
+            }
+
+            // Blok event change app_select (sudah disabled tapi double-safety)
+            appSelect.addEventListener('change', function(e) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                this.value = 'HRIS';
+            }, true);
         }
 
         appSelect.addEventListener('change', updateDashboard);

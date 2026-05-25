@@ -1612,7 +1612,9 @@ class PageController extends Controller
 
     public function evaluasi_aplikasi()
     {
-        return view('pages/evaluasi');
+        // Deteksi akses via token URL — locked ke HRIS readonly
+        $tokenMode = session('url_token_valid') === true;
+        return view('pages/evaluasi', compact('tokenMode'));
     }
 
     private const HRIS_REGIONAL_FILTER = 'SuppCo HO';
