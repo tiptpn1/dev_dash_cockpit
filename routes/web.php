@@ -117,8 +117,12 @@ Route::middleware('auth:custom')->group(function () {
 
     // AI Response Route
     Route::post('/ai/response', [AiResponseController::class, 'aiResponse']);
+});
 
-    // Evaluasi Aplikasi Route
+// Evaluasi Aplikasi Routes - menggunakan static token OR session login biasa
+// Akses via token  : /evaluasi-aplikasi?token=ptpn1-hris-eval-2024-xK9mPqRs
+// Akses via session: login biasa kemudian kunjungi /evaluasi-aplikasi
+Route::middleware(['web', 'check.token.or.session'])->group(function () {
     Route::get('/evaluasi-aplikasi', [PageController::class, 'evaluasi_aplikasi'])->name('evaluasi_aplikasi');
     Route::get('/evaluasi-aplikasi/hris-data', [PageController::class, 'evaluasi_hris_data'])->name('evaluasi_hris_data');
     Route::get('/evaluasi-aplikasi/hris-detail', [PageController::class, 'evaluasi_hris_detail'])->name('evaluasi_hris_detail');

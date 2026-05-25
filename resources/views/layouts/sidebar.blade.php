@@ -140,7 +140,7 @@ if (isset($user)) {
                     <div class="submenu" id="gisSubmenu">
                         <a href="https://gis.ptpn1.co.id/tree.php?id=0&token=eofkp4456432oewkf465oew#" target="_blank"
                             rel="noopener noreferrer" class="menu-item" id="gis-areal"><i
-                                class="fa-solid fa-map menu-icon"></i>AREAL</a>
+                                class="fa-solid fa-map menu-icon"></i></a>
                         <a href="http://gis.ptpn1.co.id/mbtiles/tree5.php?id=0&token=eofkp4456432oewkf465oew" target='_blank'
                             class="menu-item" id="gis-ndvi"><i class="fa-solid fa-satellite-dish menu-icon"></i>NDVI</a>
                         <a href="http://aset-dives-dev.ptpn1.co.id/weather?token=234kjjlksflk8y98ksafdklj23" target='_blank'
