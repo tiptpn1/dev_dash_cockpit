@@ -184,7 +184,7 @@ if (isset($user)) {
 
     @endif
 
-    @if($username == 'hris')
+    @if($username == 'hris' || $username == 'superadmin')
         @if($user && $user->evaluasi_aplikasi)
             <a href="{{url('')}}/evaluasi-aplikasi" class="menu-item" id="evaluasiaplikasi"><i
                     class="fa-solid fa-clipboard-check menu-icon"></i>Evaluasi Aplikasi</a>
