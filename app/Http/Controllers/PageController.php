@@ -1734,17 +1734,17 @@ class PageController extends Controller
             ], 400);
         }
 
-        if ($divisi === '' || $tanggal === '') {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Parameter divisi dan tanggal wajib diisi.',
-            ], 400);
-        }
-
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal)) {
+        if ($tanggal !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Format tanggal tidak valid (gunakan YYYY-MM-DD).',
+            ], 400);
+        }
+
+        if ($tanggal === '') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Parameter tanggal wajib diisi.',
             ], 400);
         }
 
@@ -2106,10 +2106,13 @@ class PageController extends Controller
     {
         $regional = self::HRIS_REGIONAL_FILTER;
 
+        $divisiCondition = $divisi !== '' ? 'AND TRIM(p.divisi) = ?' : '';
+
         $sql = "
             SELECT
                 p.nama,
                 COALESCE(NULLIF(TRIM(p.nik), ''), '-') AS pegawai_nik,
+                TRIM(p.divisi) AS divisi,
                 p.jabatan,
                 ? AS tanggal,
                 COALESCE(NULLIF(TRIM(ai.hari_kerja), ''), CAST(b.hari_kerja AS CHAR), '-') AS hari_kerja,
@@ -2134,23 +2137,28 @@ class PageController extends Controller
                 AND p.area_kode = b.area_kode
                 AND b.periode = ?
             WHERE TRIM(p.regional) = ?
-              AND TRIM(p.divisi) = ?
-            ORDER BY p.nama ASC
+              AND NULLIF(TRIM(p.divisi), '') IS NOT NULL
+              {$divisiCondition}
+            ORDER BY p.divisi ASC, p.nama ASC
         ";
 
-        return DB::connection('hris')->select($sql, [
-            $tanggal, $tanggal, $periodeHris, $periodeHris, $regional, $divisi,
-        ]);
+        $params = [$tanggal, $tanggal, $periodeHris, $periodeHris, $regional];
+        if ($divisi !== '') $params[] = $divisi;
+
+        return DB::connection('hris')->select($sql, $params);
     }
 
     private function fetchHarianFromAbsensi(string $periodeHris, string $divisi, string $tanggal): array
     {
         $regional = self::HRIS_REGIONAL_FILTER;
 
+        $divisiCondition = $divisi !== '' ? 'AND TRIM(p.divisi) = ?' : '';
+
         $sql = "
             SELECT
                 p.nama,
                 COALESCE(NULLIF(TRIM(p.nik), ''), '-') AS pegawai_nik,
+                TRIM(p.divisi) AS divisi,
                 p.jabatan,
                 ? AS tanggal,
                 CAST(COALESCE(b.hari_kerja, 0) AS CHAR) AS hari_kerja,
@@ -2173,14 +2181,16 @@ class PageController extends Controller
                 AND p.area_kode = b.area_kode
                 AND b.periode = ?
             WHERE TRIM(p.regional) = ?
-              AND TRIM(p.divisi) = ?
-            GROUP BY p.pegawai_id, p.nama, p.nik, p.jabatan, b.hari_kerja
-            ORDER BY p.nama ASC
+              AND NULLIF(TRIM(p.divisi), '') IS NOT NULL
+              {$divisiCondition}
+            GROUP BY p.pegawai_id, p.nama, p.nik, p.jabatan, b.hari_kerja, p.divisi
+            ORDER BY p.divisi ASC, p.nama ASC
         ";
 
-        return DB::connection('hris')->select($sql, [
-            $tanggal, $tanggal, $periodeHris, $regional, $divisi,
-        ]);
+        $params = [$tanggal, $tanggal, $periodeHris, $regional];
+        if ($divisi !== '') $params[] = $divisi;
+
+        return DB::connection('hris')->select($sql, $params);
     }
 
     public function evaluasi_hris_regional_list()

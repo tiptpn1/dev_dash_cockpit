@@ -830,7 +830,7 @@
                             <div class="form-group">
                                 <label class="form-label">Divisi</label>
                                 <select id="harian_divisi_select" class="form-select">
-                                    <option value="">-- Pilih Divisi --</option>
+                                    <option value="">Semua Divisi</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -859,6 +859,7 @@
                                     <th style="width:40px;">No</th>
                                     <th style="text-align:left;">Nama Karyawan</th>
                                     <th style="width:100px;">NIK</th>
+                                    <th style="text-align:left;min-width:160px;">Divisi</th>
                                     <th style="width:120px;">Status Absen</th>
                                     <th style="width:90px;">Hari Kerja</th>
                                     <th style="width:100px;">Check In</th>
@@ -869,7 +870,7 @@
                                 </tr>
                             </thead>
                             <tbody id="harian-tbody">
-                                <tr class="loading-row"><td colspan="10">Pilih divisi dan tanggal untuk menampilkan data.</td></tr>
+                                <tr class="loading-row"><td colspan="11">Pilih tanggal untuk menampilkan data.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1308,6 +1309,11 @@
             document.getElementById('tab-rekap').classList.toggle('active', tab === 'rekap');
             document.getElementById('tab-harian').classList.toggle('active', tab === 'harian');
             document.getElementById('tab-perkaryawan').classList.toggle('active', tab === 'perkaryawan');
+
+            // Auto-load data harian saat tab dibuka jika tanggal sudah terisi
+            if (tab === 'harian' && harianTanggalSelect.value) {
+                loadHarianData();
+            }
         }
 
         document.querySelectorAll('.hris-tab-btn').forEach(btn => {
@@ -1341,7 +1347,7 @@
                 .then(data => {
                     if (data.status !== 'success') throw new Error(data.message);
                     const prev = harianDivisiSelect.value;
-                    harianDivisiSelect.innerHTML = '<option value="">-- Pilih Divisi --</option>';
+                    harianDivisiSelect.innerHTML = '<option value="">Semua Divisi</option>';
                     data.data.forEach(row => {
                         const opt = document.createElement('option');
                         opt.value = row.divisi;
@@ -1357,12 +1363,12 @@
             const tanggal = harianTanggalSelect.value;
             const status = harianStatusSelect.value;
             _harianData = [];
-            if (!divisi || !tanggal || !currentPeriode) {
-                harianTbody.innerHTML = '<tr class="loading-row"><td colspan="10">Pilih divisi dan tanggal untuk menampilkan data.</td></tr>';
+            if (!tanggal || !currentPeriode) {
+                harianTbody.innerHTML = '<tr class="loading-row"><td colspan="11">Pilih tanggal untuk menampilkan data.</td></tr>';
                 return;
             }
 
-            harianTbody.innerHTML = '<tr class="loading-row"><td colspan="10"><i class="fas fa-spinner fa-spin"></i> Memuat detail harian...</td></tr>';
+            harianTbody.innerHTML = '<tr class="loading-row"><td colspan="11"><i class="fas fa-spinner fa-spin"></i> Memuat detail harian...</td></tr>';
             const params = new URLSearchParams({ periode: currentPeriode, divisi, tanggal, status });
             fetch(`${hrisHarianUrl}?${params}`)
                 .then(res => res.json())
@@ -1370,7 +1376,7 @@
                     if (data.status !== 'success') throw new Error(data.message);
                     _harianData = data.data || [];
                     if (!_harianData.length) {
-                        harianTbody.innerHTML = '<tr class="loading-row"><td colspan="10">Tidak ada karyawan di divisi ini.</td></tr>';
+                        harianTbody.innerHTML = '<tr class="loading-row"><td colspan="11">Tidak ada data karyawan untuk filter yang dipilih.</td></tr>';
                         return;
                     }
                     harianTbody.innerHTML = '';
@@ -1391,6 +1397,7 @@
                             <td style="text-align:center;">${i + 1}</td>
                             <td style="text-align:left;font-weight:600;">${escapeHtml(row.nama)}</td>
                             <td style="text-align:center;">${escapeHtml(row.pegawai_nik)}</td>
+                            <td style="text-align:left;font-size:11px;">${escapeHtml(row.divisi || '-')}</td>
                             <td style="text-align:center;">${statusBadge}</td>
                             <td style="text-align:center;">${escapeHtml(row.hari_kerja)}</td>
                             <td style="text-align:center;">${escapeHtml(row.checkin_time)}</td>
@@ -1403,7 +1410,7 @@
                     });
                 })
                 .catch(err => {
-                    harianTbody.innerHTML = `<tr class="loading-row"><td colspan="10" style="color:#991b1b;">⚠️ ${escapeHtml(err.message)}</td></tr>`;
+                    harianTbody.innerHTML = `<tr class="loading-row"><td colspan="11" style="color:#991b1b;">⚠️ ${escapeHtml(err.message)}</td></tr>`;
                 });
         }
 
@@ -1440,7 +1447,7 @@
             const ws = workbook.addWorksheet('Detail Harian');
 
             const headers = [
-                'No', 'Nama Karyawan', 'NIK', 'Status Absen', 'Hari Kerja', 
+                'No', 'Nama Karyawan', 'NIK', 'Divisi', 'Status Absen', 'Hari Kerja', 
                 'Check In', 'Check Out', 'Lokasi', 'Jenis Absen', 'Mood'
             ];
 
@@ -1448,6 +1455,7 @@
                 { key: 'no', width: 6 },
                 { key: 'nama', width: 28 },
                 { key: 'nik', width: 14 },
+                { key: 'divisi', width: 30 },
                 { key: 'status_absen', width: 16 },
                 { key: 'hari_kerja', width: 12 },
                 { key: 'check_in', width: 12 },
@@ -1466,7 +1474,7 @@
             const fillSolid = argb => ({ type: 'pattern', pattern: 'solid', fgColor: { argb } });
 
             // Title Row
-            ws.mergeCells(1, 1, 1, 10);
+            ws.mergeCells(1, 1, 1, 11);
             const titleCell = ws.getCell(1, 1);
             titleCell.value = 'DETAIL ABSENSI HARIAN KARYAWAN';
             titleCell.font = { bold: true, size: 14, color: { argb: 'FF166534' } };
@@ -1474,7 +1482,7 @@
             ws.getRow(1).height = 28;
 
             // Subtitle / Filters Row
-            ws.mergeCells(2, 1, 2, 10);
+            ws.mergeCells(2, 1, 2, 11);
             const subTitleCell = ws.getCell(2, 1);
             subTitleCell.value = `Divisi: ${divisi}   |   Tanggal: ${formattedDate}   |   Status: ${statusLabel}`;
             subTitleCell.font = { italic: true, size: 10, color: { argb: 'FF4B5563' } };
@@ -1508,6 +1516,7 @@
                     i + 1,
                     row.nama,
                     row.pegawai_nik,
+                    row.divisi || '-',
                     statusText,
                     row.hari_kerja,
                     row.checkin_time,
@@ -1528,13 +1537,14 @@
                     cell.border = borderStyle;
                     
                     // Alignments
-                    if (colNum === 1 || colNum === 3 || colNum === 5 || colNum === 6 || colNum === 7 || colNum === 9 || colNum === 10) {
+                    // col 1=No, 2=Nama, 3=NIK, 4=Divisi, 5=Status, 6=HariKerja, 7=CheckIn, 8=CheckOut, 9=Lokasi, 10=JenisAbsen, 11=Mood
+                    if (colNum === 1 || colNum === 3 || colNum === 6 || colNum === 7 || colNum === 8 || colNum === 10 || colNum === 11) {
                         cell.alignment = { horizontal: 'center', vertical: 'middle' };
-                    } else if (colNum === 4) {
+                    } else if (colNum === 5) {
                         cell.alignment = { horizontal: 'center', vertical: 'middle' };
                         cell.font = { bold: true, size: 9.5, color: { argb: noAbsen ? 'FF991B1B' : 'FF166534' } };
                     } else {
-                        cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: colNum === 8 };
+                        cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: colNum === 9 };
                     }
                 });
             });
@@ -1717,7 +1727,9 @@
                 nonHrisWrapper.style.display = 'none';
                 placeholderState.style.display = 'none';
                 updateHarianDateBounds();
-                loadHarianDivisiOptions(periodVal).catch(() => {});
+                loadHarianDivisiOptions(periodVal)
+                    .then(() => loadHarianData())
+                    .catch(() => loadHarianData());
                 loadRegionalList();
 
                 fetchHrisData(periodVal)
