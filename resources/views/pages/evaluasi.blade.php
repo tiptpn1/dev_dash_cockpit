@@ -750,7 +750,7 @@
             <div class="filter-title">
                 <i class="fas fa-sliders-h"></i> Filter Parameter
             </div>
-            <div class="filter-grid">
+            <div class="filter-grid" style="grid-template-columns: minmax(220px, 380px);">
                 <div class="form-group">
                     <label class="form-label">
                         Nama Aplikasi
@@ -773,10 +773,6 @@
                             <option value="SAPA-Amanah">SAPA-Amanah</option>
                         </select>
                     @endif
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Periode</label>
-                    <input type="month" id="periode_select" class="form-input" value="{{ date('Y-m') }}">
                 </div>
             </div>
         </div>
@@ -808,6 +804,13 @@
 
                 <!-- Tab 1: Rekap -->
                 <div id="tab-rekap" class="hris-tab-panel active">
+                    <div class="filter-card-tab2" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <label class="form-label" style="margin:0; white-space:nowrap;"><i class="fas fa-calendar-alt" style="color:#166534;"></i> Periode:</label>
+                            <input type="month" id="periode_select" class="form-input" value="{{ date('Y-m') }}" style="width:160px;">
+                        </div>
+                        <div id="rekap-periode-info" style="font-size:12px; color:#6b7280; font-style:italic;"></div>
+                    </div>
                     <div class="table-wrapper">
                         <table id="hris-table" class="report-table">
                             <thead>
@@ -863,14 +866,15 @@
                                     <th style="width:120px;">Status Absen</th>
                                     <th style="width:90px;">Hari Kerja</th>
                                     <th style="width:100px;">Check In</th>
+                                    <th style="width:110px;">Mood Check In</th>
                                     <th style="width:100px;">Check Out</th>
+                                    <th style="width:110px;">Mood Check Out</th>
                                     <th style="text-align:left;min-width:180px;">Lokasi</th>
                                     <th style="width:90px;">Jenis Absen</th>
-                                    <th style="width:110px;">Mood</th>
                                 </tr>
                             </thead>
                             <tbody id="harian-tbody">
-                                <tr class="loading-row"><td colspan="11">Pilih tanggal untuk menampilkan data.</td></tr>
+                                <tr class="loading-row"><td colspan="12">Pilih tanggal untuk menampilkan data.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -915,14 +919,15 @@
                                     <th style="width:100px;">NIK</th>
                                     <th style="width:90px;">Hari Kerja</th>
                                     <th style="width:100px;">Check In</th>
+                                    <th style="width:110px;">Mood Check In</th>
                                     <th style="width:100px;">Check Out</th>
+                                    <th style="width:110px;">Mood Check Out</th>
                                     <th style="text-align:left;min-width:180px;">Lokasi</th>
                                     <th style="width:90px;">Jenis Absen</th>
-                                    <th style="width:110px;">Mood</th>
                                 </tr>
                             </thead>
                             <tbody id="perkaryawan-tbody">
-                                <tr class="loading-row"><td colspan="9">Pilih regional, karyawan, dan range tanggal untuk menampilkan data.</td></tr>
+                                <tr class="loading-row"><td colspan="10">Pilih regional, karyawan, dan range tanggal untuk menampilkan data.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -962,32 +967,32 @@
             <div id="absensi-popup-breakdown" class="absensi-popup-breakdown" style="display:none;"></div>
         </div>
     </div>
+</div>
 
-    <!-- Map Popup -->
-    <div id="mapPopupOverlay" class="map-popup-overlay">
-        <div class="map-popup-container">
-            <div class="map-popup-header">
-                <h2>
-                    <i class="fas fa-map-marker-alt"></i>
-                    <span id="mapPopupTitle">Lokasi Absensi</span>
-                </h2>
-                <button type="button" class="map-popup-close" id="mapPopupClose" aria-label="Tutup">&times;</button>
-            </div>
-            <div class="map-popup-content">
-                <div id="mapContainer"></div>
-                <div class="map-info-panel">
-                    <div class="map-info-row">
-                        <span class="map-info-label">Lokasi:</span>
-                        <span class="map-info-value" id="mapInfoLokasi">-</span>
-                    </div>
-                    <div class="map-info-row">
-                        <span class="map-info-label">Latitude:</span>
-                        <span class="map-info-value" id="mapInfoLatitude">-</span>
-                    </div>
-                    <div class="map-info-row">
-                        <span class="map-info-label">Longitude:</span>
-                        <span class="map-info-value" id="mapInfoLongitude">-</span>
-                    </div>
+<!-- Map Popup -->
+<div id="mapPopupOverlay" class="map-popup-overlay">
+    <div class="map-popup-container">
+        <div class="map-popup-header">
+            <h2>
+                <i class="fas fa-map-marker-alt"></i>
+                <span id="mapPopupTitle">Lokasi Absensi</span>
+            </h2>
+            <button type="button" class="map-popup-close" id="mapPopupClose" aria-label="Tutup">&times;</button>
+        </div>
+        <div class="map-popup-content">
+            <div id="mapContainer"></div>
+            <div class="map-info-panel">
+                <div class="map-info-row">
+                    <span class="map-info-label">Lokasi:</span>
+                    <span class="map-info-value" id="mapInfoLokasi">-</span>
+                </div>
+                <div class="map-info-row">
+                    <span class="map-info-label">Latitude:</span>
+                    <span class="map-info-value" id="mapInfoLatitude">-</span>
+                </div>
+                <div class="map-info-row">
+                    <span class="map-info-label">Longitude:</span>
+                    <span class="map-info-value" id="mapInfoLongitude">-</span>
                 </div>
             </div>
         </div>
@@ -1364,11 +1369,11 @@
             const status = harianStatusSelect.value;
             _harianData = [];
             if (!tanggal || !currentPeriode) {
-                harianTbody.innerHTML = '<tr class="loading-row"><td colspan="11">Pilih tanggal untuk menampilkan data.</td></tr>';
+                harianTbody.innerHTML = '<tr class="loading-row"><td colspan="12">Pilih tanggal untuk menampilkan data.</td></tr>';
                 return;
             }
 
-            harianTbody.innerHTML = '<tr class="loading-row"><td colspan="11"><i class="fas fa-spinner fa-spin"></i> Memuat detail harian...</td></tr>';
+            harianTbody.innerHTML = '<tr class="loading-row"><td colspan="12"><i class="fas fa-spinner fa-spin"></i> Memuat detail harian...</td></tr>';
             const params = new URLSearchParams({ periode: currentPeriode, divisi, tanggal, status });
             fetch(`${hrisHarianUrl}?${params}`)
                 .then(res => res.json())
@@ -1376,7 +1381,7 @@
                     if (data.status !== 'success') throw new Error(data.message);
                     _harianData = data.data || [];
                     if (!_harianData.length) {
-                        harianTbody.innerHTML = '<tr class="loading-row"><td colspan="11">Tidak ada data karyawan untuk filter yang dipilih.</td></tr>';
+                        harianTbody.innerHTML = '<tr class="loading-row"><td colspan="12">Tidak ada data karyawan untuk filter yang dipilih.</td></tr>';
                         return;
                     }
                     harianTbody.innerHTML = '';
@@ -1401,16 +1406,17 @@
                             <td style="text-align:center;">${statusBadge}</td>
                             <td style="text-align:center;">${escapeHtml(row.hari_kerja)}</td>
                             <td style="text-align:center;">${escapeHtml(row.checkin_time)}</td>
+                            <td style="text-align:center;font-size:11px;">${escapeHtml(row.mood_masuk)}</td>
                             <td style="text-align:center;">${escapeHtml(row.checkout_time)}</td>
+                            <td style="text-align:center;font-size:11px;">${escapeHtml(row.mood_pulang)}</td>
                             <td style="text-align:left;font-size:11px;">${escapeHtml(row.lokasi)}${mapPinHtml}</td>
                             <td style="text-align:center;">${escapeHtml(row.jenis_absen)}</td>
-                            <td style="text-align:center;font-size:11px;">${escapeHtml(row.mood)}</td>
                         `;
                         harianTbody.appendChild(tr);
                     });
                 })
                 .catch(err => {
-                    harianTbody.innerHTML = `<tr class="loading-row"><td colspan="11" style="color:#991b1b;">⚠️ ${escapeHtml(err.message)}</td></tr>`;
+                    harianTbody.innerHTML = `<tr class="loading-row"><td colspan="12" style="color:#991b1b;">⚠️ ${escapeHtml(err.message)}</td></tr>`;
                 });
         }
 
@@ -1448,7 +1454,7 @@
 
             const headers = [
                 'No', 'Nama Karyawan', 'NIK', 'Divisi', 'Status Absen', 'Hari Kerja', 
-                'Check In', 'Check Out', 'Lokasi', 'Jenis Absen', 'Mood'
+                'Check In', 'Mood Check In', 'Check Out', 'Mood Check Out', 'Lokasi', 'Jenis Absen'
             ];
 
             ws.columns = [
@@ -1459,10 +1465,11 @@
                 { key: 'status_absen', width: 16 },
                 { key: 'hari_kerja', width: 12 },
                 { key: 'check_in', width: 12 },
+                { key: 'mood_masuk', width: 16 },
                 { key: 'check_out', width: 12 },
+                { key: 'mood_pulang', width: 16 },
                 { key: 'lokasi', width: 45 },
-                { key: 'jenis_absen', width: 15 },
-                { key: 'mood', width: 12 }
+                { key: 'jenis_absen', width: 15 }
             ];
 
             const borderStyle = {
@@ -1474,7 +1481,7 @@
             const fillSolid = argb => ({ type: 'pattern', pattern: 'solid', fgColor: { argb } });
 
             // Title Row
-            ws.mergeCells(1, 1, 1, 11);
+            ws.mergeCells(1, 1, 1, 12);
             const titleCell = ws.getCell(1, 1);
             titleCell.value = 'DETAIL ABSENSI HARIAN KARYAWAN';
             titleCell.font = { bold: true, size: 14, color: { argb: 'FF166534' } };
@@ -1482,7 +1489,7 @@
             ws.getRow(1).height = 28;
 
             // Subtitle / Filters Row
-            ws.mergeCells(2, 1, 2, 11);
+            ws.mergeCells(2, 1, 2, 12);
             const subTitleCell = ws.getCell(2, 1);
             subTitleCell.value = `Divisi: ${divisi}   |   Tanggal: ${formattedDate}   |   Status: ${statusLabel}`;
             subTitleCell.font = { italic: true, size: 10, color: { argb: 'FF4B5563' } };
@@ -1520,10 +1527,11 @@
                     statusText,
                     row.hari_kerja,
                     row.checkin_time,
+                    row.mood_masuk,
                     row.checkout_time,
+                    row.mood_pulang,
                     row.lokasi,
-                    row.jenis_absen,
-                    row.mood
+                    row.jenis_absen
                 ];
 
                 const exRow = ws.addRow(rowData);
@@ -1537,14 +1545,14 @@
                     cell.border = borderStyle;
                     
                     // Alignments
-                    // col 1=No, 2=Nama, 3=NIK, 4=Divisi, 5=Status, 6=HariKerja, 7=CheckIn, 8=CheckOut, 9=Lokasi, 10=JenisAbsen, 11=Mood
-                    if (colNum === 1 || colNum === 3 || colNum === 6 || colNum === 7 || colNum === 8 || colNum === 10 || colNum === 11) {
+                    // col 1=No, 2=Nama, 3=NIK, 4=Divisi, 5=Status, 6=HariKerja, 7=CheckIn, 8=MoodCheckin, 9=CheckOut, 10=MoodCheckout, 11=Lokasi, 12=JenisAbsen
+                    if (colNum === 1 || colNum === 3 || colNum === 6 || colNum === 7 || colNum === 8 || colNum === 9 || colNum === 10 || colNum === 12) {
                         cell.alignment = { horizontal: 'center', vertical: 'middle' };
                     } else if (colNum === 5) {
                         cell.alignment = { horizontal: 'center', vertical: 'middle' };
                         cell.font = { bold: true, size: 9.5, color: { argb: noAbsen ? 'FF991B1B' : 'FF166534' } };
                     } else {
-                        cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: colNum === 9 };
+                        cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: colNum === 11 };
                     }
                 });
             });
@@ -1572,14 +1580,14 @@
                 return;
             }
 
-            perkaryawanTbody.innerHTML = '<tr class="loading-row"><td colspan="9"><i class="fas fa-spinner fa-spin"></i> Memuat detail per karyawan...</td></tr>';
+                        perkaryawanTbody.innerHTML = '<tr class="loading-row"><td colspan="10"><i class="fas fa-spinner fa-spin"></i> Memuat detail per karyawan...</td></tr>';
             const params = new URLSearchParams({ periode: currentPeriode, pegawai_id, tanggal_awal, tanggal_akhir });
             fetch(`${hrisPerKaryawanUrl}?${params}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.status !== 'success') throw new Error(data.message);
                     if (!data.data.length) {
-                        perkaryawanTbody.innerHTML = '<tr class="loading-row"><td colspan="9">Tidak ada data absensi untuk periode yang dipilih.</td></tr>';
+                        perkaryawanTbody.innerHTML = '<tr class="loading-row"><td colspan="10">Tidak ada data absensi untuk periode yang dipilih.</td></tr>';
                         return;
                     }
                     perkaryawanTbody.innerHTML = '';
@@ -1597,16 +1605,17 @@
                             <td style="text-align:center;">${escapeHtml(row.pegawai_nik)}</td>
                             <td style="text-align:center;">${escapeHtml(row.hari_kerja)}</td>
                             <td style="text-align:center;">${escapeHtml(row.checkin_time)}</td>
+                            <td style="text-align:center;font-size:11px;">${escapeHtml(row.mood_masuk)}</td>
                             <td style="text-align:center;">${escapeHtml(row.checkout_time)}</td>
+                            <td style="text-align:center;font-size:11px;">${escapeHtml(row.mood_pulang)}</td>
                             <td style="text-align:left;font-size:11px;">${escapeHtml(row.lokasi)}${mapPinHtml}</td>
                             <td style="text-align:center;">${escapeHtml(row.jenis_absen)}</td>
-                            <td style="text-align:center;font-size:11px;">${escapeHtml(row.mood)}</td>
                         `;
                         perkaryawanTbody.appendChild(tr);
                     });
                 })
                 .catch(err => {
-                    perkaryawanTbody.innerHTML = `<tr class="loading-row"><td colspan="9" style="color:#991b1b;">⚠️ ${escapeHtml(err.message)}</td></tr>`;
+                    perkaryawanTbody.innerHTML = `<tr class="loading-row"><td colspan="10" style="color:#991b1b;">⚠️ ${escapeHtml(err.message)}</td></tr>`;
                 });
         }
 
@@ -1615,7 +1624,7 @@
             perkaryawanPegawaiId.value = '';
             perkaryawanSelectedNama.textContent = '';
             perkaryawanNamaDropdown.style.display = 'none';
-            perkaryawanTbody.innerHTML = '<tr class="loading-row"><td colspan="9">Pilih regional, karyawan, dan range tanggal untuk menampilkan data.</td></tr>';
+            perkaryawanTbody.innerHTML = '<tr class="loading-row"><td colspan="10">Pilih regional, karyawan, dan range tanggal untuk menampilkan data.</td></tr>';
         });
 
         perkaryawanNamaSearch.addEventListener('input', (e) => {

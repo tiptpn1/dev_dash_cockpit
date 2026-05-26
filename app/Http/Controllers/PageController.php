@@ -2122,11 +2122,8 @@ class PageController extends Controller
                 COALESCE(ai.checkin_long, '') AS longitude,
                 COALESCE(NULLIF(TRIM(ai.alamat), ''), NULLIF(TRIM(ai.psa), ''), '-') AS lokasi,
                 COALESCE(NULLIF(TRIM(ai.jenis_absen), ''), '-') AS jenis_absen,
-                CONCAT(
-                    COALESCE(NULLIF(TRIM(ai.mood_in), ''), '-'),
-                    ' / ',
-                    COALESCE(NULLIF(TRIM(ai.mood_out), ''), '-')
-                ) AS mood
+                COALESCE(NULLIF(TRIM(ai.mood_in), ''), '-') AS mood_masuk,
+                COALESCE(NULLIF(TRIM(ai.mood_out), ''), '-') AS mood_pulang
             FROM pegawai p
             LEFT JOIN absensi_import ai
                 ON ai.pegawai_id = p.pegawai_id
@@ -2171,11 +2168,16 @@ class PageController extends Controller
                 COALESCE(MAX(a.longitude), '') AS longitude,
                 COALESCE(MAX(NULLIF(TRIM(a.alamat), '')), '-') AS lokasi,
                 COALESCE(NULLIF(GROUP_CONCAT(DISTINCT a.jenis_absen ORDER BY a.jenis_absen SEPARATOR ', '), ''), '-') AS jenis_absen,
-                '-' AS mood
+                COALESCE(NULLIF(TRIM(pp.mood_masuk), ''), '-') AS mood_masuk,
+                COALESCE(NULLIF(TRIM(pp.mood_pulang), ''), '-') AS mood_pulang
             FROM pegawai p
             LEFT JOIN absensi a
                 ON a.pegawai_id = p.pegawai_id
                 AND DATE(a.jam) = ?
+            LEFT JOIN presensi_pegawai pp
+                ON pp.id_pegawai = p.pegawai_id
+                AND pp.tanggal = ?
+                AND pp.periode = ?
             LEFT JOIN absensi_periode b
                 ON p.regional_kode = b.regional_kode
                 AND p.area_kode = b.area_kode
@@ -2183,11 +2185,11 @@ class PageController extends Controller
             WHERE TRIM(p.regional) = ?
               AND NULLIF(TRIM(p.divisi), '') IS NOT NULL
               {$divisiCondition}
-            GROUP BY p.pegawai_id, p.nama, p.nik, p.jabatan, b.hari_kerja, p.divisi
+            GROUP BY p.pegawai_id, p.nama, p.nik, p.jabatan, b.hari_kerja, p.divisi, pp.mood_masuk, pp.mood_pulang
             ORDER BY p.divisi ASC, p.nama ASC
         ";
 
-        $params = [$tanggal, $tanggal, $periodeHris, $regional];
+        $params = [$tanggal, $tanggal, $tanggal, $periodeHris, $periodeHris, $regional];
         if ($divisi !== '') $params[] = $divisi;
 
         return DB::connection('hris')->select($sql, $params);
@@ -2326,23 +2328,28 @@ class PageController extends Controller
                 COALESCE(MAX(a.longitude), '') AS longitude,
                 COALESCE(MAX(NULLIF(TRIM(a.alamat), '')), '-') AS lokasi,
                 COALESCE(NULLIF(GROUP_CONCAT(DISTINCT a.jenis_absen ORDER BY a.jenis_absen SEPARATOR ', '), ''), '-') AS jenis_absen,
-                '-' AS mood
+                COALESCE(NULLIF(TRIM(pp.mood_masuk), ''), '-') AS mood_masuk,
+                COALESCE(NULLIF(TRIM(pp.mood_pulang), ''), '-') AS mood_pulang
             FROM pegawai p
             LEFT JOIN absensi a
                 ON a.pegawai_id = p.pegawai_id
                 AND DATE(a.jam) BETWEEN ? AND ?
+            LEFT JOIN presensi_pegawai pp
+                ON pp.id_pegawai = p.pegawai_id
+                AND pp.tanggal = DATE(a.jam)
+                AND pp.periode = ?
             LEFT JOIN absensi_periode b
                 ON p.regional_kode = b.regional_kode
                 AND p.area_kode = b.area_kode
                 AND b.periode = ?
             WHERE p.pegawai_id = ?
               AND TRIM(p.regional) = ?
-            GROUP BY p.pegawai_id, p.nama, p.nik, p.jabatan, DATE(a.jam), b.hari_kerja
+            GROUP BY p.pegawai_id, p.nama, p.nik, p.jabatan, DATE(a.jam), b.hari_kerja, pp.mood_masuk, pp.mood_pulang
             ORDER BY DATE(a.jam) DESC
         ";
 
         return DB::connection('hris')->select($sql, [
-            $tanggal_awal, $tanggal_akhir, $periodeHris, $pegawai_id, $regional,
+            $tanggal_awal, $tanggal_akhir, $periodeHris, $periodeHris, $pegawai_id, $regional,
         ]);
     }
 
@@ -2361,11 +2368,8 @@ class PageController extends Controller
                 COALESCE(ai.checkin_long, '') AS longitude,
                 COALESCE(NULLIF(TRIM(ai.alamat), ''), NULLIF(TRIM(ai.psa), ''), '-') AS lokasi,
                 COALESCE(NULLIF(TRIM(ai.jenis_absen), ''), '-') AS jenis_absen,
-                CONCAT(
-                    COALESCE(NULLIF(TRIM(ai.mood_in), ''), '-'),
-                    ' / ',
-                    COALESCE(NULLIF(TRIM(ai.mood_out), ''), '-')
-                ) AS mood
+                COALESCE(NULLIF(TRIM(ai.mood_in), ''), '-') AS mood_masuk,
+                COALESCE(NULLIF(TRIM(ai.mood_out), ''), '-') AS mood_pulang
             FROM pegawai p
             LEFT JOIN absensi_import ai
                 ON ai.pegawai_id = p.pegawai_id
