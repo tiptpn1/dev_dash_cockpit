@@ -1726,6 +1726,12 @@
             const periodVal = periodeSelect.value;
             const formattedPeriod = formatPeriodLabel(periodVal);
 
+            // Redirect to Digital Farming if selected
+            if (selectedApp === 'Digital Farming') {
+                window.location.href = '/dfarmkaret';
+                return;
+            }
+
             tableTitle.textContent = `Hasil Evaluasi Aplikasi ${selectedApp} &mdash; Periode ${formattedPeriod}`;
 
             if (selectedApp === 'HRIS') {
