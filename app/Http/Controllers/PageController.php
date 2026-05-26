@@ -1429,6 +1429,152 @@ class PageController extends Controller
 
         return view('pages/dfarm/dfarm_pemeliharaan', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'selectedaktivitas', 'prestasiData', 'prestasiDataLite', 'totalData', 'tglAwal', 'tglAkhir', 'jobdesc', 'detaildatapemeliharaan', 'alldatapemeliharaan'));
     }
+    public function ajax_dfarmpemeliharaan(Request $request)
+    {
+        // Validate input parameters
+        $request->validate([
+            'id_reg' => 'nullable|string',
+            'tgl_awal' => 'nullable|date_format:Y-m-d',
+            'tgl_akhir' => 'nullable|date_format:Y-m-d',
+            'kode_kebun' => 'nullable|string',
+            'jenis_aktivitas' => 'nullable|string',
+            'jobdesc' => 'nullable|string',
+        ]);
+
+        $regional = $request->input('id_reg', '');
+        $tglAwal = $request->input('tgl_awal', date('Y-m-d'));
+        $tglAkhir = $request->input('tgl_akhir', date('Y-m-d'));
+        $kebun = $request->input('kode_kebun', '');
+        $jenis_aktivitas = $request->input('jenis_aktivitas', '19');
+        $jobdesc = $request->input('jobdesc', 'PEMELIHARAAN');
+        $komoditas = $request->input('komoditas', 1);
+
+        if ($tglAwal > $tglAkhir) {
+            return response()->json(['error' => 'Tanggal awal tidak boleh lebih besar dari tanggal akhir'], 400);
+        }
+
+        // Initialize variables
+        $prestasiData = [];
+        $prestasiDataLite = [];
+        $totalData = [];
+
+        // Gunakan INNER JOIN (lebih cepat) dan tambahkan filter regional
+        $data = DB::connection('pgsql_secondary')
+            ->table('person_data')
+            ->select('person_data.kebun_id', 'person_data.regional_id', 'm_kebun.nama as nama_kebun')
+            ->leftJoin('m_kebun', 'person_data.kebun_id', '=', 'm_kebun.id')
+            ->whereNotNull('person_data.regional_id')
+            ->orderBy('person_data.regional_id');
+
+        if ($komoditas == 1) {
+            $data->where(function ($query) {
+                $query->where('positionsdesc', 'like', '%Pemetik%')
+                    ->orWhere('positionsdesc', 'like', '%PEMETIK%')
+                    ->orWhere('positionsdesc', 'like', '%pemetik%');
+            });
+        }
+        if ($komoditas == 2) {
+            $data->where(function ($query) {
+                $query->where('positionsdesc', 'like', '%penyadap%')
+                    ->orWhere('positionsdesc', 'like', '%PENYADAP%')
+                    ->orWhere('positionsdesc', 'like', '%penyadap%');
+            });
+        }
+        if ($komoditas == 3) {
+            $data->where(function ($query) {
+                $query->where('positionsdesc', 'like', '%Panen Kopi%')
+                    ->orWhere('positionsdesc', 'like', '%PANEN KOPI%')
+                    ->orWhere('positionsdesc', 'like', '%panen kopi%');
+            });
+        }
+
+        if ($regional) {
+            $data->where('person_data.regional_id', $regional);
+        }
+        // Gunakan pagination untuk data besar
+        $allDatakebun = $data->groupBy('person_data.kebun_id', 'person_data.regional_id', 'm_kebun.nama')
+            ->get();
+
+        $selectedRegional = $regional;
+        $selectedKomoditas = $komoditas;
+        $selectedKebun = $kebun;
+        if ($regional != '' and $kebun == '') {
+            $prestasiData = DB::connection('pgsql_secondary')->select(
+                'SELECT * FROM fn_rekap_prestasi_pemeliharaan_kebun(?,?,?,?,?) AS (
+                    id integer, 
+                    nama varchar, 
+                    hasil_pemeliharaan numeric
+                )',
+                [$komoditas, $jenis_aktivitas, $regional, $tglAwal, $tglAkhir]
+            );
+            $totalData = $this->calculateTotalPrestasiPemeliharaan($prestasiData);
+            $prestasiDataLite = DB::connection('pgsql_secondary')->select(
+                'SELECT nama, persen_input_presensi, persen_input_produksi 
+                FROM fn_report_n1_karet_rekap_presensi_prestasi_kebun_lite(?, ?, ?, ?, ?, ?)',
+                ['PEMELIHARAAN', $regional, '', $komoditas, $tglAwal, $tglAkhir]
+            );
+        }
+        if ($regional == '') {
+
+            $prestasiData = DB::connection('pgsql_secondary')->select(
+                'SELECT * FROM fn_rekap_prestasi_pemeliharaan_regional(?, ?, ?, ?) AS (
+                    id integer, 
+                    nama varchar, 
+                    hasil_pemeliharaan numeric
+                )',
+                [$komoditas, $jenis_aktivitas, $tglAwal, $tglAkhir]
+            );
+            $totalData = $this->calculateTotalPrestasiPemeliharaan($prestasiData);
+            $prestasiDataLite = DB::connection('pgsql_secondary')->select(
+                'SELECT nama, persen_input_presensi, persen_input_produksi 
+                FROM fn_report_n1_karet_rekap_presensi_prestasi_regional_lite(?, ?, ?, ?, ?)',
+                ['PEMELIHARAAN', '', $komoditas, $tglAwal, $tglAkhir]
+            );
+        }
+        if ($regional != '' and $kebun != '') {
+
+            $prestasiData = DB::connection('pgsql_secondary')->select(
+                'SELECT * FROM fn_rekap_prestasi_pemeliharaan_afdeling(?,?,?,?,?) AS (
+                    id integer, 
+                    nama varchar, 
+                    hasil_pemeliharaan numeric
+                )',
+                [$komoditas, $jenis_aktivitas, $kebun, $tglAwal, $tglAkhir]
+            );
+            $totalData = $this->calculateTotalPrestasiPemeliharaan($prestasiData);
+            $prestasiDataLite = DB::connection('pgsql_secondary')->select(
+                'SELECT nama, persen_input_presensi, persen_input_produksi 
+                FROM fn_report_n1_karet_rekap_presensi_prestasi_afdeling_lite(?, ?, ?, ?, ?)',
+                ['PEMELIHARAAN', $kebun, $komoditas, $tglAwal, $tglAkhir]
+            );
+        }
+
+        // Hitung total untuk masing-masing kolom
+        if (empty($prestasiData) || empty($totalData)) {
+            return response()->json([
+                'error' => 'Data tidak ditemukan untuk filter yang dipilih',
+                'success' => false
+            ], 404);
+        }
+
+        $dataoutput = [
+            'success' => true,
+            'allDatakebun' => $allDatakebun,
+            'selectedRegional' => $selectedRegional,
+            'selectedKebun' => $selectedKebun,
+            'selectedKomoditas' => $selectedKomoditas,
+            'prestasiData' => $prestasiData,
+            'prestasiDataLite' => $prestasiDataLite,
+            'totalData' => $totalData,
+            'tglAwal' => $tglAwal,
+            'tglAkhir' => $tglAkhir,
+            'jobdesc' => $jobdesc,
+            'jenis_aktivitas' => $jenis_aktivitas
+        ];
+        
+        return response()->json($dataoutput, 200)
+            ->header('Content-Type', 'application/json; charset=utf-8');
+    }
     public function dfarmtehold()
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/7fba3d9e-d5ae-4f1a-91c6-22fe03e27029/page/p_wsn4ogdumd';

@@ -803,7 +803,8 @@
 
             <!-- Tab 3: Detail Kopi -->
             <div id="tab-detail-kopi" class="hris-tab-panel">
-              <!-- Filter Card in Tab -->
+              <div style="padding: 20px;">
+                <!-- Filter Card in Tab -->
                 <div class="filter-card" style="margin: 16px;">
                   <div class="filter-title">
                     <i class="fas fa-sliders-h"></i> Filter Parameter
@@ -811,11 +812,30 @@
                   <div class="filter-grid">
                     <div class="form-group">
                       <label class="form-label">Periode</label>
-                      <input type="text" placeholder="Pilih periode" class="form-input" style="cursor: pointer;">
+                      <div style="position: relative;">
+                        <input type="text" id="dateRangeKopi" placeholder="Nov 5, 2024 - Nov 6, 2024" readonly class="form-input" style="cursor: pointer; width: 100%;">
+                        <div id="datePickerPopupKopi" class="hidden" style="position: absolute; top: 100%; left: 0; margin-top: 8px; background: white; border: 1px solid #d1d5db; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); padding: 16px; z-index: 50; min-width: 320px;">
+                          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <div>
+                              <label class="form-label" style="color: #374151;">Dari Tanggal</label>
+                              <input type="date" id="datePickerStartKopi" class="form-input">
+                            </div>
+                            <div>
+                              <label class="form-label" style="color: #374151;">Sampai Tanggal</label>
+                              <input type="date" id="datePickerEndKopi" class="form-input">
+                            </div>
+                          </div>
+                          <div style="display: flex; gap: 8px; margin-top: 12px;">
+                            <button id="datePickerApplyKopi" class="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-xs rounded transition-colors font-medium" style="background-color: #166534; border: none; cursor: pointer; flex: 1; padding: 8px 12px;">Terapkan</button>
+                            <button id="datePickerCancelKopi" class="flex-1 px-3 py-2 bg-gray-400 hover:bg-gray-500 text-white text-xs rounded transition-colors font-medium" style="background-color: #9ca3af; border: none; cursor: pointer; flex: 1; padding: 8px 12px;">Batal</button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
+
                     <div class="form-group">
                       <label class="form-label">Regional</label>
-                      <select class="form-select">
+                      <select id="selectKopiRegional" class="form-select">
                         <option value="">Pilih</option>
                         <option value="2">REGIONAL 2</option>
                         <option value="3">REGIONAL 3</option>
@@ -824,70 +844,221 @@
                         <option value="8">REGIONAL 8</option>
                       </select>
                     </div>
+
                     <div class="form-group">
                       <label class="form-label">Nama Kebun</label>
-                      <select class="form-select">
+                      <select id="selectKopiKebun" class="form-select">
                         <option value="">Pilih</option>
                       </select>
                     </div>
                   </div>
                 </div>
 
-                 <!-- Action Buttons -->
-                  <div style="margin: 16px; display: flex; gap: 10px;">
-                  <button class="inline-flex align-items-center justify-content-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-all" style="background-color: #16a34a; border: 1px solid #15803d; height: 36px;">
+                <!-- Action Buttons -->
+                <div style="margin: 0 16px 16px; display: flex; gap: 10px;">
+                  <button id="btnKopiFilter" class="inline-flex align-items-center justify-content-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-all box-shadow" style="background-color: #16a34a; border: 1px solid #15803d; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); height: 36px;">
                     <i class="fas fa-filter"></i> Filter
                   </button>
-                  <button class="inline-flex align-items-center justify-content-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-all" style="background-color: #16a34a; border: 1px solid #15803d; height: 36px;">
+                  <button id="btnKopiReset" class="inline-flex align-items-center justify-content-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-all box-shadow" style="background-color: #16a34a; border: 1px solid #15803d; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); height: 36px;">
                     <i class="fas fa-rotate-right"></i> Reset
                   </button>
+                </div>
+
+                <!-- Loading Spinner -->
+                <div id="kopiLoadingSpinner" class="teh-loading-spinner">
+                  <div class="spinner"></div>
+                  <div class="spinner-text">Memuat data...</div>
+                </div>
+
+                <!-- KPI Cards Section -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                  <!-- Total Basah -->
+                  <div style="background: #fff; border: 1px solid #d1fae5; border-top: 4px solid #166534; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08); transition: transform 0.2s, box-shadow 0.2s;" class="hover:shadow-lg hover:scale-105">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                      <h3 style="color: #166534; font-size: 12px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Total Basah</h3>
+                      <i class="fas fa-droplet" style="color: #16a34a; font-size: 18px;"></i>
+                    </div>
+                    <p id="kpiKopiTotalBasah" style="color: #166534; font-size: 28px; font-weight: 800; margin: 0; line-height: 1;">0</p>
+                    <p style="color: #6b7280; font-size: 11px; margin: 4px 0 0 0;">Kg</p>
                   </div>
+
+                  <!-- Total Kering -->
+                  <div style="background: #fff; border: 1px solid #d1fae5; border-top: 4px solid #166534; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08); transition: transform 0.2s, box-shadow 0.2s;" class="hover:shadow-lg hover:scale-105">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                      <h3 style="color: #166534; font-size: 12px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Total Kering</h3>
+                      <i class="fas fa-leaf" style="color: #16a34a; font-size: 18px;"></i>
+                    </div>
+                    <p id="kpiKopiTotalKering" style="color: #166534; font-size: 28px; font-weight: 800; margin: 0; line-height: 1;">0</p>
+                    <p style="color: #6b7280; font-size: 11px; margin: 4px 0 0 0;">Kg</p>
+                  </div>
+
+                  <!-- % Input Produksi -->
+                  <div style="background: #fff; border: 1px solid #d1fae5; border-top: 4px solid #166534; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08); transition: transform 0.2s, box-shadow 0.2s;" class="hover:shadow-lg hover:scale-105">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                      <h3 style="color: #166534; font-size: 12px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">% Input</h3>
+                      <i class="fas fa-chart-pie" style="color: #16a34a; font-size: 18px;"></i>
+                    </div>
+                    <p id="kpiKopiInputPercent" style="color: #166534; font-size: 28px; font-weight: 800; margin: 0; line-height: 1;">0%</p>
+                    <p style="color: #6b7280; font-size: 11px; margin: 4px 0 0 0;">Rata-rata</p>
+                  </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                  <!-- Warna Basah Chart -->
+                  <div class="chart-card">
+                    <h2>Warna Basah (Merah/Kuning/Hijau/Hitam)</h2>
+                    <div class="relative" style="height: 300px; position: relative;">
+                      <canvas id="kopiWarnaBasahChart"></canvas>
+                    </div>
+                  </div>
+
+                  <!-- Warna Kering Chart -->
+                  <div class="chart-card">
+                    <h2>Warna Kering (Merah/Kuning/Hijau/Hitam)</h2>
+                    <div class="relative" style="height: 300px; position: relative;">
+                      <canvas id="kopiWarnaKeringChart"></canvas>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- % Input Produksi Chart -->
+                <div class="chart-card" style="margin-bottom: 24px;">
+                  <h2>% Input Produksi</h2>
+                  <div class="relative" style="height: 300px; position: relative;">
+                    <canvas id="kopiInputProduksiChart"></canvas>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- Tab 4: Detail Pemeliharaan -->
             <div id="tab-detail-pemeliharaan" class="hris-tab-panel">
-              <!-- Filter Card in Tab -->
+              <div style="padding: 20px;">
+                <!-- Filter Card with Date Picker -->
                 <div class="filter-card" style="margin: 16px;">
                   <div class="filter-title">
                     <i class="fas fa-sliders-h"></i> Filter Parameter
                   </div>
                   <div class="filter-grid">
+                    <!-- Komoditas Filter -->
                     <div class="form-group">
-                      <label class="form-label">Periode</label>
-                      <input type="text" placeholder="Pilih periode" class="form-input" style="cursor: pointer;">
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">Regional</label>
-                      <select class="form-select">
+                      <label class="form-label">Komoditas</label>
+                      <select id="selectPemeliharaanKomoditas" class="form-select">
                         <option value="">Pilih</option>
-                        <option value="2">REGIONAL 2</option>
-                        <option value="3">REGIONAL 3</option>
-                        <option value="5">REGIONAL 5</option>
-                        <option value="7">REGIONAL 7</option>
-                        <option value="8">REGIONAL 8</option>
+                        <option value="1">Teh</option>
+                        <option value="2">Karet</option>
+                        <option value="3">Kopi</option>
                       </select>
                     </div>
+
+                    <!-- Aktivitas Filter -->
+                    <div class="form-group">
+                      <label class="form-label">Aktivitas</label>
+                      <select id="selectPemeliharaanAktivitas" class="form-select">
+                        <option value="">Pilih</option>
+                      </select>
+                    </div>
+
+                    <!-- Date Range with Popup -->
+                    <div class="form-group">
+                      <label class="form-label">Periode</label>
+                      <div style="position: relative;">
+                        <input type="text" id="dateRangePemeliharaan" placeholder="Nov 5, 2024 - Nov 6, 2024" readonly class="form-input" style="cursor: pointer; width: 100%;">
+                        <div id="datePickerPopupPemeliharaan" class="hidden" style="position: absolute; top: 100%; left: 0; background-color: white; border: 1px solid #ccc; border-radius: 8px; padding: 15px; width: 300px; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                          <div style="margin-bottom: 10px;">
+                            <label style="display: block; font-size: 12px; color: #333; margin-bottom: 5px;">Tanggal Awal</label>
+                            <input type="date" id="datePickerStartPemeliharaan" class="form-input" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                          </div>
+                          <div style="margin-bottom: 10px;">
+                            <label style="display: block; font-size: 12px; color: #333; margin-bottom: 5px;">Tanggal Akhir</label>
+                            <input type="date" id="datePickerEndPemeliharaan" class="form-input" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                          </div>
+                          <div style="display: flex; gap: 10px;">
+                            <button id="datePickerApplyPemeliharaan" style="flex: 1; padding: 8px; background-color: #16a34a; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Terapkan</button>
+                            <button id="datePickerCancelPemeliharaan" style="flex: 1; padding: 8px; background-color: #666; color: white; border: none; border-radius: 4px; cursor: pointer;">Batal</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Regional Select -->
+                    <div class="form-group">
+                      <label class="form-label">Regional</label>
+                      <select id="selectPemeliharaanRegional" class="form-select">
+                        <option value="">Pilih</option>
+                      </select>
+                    </div>
+
+                    <!-- Kebun Select -->
                     <div class="form-group">
                       <label class="form-label">Nama Kebun</label>
-                      <select class="form-select">
+                      <select id="selectPemeliharaanKebun" class="form-select">
                         <option value="">Pilih</option>
                       </select>
                     </div>
                   </div>
                 </div>
 
-                 <!-- Action Buttons -->
-                <div style="margin: 16px; display: flex; gap: 10px;">
-                  <button class="inline-flex align-items-center justify-content-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-all" style="background-color: #16a34a; border: 1px solid #15803d; height: 36px;">
+                <!-- Action Buttons -->
+                <div style="margin: 0 16px 16px; display: flex; gap: 10px;">
+                  <button id="btnPemeliharaanFilter" class="inline-flex align-items-center justify-content-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-all box-shadow" style="background-color: #16a34a; border: 1px solid #15803d; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); height: 36px;">
                     <i class="fas fa-filter"></i> Filter
                   </button>
-                  <button class="inline-flex align-items-center justify-content-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-all" style="background-color: #16a34a; border: 1px solid #15803d; height: 36px;">
+                  <button id="btnPemeliharaanReset" class="inline-flex align-items-center justify-content-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-all box-shadow" style="background-color: #16a34a; border: 1px solid #15803d; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); height: 36px;">
                     <i class="fas fa-rotate-right"></i> Reset
                   </button>
                 </div>
+
+                <!-- Loading Spinner -->
+                <div id="pemeliharaanLoadingSpinner" class="teh-loading-spinner">
+                  <div class="spinner"></div>
+                  <div class="spinner-text">Memuat data...</div>
+                </div>
+
+                <!-- KPI Cards Section -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 mb-8">
+                  <!-- Hasil Pemeliharaan -->
+                  <div style="background: #fff; border: 1px solid #d1fae5; border-top: 4px solid #166534; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08); transition: transform 0.2s, box-shadow 0.2s;" class="hover:shadow-lg hover:scale-105">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                      <h3 style="color: #166534; font-size: 12px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Hasil Pemeliharaan</h3>
+                      <i class="fas fa-hammer" style="color: #16a34a; font-size: 18px;"></i>
+                    </div>
+                    <p id="kpiPemeliharaanHasil" style="color: #166534; font-size: 28px; font-weight: 800; margin: 0; line-height: 1;">0</p>
+                    <p style="color: #6b7280; font-size: 11px; margin: 4px 0 0 0;">Unit</p>
+                  </div>
+
+                  <!-- % Input Produksi -->
+                  <div style="background: #fff; border: 1px solid #d1fae5; border-top: 4px solid #166534; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08); transition: transform 0.2s, box-shadow 0.2s;" class="hover:shadow-lg hover:scale-105">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                      <h3 style="color: #166534; font-size: 12px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">% Input</h3>
+                      <i class="fas fa-chart-pie" style="color: #16a34a; font-size: 18px;"></i>
+                    </div>
+                    <p id="kpiPemeliharaanInputPercent" style="color: #166534; font-size: 28px; font-weight: 800; margin: 0; line-height: 1;">0%</p>
+                    <p style="color: #6b7280; font-size: 11px; margin: 4px 0 0 0;">Rata-rata</p>
+                  </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-6">
+                  <!-- Hasil Aktivitas Chart -->
+                  <div class="chart-card">
+                    <h2>Hasil Aktivitas Pemeliharaan</h2>
+                    <div class="relative" style="height: 300px; position: relative;">
+                      <canvas id="pemeliharaanHasilChart"></canvas>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Input Produksi Chart -->
+                <div class="chart-card" style="margin-bottom: 24px;">
+                  <h2>% Input vs % Tidak Input Produksi</h2>
+                  <div class="relative" style="height: 300px; position: relative;">
+                    <canvas id="pemeliharaanInputProduksiChart"></canvas>
+                  </div>
+                </div>
+              </div>
             </div>
-            
-          </div>
         </div>
       </div>
     </div>
@@ -1033,6 +1204,166 @@
 
           } catch (error) {
             console.error('Error loading teh data:', error);
+            loadingSpinner.classList.remove('active');
+            showErrorPopup('Terjadi error saat load data');
+          }
+        }
+
+        // Auto-load data for detail-kopi tab
+        if (tabName === 'detail-kopi') {
+          // Load with default dates and no filter
+          const today = new Date();
+          const startDate = new Date(today);
+          startDate.setDate(startDate.getDate() - 1);
+          
+          const formatDate = (date) => date.toISOString().split('T')[0];
+          
+          const tglAwal = formatDate(startDate);
+          const tglAkhir = formatDate(today);
+
+          // Update date inputs
+          document.getElementById('datePickerStartKopi').value = tglAwal;
+          document.getElementById('datePickerEndKopi').value = tglAkhir;
+          
+          function updateDateDisplayKopi() {
+            if (document.getElementById('datePickerStartKopi').value && document.getElementById('datePickerEndKopi').value) {
+              const start = new Date(document.getElementById('datePickerStartKopi').value);
+              const end = new Date(document.getElementById('datePickerEndKopi').value);
+              document.getElementById('dateRangeKopi').value = `${start.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })} - ${end.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })}`;
+            }
+          }
+          updateDateDisplayKopi();
+
+          // Show loading spinner
+          const loadingSpinner = document.getElementById('kopiLoadingSpinner');
+          loadingSpinner.classList.add('active');
+
+          // Auto-load AJAX data
+          try {
+            const response = await fetch('{{ route('ajax_dfarmkopiproduksi') }}', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                'X-Requested-With': 'XMLHttpRequest'
+              },
+              body: JSON.stringify({
+                id_reg: '',
+                tgl_awal: tglAwal,
+                tgl_akhir: tglAkhir,
+                kode_kebun: '',
+                jobdesc: 'PANEN KOPI'
+              })
+            });
+
+            const data = await response.json();
+            loadingSpinner.classList.remove('active');
+
+            if (!data.success) {
+              showErrorPopup(data.error || 'Gagal load data');
+              return;
+            }
+
+            // Update KPI Cards
+            const totalBasah = data.prestasiData.reduce((sum, item) => sum + (parseFloat(item.total_basah) || 0), 0);
+            const totalKering = data.prestasiData.reduce((sum, item) => sum + (parseFloat(item.total_kering) || 0), 0);
+            const avgInputPercent = data.prestasiDataLite.length > 0 
+              ? data.prestasiDataLite.reduce((sum, item) => sum + (parseFloat(item.persen_input_produksi) || 0), 0) / data.prestasiDataLite.length 
+              : 0;
+
+            document.getElementById('kpiKopiTotalBasah').textContent = new Intl.NumberFormat('id-ID').format(Math.round(totalBasah));
+            document.getElementById('kpiKopiTotalKering').textContent = new Intl.NumberFormat('id-ID').format(Math.round(totalKering));
+            document.getElementById('kpiKopiInputPercent').textContent = Math.round(avgInputPercent) + '%';
+
+            // Destroy existing charts
+            window.kopiCharts.forEach(chart => chart.destroy());
+            window.kopiCharts = [];
+
+            // Initialize Charts with AJAX data
+            initKopiCharts(data.prestasiData, data.prestasiDataLite);
+
+          } catch (error) {
+            console.error('Error loading kopi data:', error);
+            loadingSpinner.classList.remove('active');
+            showErrorPopup('Terjadi error saat load data');
+          }
+        }
+
+        // Auto-load data for detail-pemeliharaan tab
+        if (tabName === 'detail-pemeliharaan') {
+          // Load with default dates and no filter
+          const today = new Date();
+          const startDate = new Date(today);
+          startDate.setDate(startDate.getDate() - 1);
+          
+          const formatDate = (date) => date.toISOString().split('T')[0];
+          
+          const tglAwal = formatDate(startDate);
+          const tglAkhir = formatDate(today);
+
+          // Update date inputs
+          document.getElementById('datePickerStartPemeliharaan').value = tglAwal;
+          document.getElementById('datePickerEndPemeliharaan').value = tglAkhir;
+          
+          function updateDateDisplayPemeliharaan() {
+            if (document.getElementById('datePickerStartPemeliharaan').value && document.getElementById('datePickerEndPemeliharaan').value) {
+              const start = new Date(document.getElementById('datePickerStartPemeliharaan').value);
+              const end = new Date(document.getElementById('datePickerEndPemeliharaan').value);
+              document.getElementById('dateRangePemeliharaan').value = `${start.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })} - ${end.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })}`;
+            }
+          }
+          updateDateDisplayPemeliharaan();
+
+          // Show loading spinner
+          const loadingSpinner = document.getElementById('pemeliharaanLoadingSpinner');
+          loadingSpinner.classList.add('active');
+
+          // Auto-load AJAX data with default komoditas (Teh = 1)
+          try {
+            const response = await fetch('{{ route('ajax_dfarmpemeliharaan') }}', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                'X-Requested-With': 'XMLHttpRequest'
+              },
+              body: JSON.stringify({
+                id_reg: '',
+                tgl_awal: tglAwal,
+                tgl_akhir: tglAkhir,
+                kode_kebun: '',
+                komoditas: '1',
+                jenis_aktivitas: '',
+                jobdesc: 'PEMELIHARAAN'
+              })
+            });
+
+            const data = await response.json();
+            loadingSpinner.classList.remove('active');
+
+            if (!data.success) {
+              showErrorPopup(data.error || 'Gagal load data');
+              return;
+            }
+
+            // Update KPI Cards
+            const totalHasil = data.prestasiData.reduce((sum, item) => sum + (parseFloat(item.hasil_pemeliharaan) || 0), 0);
+            const avgInputPercent = data.prestasiDataLite.length > 0 
+              ? data.prestasiDataLite.reduce((sum, item) => sum + (parseFloat(item.persen_input_produksi) || 0), 0) / data.prestasiDataLite.length 
+              : 0;
+
+            document.getElementById('kpiPemeliharaanHasil').textContent = new Intl.NumberFormat('id-ID').format(Math.round(totalHasil));
+            document.getElementById('kpiPemeliharaanInputPercent').textContent = Math.round(avgInputPercent) + '%';
+
+            // Destroy existing charts
+            window.pemeliharaanCharts.forEach(chart => chart.destroy());
+            window.pemeliharaanCharts = [];
+
+            // Initialize Charts with AJAX data
+            initPemeliharaanCharts(data.prestasiData, data.prestasiDataLite);
+
+          } catch (error) {
+            console.error('Error loading pemeliharaan data:', error);
             loadingSpinner.classList.remove('active');
             showErrorPopup('Terjadi error saat load data');
           }
@@ -1823,6 +2154,658 @@
     // Destroy charts
     window.tehCharts.forEach(chart => chart.destroy());
     window.tehCharts = [];
+  });
+
+  // ============================================
+  // KOPI TAB - DATE PICKER & FILTER HANDLERS
+  // ============================================
+  
+  const dateRangeInputKopi = document.getElementById('dateRangeKopi');
+  const datePickerPopupKopi = document.getElementById('datePickerPopupKopi');
+  const datePickerStartKopi = document.getElementById('datePickerStartKopi');
+  const datePickerEndKopi = document.getElementById('datePickerEndKopi');
+  const datePickerApplyKopi = document.getElementById('datePickerApplyKopi');
+  const datePickerCancelKopi = document.getElementById('datePickerCancelKopi');
+
+  // Set initial dates for Kopi tab
+  datePickerStartKopi.value = tglAwalDefault;
+  datePickerEndKopi.value = tglAkhirDefault;
+  
+  // Update display for Kopi
+  function updateDateDisplayKopi() {
+    if (datePickerStartKopi.value && datePickerEndKopi.value) {
+      dateRangeInputKopi.value = `${formatDate(datePickerStartKopi.value)} - ${formatDate(datePickerEndKopi.value)}`;
+    }
+  }
+  updateDateDisplayKopi();
+
+  // Toggle popup for Kopi
+  dateRangeInputKopi.addEventListener('click', () => {
+    datePickerPopupKopi.classList.toggle('hidden');
+  });
+
+  // Apply button for Kopi
+  datePickerApplyKopi.addEventListener('click', () => {
+    if (datePickerStartKopi.value && datePickerEndKopi.value) {
+      if (new Date(datePickerStartKopi.value) <= new Date(datePickerEndKopi.value)) {
+        updateDateDisplayKopi();
+        datePickerPopupKopi.classList.add('hidden');
+      } else {
+        alert('Tanggal awal harus lebih kecil dari tanggal akhir');
+      }
+    }
+  });
+
+  // Cancel button for Kopi
+  datePickerCancelKopi.addEventListener('click', () => {
+    datePickerPopupKopi.classList.add('hidden');
+  });
+
+  // Regional Select Change for Kopi - Load Kebun Data via AJAX
+  document.getElementById('selectKopiRegional').addEventListener('change', function() {
+    const regionalId = this.value;
+    const selectKebun = document.getElementById('selectKopiKebun');
+
+    if (!regionalId) {
+      selectKebun.innerHTML = '<option value="">Pilih</option>';
+      return;
+    }
+
+    selectKebun.innerHTML = '<option value="">Loading...</option>';
+
+    fetch('{{ route('get_data_kebun') }}?id_reg=' + regionalId + '&komoditas=3', {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      selectKebun.innerHTML = '<option value="">Pilih</option>';
+
+      if (data.data && data.data.length > 0) {
+        const uniqueKebun = new Map();
+        data.data.forEach(item => {
+          if (!uniqueKebun.has(item.kebun_id)) {
+            uniqueKebun.set(item.kebun_id, item.nama_kebun);
+          }
+        });
+
+        uniqueKebun.forEach((nama, kebunId) => {
+          const option = document.createElement('option');
+          option.value = kebunId;
+          option.textContent = nama;
+          selectKebun.appendChild(option);
+        });
+      } else {
+        selectKebun.innerHTML = '<option value="">Tidak ada data kebun</option>';
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      selectKebun.innerHTML = '<option value="">Error loading data</option>';
+    });
+  });
+
+  // Store for Kopi charts globally
+  window.kopiCharts = [];
+
+  // Initialize Kopi Charts Function
+  function initKopiCharts(prestasiData, prestasiDataLite) {
+    // Chart 1: Warna Basah (Merah/Kuning/Hijau/Hitam)
+    const kopiBasahCtx = document.getElementById('kopiWarnaBasahChart').getContext('2d');
+    if (kopiBasahCtx) {
+      const kopiBasah = new Chart(kopiBasahCtx, {
+        type: 'bar',
+        data: {
+          labels: prestasiData.map(item => item.nama),
+          datasets: [
+            {
+              label: 'Basah Merah (Kg)',
+              data: prestasiData.map(item => item.basah_merah || 0),
+              backgroundColor: chartColors.red,
+              borderRadius: 6,
+              borderSkipped: false,
+            },
+            {
+              label: 'Basah Kuning (Kg)',
+              data: prestasiData.map(item => item.basah_kuning || 0),
+              backgroundColor: '#f59e0b',
+              borderRadius: 6,
+              borderSkipped: false,
+            },
+            {
+              label: 'Basah Hijau (Kg)',
+              data: prestasiData.map(item => item.basah_hijau || 0),
+              backgroundColor: chartColors.cyan,
+              borderRadius: 6,
+              borderSkipped: false,
+            },
+            {
+              label: 'Basah Hitam (Kg)',
+              data: prestasiData.map(item => item.basah_hitam || 0),
+              backgroundColor: '#374151',
+              borderRadius: 6,
+              borderSkipped: false,
+            },
+          ],
+        },
+        options: {
+          ...commonOptions,
+          scales: {
+            ...commonOptions.scales,
+            x: {
+              ...commonOptions.scales.x,
+              stacked: false,
+            },
+            y: {
+              ...commonOptions.scales.y,
+              stacked: false,
+            },
+          },
+        },
+      });
+      window.kopiCharts.push(kopiBasah);
+    }
+
+    // Chart 2: Warna Kering (Merah/Kuning/Hijau/Hitam)
+    const kopiKeringCtx = document.getElementById('kopiWarnaKeringChart').getContext('2d');
+    if (kopiKeringCtx) {
+      const kopiKering = new Chart(kopiKeringCtx, {
+        type: 'bar',
+        data: {
+          labels: prestasiData.map(item => item.nama),
+          datasets: [
+            {
+              label: 'Kering Merah (Kg)',
+              data: prestasiData.map(item => item.kering_merah || 0),
+              backgroundColor: chartColors.red,
+              borderRadius: 6,
+              borderSkipped: false,
+            },
+            {
+              label: 'Kering Kuning (Kg)',
+              data: prestasiData.map(item => item.kering_kuning || 0),
+              backgroundColor: '#f59e0b',
+              borderRadius: 6,
+              borderSkipped: false,
+            },
+            {
+              label: 'Kering Hijau (Kg)',
+              data: prestasiData.map(item => item.kering_hijau || 0),
+              backgroundColor: chartColors.cyan,
+              borderRadius: 6,
+              borderSkipped: false,
+            },
+            {
+              label: 'Kering Hitam (Kg)',
+              data: prestasiData.map(item => item.kering_hitam || 0),
+              backgroundColor: '#374151',
+              borderRadius: 6,
+              borderSkipped: false,
+            },
+          ],
+        },
+        options: {
+          ...commonOptions,
+          scales: {
+            ...commonOptions.scales,
+            x: {
+              ...commonOptions.scales.x,
+              stacked: false,
+            },
+            y: {
+              ...commonOptions.scales.y,
+              stacked: false,
+            },
+          },
+        },
+      });
+      window.kopiCharts.push(kopiKering);
+    }
+
+    // Chart 3: % Input Produksi
+    const kopiInputCtx = document.getElementById('kopiInputProduksiChart').getContext('2d');
+    if (kopiInputCtx) {
+      const kopiInput = new Chart(kopiInputCtx, {
+        type: 'bar',
+        data: {
+          labels: prestasiDataLite.map(item => item.nama),
+          datasets: [
+            {
+              label: '% Input',
+              data: prestasiDataLite.map(item => Math.min(100, item.persen_input_produksi || 0)),
+              backgroundColor: chartColors.blue,
+              borderRadius: 6,
+              borderSkipped: false,
+            },
+            {
+              label: '% Tidak Input',
+              data: prestasiDataLite.map(item => Math.max(0, 100 - Math.min(100, item.persen_input_produksi || 0))),
+              backgroundColor: chartColors.red,
+              borderRadius: 6,
+              borderSkipped: false,
+            },
+          ],
+        },
+        options: {
+          ...commonOptions,
+          scales: {
+            ...commonOptions.scales,
+            x: {
+              ...commonOptions.scales.x,
+              stacked: true,
+            },
+            y: {
+              ...commonOptions.scales.y,
+              stacked: true,
+              max: 100,
+            },
+          },
+        },
+      });
+      window.kopiCharts.push(kopiInput);
+    }
+  }
+
+  // Filter Button Handler for Kopi Tab
+  document.getElementById('btnKopiFilter').addEventListener('click', async () => {
+    const tglAwal = datePickerStartKopi.value;
+    const tglAkhir = datePickerEndKopi.value;
+    const idReg = document.getElementById('selectKopiRegional').value;
+    const kodeKebun = document.getElementById('selectKopiKebun').value;
+
+    if (!tglAwal || !tglAkhir) {
+      showErrorPopup('Silakan pilih periode terlebih dahulu');
+      return;
+    }
+
+    // Show loading spinner
+    const loadingSpinner = document.getElementById('kopiLoadingSpinner');
+    loadingSpinner.classList.add('active');
+
+    // Call AJAX endpoint
+    try {
+      const response = await fetch('{{ route('ajax_dfarmkopiproduksi') }}', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+          id_reg: idReg,
+          tgl_awal: tglAwal,
+          tgl_akhir: tglAkhir,
+          kode_kebun: kodeKebun,
+          jobdesc: 'PANEN KOPI'
+        })
+      });
+
+      const data = await response.json();
+      loadingSpinner.classList.remove('active');
+
+      if (!data.success) {
+        showErrorPopup(data.error || 'Gagal load data');
+        return;
+      }
+
+      // Update KPI Cards
+      const totalBasah = data.prestasiData.reduce((sum, item) => sum + (parseFloat(item.total_basah) || 0), 0);
+      const totalKering = data.prestasiData.reduce((sum, item) => sum + (parseFloat(item.total_kering) || 0), 0);
+      const avgInputPercent = data.prestasiDataLite.length > 0 
+        ? data.prestasiDataLite.reduce((sum, item) => sum + (parseFloat(item.persen_input_produksi) || 0), 0) / data.prestasiDataLite.length 
+        : 0;
+
+      document.getElementById('kpiKopiTotalBasah').textContent = new Intl.NumberFormat('id-ID').format(Math.round(totalBasah));
+      document.getElementById('kpiKopiTotalKering').textContent = new Intl.NumberFormat('id-ID').format(Math.round(totalKering));
+      document.getElementById('kpiKopiInputPercent').textContent = Math.round(avgInputPercent) + '%';
+
+      // Destroy existing charts
+      window.kopiCharts.forEach(chart => chart.destroy());
+      window.kopiCharts = [];
+
+      // Initialize Charts with AJAX data
+      initKopiCharts(data.prestasiData, data.prestasiDataLite);
+
+    } catch (error) {
+      console.error('Error:', error);
+      loadingSpinner.classList.remove('active');
+      showErrorPopup('Terjadi error saat load data');
+    }
+  });
+
+  // Reset Button Handler for Kopi Tab
+  document.getElementById('btnKopiReset').addEventListener('click', () => {
+    document.getElementById('selectKopiRegional').value = '';
+    document.getElementById('selectKopiKebun').value = '';
+    
+    // Hide loading spinner
+    document.getElementById('kopiLoadingSpinner').classList.remove('active');
+    
+    // Reset KPI cards
+    document.getElementById('kpiKopiTotalBasah').textContent = '0';
+    document.getElementById('kpiKopiTotalKering').textContent = '0';
+    document.getElementById('kpiKopiInputPercent').textContent = '0%';
+
+    // Destroy charts
+    window.kopiCharts.forEach(chart => chart.destroy());
+    window.kopiCharts = [];
+  });
+
+  // ============================================
+  // PEMELIHARAAN TAB - DATE PICKER & FILTER HANDLERS
+  // ============================================
+  
+  const dateRangeInputPemeliharaan = document.getElementById('dateRangePemeliharaan');
+  const datePickerPopupPemeliharaan = document.getElementById('datePickerPopupPemeliharaan');
+  const datePickerStartPemeliharaan = document.getElementById('datePickerStartPemeliharaan');
+  const datePickerEndPemeliharaan = document.getElementById('datePickerEndPemeliharaan');
+  const datePickerApplyPemeliharaan = document.getElementById('datePickerApplyPemeliharaan');
+  const datePickerCancelPemeliharaan = document.getElementById('datePickerCancelPemeliharaan');
+
+  // Set initial dates for Pemeliharaan tab
+  datePickerStartPemeliharaan.value = tglAwalDefault;
+  datePickerEndPemeliharaan.value = tglAkhirDefault;
+  
+  // Update display for Pemeliharaan
+  function updateDateDisplayPemeliharaan() {
+    if (datePickerStartPemeliharaan.value && datePickerEndPemeliharaan.value) {
+      dateRangeInputPemeliharaan.value = `${formatDate(datePickerStartPemeliharaan.value)} - ${formatDate(datePickerEndPemeliharaan.value)}`;
+    }
+  }
+  updateDateDisplayPemeliharaan();
+
+  // Toggle popup for Pemeliharaan
+  dateRangeInputPemeliharaan.addEventListener('click', () => {
+    datePickerPopupPemeliharaan.classList.toggle('hidden');
+  });
+
+  // Apply button for Pemeliharaan
+  datePickerApplyPemeliharaan.addEventListener('click', () => {
+    if (datePickerStartPemeliharaan.value && datePickerEndPemeliharaan.value) {
+      if (new Date(datePickerStartPemeliharaan.value) <= new Date(datePickerEndPemeliharaan.value)) {
+        updateDateDisplayPemeliharaan();
+        datePickerPopupPemeliharaan.classList.add('hidden');
+      } else {
+        alert('Tanggal awal harus lebih kecil dari tanggal akhir');
+      }
+    }
+  });
+
+  // Cancel button for Pemeliharaan
+  datePickerCancelPemeliharaan.addEventListener('click', () => {
+    datePickerPopupPemeliharaan.classList.add('hidden');
+  });
+
+  // Komoditas Select Change for Pemeliharaan - Load Aktivitas Data via AJAX
+  document.getElementById('selectPemeliharaanKomoditas').addEventListener('change', function() {
+    const komoditas = this.value;
+    const selectAktivitas = document.getElementById('selectPemeliharaanAktivitas');
+    const selectRegional = document.getElementById('selectPemeliharaanRegional');
+
+    // Reset dependent selects
+    selectAktivitas.innerHTML = '<option value="">Loading...</option>';
+    selectRegional.innerHTML = '<option value="">Pilih</option>';
+
+    if (!komoditas) {
+      selectAktivitas.innerHTML = '<option value="">Pilih</option>';
+      return;
+    }
+
+    // Load aktivitas data
+    fetch('{{ route('get_data_aktivitas') }}?komoditas=' + komoditas, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      selectAktivitas.innerHTML = '<option value="">Pilih</option>';
+
+      if (data.data && data.data.length > 0) {
+        data.data.forEach(item => {
+          const option = document.createElement('option');
+          option.value = item.id;
+          option.textContent = item.nama;
+          selectAktivitas.appendChild(option);
+        });
+      } else {
+        selectAktivitas.innerHTML = '<option value="">Tidak ada data aktivitas</option>';
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      selectAktivitas.innerHTML = '<option value="">Error loading data</option>';
+    });
+  });
+
+  // Regional Select Change for Pemeliharaan - Load Kebun Data via AJAX
+  document.getElementById('selectPemeliharaanRegional').addEventListener('change', function() {
+    const regionalId = this.value;
+    const komoditas = document.getElementById('selectPemeliharaanKomoditas').value;
+    const selectKebun = document.getElementById('selectPemeliharaanKebun');
+
+    if (!regionalId) {
+      selectKebun.innerHTML = '<option value="">Pilih</option>';
+      return;
+    }
+
+    selectKebun.innerHTML = '<option value="">Loading...</option>';
+
+    fetch('{{ route('get_data_kebun') }}?id_reg=' + regionalId + '&komoditas=' + komoditas, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      selectKebun.innerHTML = '<option value="">Pilih</option>';
+
+      if (data.data && data.data.length > 0) {
+        const uniqueKebun = new Map();
+        data.data.forEach(item => {
+          if (!uniqueKebun.has(item.kebun_id)) {
+            uniqueKebun.set(item.kebun_id, item.nama_kebun);
+          }
+        });
+
+        uniqueKebun.forEach((nama, kebunId) => {
+          const option = document.createElement('option');
+          option.value = kebunId;
+          option.textContent = nama;
+          selectKebun.appendChild(option);
+        });
+      } else {
+        selectKebun.innerHTML = '<option value="">Tidak ada data kebun</option>';
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      selectKebun.innerHTML = '<option value="">Error loading data</option>';
+    });
+  });
+
+  // Store for Pemeliharaan charts globally
+  window.pemeliharaanCharts = [];
+
+  // Initialize Pemeliharaan Charts Function
+  function initPemeliharaanCharts(prestasiData, prestasiDataLite) {
+    // Chart 1: Hasil Aktivitas Pemeliharaan
+    const pemeliharaanHasilCtx = document.getElementById('pemeliharaanHasilChart').getContext('2d');
+    if (pemeliharaanHasilCtx) {
+      const pemeliharaanHasil = new Chart(pemeliharaanHasilCtx, {
+        type: 'bar',
+        data: {
+          labels: prestasiData.map(item => item.nama),
+          datasets: [
+            {
+              label: 'Hasil Pemeliharaan',
+              data: prestasiData.map(item => item.hasil_pemeliharaan || 0),
+              backgroundColor: chartColors.blue,
+              borderRadius: 6,
+              borderSkipped: false,
+            },
+          ],
+        },
+        options: {
+          ...commonOptions,
+          scales: {
+            ...commonOptions.scales,
+            x: {
+              ...commonOptions.scales.x,
+              stacked: false,
+            },
+            y: {
+              ...commonOptions.scales.y,
+              stacked: false,
+            },
+          },
+        },
+      });
+      window.pemeliharaanCharts.push(pemeliharaanHasil);
+    }
+
+    // Chart 2: % Input Produksi
+    const pemeliharaanInputCtx = document.getElementById('pemeliharaanInputProduksiChart').getContext('2d');
+    if (pemeliharaanInputCtx) {
+      const pemeliharaanInput = new Chart(pemeliharaanInputCtx, {
+        type: 'bar',
+        data: {
+          labels: prestasiDataLite.map(item => item.nama),
+          datasets: [
+            {
+              label: '% Input',
+              data: prestasiDataLite.map(item => Math.min(100, item.persen_input_produksi || 0)),
+              backgroundColor: chartColors.blue,
+              borderRadius: 6,
+              borderSkipped: false,
+            },
+            {
+              label: '% Tidak Input',
+              data: prestasiDataLite.map(item => Math.max(0, 100 - Math.min(100, item.persen_input_produksi || 0))),
+              backgroundColor: chartColors.red,
+              borderRadius: 6,
+              borderSkipped: false,
+            },
+          ],
+        },
+        options: {
+          ...commonOptions,
+          scales: {
+            ...commonOptions.scales,
+            x: {
+              ...commonOptions.scales.x,
+              stacked: true,
+            },
+            y: {
+              ...commonOptions.scales.y,
+              stacked: true,
+              max: 100,
+            },
+          },
+        },
+      });
+      window.pemeliharaanCharts.push(pemeliharaanInput);
+    }
+  }
+
+  // Filter Button Handler for Pemeliharaan Tab
+  document.getElementById('btnPemeliharaanFilter').addEventListener('click', async () => {
+    const tglAwal = datePickerStartPemeliharaan.value;
+    const tglAkhir = datePickerEndPemeliharaan.value;
+    const idReg = document.getElementById('selectPemeliharaanRegional').value;
+    const kodeKebun = document.getElementById('selectPemeliharaanKebun').value;
+    const komoditas = document.getElementById('selectPemeliharaanKomoditas').value;
+    const jenisAktivitas = document.getElementById('selectPemeliharaanAktivitas').value;
+
+    if (!tglAwal || !tglAkhir) {
+      showErrorPopup('Silakan pilih periode terlebih dahulu');
+      return;
+    }
+
+    if (!komoditas) {
+      showErrorPopup('Silakan pilih komoditas terlebih dahulu');
+      return;
+    }
+
+    // Show loading spinner
+    const loadingSpinner = document.getElementById('pemeliharaanLoadingSpinner');
+    loadingSpinner.classList.add('active');
+
+    // Call AJAX endpoint
+    try {
+      const response = await fetch('{{ route('ajax_dfarmpemeliharaan') }}', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+          id_reg: idReg,
+          tgl_awal: tglAwal,
+          tgl_akhir: tglAkhir,
+          kode_kebun: kodeKebun,
+          komoditas: komoditas,
+          jenis_aktivitas: jenisAktivitas,
+          jobdesc: 'PEMELIHARAAN'
+        })
+      });
+
+      const data = await response.json();
+      loadingSpinner.classList.remove('active');
+
+      if (!data.success) {
+        showErrorPopup(data.error || 'Gagal load data');
+        return;
+      }
+
+      // Update KPI Cards
+      const totalHasil = data.prestasiData.reduce((sum, item) => sum + (parseFloat(item.hasil_pemeliharaan) || 0), 0);
+      const avgInputPercent = data.prestasiDataLite.length > 0 
+        ? data.prestasiDataLite.reduce((sum, item) => sum + (parseFloat(item.persen_input_produksi) || 0), 0) / data.prestasiDataLite.length 
+        : 0;
+
+      document.getElementById('kpiPemeliharaanHasil').textContent = new Intl.NumberFormat('id-ID').format(Math.round(totalHasil));
+      document.getElementById('kpiPemeliharaanInputPercent').textContent = Math.round(avgInputPercent) + '%';
+
+      // Destroy existing charts
+      window.pemeliharaanCharts.forEach(chart => chart.destroy());
+      window.pemeliharaanCharts = [];
+
+      // Initialize Charts with AJAX data
+      initPemeliharaanCharts(data.prestasiData, data.prestasiDataLite);
+
+    } catch (error) {
+      console.error('Error:', error);
+      loadingSpinner.classList.remove('active');
+      showErrorPopup('Terjadi error saat load data');
+    }
+  });
+
+  // Reset Button Handler for Pemeliharaan Tab
+  document.getElementById('btnPemeliharaanReset').addEventListener('click', () => {
+    document.getElementById('selectPemeliharaanKomoditas').value = '';
+    document.getElementById('selectPemeliharaanAktivitas').value = '';
+    document.getElementById('selectPemeliharaanRegional').value = '';
+    document.getElementById('selectPemeliharaanKebun').value = '';
+    
+    // Hide loading spinner
+    document.getElementById('pemeliharaanLoadingSpinner').classList.remove('active');
+    
+    // Reset KPI cards
+    document.getElementById('kpiPemeliharaanHasil').textContent = '0';
+    document.getElementById('kpiPemeliharaanInputPercent').textContent = '0%';
+
+    // Destroy charts
+    window.pemeliharaanCharts.forEach(chart => chart.destroy());
+    window.pemeliharaanCharts = [];
   });
 </script>
 

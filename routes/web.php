@@ -61,7 +61,9 @@ Route::middleware('auth:custom')->group(function () {
     Route::get('/dfarmkopiproduksi', [PageController::class, 'dfarmkopiproduksi'])->name('dfarmkopiproduksi');
     Route::post('/ajax_dfarmkopiproduksi', [PageController::class, 'ajax_dfarmkopiproduksi'])->name('ajax_dfarmkopiproduksi');
     Route::get('/dfarmpemeliharaan', [PageController::class, 'dfarmpemeliharaan'])->name('dfarmpemeliharaan');
+    Route::post('/ajax_dfarmpemeliharaan', [PageController::class, 'ajax_dfarmpemeliharaan'])->name('ajax_dfarmpemeliharaan');
     Route::get('/get_data_kebun', [ApiController::class, 'get_data_kebun'])->name('get_data_kebun');
+    Route::get('/get_data_aktivitas', [ApiController::class, 'get_data_aktivitas'])->name('get_data_aktivitas');
 
     Route::get('/fin_console', [PageController::class, 'fin_console'])->name('fin_console');
     Route::get('/fin_parent', [PageController::class, 'fin_parent'])->name('fin_parent');
