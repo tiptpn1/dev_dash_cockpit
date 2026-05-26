@@ -2,220 +2,894 @@
 @extends('layouts.app')
 
 @section('content')
-<link rel="stylesheet" href="{{ asset('css/dfarm.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/dfarm.css') }}">
 
-<div class="gradient-container">
-  @include('pages.dfarm.menu.headerkaret')
+  <style>
+    html, body {
+    height: auto !important;
+    min-height: 100vh;
+    overflow-y: auto !important;
+    background-color: #f8fafc !important;
+    color: #1f2937;
+    font-family: 'Google Sans', 'Inter', sans-serif;
+    }
+    /* ===== PAGE HEADER ===== */
+    .lm-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 50px;
+    background: #fff;
+    border-bottom: 1px solid #e5e7eb;
+    min-height: 56px;
+    }
 
-  <!-- Header Banner -->
-  <div class="bg-gradient-to-r from-blue-700 to-blue-500 text-white py-4 px-6 shadow-lg flex-shrink-0">
-    <div class="max-w-7xl mx-auto">
-      <h1 class="text-2xl md:text-3xl font-bold">
-        <span class="font-light">Produksi Karet</span> <span class="italic">DFARM PTPN I</span>
-      </h1>
-    </div>
-  </div>
+    .lm-header-logo {
+    width: 130px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    }
 
-  <!-- Main Content -->
-  <div class="flex-1 overflow-y-auto">
-    <div class="max-w-7xl mx-auto px-4 py-6">
-      
-      <!-- Error Notification Popup -->
-      <div id="errorPopup" class="hidden fixed top-20 right-4 bg-red-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 z-50 animate-slide-in">
-        <div class="flex-1">
-          <p id="errorMessage" class="text-sm font-medium"></p>
-        </div>
-        <button id="closeErrorBtn" class="text-white hover:text-gray-200 transition-colors">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
+    .lm-header-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    }
+
+    .lm-header-center {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    }
+
+    .lm-header-center h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #166534;
+    margin: 0;
+    }
+
+    .lm-header-right {
+    display: flex;
+    align-items: center;
+    }
+
+    .lm-header-right img {
+    height: 44px;
+    width: auto;
+    object-fit: contain;
+    }
+
+    /* ===== FILTER CARD ===== */
+    .filter-card {
+    background: #fff;
+    border: 1px solid #d1fae5;
+    border-left: 4px solid #166534;
+    border-radius: 8px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 4px rgba(22, 101, 52, 0.08);
+    }
+
+    .filter-title {
+    color: #166534;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    }
+
+    .filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    }
+
+    .form-group {
+    display: flex;
+    flex-direction: column;
+    }
+
+    .form-label {
+    color: #374151;
+    font-size: 11px;
+    font-weight: 700;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    }
+
+    .form-select, .form-input {
+    width: 100%;
+    padding: 8px 10px;
+    background-color: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    color: #1f2937;
+    font-size: 13px;
+    transition: border-color 0.2s;
+    }
+
+    .form-select:focus, .form-input:focus {
+    outline: none;
+    border-color: #166534;
+    box-shadow: 0 0 0 2px rgba(22, 101, 52, 0.12);
+    }
+
+    .content-section {
+    max-width: 100%;
+    margin: 0;
+    padding: 18px 50px 32px;
+    }
+
+    .chart-card {
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    }
+
+    .chart-card h2 {
+    color: #166534;
+    font-size: 14px;
+    font-weight: 700;
+    margin: 0 0 16px 0;
+    text-align: center;
+    }
+
+    .button-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    }
+
+    .btn-filter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background-color: #16a34a;
+    color: white;
+    border: 1px solid #15803d;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .btn-filter:hover {
+    background-color: #15803d;
+    }
+    /* ===== TABLE CARD ===== */
+    .table-card {
+    background: #fff;
+    border: 2px solid #166534;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(22, 101, 52, 0.10);
+    }
+
+    .table-header {
+    background: #166534;
+    padding: 12px 20px;
+    border-bottom: 2px solid #14532d;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    }
+
+    .table-title {
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: 0.02em;
+    }
+
+    .table-count {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    }
+
+    .table-wrapper {
+    overflow-x: auto;
+    width: 100%;
+    }
+
+    .report-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    color: #1f2937;
+    }
+
+    .report-table thead th {
+    background: #15803d;
+    color: #fff;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 9px 12px;
+    border: 1px solid #166534;
+    text-align: center;
+    white-space: nowrap;
+    }
+
+    .report-table tbody td {
+    padding: 8px 12px;
+    border: 1px solid #e5e7eb;
+    vertical-align: middle;
+    color: #1f2937;
+    }
+
+    .report-table tbody tr:hover td {
+    background-color: #f0fdf4;
+    }
+
+    .loading-row td {
+    text-align: center;
+    padding: 32px;
+    color: #6b7280;
+    font-size: 13px;
+    }
+
+    .error-banner {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    padding: 12px 16px;
+    margin: 12px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    }
+
+    .regional-badge {
+    display: inline-block;
+    background: #ecfdf5;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 8px;
+    }
+
+    .hris-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid #e5e7eb;
+    padding: 0 16px;
+    background: #f9fafb;
+    }
+
+    .hris-tab-btn {
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+    }
+
+    .hris-tab-btn.active {
+    color: #166534;
+    border-bottom-color: #166534;
+    background: #fff;
+    }
+
+    .hris-tab-panel {
+    display: none;
+    }
+
+    .hris-tab-panel.active {
+    display: block;
+    }
+
+    /* Loading Spinner Animation */
+    .teh-loading-spinner {
+      display: none;
+      text-align: center;
+      padding: 24px;
+      margin: 16px;
+    }
+
+    .teh-loading-spinner.active {
+      display: block;
+    }
+
+    .spinner {
+      border: 4px solid #f0f0f0;
+      border-top: 4px solid #16a34a;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .spinner-text {
+      color: #16a34a;
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 12px;
+    }
+
+    /* Loading Spinner Animation */
+    .teh-loading-spinner {
+      display: none;
+      text-align: center;
+      padding: 24px;
+      margin: 16px;
+    }
+
+    .teh-loading-spinner.active {
+      display: block;
+    }
+
+    .spinner {
+      border: 4px solid #f0f0f0;
+      border-top: 4px solid #16a34a;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .spinner-text {
+      color: #16a34a;
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 12px;
+    }
+  </style>
+
+  <div class="gradient-container">
+    <!-- Page Header -->
+    <header class="lm-page-header">
+      <div class="lm-header-logo">
+        <img src="{{ asset('danantara.png') }}" alt="Danantara">
       </div>
+      <div class="lm-header-center">
+        <svg style="width:28px;height:28px;color:#22c55e;flex-shrink:0;" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3A5 5 0 008 22c12 0 15-17 15-17-1 2-8 2-13 3-5 1-6 7-6 7s5.5-2 8.5-2 5 2 5 2-3-5-3-5 3 5 3 5-5 3-5 3 2 3 2 6-2 6-2 6 3-3 3-6-2-6-2-6z" />
+        </svg>
+        <h1>Evaluasi Kinerja Aplikasi</h1>
+      </div>
+      <div class="lm-header-right">
+        <img src="{{ asset('ptpn1.png') }}" alt="PTPN 1">
+      </div>
+    </header>
 
-      <style>
-        @keyframes slide-in {
-          from {
-            transform: translateX(400px);
-            opacity: 0;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
-        
-        @keyframes slide-out {
-          from {
-            transform: translateX(0);
-            opacity: 1;
-          }
-          to {
-            transform: translateX(400px);
-            opacity: 0;
-          }
-        }
-        
-        .animate-slide-in {
-          animation: slide-in 0.3s ease-out;
-        }
-        
-        .animate-slide-out {
-          animation: slide-out 0.3s ease-out;
-        }
-      </style>
-      
-      <!-- Filters Section -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
+    <!-- Main Content Section -->
+    <div class="content-section">
+      <div class="flex-1 overflow-y-auto">
+        <div class="mx-auto">
+          <!-- Error Notification Popup -->
+          <div id="errorPopup" class="hidden fixed top-20 right-4 bg-red-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 z-50 animate-slide-in">
+            <div class="flex-1">
+              <p id="errorMessage" class="text-sm font-medium"></p>
+            </div>
+            <button id="closeErrorBtn" class="text-white hover:text-gray-200 transition-colors">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
 
-        <!-- Date Range Filter -->
-        <div>
-          <label class="block text-white text-xs md:text-sm font-medium mb-1">Periode</label>
-          <div class="relative">
-            <input 
-              type="text" 
-              id="dateRange"
-              placeholder="Nov 5, 2024 - Nov 6, 2024" 
-              readonly
-              class="w-full px-3 py-2 text-sm rounded-lg bg-slate-700 bg-opacity-50 text-black placeholder-gray-400 border border-slate-600 focus:outline-none focus:border-blue-400 cursor-pointer font-medium"
-            />
-            <div id="datePickerPopup" class="hidden absolute top-full left-0 mt-2 bg-gray-900 rounded-lg border border-slate-600 shadow-lg p-4 z-50 min-w-max">
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label class="text-white text-xs mb-2 block">Dari Tanggal</label>
-                  <input type="date" id="datePickerStart" class="w-full px-2 py-1 text-sm rounded bg-slate-700 text-black border border-slate-600 font-medium">
-                </div>
-                <div>
-                  <label class="text-white text-xs mb-2 block">Sampai Tanggal</label>
-                  <input type="date" id="datePickerEnd" class="w-full px-2 py-1 text-sm rounded bg-slate-700 text-black border border-slate-600 font-medium">
-                </div>
-              </div>
-              <div class="flex gap-2 mt-3">
-                <button id="datePickerApply" class="flex-1 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-black text-xs rounded transition-colors">Terapkan</button>
-                <button id="datePickerCancel" class="flex-1 px-3 py-1 bg-slate-600 hover:bg-slate-700 text-black text-xs rounded transition-colors">Batal</button>
+          <style>
+            @keyframes slide-in {
+              from {
+                transform: translateX(400px);
+                opacity: 0;
+              }
+              to {
+                transform: translateX(0);
+                opacity: 1;
+              }
+            }
+
+            @keyframes slide-out {
+              from {
+                transform: translateX(0);
+                opacity: 1;
+              }
+              to {
+                transform: translateX(400px);
+                opacity: 0;
+              }
+            }
+
+            .animate-slide-in {
+              animation: slide-in 0.3s ease-out;
+            }
+
+            .animate-slide-out {
+              animation: slide-out 0.3s ease-out;
+            }
+          </style>
+          <!-- Filters Section -->
+          <div class="filter-card">
+            <div class="filter-title">
+              <i class="fas fa-sliders-h"></i> Filter Parameter
+            </div>
+            <div class="filter-grid">
+              <div class="form-group">
+                <label class="form-label">Aplikasi</label>
+                <select id="selectJobDesc" class="form-select">
+                  <option value="PENYADAP" <?php if ($jobdesc == 'PENYADAP') echo 'selected'; ?>>PENYADAP</option>
+                  <option value="PEMETIK" <?php if ($jobdesc == 'PEMETIK') echo 'selected'; ?>>PEMETIK</option>
+                  <option value="PANEN KOPI" <?php if ($jobdesc == 'PANEN KOPI') echo 'selected'; ?>>PANEN KOPI</option>
+                  <option value="PEMELIHARAAN" <?php if ($jobdesc == 'PEMELIHARAAN') echo 'selected'; ?>>PEMELIHARAAN</option>
+                </select>
               </div>
             </div>
           </div>
-        </div>
+          
+          <div class="table-card">
+            <div class="table-header">
+              <div class="table-title">
+                <i class="fas fa-table"></i>
+                <span id="table-title">Data Produksi On Farm DFARM</span>
+                <span id="regional-badge" class="regional-badge" style="display:none;"></span>
+              </div>
+              <span id="data-count-badge" class="table-count">Dfarm PTPN I</span>
+            </div>
 
-        <!-- Regional Filter -->
-        <div>
-          <label class="block text-white text-xs md:text-sm font-medium mb-1">Regional</label>
-          <select id="selectRegional" class="w-full px-3 py-2 text-sm rounded-lg bg-slate-700 bg-opacity-50 text-black border border-slate-600 focus:outline-none focus:border-blue-400 font-medium">
-            <option value="">Pilih</option>
-            <option value="2" <?php if ($selectedRegional == '2') echo 'selected'; ?>>REGIONAL 2</option>
-            <option value="3" <?php if ($selectedRegional == '3') echo 'selected'; ?>>REGIONAL 3</option>
-            <option value="5" <?php if ($selectedRegional == '5') echo 'selected'; ?>>REGIONAL 5</option>
-            <option value="7" <?php if ($selectedRegional == '7') echo 'selected'; ?>>REGIONAL 7</option>
-            <option value="8" <?php if ($selectedRegional == '8') echo 'selected'; ?>>REGIONAL 8</option>
-          </select>
-        </div>
+            <div id="tabs-wrap" style="display: block;">
+              <div class="hris-tabs">
+                <button type="button" class="hris-tab-btn active" data-tab="rekap">
+                  <i class="fas fa-chart-bar"></i>  Produksi Karet
+                </button>
+                <button type="button" class="hris-tab-btn" data-tab="detail-teh">
+                  <i class="fas fa-calendar-day"></i>  Produksi Teh
+                </button>
+                <button type="button" class="hris-tab-btn" data-tab="detail-kopi">
+                  <i class="fas fa-calendar-day"></i>  Produksi Kopi
+                </button>
+                <button type="button" class="hris-tab-btn" data-tab="detail-pemeliharaan">
+                  <i class="fas fa-calendar-day"></i> Prestasi Pemeliharaan
+                </button>
+              </div>
 
-        <!-- Nama Kebun Filter -->
-        <div class="flex flex-col">
-          <label class="block text-white text-xs md:text-sm font-medium mb-1">Nama Kebun</label>
-          <div class="flex gap-2 h-full">
-            <select id="selectKebun" class="flex-1 px-3 py-2 text-sm rounded-lg bg-slate-700 bg-opacity-50 text-black border border-slate-600 focus:outline-none focus:border-blue-400 font-medium">
-              <option value="">Pilih</option>
-              <?php
-                foreach ($allDatakebun as $key) {
-                  echo '<option value="' . $key->kebun_id . '"';
-                  if ($selectedKebun == $key->kebun_id) echo ' selected';
-                  echo '>' . $key->nama_kebun . '</option>';
-                } 
-              ?>
-            </select>
-            <!-- Filter Button -->
-            <button id="btnFilter" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap">
-              <i class="fa-solid fa-filter" style="margin-right: 6px;"></i>Filter
-            </button>
-            <button id="btnReset" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap">
-              <i class="fa-solid fa-rotate-right" style="margin-right: 6px;"></i>Reset
-            </button>
+              <div id="error-banner" class="error-banner" style="display: none;"></div>
+
+              <!-- Tab 1: Rekap -->
+              <div id="tab-rekap" class="hris-tab-panel active">
+                <!-- Filter Card in Tab -->
+                <div class="filter-card" style="margin: 16px;">
+                  <div class="filter-title">
+                    <i class="fas fa-sliders-h"></i> Filter Parameter
+                  </div>
+                  <div class="filter-grid">
+                    <div class="form-group">
+                      <label class="form-label">Periode</label>
+                      <div style="position: relative;">
+                        <input type="text" id="dateRange" placeholder="Nov 5, 2024 - Nov 6, 2024" readonly class="form-input" style="cursor: pointer; width: 100%;">
+                        <div id="datePickerPopup" class="hidden" style="position: absolute; top: 100%; left: 0; margin-top: 8px; background: white; border: 1px solid #d1d5db; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); padding: 16px; z-index: 50; min-width: 320px;">
+                          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <div>
+                              <label class="form-label" style="color: #374151;">Dari Tanggal</label>
+                              <input type="date" id="datePickerStart" class="form-input">
+                            </div>
+                            <div>
+                              <label class="form-label" style="color: #374151;">Sampai Tanggal</label>
+                              <input type="date" id="datePickerEnd" class="form-input">
+                            </div>
+                          </div>
+                          <div style="display: flex; gap: 8px; margin-top: 12px;">
+                            <button id="datePickerApply" class="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-xs rounded transition-colors font-medium" style="background-color: #166534; border: none; cursor: pointer; flex: 1; padding: 8px 12px;">Terapkan</button>
+                            <button id="datePickerCancel" class="flex-1 px-3 py-2 bg-gray-400 hover:bg-gray-500 text-white text-xs rounded transition-colors font-medium" style="background-color: #9ca3af; border: none; cursor: pointer; flex: 1; padding: 8px 12px;">Batal</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label class="form-label">Regional</label>
+                      <select id="selectRegional" class="form-select">
+                        <option value="">Pilih</option>
+                        <option value="2" <?php if ($selectedRegional == '2') echo 'selected'; ?>>REGIONAL 2</option>
+                        <option value="3" <?php if ($selectedRegional == '3') echo 'selected'; ?>>REGIONAL 3</option>
+                        <option value="5" <?php if ($selectedRegional == '5') echo 'selected'; ?>>REGIONAL 5</option>
+                        <option value="7" <?php if ($selectedRegional == '7') echo 'selected'; ?>>REGIONAL 7</option>
+                        <option value="8" <?php if ($selectedRegional == '8') echo 'selected'; ?>>REGIONAL 8</option>
+                      </select>
+                    </div>
+
+                    <div class="form-group">
+                      <label class="form-label">Nama Kebun</label>
+                      <select id="selectKebun" class="form-select">
+                        <option value="">Pilih</option>
+                        <?php
+                        foreach ($allDatakebun as $key) {
+                          echo '<option value="' . $key->kebun_id . '"';
+                          if ($selectedKebun == $key->kebun_id) echo ' selected';
+                          echo '>' . $key->nama_kebun . '</option>';
+                        }
+                        ?>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Action Buttons in Tab -->
+                <div style="margin: 0 16px 16px; display: flex; gap: 10px;">
+                  <button id="btnFilter" class="inline-flex align-items-center justify-content-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-all box-shadow" style="background-color: #16a34a; border: 1px solid #15803d; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); height: 36px;">
+                    <i class="fas fa-filter"></i> Filter
+                  </button>
+                  <button id="btnReset" class="inline-flex align-items-center justify-content-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-all box-shadow" style="background-color: #16a34a; border: 1px solid #15803d; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); height: 36px;">
+                    <i class="fas fa-rotate-right"></i> Reset
+                  </button>
+                </div>
+
+                <!-- KPI Cards Section -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                  <!-- Lateks Basah -->
+                  <div style="background: #fff; border: 1px solid #d1fae5; border-top: 4px solid #166534; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08); transition: transform 0.2s, box-shadow 0.2s;" class="hover:shadow-lg hover:scale-105">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                      <h3 style="color: #166534; font-size: 12px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Lateks Basah</h3>
+                      <i class="fas fa-tint" style="color: #16a34a; font-size: 18px;"></i>
+                    </div>
+                    <p style="color: #166534; font-size: 28px; font-weight: 800; margin: 0; line-height: 1;">{{ number_format($totalData['basah_latek'], 0, ',', '.') }}</p>
+                    <p style="color: #6b7280; font-size: 11px; margin: 4px 0 0 0;">Kg</p>
+                  </div>
+
+                  <!-- Lump Basah -->
+                  <div style="background: #fff; border: 1px solid #d1fae5; border-top: 4px solid #166534; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08); transition: transform 0.2s, box-shadow 0.2s;" class="hover:shadow-lg hover:scale-105">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                      <h3 style="color: #166534; font-size: 12px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Lump Basah</h3>
+                      <i class="fas fa-cube" style="color: #16a34a; font-size: 18px;"></i>
+                    </div>
+                    <p style="color: #166534; font-size: 28px; font-weight: 800; margin: 0; line-height: 1;">{{ number_format($totalData['basah_lump'], 0, ',', '.') }}</p>
+                    <p style="color: #6b7280; font-size: 11px; margin: 4px 0 0 0;">Kg</p>
+                  </div>
+
+                  <!-- Scrap Basah -->
+                  <div style="background: #fff; border: 1px solid #d1fae5; border-top: 4px solid #166534; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08); transition: transform 0.2s, box-shadow 0.2s;" class="hover:shadow-lg hover:scale-105">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                      <h3 style="color: #166534; font-size: 12px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Scrap Basah</h3>
+                      <i class="fas fa-droplets" style="color: #16a34a; font-size: 18px;"></i>
+                    </div>
+                    <p style="color: #166534; font-size: 28px; font-weight: 800; margin: 0; line-height: 1;">{{ number_format($totalData['basah_scrab'], 0, ',', '.') }}</p>
+                    <p style="color: #6b7280; font-size: 11px; margin: 4px 0 0 0;">Kg</p>
+                  </div>
+
+                  <!-- Sheet -->
+                  <div style="background: #fff; border: 1px solid #d1fae5; border-top: 4px solid #166534; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08); transition: transform 0.2s, box-shadow 0.2s;" class="hover:shadow-lg hover:scale-105">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                      <h3 style="color: #166534; font-size: 12px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Sheet</h3>
+                      <i class="fas fa-layer-group" style="color: #16a34a; font-size: 18px;"></i>
+                    </div>
+                    <p style="color: #166534; font-size: 28px; font-weight: 800; margin: 0; line-height: 1;">{{ number_format($totalData['sheet'], 0, ',', '.') }}</p>
+                    <p style="color: #6b7280; font-size: 11px; margin: 4px 0 0 0;">Kg</p>
+                  </div>
+
+                  <!-- Compo + Scrap -->
+                  <div style="background: #fff; border: 1px solid #d1fae5; border-top: 4px solid #166534; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08); transition: transform 0.2s, box-shadow 0.2s;" class="hover:shadow-lg hover:scale-105">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                      <h3 style="color: #166534; font-size: 12px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Compo + Scrap</h3>
+                      <i class="fas fa-boxes" style="color: #16a34a; font-size: 18px;"></i>
+                    </div>
+                    <p style="color: #166534; font-size: 28px; font-weight: 800; margin: 0; line-height: 1;">{{ number_format($totalData['compo'] + $totalData['scrap'], 0, ',', '.') }}</p>
+                    <p style="color: #6b7280; font-size: 11px; margin: 4px 0 0 0;">Kg</p>
+                  </div>
+
+                  <!-- Total Kering -->
+                  <div style="background: #fff; border: 1px solid #d1fae5; border-top: 4px solid #166534; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08); transition: transform 0.2s, box-shadow 0.2s;" class="hover:shadow-lg hover:scale-105">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                      <h3 style="color: #166534; font-size: 12px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Total Kering</h3>
+                      <i class="fas fa-weight" style="color: #16a34a; font-size: 18px;"></i>
+                    </div>
+                    <p style="color: #166534; font-size: 28px; font-weight: 800; margin: 0; line-height: 1;">{{ number_format($totalData['total_kering'], 0, ',', '.') }}</p>
+                    <p style="color: #6b7280; font-size: 11px; margin: 4px 0 0 0;">Kg</p>
+                  </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                  <!-- Produksi Kebun Chart -->
+                  <div class="chart-card">
+                    <h2>Produksi Kebun</h2>
+                    <div class="relative" style="height: 300px; position: relative;">
+                      <canvas id="presentaseInputChartBasah"></canvas>
+                    </div>
+                  </div>
+                
+
+                  <!-- Produksi Kering Chart -->
+                  <div class="chart-card">
+                    <h2>Produksi Kering</h2>
+                    <div class="relative" style="height: 300px; position: relative;">
+                      <canvas id="presentaseInputChart"></canvas>
+                    </div>
+                  </div>
+
+                  <!-- Perbandingan High Grade & Low Grade Bahan Baku -->
+                  <div class="chart-card">
+                    <h2>Perbandingan High Grade & Low Grade Bahan Baku</h2>
+                    <div class="relative" style="height: 300px; position: relative;">
+                      <canvas id="presensiChart"></canvas>
+                    </div>
+                  </div>
+
+                  <!-- Perbandingan High Grade & Low Grade Kering -->
+                  <div class="chart-card">
+                    <h2>Perbandingan High Grade & Low Grade Kering</h2>
+                    <div class="relative" style="height: 300px; position: relative;">
+                      <canvas id="presentaseHadirChart"></canvas>
+                    </div>
+                  </div>
+                </div>
+                <!-- % Input Produksi Chart -->
+                <div class="chart-card" style="margin-bottom: 24px;">
+                  <h2>% Input Produksi</h2>
+                  <div class="relative" style="height: 300px; position: relative;">
+                    <canvas id="presentaseInputProduksiChart"></canvas>
+                  </div>
+                </div>
+              </div>
+
+            <!-- Tab 2: Detail Teh -->
+            <div id="tab-detail-teh" class="hris-tab-panel">
+              <div style="padding: 20px;">
+                <!-- Filter Card in Tab -->
+                <div class="filter-card" style="margin: 16px;">
+                  <div class="filter-title">
+                    <i class="fas fa-sliders-h"></i> Filter Parameter
+                  </div>
+                  <div class="filter-grid">
+                    <div class="form-group">
+                      <label class="form-label">Periode</label>
+                      <div style="position: relative;">
+                        <input type="text" id="dateRangeTeh" placeholder="Nov 5, 2024 - Nov 6, 2024" readonly class="form-input" style="cursor: pointer; width: 100%;">
+                        <div id="datePickerPopupTeh" class="hidden" style="position: absolute; top: 100%; left: 0; margin-top: 8px; background: white; border: 1px solid #d1d5db; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); padding: 16px; z-index: 50; min-width: 320px;">
+                          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <div>
+                              <label class="form-label" style="color: #374151;">Dari Tanggal</label>
+                              <input type="date" id="datePickerStartTeh" class="form-input">
+                            </div>
+                            <div>
+                              <label class="form-label" style="color: #374151;">Sampai Tanggal</label>
+                              <input type="date" id="datePickerEndTeh" class="form-input">
+                            </div>
+                          </div>
+                          <div style="display: flex; gap: 8px; margin-top: 12px;">
+                            <button id="datePickerApplyTeh" class="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-xs rounded transition-colors font-medium" style="background-color: #166534; border: none; cursor: pointer; flex: 1; padding: 8px 12px;">Terapkan</button>
+                            <button id="datePickerCancelTeh" class="flex-1 px-3 py-2 bg-gray-400 hover:bg-gray-500 text-white text-xs rounded transition-colors font-medium" style="background-color: #9ca3af; border: none; cursor: pointer; flex: 1; padding: 8px 12px;">Batal</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label class="form-label">Regional</label>
+                      <select id="selectTehRegional" class="form-select">
+                        <option value="">Pilih</option>
+                        <option value="2">REGIONAL 2</option>
+                        <option value="3">REGIONAL 3</option>
+                        <option value="5">REGIONAL 5</option>
+                        <option value="7">REGIONAL 7</option>
+                        <option value="8">REGIONAL 8</option>
+                      </select>
+                    </div>
+
+                    <div class="form-group">
+                      <label class="form-label">Nama Kebun</label>
+                      <select id="selectTehKebun" class="form-select">
+                        <option value="">Pilih</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div style="margin: 0 16px 16px; display: flex; gap: 10px;">
+                  <button id="btnTehFilter" class="inline-flex align-items-center justify-content-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-all box-shadow" style="background-color: #16a34a; border: 1px solid #15803d; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); height: 36px;">
+                    <i class="fas fa-filter"></i> Filter
+                  </button>
+                  <button id="btnTehReset" class="inline-flex align-items-center justify-content-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-all box-shadow" style="background-color: #16a34a; border: 1px solid #15803d; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); height: 36px;">
+                    <i class="fas fa-rotate-right"></i> Reset
+                  </button>
+                </div>
+
+                <!-- Loading Spinner -->
+                <div id="tehLoadingSpinner" class="teh-loading-spinner">
+                  <div class="spinner"></div>
+                  <div class="spinner-text">Memuat data...</div>
+                </div>
+
+                <!-- KPI Cards Section -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                  <!-- Panen Manual -->
+                  <div style="background: #fff; border: 1px solid #d1fae5; border-top: 4px solid #166534; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08); transition: transform 0.2s, box-shadow 0.2s;" class="hover:shadow-lg hover:scale-105">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                      <h3 style="color: #166534; font-size: 12px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Panen Manual</h3>
+                      <i class="fas fa-hand-holding-leaves" style="color: #16a34a; font-size: 18px;"></i>
+                    </div>
+                    <p id="kpiTehPanenManual" style="color: #166534; font-size: 28px; font-weight: 800; margin: 0; line-height: 1;">0</p>
+                    <p style="color: #6b7280; font-size: 11px; margin: 4px 0 0 0;">Kg</p>
+                  </div>
+
+                  <!-- Panen Gunting -->
+                  <div style="background: #fff; border: 1px solid #d1fae5; border-top: 4px solid #166534; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08); transition: transform 0.2s, box-shadow 0.2s;" class="hover:shadow-lg hover:scale-105">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                      <h3 style="color: #166534; font-size: 12px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Panen Gunting</h3>
+                      <i class="fas fa-scissors" style="color: #16a34a; font-size: 18px;"></i>
+                    </div>
+                    <p id="kpiTehPanenGunting" style="color: #166534; font-size: 28px; font-weight: 800; margin: 0; line-height: 1;">0</p>
+                    <p style="color: #6b7280; font-size: 11px; margin: 4px 0 0 0;">Kg</p>
+                  </div>
+
+                  <!-- Panen Mesin -->
+                  <div style="background: #fff; border: 1px solid #d1fae5; border-top: 4px solid #166534; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08); transition: transform 0.2s, box-shadow 0.2s;" class="hover:shadow-lg hover:scale-105">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                      <h3 style="color: #166534; font-size: 12px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Panen Mesin</h3>
+                      <i class="fas fa-cogs" style="color: #16a34a; font-size: 18px;"></i>
+                    </div>
+                    <p id="kpiTehPanenMesin" style="color: #166534; font-size: 28px; font-weight: 800; margin: 0; line-height: 1;">0</p>
+                    <p style="color: #6b7280; font-size: 11px; margin: 4px 0 0 0;">Kg</p>
+                  </div>
+
+                  <!-- Total -->
+                  <div style="background: #fff; border: 1px solid #d1fae5; border-top: 4px solid #166534; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08); transition: transform 0.2s, box-shadow 0.2s;" class="hover:shadow-lg hover:scale-105">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                      <h3 style="color: #166534; font-size: 12px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Total Panen</h3>
+                      <i class="fas fa-chart-line" style="color: #16a34a; font-size: 18px;"></i>
+                    </div>
+                    <p id="kpiTehTotal" style="color: #166534; font-size: 28px; font-weight: 800; margin: 0; line-height: 1;">0</p>
+                    <p style="color: #6b7280; font-size: 11px; margin: 4px 0 0 0;">Kg</p>
+                  </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                  <!-- Produksi Kebun Chart -->
+                  <div class="chart-card">
+                    <h2>Produksi Kebun (Panen Manual/Gunting/Mesin)</h2>
+                    <div class="relative" style="height: 300px; position: relative;">
+                      <canvas id="presentaseInputChartTehBasah"></canvas>
+                    </div>
+                  </div>
+
+                  <!-- Produksi Kering Chart -->
+                  <div class="chart-card">
+                    <h2>Total Produksi</h2>
+                    <div class="relative" style="height: 300px; position: relative;">
+                      <canvas id="presentaseInputChartTeh"></canvas>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- % Input Produksi Chart -->
+                <div class="chart-card" style="margin-bottom: 24px;">
+                  <h2>% Input Produksi</h2>
+                  <div class="relative" style="height: 300px; position: relative;">
+                    <canvas id="presentaseInputProduksiTehChart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab 3: Detail Kopi -->
+            <div id="tab-detail-kopi" class="hris-tab-panel">
+              <!-- Filter Card in Tab -->
+                <div class="filter-card" style="margin: 16px;">
+                  <div class="filter-title">
+                    <i class="fas fa-sliders-h"></i> Filter Parameter
+                  </div>
+                  <div class="filter-grid">
+                    <div class="form-group">
+                      <label class="form-label">Periode</label>
+                      <input type="text" placeholder="Pilih periode" class="form-input" style="cursor: pointer;">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Regional</label>
+                      <select class="form-select">
+                        <option value="">Pilih</option>
+                        <option value="2">REGIONAL 2</option>
+                        <option value="3">REGIONAL 3</option>
+                        <option value="5">REGIONAL 5</option>
+                        <option value="7">REGIONAL 7</option>
+                        <option value="8">REGIONAL 8</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Nama Kebun</label>
+                      <select class="form-select">
+                        <option value="">Pilih</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                 <!-- Action Buttons -->
+                  <div style="margin: 16px; display: flex; gap: 10px;">
+                  <button class="inline-flex align-items-center justify-content-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-all" style="background-color: #16a34a; border: 1px solid #15803d; height: 36px;">
+                    <i class="fas fa-filter"></i> Filter
+                  </button>
+                  <button class="inline-flex align-items-center justify-content-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-all" style="background-color: #16a34a; border: 1px solid #15803d; height: 36px;">
+                    <i class="fas fa-rotate-right"></i> Reset
+                  </button>
+                  </div>
+            </div>
+
+            <!-- Tab 4: Detail Pemeliharaan -->
+            <div id="tab-detail-pemeliharaan" class="hris-tab-panel">
+              <!-- Filter Card in Tab -->
+                <div class="filter-card" style="margin: 16px;">
+                  <div class="filter-title">
+                    <i class="fas fa-sliders-h"></i> Filter Parameter
+                  </div>
+                  <div class="filter-grid">
+                    <div class="form-group">
+                      <label class="form-label">Periode</label>
+                      <input type="text" placeholder="Pilih periode" class="form-input" style="cursor: pointer;">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Regional</label>
+                      <select class="form-select">
+                        <option value="">Pilih</option>
+                        <option value="2">REGIONAL 2</option>
+                        <option value="3">REGIONAL 3</option>
+                        <option value="5">REGIONAL 5</option>
+                        <option value="7">REGIONAL 7</option>
+                        <option value="8">REGIONAL 8</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Nama Kebun</label>
+                      <select class="form-select">
+                        <option value="">Pilih</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                 <!-- Action Buttons -->
+                <div style="margin: 16px; display: flex; gap: 10px;">
+                  <button class="inline-flex align-items-center justify-content-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-all" style="background-color: #16a34a; border: 1px solid #15803d; height: 36px;">
+                    <i class="fas fa-filter"></i> Filter
+                  </button>
+                  <button class="inline-flex align-items-center justify-content-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-all" style="background-color: #16a34a; border: 1px solid #15803d; height: 36px;">
+                    <i class="fas fa-rotate-right"></i> Reset
+                  </button>
+                </div>
+            </div>
+            
           </div>
         </div>
       </div>
-
-      <!-- KPI Cards Section -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
-        <!-- Presensi Hadir -->
-        <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
-          <h3 class="text-gray-300 text-xs font-medium mb-1">Lateks Basah</h3>
-          <p class="text-2xl md:text-3xl font-bold text-white">{{number_format($totalData['basah_latek'], 0, ',', '.') }} Kg</p>
-        </div>
-
-        <!-- Jumlah Input Presensi -->
-        <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
-          <h3 class="text-gray-300 text-xs font-medium mb-1">Lump Basah</h3>
-          <p class="text-2xl md:text-3xl font-bold text-white">{{number_format($totalData['basah_lump'], 0, ',', '.') }} Kg</p>
-        </div>
-
-        <!-- Jumlah Karyawan -->
-        <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
-          <h3 class="text-gray-300 text-xs font-medium mb-1">Scrap Basah</h3>
-          <p class="text-2xl md:text-3xl font-bold text-white">{{number_format($totalData['basah_scrab'], 0, ',', '.') }} Kg</p>
-        </div>
-
-        <!-- Persentase Kehadiran -->
-        <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
-          <h3 class="text-gray-300 text-xs font-medium mb-1">Sheet</h3>
-          <p class="text-2xl md:text-3xl font-bold text-white">{{number_format($totalData['sheet'], 0, ',', '.') }} Kg</p>
-        </div>
-
-        <!-- Presentase Presensi -->
-        <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
-          <h3 class="text-gray-300 text-xs font-medium mb-1">Compo + Scrap</h3>
-          <p class="text-2xl md:text-3xl font-bold text-white">{{number_format($totalData['compo'] + $totalData['scrap'], 0, ',', '.') }} Kg</p>
-        </div>
-
-        <!-- Presentase Input Presensi -->
-        <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
-          <h3 class="text-gray-300 text-xs font-medium mb-1">Total Kering</h3>
-          <p class="text-2xl md:text-3xl font-bold text-white">{{number_format($totalData['total_kering'], 0, ',', '.') }} Kg</p>
-        </div>
-      </div>
-      <!-- Charts Section - By Regional -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-        <!-- Presentase Input Chart -->
-        <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
-          <h2 class="text-white text-xs md:text-sm font-bold mb-3 text-center">Produksi Kebun</h2>
-          <div class="relative h-56 md:h-64">
-            <canvas id="presentaseInputChartBasah"></canvas>
-          </div>
-        </div>
-
-        <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
-          <h2 class="text-white text-xs md:text-sm font-bold mb-3 text-center">Produksi Kering</h2>
-          <div class="relative h-56 md:h-64">
-            <canvas id="presentaseInputChart"></canvas>
-          </div>
-        </div>
-
-        <!-- Prestasi Chart Regional-->
-        <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
-          <h2 class="text-white text-xs md:text-sm font-bold mb-3 text-center">Perbandingan High Grade & Low Grade Bahan Baku</h2>
-          <div class="relative h-56 md:h-64">
-            <canvas id="presensiChart"></canvas>
-          </div>
-        </div>
-
-        <!-- Presentase Hadir Chart -->
-        <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
-          <h2 class="text-white text-xs md:text-sm font-bold mb-3 text-center">Perbandingan High Grade & Low Grade Kering</h2>
-          <div class="relative h-56 md:h-64">
-            <canvas id="presentaseHadirChart"></canvas>
-          </div>
-        </div>
-
-        
-      </div>
-      <div class="grid grid-cols-1 lg:grid-cols-1 gap-4 mb-6">
-        <!-- Presentase Input Chart -->
-        <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
-          <h2 class="text-white text-xs md:text-sm font-bold mb-3 text-center">% Input Produksi</h2>
-          <div class="relative h-56 md:h-64">
-            <canvas id="presentaseInputProduksiChart"></canvas>
-          </div>
-        </div>
-      </div>
-      
     </div>
   </div>
 </div>
@@ -260,15 +934,121 @@
     showErrorPopup('{{ $errors->first('msg') }}');
   @endif
 
+  // ============================================
+  // TAB SWITCHING FUNCTIONALITY
+  // ============================================
+  document.querySelectorAll('.hris-tab-btn').forEach(button => {
+    button.addEventListener('click', async () => {
+      const tabName = button.getAttribute('data-tab');
+      
+      // Remove active class from all buttons and panels
+      document.querySelectorAll('.hris-tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.hris-tab-panel').forEach(panel => panel.classList.remove('active'));
+      
+      // Add active class to clicked button and corresponding panel
+      button.classList.add('active');
+      const tabPanel = document.getElementById('tab-' + tabName);
+      if (tabPanel) {
+        tabPanel.classList.add('active');
+        
+        // Trigger chart resize for rekap tab
+        if (tabName === 'rekap' && window.charts && window.charts.length > 0) {
+          setTimeout(() => {
+            window.charts.forEach(chart => chart.resize());
+          }, 100);
+        }
+
+        // Auto-load data for detail-teh tab
+        if (tabName === 'detail-teh') {
+          // Load with default dates and no filter
+          const today = new Date();
+          const startDate = new Date(today);
+          startDate.setDate(startDate.getDate() - 1);
+          
+          const formatDate = (date) => date.toISOString().split('T')[0];
+          
+          const tglAwal = formatDate(startDate);
+          const tglAkhir = formatDate(today);
+
+          // Update date inputs
+          document.getElementById('datePickerStartTeh').value = tglAwal;
+          document.getElementById('datePickerEndTeh').value = tglAkhir;
+          
+          function updateDateDisplayTeh() {
+            if (document.getElementById('datePickerStartTeh').value && document.getElementById('datePickerEndTeh').value) {
+              const start = new Date(document.getElementById('datePickerStartTeh').value);
+              const end = new Date(document.getElementById('datePickerEndTeh').value);
+              document.getElementById('dateRangeTeh').value = `${start.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })} - ${end.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })}`;
+            }
+          }
+          updateDateDisplayTeh();
+
+          // Show loading spinner
+          const loadingSpinner = document.getElementById('tehLoadingSpinner');
+          loadingSpinner.classList.add('active');
+
+          // Auto-load AJAX data
+          try {
+            const response = await fetch('{{ route('ajax_dfarmtehproduksi') }}', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                'X-Requested-With': 'XMLHttpRequest'
+              },
+              body: JSON.stringify({
+                id_reg: '',
+                tgl_awal: tglAwal,
+                tgl_akhir: tglAkhir,
+                kode_kebun: '',
+                jobdesc: 'PEMETIK'
+              })
+            });
+
+            const data = await response.json();
+            loadingSpinner.classList.remove('active');
+
+            if (!data.success) {
+              showErrorPopup(data.error || 'Gagal load data');
+              return;
+            }
+
+            // Update KPI Cards
+            const panen_manual_total = data.prestasiData.reduce((sum, item) => sum + (parseFloat(item.panen_manual) || 0), 0);
+            const panen_gunting_total = data.prestasiData.reduce((sum, item) => sum + (parseFloat(item.panen_gunting) || 0), 0);
+            const panen_mesin_total = data.prestasiData.reduce((sum, item) => sum + (parseFloat(item.panen_mesin_individu) || 0), 0);
+            const total = data.prestasiData.reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
+
+            document.getElementById('kpiTehPanenManual').textContent = new Intl.NumberFormat('id-ID').format(Math.round(panen_manual_total));
+            document.getElementById('kpiTehPanenGunting').textContent = new Intl.NumberFormat('id-ID').format(Math.round(panen_gunting_total));
+            document.getElementById('kpiTehPanenMesin').textContent = new Intl.NumberFormat('id-ID').format(Math.round(panen_mesin_total));
+            document.getElementById('kpiTehTotal').textContent = new Intl.NumberFormat('id-ID').format(Math.round(total));
+
+            // Destroy existing charts
+            window.tehCharts.forEach(chart => chart.destroy());
+            window.tehCharts = [];
+
+            // Initialize Charts with AJAX data
+            initTehCharts(data.prestasiData, data.prestasiDataLite);
+
+          } catch (error) {
+            console.error('Error loading teh data:', error);
+            loadingSpinner.classList.remove('active');
+            showErrorPopup('Terjadi error saat load data');
+          }
+        }
+      }
+    });
+  });
+
   // Chart Colors
   const chartColors = {
-    blue: '#0EA5E9',
+    blue: '#0ea5e9',
     cyan: '#06B6D4',
-    red: '#EF4444',
+    red: '#dc2626',
     purple: '#8B5CF6',
-    primary: '#1E40AF',
-    gridColor: 'rgba(148, 163, 184, 0.1)',
-    textColor: '#E2E8F0',
+    gridColor: 'rgba(0, 0, 0, 0.1)',
+    textColor: '#1f2937',
   };
 
   // Chart Options Template
@@ -297,6 +1077,136 @@
       },
     },
   };
+
+  // Initialize Teh Charts Function
+  function initTehCharts(prestasiData, prestasiDataLite) {
+    // Chart 1: Produksi Kebun (Panen Manual/Gunting/Mesin)
+    const contextBasah = document.getElementById('presentaseInputChartTehBasah').getContext('2d');
+    if (contextBasah) {
+      const chartBasah = new Chart(contextBasah, {
+        type: 'bar',
+        data: {
+          labels: prestasiData.map(item => item.nama),
+          datasets: [
+            {
+              label: 'Panen Manual (Kg)',
+              data: prestasiData.map(item => item.panen_manual || 0),
+              backgroundColor: chartColors.blue,
+              borderRadius: 6,
+              borderSkipped: false,
+            },
+            {
+              label: 'Panen Gunting (Kg)',
+              data: prestasiData.map(item => item.panen_gunting || 0),
+              backgroundColor: chartColors.cyan,
+              borderRadius: 6,
+              borderSkipped: false,
+            },
+            {
+              label: 'Panen Mesin (Kg)',
+              data: prestasiData.map(item => item.panen_mesin_individu || 0),
+              backgroundColor: chartColors.purple,
+              borderRadius: 6,
+              borderSkipped: false,
+            },
+          ],
+        },
+        options: {
+          ...commonOptions,
+          scales: {
+            ...commonOptions.scales,
+            x: {
+              ...commonOptions.scales.x,
+              stacked: false,
+            },
+            y: {
+              ...commonOptions.scales.y,
+              stacked: false,
+            },
+          },
+        },
+      });
+      window.tehCharts.push(chartBasah);
+    }
+
+    // Chart 2: Total Produksi
+    const contextTotal = document.getElementById('presentaseInputChartTeh').getContext('2d');
+    if (contextTotal) {
+      const chartTotal = new Chart(contextTotal, {
+        type: 'bar',
+        data: {
+          labels: prestasiData.map(item => item.nama),
+          datasets: [
+            {
+              label: 'Total (Kg)',
+              data: prestasiData.map(item => (item.panen_manual || 0) + (item.panen_gunting || 0) + (item.panen_mesin_individu || 0)),
+              backgroundColor: chartColors.blue,
+              borderRadius: 6,
+              borderSkipped: false,
+            },
+          ],
+        },
+        options: {
+          ...commonOptions,
+          scales: {
+            ...commonOptions.scales,
+            x: {
+              ...commonOptions.scales.x,
+              stacked: false,
+            },
+            y: {
+              ...commonOptions.scales.y,
+              stacked: false,
+            },
+          },
+        },
+      });
+      window.tehCharts.push(chartTotal);
+    }
+
+    // Chart 3: % Input Produksi
+    const contextInputPercent = document.getElementById('presentaseInputProduksiTehChart').getContext('2d');
+    if (contextInputPercent) {
+      const chartInputPercent = new Chart(contextInputPercent, {
+        type: 'bar',
+        data: {
+          labels: prestasiDataLite.map(item => item.nama),
+          datasets: [
+            {
+              label: '% Input',
+              data: prestasiDataLite.map(item => Math.min(100, item.persen_input_produksi || 0)),
+              backgroundColor: chartColors.blue,
+              borderRadius: 6,
+              borderSkipped: false,
+            },
+            {
+              label: '% Tidak Input',
+              data: prestasiDataLite.map(item => Math.max(0, 100 - Math.min(100, item.persen_input_produksi || 0))),
+              backgroundColor: chartColors.red,
+              borderRadius: 6,
+              borderSkipped: false,
+            },
+          ],
+        },
+        options: {
+          ...commonOptions,
+          scales: {
+            ...commonOptions.scales,
+            x: {
+              ...commonOptions.scales.x,
+              stacked: true,
+            },
+            y: {
+              ...commonOptions.scales.y,
+              stacked: true,
+              max: 100,
+            },
+          },
+        },
+      });
+      window.tehCharts.push(chartInputPercent);
+    }
+  }
 
     // 1. Presensi Chart (Grouped Bar)
     const presensiCtx = document.getElementById('presensiChart').getContext('2d');
@@ -552,6 +1462,9 @@
       },
     });
 
+    // NOTE: Teh tab charts are initialized dynamically by initTehCharts() when tab is clicked
+    // This prevents null reference errors from trying to access hidden canvas elements on page load
+
 </script>
 
 <!-- Date Range Picker Script -->
@@ -729,6 +1642,187 @@
     
     // Reset ke halaman tanpa parameter
     window.location.href = window.location.pathname;
+  });
+
+  // ============================================
+  // TEH TAB - DATE PICKER & FILTER HANDLERS
+  // ============================================
+  
+  const dateRangeInputTeh = document.getElementById('dateRangeTeh');
+  const datePickerPopupTeh = document.getElementById('datePickerPopupTeh');
+  const datePickerStartTeh = document.getElementById('datePickerStartTeh');
+  const datePickerEndTeh = document.getElementById('datePickerEndTeh');
+  const datePickerApplyTeh = document.getElementById('datePickerApplyTeh');
+  const datePickerCancelTeh = document.getElementById('datePickerCancelTeh');
+
+  // Set initial dates for Teh tab
+  datePickerStartTeh.value = tglAwalDefault;
+  datePickerEndTeh.value = tglAkhirDefault;
+  
+  // Update display for Teh
+  function updateDateDisplayTeh() {
+    if (datePickerStartTeh.value && datePickerEndTeh.value) {
+      dateRangeInputTeh.value = `${formatDate(datePickerStartTeh.value)} - ${formatDate(datePickerEndTeh.value)}`;
+    }
+  }
+  updateDateDisplayTeh();
+
+  // Toggle popup for Teh
+  dateRangeInputTeh.addEventListener('click', () => {
+    datePickerPopupTeh.classList.toggle('hidden');
+  });
+
+  // Apply button for Teh
+  datePickerApplyTeh.addEventListener('click', () => {
+    if (datePickerStartTeh.value && datePickerEndTeh.value) {
+      if (new Date(datePickerStartTeh.value) <= new Date(datePickerEndTeh.value)) {
+        updateDateDisplayTeh();
+        datePickerPopupTeh.classList.add('hidden');
+      } else {
+        alert('Tanggal awal harus lebih kecil dari tanggal akhir');
+      }
+    }
+  });
+
+  // Cancel button for Teh
+  datePickerCancelTeh.addEventListener('click', () => {
+    datePickerPopupTeh.classList.add('hidden');
+  });
+
+  // Regional Select Change for Teh - Load Kebun Data via AJAX
+  document.getElementById('selectTehRegional').addEventListener('change', function() {
+    const regionalId = this.value;
+    const selectKebun = document.getElementById('selectTehKebun');
+
+    if (!regionalId) {
+      selectKebun.innerHTML = '<option value="">Pilih</option>';
+      return;
+    }
+
+    selectKebun.innerHTML = '<option value="">Loading...</option>';
+
+    fetch('{{ route('get_data_kebun') }}?id_reg=' + regionalId + '&komoditas=1', {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      selectKebun.innerHTML = '<option value="">Pilih</option>';
+
+      if (data.data && data.data.length > 0) {
+        const uniqueKebun = new Map();
+        data.data.forEach(item => {
+          if (!uniqueKebun.has(item.kebun_id)) {
+            uniqueKebun.set(item.kebun_id, item.nama_kebun);
+          }
+        });
+
+        uniqueKebun.forEach((nama, kebunId) => {
+          const option = document.createElement('option');
+          option.value = kebunId;
+          option.textContent = nama;
+          selectKebun.appendChild(option);
+        });
+      } else {
+        selectKebun.innerHTML = '<option value="">Tidak ada data kebun</option>';
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      selectKebun.innerHTML = '<option value="">Error loading data</option>';
+    });
+  });
+
+  // Store for Teh charts globally
+  window.tehCharts = [];
+
+  // Filter Button Handler for Teh Tab
+  document.getElementById('btnTehFilter').addEventListener('click', async () => {
+    const tglAwal = datePickerStartTeh.value;
+    const tglAkhir = datePickerEndTeh.value;
+    const idReg = document.getElementById('selectTehRegional').value;
+    const kodeKebun = document.getElementById('selectTehKebun').value;
+
+    if (!tglAwal || !tglAkhir) {
+      showErrorPopup('Silakan pilih periode terlebih dahulu');
+      return;
+    }
+
+    // Show loading spinner
+    const loadingSpinner = document.getElementById('tehLoadingSpinner');
+    loadingSpinner.classList.add('active');
+
+    // Call AJAX endpoint
+    try {
+      const response = await fetch('{{ route('ajax_dfarmtehproduksi') }}', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+          id_reg: idReg,
+          tgl_awal: tglAwal,
+          tgl_akhir: tglAkhir,
+          kode_kebun: kodeKebun,
+          jobdesc: 'PEMETIK'
+        })
+      });
+
+      const data = await response.json();
+      loadingSpinner.classList.remove('active');
+
+      if (!data.success) {
+        showErrorPopup(data.error || 'Gagal load data');
+        return;
+      }
+
+      // Update KPI Cards
+      const panen_manual_total = data.prestasiData.reduce((sum, item) => sum + (parseFloat(item.panen_manual) || 0), 0);
+      const panen_gunting_total = data.prestasiData.reduce((sum, item) => sum + (parseFloat(item.panen_gunting) || 0), 0);
+      const panen_mesin_total = data.prestasiData.reduce((sum, item) => sum + (parseFloat(item.panen_mesin_individu) || 0), 0);
+      const total = data.prestasiData.reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
+
+      document.getElementById('kpiTehPanenManual').textContent = new Intl.NumberFormat('id-ID').format(Math.round(panen_manual_total));
+      document.getElementById('kpiTehPanenGunting').textContent = new Intl.NumberFormat('id-ID').format(Math.round(panen_gunting_total));
+      document.getElementById('kpiTehPanenMesin').textContent = new Intl.NumberFormat('id-ID').format(Math.round(panen_mesin_total));
+      document.getElementById('kpiTehTotal').textContent = new Intl.NumberFormat('id-ID').format(Math.round(total));
+
+      // Destroy existing charts
+      window.tehCharts.forEach(chart => chart.destroy());
+      window.tehCharts = [];
+
+      // Initialize Charts with AJAX data
+      initTehCharts(data.prestasiData, data.prestasiDataLite);
+
+    } catch (error) {
+      console.error('Error:', error);
+      loadingSpinner.classList.remove('active');
+      showErrorPopup('Terjadi error saat load data');
+    }
+  });
+
+  // Reset Button Handler for Teh Tab
+  document.getElementById('btnTehReset').addEventListener('click', () => {
+    document.getElementById('selectTehRegional').value = '';
+    document.getElementById('selectTehKebun').value = '';
+    
+    // Hide loading spinner
+    document.getElementById('tehLoadingSpinner').classList.remove('active');
+    
+    // Reset KPI cards
+    document.getElementById('kpiTehPanenManual').textContent = '0';
+    document.getElementById('kpiTehPanenGunting').textContent = '0';
+    document.getElementById('kpiTehPanenMesin').textContent = '0';
+    document.getElementById('kpiTehTotal').textContent = '0';
+
+    // Destroy charts
+    window.tehCharts.forEach(chart => chart.destroy());
+    window.tehCharts = [];
   });
 </script>
 

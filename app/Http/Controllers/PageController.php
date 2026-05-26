@@ -884,6 +884,147 @@ class PageController extends Controller
 
         return view('pages/dfarm/dfarm_teh_produksi', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'prestasiData', 'prestasiDataLite', 'totalData', 'tglAwal', 'tglAkhir', 'jobdesc'));
     }
+    public function ajax_dfarmtehproduksi(Request $request)
+    {
+        // Validate input parameters
+        $request->validate([
+            'id_reg' => 'nullable|string',
+            'tgl_awal' => 'nullable|date_format:Y-m-d',
+            'tgl_akhir' => 'nullable|date_format:Y-m-d',
+            'kode_kebun' => 'nullable|string',
+            'jobdesc' => 'nullable|string',
+        ]);
+
+        $regional = $request->input('id_reg', '');
+        $tglAwal = $request->input('tgl_awal', date('Y-m-d'));
+        $tglAkhir = $request->input('tgl_akhir', date('Y-m-d'));
+        $kebun = $request->input('kode_kebun', '');
+        $jobdesc = $request->input('jobdesc', 'PEMETIK');
+        $komoditas = 1;
+
+        if ($tglAwal > $tglAkhir) {
+            return response()->json(['error' => 'Tanggal awal tidak boleh lebih besar dari tanggal akhir'], 400);
+        }
+
+        // Initialize variables
+        $prestasiData = [];
+        $prestasiDataLite = [];
+        $totalData = [];
+
+        // Gunakan INNER JOIN (lebih cepat) dan tambahkan filter regional
+        $data = DB::connection('pgsql_secondary')
+            ->table('person_data')
+            ->select('person_data.kebun_id', 'person_data.regional_id', 'm_kebun.nama as nama_kebun')
+            ->leftJoin('m_kebun', 'person_data.kebun_id', '=', 'm_kebun.id')
+            ->whereNotNull('person_data.regional_id')
+            ->orderBy('person_data.regional_id');
+
+        if ($komoditas == 1) {
+            $data->where(function ($query) {
+                $query->where('positionsdesc', 'like', '%Pemetik%')
+                    ->orWhere('positionsdesc', 'like', '%PEMETIK%')
+                    ->orWhere('positionsdesc', 'like', '%pemetik%');
+            });
+        }
+
+        if ($regional) {
+            $data->where('person_data.regional_id', $regional);
+        }
+        // Gunakan pagination untuk data besar
+        $allDatakebun = $data->groupBy('person_data.kebun_id', 'person_data.regional_id', 'm_kebun.nama')
+            ->get();
+
+        $selectedRegional = $regional;
+        $selectedKomoditas = $komoditas;
+        $selectedKebun = $kebun;
+        if ($regional != '' and $kebun == '') {
+            $prestasiData = DB::connection('pgsql_secondary')->select(
+                'SELECT * FROM fn_rekap_prestasi_teh_kebun(?,?, ?) AS (
+                    id integer, 
+                    nama varchar, 
+                    panen_manual numeric, 
+                    panen_gunting numeric, 
+                    panen_mesin_group numeric, 
+                    panen_mesin_individu numeric,
+                    total numeric
+                )',
+                [$regional, $tglAwal, $tglAkhir]
+            );
+            $totalData = $this->calculateTotalPrestasiTeh($prestasiData);
+            $prestasiDataLite = DB::connection('pgsql_secondary')->select(
+                'SELECT nama, persen_input_presensi, persen_input_produksi 
+                FROM fn_report_n1_karet_rekap_presensi_prestasi_kebun_lite(?, ?, ?, ?, ?, ?)',
+                ['PEMETIK', $regional, '', 1, $tglAwal, $tglAkhir]
+            );
+        }
+        if ($regional == '') {
+
+            $prestasiData = DB::connection('pgsql_secondary')->select(
+                'SELECT * FROM fn_rekap_prestasi_teh_regional(?, ?) AS (
+                    id integer, 
+                    nama varchar, 
+                    panen_manual numeric, 
+                    panen_gunting numeric, 
+                    panen_mesin_group numeric, 
+                    panen_mesin_individu numeric,
+                    total numeric
+                )',
+                [$tglAwal, $tglAkhir]
+            );
+            $totalData = $this->calculateTotalPrestasiTeh($prestasiData);
+            $prestasiDataLite = DB::connection('pgsql_secondary')->select(
+                'SELECT nama, persen_input_presensi, persen_input_produksi 
+                FROM fn_report_n1_karet_rekap_presensi_prestasi_regional_lite(?, ?, ?, ?, ?)',
+                ['PEMETIK', '', 1, $tglAwal, $tglAkhir]
+            );
+        }
+        if ($regional != '' and $kebun != '') {
+
+            $prestasiData = DB::connection('pgsql_secondary')->select(
+                'SELECT * FROM fn_rekap_prestasi_teh_afdeling(?,?, ?) AS (
+                    id integer, 
+                    nama varchar, 
+                    panen_manual numeric, 
+                    panen_gunting numeric, 
+                    panen_mesin_group numeric, 
+                    panen_mesin_individu numeric,
+                    total numeric
+                )',
+                [$kebun, $tglAwal, $tglAkhir]
+            );
+            $totalData = $this->calculateTotalPrestasiTeh($prestasiData);
+            $prestasiDataLite = DB::connection('pgsql_secondary')->select(
+                'SELECT nama, persen_input_presensi, persen_input_produksi 
+                FROM fn_report_n1_karet_rekap_presensi_prestasi_afdeling_lite(?, ?, ?, ?, ?)',
+                ['PEMETIK', $kebun, 1, $tglAwal, $tglAkhir]
+            );
+        }
+
+        // Hitung total untuk masing-masing kolom
+        if (empty($prestasiData) || empty($totalData)) {
+            return response()->json([
+                'error' => 'Data tidak ditemukan untuk filter yang dipilih',
+                'success' => false
+            ], 404);
+        }
+
+        $dataoutput = [
+            'success' => true,
+            'allDatakebun' => $allDatakebun,
+            'selectedRegional' => $selectedRegional,
+            'selectedKebun' => $selectedKebun,
+            'selectedKomoditas' => $selectedKomoditas,
+            'prestasiData' => $prestasiData,
+            'prestasiDataLite' => $prestasiDataLite,
+            'totalData' => $totalData,
+            'tglAwal' => $tglAwal,
+            'tglAkhir' => $tglAkhir,
+            'jobdesc' => $jobdesc
+        ];
+        
+        return response()->json($dataoutput, 200)
+            ->header('Content-Type', 'application/json; charset=utf-8');
+    }
     public function dfarmkopiproduksi()
     {
         $regional = $_GET['id_reg'] ?? '';
@@ -1007,6 +1148,162 @@ class PageController extends Controller
 
 
         return view('pages/dfarm/dfarm_kopi_produksi', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'prestasiData', 'prestasiDataLite', 'totalData', 'tglAwal', 'tglAkhir', 'jobdesc'));
+    }
+    public function ajax_dfarmkopiproduksi(Request $request)
+    {
+        // Validate input parameters
+        $request->validate([
+            'id_reg' => 'nullable|string',
+            'tgl_awal' => 'nullable|date_format:Y-m-d',
+            'tgl_akhir' => 'nullable|date_format:Y-m-d',
+            'kode_kebun' => 'nullable|string',
+            'jobdesc' => 'nullable|string',
+        ]);
+
+        $regional = $request->input('id_reg', '');
+        $tglAwal = $request->input('tgl_awal', date('Y-m-d'));
+        $tglAkhir = $request->input('tgl_akhir', date('Y-m-d'));
+        $kebun = $request->input('kode_kebun', '');
+        $jobdesc = $request->input('jobdesc', 'PANEN KOPI');
+        $komoditas = 3;
+
+        if ($tglAwal > $tglAkhir) {
+            return response()->json(['error' => 'Tanggal awal tidak boleh lebih besar dari tanggal akhir'], 400);
+        }
+
+        // Initialize variables
+        $prestasiData = [];
+        $prestasiDataLite = [];
+        $totalData = [];
+
+        // Gunakan INNER JOIN (lebih cepat) dan tambahkan filter regional
+        $data = DB::connection('pgsql_secondary')
+            ->table('person_data')
+            ->select('person_data.kebun_id', 'person_data.regional_id', 'm_kebun.nama as nama_kebun')
+            ->leftJoin('m_kebun', 'person_data.kebun_id', '=', 'm_kebun.id')
+            ->whereNotNull('person_data.regional_id')
+            ->orderBy('person_data.regional_id');
+
+        if ($komoditas == 3) {
+            $data->where(function ($query) {
+                $query->where('positionsdesc', 'like', '%Panen Kopi%')
+                    ->orWhere('positionsdesc', 'like', '%PANEN KOPI%')
+                    ->orWhere('positionsdesc', 'like', '%panen kopi%');
+            });
+        }
+
+        if ($regional) {
+            $data->where('person_data.regional_id', $regional);
+        }
+        // Gunakan pagination untuk data besar
+        $allDatakebun = $data->groupBy('person_data.kebun_id', 'person_data.regional_id', 'm_kebun.nama')
+            ->get();
+
+        $selectedRegional = $regional;
+        $selectedKomoditas = $komoditas;
+        $selectedKebun = $kebun;
+        if ($regional != '' and $kebun == '') {
+            $prestasiData = DB::connection('pgsql_secondary')->select(
+                'SELECT * FROM fn_rekap_prestasi_kopi_kebun(?, ?, ?, ?) AS (
+                    id integer, 
+                    nama varchar, 
+                    basah_merah numeric, 
+                    basah_kuning numeric, 
+                    basah_hijau numeric, 
+                    basah_hitam numeric, 
+                    total_basah numeric,
+                    kering_merah numeric, 
+                    kering_kuning numeric, 
+                    kering_hijau numeric, 
+                    kering_hitam numeric, 
+                    total_kering numeric
+                )',
+                [$komoditas, $regional, $tglAwal, $tglAkhir]
+            );
+            $totalData = $this->calculateTotalPrestasiKopi($prestasiData);
+            $prestasiDataLite = DB::connection('pgsql_secondary')->select(
+                'SELECT nama, persen_input_presensi, persen_input_produksi 
+                FROM fn_report_n1_karet_rekap_presensi_prestasi_kebun_lite(?, ?, ?, ?, ?, ?)',
+                ['PANEN KOPI', $regional, '', 3, $tglAwal, $tglAkhir]
+            );
+        }
+        if ($regional == '') {
+
+            $prestasiData = DB::connection('pgsql_secondary')->select(
+                'SELECT * FROM fn_rekap_prestasi_kopi_regional(?, ?, ?) AS (
+                    id integer, 
+                    nama varchar, 
+                    basah_merah numeric, 
+                    basah_kuning numeric, 
+                    basah_hijau numeric, 
+                    basah_hitam numeric, 
+                    total_basah numeric,
+                    kering_merah numeric, 
+                    kering_kuning numeric, 
+                    kering_hijau numeric, 
+                    kering_hitam numeric, 
+                    total_kering numeric
+                )',
+                [$komoditas, $tglAwal, $tglAkhir]
+            );
+            $totalData = $this->calculateTotalPrestasiKopi($prestasiData);
+            $prestasiDataLite = DB::connection('pgsql_secondary')->select(
+                'SELECT nama, persen_input_presensi, persen_input_produksi 
+                FROM fn_report_n1_karet_rekap_presensi_prestasi_regional_lite(?, ?, ?, ?, ?)',
+                ['PANEN KOPI', '', 3, $tglAwal, $tglAkhir]
+            );
+        }
+        if ($regional != '' and $kebun != '') {
+
+            $prestasiData = DB::connection('pgsql_secondary')->select(
+                'SELECT * FROM fn_rekap_prestasi_kopi_afdeling(?, ?, ?, ?) AS (
+                    id integer, 
+                    nama varchar, 
+                    basah_merah numeric, 
+                    basah_kuning numeric, 
+                    basah_hijau numeric, 
+                    basah_hitam numeric, 
+                    total_basah numeric,
+                    kering_merah numeric, 
+                    kering_kuning numeric, 
+                    kering_hijau numeric, 
+                    kering_hitam numeric, 
+                    total_kering numeric
+                )',
+                [$komoditas, $kebun, $tglAwal, $tglAkhir]
+            );
+            $totalData = $this->calculateTotalPrestasiKopi($prestasiData);
+            $prestasiDataLite = DB::connection('pgsql_secondary')->select(
+                'SELECT nama, persen_input_presensi, persen_input_produksi 
+                FROM fn_report_n1_karet_rekap_presensi_prestasi_afdeling_lite(?, ?, ?, ?, ?)',
+                ['PANEN KOPI', $kebun, 3, $tglAwal, $tglAkhir]
+            );
+        }
+
+        // Hitung total untuk masing-masing kolom
+        if (empty($prestasiData) || empty($totalData)) {
+            return response()->json([
+                'error' => 'Data tidak ditemukan untuk filter yang dipilih',
+                'success' => false
+            ], 404);
+        }
+
+        $dataoutput = [
+            'success' => true,
+            'allDatakebun' => $allDatakebun,
+            'selectedRegional' => $selectedRegional,
+            'selectedKebun' => $selectedKebun,
+            'selectedKomoditas' => $selectedKomoditas,
+            'prestasiData' => $prestasiData,
+            'prestasiDataLite' => $prestasiDataLite,
+            'totalData' => $totalData,
+            'tglAwal' => $tglAwal,
+            'tglAkhir' => $tglAkhir,
+            'jobdesc' => $jobdesc
+        ];
+        
+        return response()->json($dataoutput, 200)
+            ->header('Content-Type', 'application/json; charset=utf-8');
     }
     public function dfarmpemeliharaan()
     {
