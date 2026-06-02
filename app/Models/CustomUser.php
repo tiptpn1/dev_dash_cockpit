@@ -82,7 +82,9 @@ class CustomUser extends Model implements AuthenticatableContract
             'pengadaan',
             'carbon',
             'warehouse',
-            'evaluasi_aplikasi'
+            'evaluasi_aplikasi',
+            'pica',
+            'portalaplikasi'
         ];
 
         if (in_array($key, $features)) {

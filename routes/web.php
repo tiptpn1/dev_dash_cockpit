@@ -7,6 +7,9 @@ use App\Http\Controllers\AiResponseController;
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\BigQueryController;
 use App\Http\Controllers\SkyviewController;
+use App\Http\Controllers\Management\UserManagementController;
+use App\Http\Controllers\Management\FeatureManagementController;
+use App\Http\Controllers\Management\UserFeatureAccessController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -120,6 +123,15 @@ Route::middleware('auth:custom')->group(function () {
     Route::get('/get_data_lm34', [BigQueryController::class, 'get_data_lm34'])->name('get_data_lm34');
     Route::get('/get_data_lm34_by_negara', [BigQueryController::class, 'get_data_lm34_by_negara'])->name('get_data_lm34_by_negara');
     Route::get('/get_data_lm34_by_customer', [BigQueryController::class, 'get_data_lm34_by_customer'])->name('get_data_lm34_by_customer');
+
+    // Management Routes
+    Route::prefix('management')->name('management.')->group(function () {
+        Route::resource('users', UserManagementController::class);
+        Route::resource('features', FeatureManagementController::class);
+        Route::get('access', [UserFeatureAccessController::class, 'index'])->name('access.index');
+        Route::get('access/{user}/edit', [UserFeatureAccessController::class, 'edit'])->name('access.edit');
+        Route::put('access/{user}', [UserFeatureAccessController::class, 'update'])->name('access.update');
+    });
 
     // AI Response Route
     Route::post('/ai/response', [AiResponseController::class, 'aiResponse']);

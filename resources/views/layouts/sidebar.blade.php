@@ -20,31 +20,12 @@ if (isset($user)) {
         @if($user && $user->mrc)
             <a href="{{url('')}}/mrc" class="menu-item" id="mrc"><i class="fa-solid fa-calendar-days menu-icon"></i>MRC</a>
         @endif
-        @if($username != 'mrc')
-                @if($user && $user->operasional)
+        @if($user && $user->operasional)
                     <a href="#operasional" id="operasional" class="parent"><i class="fa-solid fa-gears menu-icon"></i>Operasional
                         <span class="toggle-icon">&#9654;</span></a>
                     <div class="submenu" id="operasionalSubmenu">
-                        <!-- <a href="#" id="karetSubmenu" class="parents"><i class="fa-solid fa-leaf menu-icon"></i>Karet<span
-                                                                                                        class="toggle-icon">&#9654;</span></a>
-                                                                                                <div class="submenu subsub">
-                                                                                                    <a href="{{url('')}}/onfarmkaret"><i class="fa-solid fa-tree menu-icon"></i>On Farm</a>
-                                                                                                    <a href="{{url('')}}/offfarmkaret"><i class="fa-solid fa-truck menu-icon"></i>Off Farm</a>
-                                                                                                </div>
-                                                                                                <a href="#" id="tehSubmenu" class="parents"><i class="fa-solid fa-mug-hot menu-icon"></i>Teh<span
-                                                                                                        class="toggle-icon">&#9654;</span></a>
-                                                                                                <div class="submenu subsub">
-                                                                                                    <a href="{{url('')}}/onfarmteh"><i class="fa-solid fa-tree menu-icon"></i>On Farm</a>
-                                                                                                    <a href="{{url('')}}/offfarmteh"><i class="fa-solid fa-truck menu-icon"></i>Off Farm</a>
-                                                                                                </div> -->
-                        <!-- <a href="{{url('')}}/onfarmkopi"><i class="fa-solid fa-mug-hot menu-icon"></i>Kopi</a> -->
-                        <!-- <a href="{{url('')}}/iot"><i class="fa-solid fa-microchip menu-icon"></i>IOT</a> -->
                         <a href="{{url('')}}/amanah"><i class="fa-solid fa-building menu-icon"></i>AMANAH</a>
-                        <!-- <a href="{{url('')}}/picaonfarm"><i class="fa-solid fa-clipboard-list menu-icon"></i>PICA On Farm</a> -->
-                        <!-- <a href="{{url('')}}/picaofffarm"><i class="fa-solid fa-clipboard-list menu-icon"></i>PICA Off Farm</a> -->
                         <a href="{{url('')}}/dfarmkaret"><i class="fa-solid fa-seedling menu-icon"></i>DFarm PTPN I</a>
-                        {{-- <a href="{{url('')}}/dfarmteh"><i class="fa-solid fa-seedling menu-icon"></i>DFarm Teh</a> --}}
-                        <!-- <a href="{{url('')}}/gudangutilisasi">Dashboard Utilisasi Gudang</a> -->
                     </div>
                 @endif
                 @if($user && $user->pica)
@@ -109,7 +90,6 @@ if (isset($user)) {
                     </div>
                 @endif
                 @if($user && $user->progress)
-                    <!-- <a href="{{url('')}}/pengadaan" class="menu-item" id="pengadaan">Pengadaan</a> -->
                     <a href="#capaian" id="capaian" class="parent"><i class="fa-solid fa-chart-line menu-icon"></i>Capaian Progres
                         <span class="toggle-icon">&#9654;</span></a>
                     <div class="submenu" id="capaianSubmenu">
@@ -166,10 +146,6 @@ if (isset($user)) {
                 @endif
             </div>
 
-        @endif
-
-
-    @if($username != 'mrc')
         @if($user && $user->aigr1)
             <a href="{{url('')}}/aigri" class="menu-item" id="aigr1"><i class="fa-solid fa-robot menu-icon"></i>AIGR1</a>
         @endif
@@ -182,14 +158,26 @@ if (isset($user)) {
                     class="fa-solid fa-th-large menu-icon"></i>Portal Aplikasi</a>
         @endif
 
-    @endif
-
-    @if($username == 'hris' || $username == 'superadmin')
         @if($user && $user->evaluasi_aplikasi)
             <a href="{{url('')}}/evaluasi-aplikasi" class="menu-item" id="evaluasiaplikasi"><i
                     class="fa-solid fa-clipboard-check menu-icon"></i>Evaluasi Aplikasi</a>
         @endif
-    @endif
+
+        @if($user && ($user->hasFeature('management_users') || $user->hasFeature('management_features') || $user->hasFeature('management_access')))
+            <a href="#management" id="management" class="parent"><i class="fa-solid fa-cogs menu-icon"></i>System Management
+                <span class="toggle-icon">&#9654;</span></a>
+            <div class="submenu" id="managementSubmenu">
+                @if($user->hasFeature('management_users'))
+                    <a href="{{ route('management.users.index') }}"><i class="fa-solid fa-users menu-icon"></i>User Management</a>
+                @endif
+                @if($user->hasFeature('management_features'))
+                    <a href="{{ route('management.features.index') }}"><i class="fa-solid fa-cube menu-icon"></i>Feature Management</a>
+                @endif
+                @if($user->hasFeature('management_access'))
+                    <a href="{{ route('management.access.index') }}"><i class="fa-solid fa-shield-halved menu-icon"></i>Access Management</a>
+                @endif
+            </div>
+        @endif
 
     <a href="{{url('')}}/logout" class="menu-item" id="logout"><i
             class="fa-solid fa-right-from-bracket menu-icon"></i>Logout</a>
