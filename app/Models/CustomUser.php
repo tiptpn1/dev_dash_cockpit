@@ -59,40 +59,7 @@ class CustomUser extends Model implements AuthenticatableContract
         return in_array($slug, $this->featureCache);
     }
 
-    /**
-     * Magic getter: $user->mrc, $user->finansial, dll.
-     * Agar sidebar lama ($user->mrc) tetap kompatibel
-     */
-    public function __get($key)
-    {
-        $features = [
-            'mrc',
-            'gis',
-            'lm',
-            'aigr1',
-            'garda',
-            'skyview',
-            'operasional',
-            'aset',
-            'finansial',
-            'hr',
-            'sales',
-            'legal',
-            'progress',
-            'pengadaan',
-            'carbon',
-            'warehouse',
-            'evaluasi_aplikasi',
-            'pica',
-            'portalaplikasi'
-        ];
 
-        if (in_array($key, $features)) {
-            return $this->hasFeature($key);
-        }
-
-        return parent::__get($key);
-    }
 
     // ─── AuthenticatableContract helpers ───────────────────────────────────
 
