@@ -766,10 +766,12 @@
                         <input type="hidden" id="app_select_hidden" value="HRIS">
                     @else
                         <select id="app_select" class="form-select">
-                            <option value="Digital Farming">Digital Farming</option>
+                            <option value="Digital Farming">DFarm Presensi</option>
+                            <option value="Digital Farming Produksi">DFarm Prestasi</option>
                             <option value="HRIS" selected>HRIS</option>
                             <option value="MAIA">MAIA</option>
                             <option value="MONIKA">MONIKA</option>
+                            <option value="BPD">Aplikasi BPD</option>
                             <option value="SAPA-Amanah">SAPA-Amanah</option>
                         </select>
                     @endif
@@ -1729,6 +1731,12 @@
             // Redirect to Digital Farming if selected
             if (selectedApp === 'Digital Farming') {
                 window.location.href = '/dfarmkaret';
+                return;
+            }
+
+            // Redirect to Digital Farming Produksi if selected
+            if (selectedApp === 'Digital Farming Produksi') {
+                window.location.href = '/dfarmkaretproduksi';
                 return;
             }
 

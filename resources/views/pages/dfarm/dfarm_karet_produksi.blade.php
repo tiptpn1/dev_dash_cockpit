@@ -443,17 +443,7 @@
             <div class="filter-title">
               <i class="fas fa-sliders-h"></i> Filter Parameter
             </div>
-            <div class="filter-grid">
-              <div class="form-group">
-                <label class="form-label">Aplikasi</label>
-                <select id="selectJobDesc" class="form-select">
-                  <option value="PENYADAP" <?php if ($jobdesc == 'PENYADAP') echo 'selected'; ?>>PENYADAP</option>
-                  <option value="PEMETIK" <?php if ($jobdesc == 'PEMETIK') echo 'selected'; ?>>PEMETIK</option>
-                  <option value="PANEN KOPI" <?php if ($jobdesc == 'PANEN KOPI') echo 'selected'; ?>>PANEN KOPI</option>
-                  <option value="PEMELIHARAAN" <?php if ($jobdesc == 'PEMELIHARAAN') echo 'selected'; ?>>PEMELIHARAAN</option>
-                </select>
-              </div>
-            </div>
+            @include('pages.dfarm.components.application-select', ['selected' => 'Digital Farming Produksi'])
           </div>
           
           <div class="table-card">
@@ -2806,6 +2796,31 @@
     // Destroy charts
     window.pemeliharaanCharts.forEach(chart => chart.destroy());
     window.pemeliharaanCharts = [];
+  });
+
+  // ============================================
+  // APPLICATION SELECT REDIRECT HANDLER
+  // ============================================
+  document.getElementById('selectedApp').addEventListener('change', function() {
+    const selectedApp = this.value;
+
+    // Redirect to Digital Farming if selected
+    if (selectedApp === 'Digital Farming') {
+      window.location.href = '/dfarmkaret';
+      return;
+    }
+
+    // Redirect to Digital Farming Produksi if selected
+    if (selectedApp === 'Digital Farming Produksi') {
+      window.location.href = '/dfarmkaretproduksi';
+      return;
+    }
+
+    // Redirect to HRIS if selected
+    if (selectedApp === 'HRIS') {
+      window.location.href = '/evaluasi-aplikasi';
+      return;
+    }
   });
 </script>
 
