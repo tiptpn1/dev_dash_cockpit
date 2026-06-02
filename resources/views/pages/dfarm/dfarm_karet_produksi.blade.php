@@ -2798,31 +2798,9 @@
     window.pemeliharaanCharts = [];
   });
 
-  // ============================================
-  // APPLICATION SELECT REDIRECT HANDLER
-  // ============================================
-  document.getElementById('selectedApp').addEventListener('change', function() {
-    const selectedApp = this.value;
-
-    // Redirect to Digital Farming if selected
-    if (selectedApp === 'Digital Farming') {
-      window.location.href = '/dfarmkaret';
-      return;
-    }
-
-    // Redirect to Digital Farming Produksi if selected
-    if (selectedApp === 'Digital Farming Produksi') {
-      window.location.href = '/dfarmkaretproduksi';
-      return;
-    }
-
-    // Redirect to HRIS if selected
-    if (selectedApp === 'HRIS') {
-      window.location.href = '/evaluasi-aplikasi';
-      return;
-    }
-  });
 </script>
+
+<script src="{{ asset('js/components/application-select-handler.js') }}"></script>
 
 @include('pages.dfarm.menu.menu-script')
 

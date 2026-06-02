@@ -305,7 +305,10 @@ class PageController extends Controller
 
         return view('pages/dfarm/dfarm_karet_presensi', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'presensiData', 'totalData', 'tglAwal', 'tglAkhir', 'jobdesc'));
     }
-
+    public function sapaEvaluasi()
+    {
+        return view('pages/dfarm/sapa_evaluasi');
+    }
     public function dfarmkaretpresensitabular()
     {
         $regional = $_GET['id_reg'] ?? '';

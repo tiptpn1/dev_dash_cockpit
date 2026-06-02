@@ -1902,5 +1902,9 @@
         });
     });
 </script>
+
+<!-- Application Select Handler for redirects -->
+<script src="{{ asset('js/components/application-select-handler.js') }}"></script>
+
 @endsection
 

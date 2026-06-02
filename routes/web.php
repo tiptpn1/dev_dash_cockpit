@@ -65,6 +65,8 @@ Route::middleware('auth:custom')->group(function () {
     Route::get('/get_data_kebun', [ApiController::class, 'get_data_kebun'])->name('get_data_kebun');
     Route::get('/get_data_aktivitas', [ApiController::class, 'get_data_aktivitas'])->name('get_data_aktivitas');
 
+    Route::get('/sapa-evaluasi', [PageController::class, 'sapaEvaluasi'])->name('sapa.evaluasi');
+
     Route::get('/fin_console', [PageController::class, 'fin_console'])->name('fin_console');
     Route::get('/fin_parent', [PageController::class, 'fin_parent'])->name('fin_parent');
     Route::get('/fin_sub', [PageController::class, 'fin_sub'])->name('fin_sub');
