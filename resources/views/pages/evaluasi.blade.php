@@ -1724,19 +1724,37 @@
         }
 
         function updateDashboard() {
-            const selectedApp = appSelect.value;
+            const selectedApp = appSelect.value.trim();
             const periodVal = periodeSelect.value;
             const formattedPeriod = formatPeriodLabel(periodVal);
 
+            console.log('Selected App:', selectedApp, '| App Select Value:', appSelect.value);
+
             // Redirect to Digital Farming if selected
             if (selectedApp === 'Digital Farming') {
-                window.location.href = '/dfarmkaret';
+                console.log('Redirecting to Digital Farming...');
+                window.location.replace('/dfarmkaret');
                 return;
             }
 
             // Redirect to Digital Farming Produksi if selected
             if (selectedApp === 'Digital Farming Produksi') {
-                window.location.href = '/dfarmkaretproduksi';
+                console.log('Redirecting to Digital Farming Produksi...');
+                window.location.replace('/dfarmkaretproduksi');
+                return;
+            }
+
+            // Redirect to SAPA-Amanah if selected
+            if (selectedApp === 'SAPA-Amanah') {
+                console.log('Redirecting to SAPA-Amanah...');
+                window.location.replace('/sapa-evaluasi');
+                return;
+            }
+
+            // Redirect to BPD if selected
+            if (selectedApp === 'BPD') {
+                console.log('Redirecting to BPD...');
+                window.location.replace('/bpd-evaluasi');
                 return;
             }
 
@@ -1817,15 +1835,14 @@
                 mainContent.style.width = '100%';
             }
 
-            // Blok event change app_select (sudah disabled tapi double-safety)
-            appSelect.addEventListener('change', function(e) {
-                e.preventDefault();
-                e.stopImmediatePropagation();
-                this.value = 'HRIS';
-            }, true);
+            // Disable app_select change untuk token mode - jangan ubah value
+            appSelect.disabled = true;
+            appSelect.style.opacity = '0.6';
+            appSelect.style.cursor = 'not-allowed';
         }
 
-        appSelect.addEventListener('change', updateDashboard);
+        // Only periodeSelect triggers updateDashboard
+        // appSelect redirect handled by application-select-handler.js
         periodeSelect.addEventListener('change', updateDashboard);
 
         updateDashboard();

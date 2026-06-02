@@ -1,7 +1,8 @@
 // ============================================
 // APPLICATION SELECT REDIRECT HANDLER
 // ============================================
-document.addEventListener('DOMContentLoaded', function() {
+
+function initializeApplicationSelect() {
   // Handler for selectedApp (application-select.blade.php component)
   const appSelectElement = document.getElementById('selectedApp');
   
@@ -30,6 +31,24 @@ document.addEventListener('DOMContentLoaded', function() {
       // Redirect to SAPA-Amanah if selected
       if (selectedApp === 'SAPA-Amanah') {
         window.location.href = '/sapa-evaluasi';
+        return;
+      }
+
+      // Redirect to BPD if selected
+      if (selectedApp === 'BPD') {
+        window.location.href = '/bpd-evaluasi';
+        return;
+      }
+
+      // Redirect to MAIA if selected
+      if (selectedApp === 'MAIA') {
+        window.location.href = '/evaluasi-aplikasi';
+        return;
+      }
+
+      // Redirect to MONIKA if selected
+      if (selectedApp === 'MONIKA') {
+        window.location.href = '/evaluasi-aplikasi';
         return;
       }
     });
@@ -80,9 +99,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
       // Redirect to BPD if selected
       if (selectedApp === 'BPD') {
-        window.location.href = '/evaluasi-aplikasi';
+        window.location.href = '/bpd-evaluasi';
         return;
       }
     });
   }
-});
+}
+
+// Initialize on DOMContentLoaded or immediately if DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeApplicationSelect);
+} else {
+  // DOM is already loaded, call immediately
+  initializeApplicationSelect();
+}

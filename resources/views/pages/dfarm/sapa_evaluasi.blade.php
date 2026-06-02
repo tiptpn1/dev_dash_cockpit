@@ -346,7 +346,7 @@
                 <span id="table-title">Pantauan SAPA-Amanah</span>
                 <span id="regional-badge" class="regional-badge" style="display:none;"></span>
               </div>
-              <span id="data-count-badge" class="table-count">Dfarm PTPN I</span>
+              <span id="data-count-badge" class="table-count">SAPA-Amanah</span>
             </div>
 
             <div id="tabs-wrap" style="display: block;">
@@ -406,8 +406,8 @@
 
                   <!-- Dashboard Section - Rata-rata Skor per Regional -->
                   <div style="padding: 0 16px 16px;">
-                    <h2 style="font-size: 16px; font-weight: 700; color: #1f2937; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
-                      <i class="fas fa-chart-line"></i> Dashboard bulan Juni 2026
+                    <h2 id="dashboardTitle" style="font-size: 16px; font-weight: 700; color: #1f2937; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                      <i class="fas fa-chart-line"></i> Dashboard
                     </h2>
                     
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -995,7 +995,18 @@
             dateRangeInput.value = formatMonthYear(datePickerStart.value);
           }
         }
+        
+        // Update dashboard title with selected month
+        function updateDashboardTitle() {
+          const dashboardTitle = document.getElementById('dashboardTitle');
+          if (dashboardTitle && datePickerStart.value) {
+            const formattedMonth = formatMonthYear(datePickerStart.value);
+            dashboardTitle.innerHTML = `<i class="fas fa-chart-line"></i> Dashboard bulan ${formattedMonth}`;
+          }
+        }
+        
         updateDateDisplay();
+        updateDashboardTitle();
 
         // Toggle popup
         dateRangeInput.addEventListener('click', () => {
@@ -1006,6 +1017,7 @@
         datePickerApply.addEventListener('click', () => {
           if (datePickerStart.value) {
             updateDateDisplay();
+            updateDashboardTitle();
             datePickerPopup.classList.add('hidden');
             console.log('Period terpilih:', datePickerStart.value);
             // TODO: Trigger API call atau filter dengan periode terpilih
@@ -1032,21 +1044,6 @@
           }
         });
 
-        // Tab handling
-        document.querySelectorAll('.hris-tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-        const tab = btn.dataset.tab;
-
-        // Update active button
-        document.querySelectorAll('.hris-tab-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-
-        // Update active panel
-        document.querySelectorAll('.hris-tab-panel').forEach(panel => panel.classList.remove('active'));
-        document.getElementById(`tab-${tab}`).classList.add('active');
-        });
-        });
-
         // Filter Button Handler
         document.getElementById('btnFilter').addEventListener('click', () => {
           const selectedDate = document.getElementById('datePickerStart').value;
@@ -1054,6 +1051,7 @@
           
           if (selectedDate) {
             console.log('Filter dengan date:', selectedDate, 'company:', company);
+            updateDashboardTitle();
             loadRataRataSkorData(selectedDate, company);
           } else {
             alert('Silakan pilih periode terlebih dahulu');
@@ -1066,6 +1064,7 @@
           const currentMonth = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0');
           document.getElementById('datePickerStart').value = currentMonth;
           document.getElementById('dateRange').value = formatMonthYear(currentMonth);
+          updateDashboardTitle();
           loadRataRataSkorData(currentMonth, 2);
         });
 
@@ -1096,6 +1095,9 @@
           }
         });
       </script>
+      <script src="{{ asset('js/components/application-select-handler.js') }}"></script>
+      @include('pages.dfarm.menu.menu-script')
+
   </div>
 
 @endsection

@@ -69,6 +69,9 @@ Route::middleware('auth:custom')->group(function () {
     Route::get('/get_data_aktivitas', [ApiController::class, 'get_data_aktivitas'])->name('get_data_aktivitas');
 
     Route::get('/sapa-evaluasi', [PageController::class, 'sapaEvaluasi'])->name('sapa.evaluasi');
+    Route::get('/bpd-evaluasi', [PageController::class, 'bpdEvaluasi'])->name('bpd.evaluasi');
+    Route::get('/api/bpd/bidang-status', [PageController::class, 'getBidangStatusApi'])->name('api.bpd.bidang.status');
+    Route::get('/api/bpd/biaya-anggaran', [PageController::class, 'getBiayaAnggaranApi'])->name('api.bpd.biaya.anggaran');
 
     Route::get('/fin_console', [PageController::class, 'fin_console'])->name('fin_console');
     Route::get('/fin_parent', [PageController::class, 'fin_parent'])->name('fin_parent');

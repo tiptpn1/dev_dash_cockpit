@@ -31,6 +31,10 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.href = '/sapa-evaluasi';
         return;
       }
+      if (selectedApp === 'BPD') {
+        window.location.href = '/bpd-evaluasi';
+        return;
+      }
     });
   }
 });
