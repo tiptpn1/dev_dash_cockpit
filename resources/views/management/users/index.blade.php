@@ -44,7 +44,7 @@
                         </div>
                         <input type="text" name="search" placeholder="Search by username or NIK..."
                             value="{{ request('search') }}"
-                            class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition">
+                            class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition text-gray-900">
                     </div>
                     <button type="submit"
                         class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition shadow-sm">
