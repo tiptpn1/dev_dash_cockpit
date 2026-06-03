@@ -8,12 +8,12 @@
             <!-- Header Section -->
             <div class="flex justify-between items-center mb-8">
                 <div>
-                    <h1 class="text-4xl font-bold text-gray-800">Feature Management</h1>
-                    <p class="text-gray-600 mt-2">Manage system features and capabilities</p>
+                    <h1 class="text-4xl font-bold text-gray-800">Management Fitur</h1>
+                    <p class="text-gray-600 mt-2">Pengelolaan Fitur dan Kapabilitas</p>
                 </div>
                 <a href="{{ route('management.features.create') }}"
                     class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition">
-                    <i class="fas fa-plus"></i> Add New Feature
+                    <i class="fas fa-plus"></i> Tambah Fitur Baru
                 </a>
             </div>
 
@@ -45,12 +45,12 @@
                     </div>
                     <button type="submit"
                         class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition">
-                        <i class="fas fa-search"></i> Search
+                        Search
                     </button>
                     @if(request('search'))
                         <a href="{{ route('management.features.index') }}"
                             class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition">
-                            <i class="fas fa-times"></i> Clear
+                            Clear
                         </a>
                     @endif
                 </form>
@@ -81,12 +81,12 @@
                                 <th class="px-6 py-4 font-semibold text-sm uppercase tracking-wider" style="width: 60px;">
                                     No.</th>
                                 <th class="px-6 py-4 font-semibold text-sm uppercase tracking-wider">Slug</th>
-                                <th class="px-6 py-4 font-semibold text-sm uppercase tracking-wider">Feature Name</th>
-                                <th class="px-6 py-4 font-semibold text-sm uppercase tracking-wider">Users Assigned</th>
-                                <th class="px-6 py-4 font-semibold text-sm uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-4 font-semibold text-sm uppercase tracking-wider">Created At</th>
+                                <th class="px-6 py-4 font-semibold text-sm uppercase tracking-wider">Nama Fitur</th>
+                                <!-- <th class="px-6 py-4 font-semibold text-sm uppercase tracking-wider">Users Assigned</th> -->
+                                <!-- <th class="px-6 py-4 font-semibold text-sm uppercase tracking-wider">Status</th> -->
+                                <!-- <th class="px-6 py-4 font-semibold text-sm uppercase tracking-wider">Created At</th> -->
                                 <th class="px-6 py-4 font-semibold text-sm uppercase tracking-wider" style="width: 180px;">
-                                    Actions</th>
+                                    Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -99,12 +99,12 @@
                                             class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">{{ $feature->slug }}</span>
                                     </td>
                                     <td class="px-4 py-3 text-gray-800 font-medium">{{ $feature->name }}</td>
-                                    <td class="px-4 py-3">
+                                    <!-- <td class="px-4 py-3">
                                         <span
                                             class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-semibold">{{ $feature->users->count() }}
                                             users</span>
-                                    </td>
-                                    <td class="px-4 py-3">
+                                    </td> -->
+                                    <!-- <td class="px-4 py-3">
                                         @if($feature->users->count() > 0)
                                             <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">
                                                 <i class="fas fa-check-circle"></i> Active
@@ -116,7 +116,7 @@
                                             </span>
                                         @endif
                                     </td>
-                                    <td class="px-6 py-4 text-gray-600 text-sm">{{ $feature->created_at->format('M d, Y H:i') }}
+                                    <td class="px-6 py-4 text-gray-600 text-sm">{{ $feature->created_at->format('M d, Y H:i') }} -->
                                     </td>
                                     <td class="px-6 py-4 text-sm font-medium">
                                         <div class="flex items-center gap-3">

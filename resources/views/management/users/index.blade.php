@@ -8,12 +8,12 @@
             <!-- Header Section -->
             <div class="flex justify-between items-center mb-8">
                 <div>
-                    <h1 class="text-4xl font-bold text-gray-800">User Management</h1>
-                    <p class="text-gray-600 mt-2">Manage all system users and their information</p>
+                    <h1 class="text-4xl font-bold text-gray-800">Manajemen User</h1>
+                    <p class="text-gray-600 mt-2">Pengelolaan Informasi User</p>
                 </div>
                 <a href="{{ route('management.users.create') }}"
                     class="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-3 px-6 rounded-lg shadow-md transition">
-                    <i class="fas fa-plus"></i> Add New User
+                    <i class="fas fa-plus"></i> Tambah User Baru
                 </a>
             </div>
 
@@ -72,14 +72,15 @@
                                 <th class="px-6 py-4 font-semibold text-sm uppercase tracking-wider">Plant</th>
                                 <th class="px-6 py-4 font-semibold text-sm uppercase tracking-wider">Role</th>
                                 <th class="px-6 py-4 font-semibold text-sm uppercase tracking-wider" style="width: 180px;">
-                                    Actions</th>
+                                    Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
                             @forelse($users as $index => $user)
                                 <tr class="hover:bg-green-50 transition duration-150">
                                     <td class="px-6 py-4 text-gray-700 font-medium">
-                                        {{ ($users->currentPage() - 1) * 5 + $index + 1 }}</td>
+                                        {{ ($users->currentPage() - 1) * 5 + $index + 1 }}
+                                    </td>
                                     <td class="px-6 py-4">
                                         <span
                                             class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-bold shadow-sm">{{ $user->username }}</span>

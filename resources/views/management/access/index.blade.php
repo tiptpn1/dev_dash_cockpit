@@ -8,8 +8,8 @@
             <!-- Header Section -->
             <div class="flex justify-between items-center mb-8">
                 <div>
-                    <h1 class="text-4xl font-bold text-gray-800">User Feature Access</h1>
-                    <p class="text-gray-600 mt-2">Manage and assign features to users for system access control</p>
+                    <h1 class="text-4xl font-bold text-gray-800">Manajemen Akses User</h1>
+                    <p class="text-gray-600 mt-2">Mengelola dan menetapkan fitur kepada pengguna untuk kontrol akses</p>
                 </div>
             </div>
 
@@ -57,23 +57,23 @@
 
             <!-- Statistics -->
             <!-- <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                    <div class="bg-gradient-to-br from-green-600 to-green-700 text-white rounded-lg p-4 shadow-md">
-                        <p class="text-sm font-medium opacity-90">Total Users</p>
-                        <p class="text-3xl font-bold">{{ $users->total() }}</p>
-                    </div>
-                    <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-lg p-4 shadow-md">
-                        <p class="text-sm font-medium opacity-90">With Features</p>
-                        <p class="text-3xl font-bold">{{ $users->whereNotNull('features')->count() }}</p>
-                    </div>
-                    <div class="bg-gradient-to-br from-teal-500 to-teal-600 text-white rounded-lg p-4 shadow-md">
-                        <p class="text-sm font-medium opacity-90">No Access</p>
-                        <p class="text-3xl font-bold">{{ $users->filter(fn($u) => $u->features->count() === 0)->count() }}</p>
-                    </div>
-                    <div class="bg-gradient-to-br from-green-800 to-green-900 text-white rounded-lg p-4 shadow-md">
-                        <p class="text-sm font-medium opacity-90">Total Assignments</p>
-                        <p class="text-3xl font-bold">{{ $users->sum(fn($u) => $u->features->count()) }}</p>
-                    </div>
-                </div> -->
+                                    <div class="bg-gradient-to-br from-green-600 to-green-700 text-white rounded-lg p-4 shadow-md">
+                                        <p class="text-sm font-medium opacity-90">Total Users</p>
+                                        <p class="text-3xl font-bold">{{ $users->total() }}</p>
+                                    </div>
+                                    <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-lg p-4 shadow-md">
+                                        <p class="text-sm font-medium opacity-90">With Features</p>
+                                        <p class="text-3xl font-bold">{{ $users->whereNotNull('features')->count() }}</p>
+                                    </div>
+                                    <div class="bg-gradient-to-br from-teal-500 to-teal-600 text-white rounded-lg p-4 shadow-md">
+                                        <p class="text-sm font-medium opacity-90">No Access</p>
+                                        <p class="text-3xl font-bold">{{ $users->filter(fn($u) => $u->features->count() === 0)->count() }}</p>
+                                    </div>
+                                    <div class="bg-gradient-to-br from-green-800 to-green-900 text-white rounded-lg p-4 shadow-md">
+                                        <p class="text-sm font-medium opacity-90">Total Assignments</p>
+                                        <p class="text-3xl font-bold">{{ $users->sum(fn($u) => $u->features->count()) }}</p>
+                                    </div>
+                                </div> -->
 
             <!-- Users Access Table -->
             <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-100">
@@ -85,10 +85,11 @@
                                     No.</th>
                                 <th class="px-6 py-4 font-semibold text-sm uppercase tracking-wider">Username</th>
                                 <th class="px-6 py-4 font-semibold text-sm uppercase tracking-wider">Role</th>
-                                <th class="px-6 py-4 font-semibold text-sm uppercase tracking-wider">Features Assigned</th>
-                                <th class="px-6 py-4 font-semibold text-sm uppercase tracking-wider">Count</th>
+                                <th class="px-6 py-4 font-semibold text-sm uppercase tracking-wider">Fitur yang Dibagikan
+                                </th>
+                                <th class="px-6 py-4 font-semibold text-sm uppercase tracking-wider">Jumlah Fitur</th>
                                 <th class="px-6 py-4 font-semibold text-sm uppercase tracking-wider" style="width: 120px;">
-                                    Actions</th>
+                                    Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
