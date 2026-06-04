@@ -315,7 +315,8 @@ class PageController extends Controller
             ->table('m_bidang as mb')
             ->select(
                 'mb.nama as nama_bidang',
-                'mb.id')
+                'mb.id'
+            )
             ->get();
         $tglAwal = date('Y-m-d');
         $tglAkhir = date('Y-m-d');
@@ -335,9 +336,11 @@ class PageController extends Controller
     private function getBidangWithStatus($tglAwal = '', $tglAkhir = '', $bidangId = '', $branchId = '')
     {
         // Jika parameter kosong, gunakan default
-        if (!$tglAwal) $tglAwal = '';
-        if (!$tglAkhir) $tglAkhir = '';
-        
+        if (!$tglAwal)
+            $tglAwal = '';
+        if (!$tglAkhir)
+            $tglAkhir = '';
+
         $query = DB::connection('pgsql_bpd')
             ->table('m_bidang as mb')
             ->select(
@@ -360,11 +363,14 @@ class PageController extends Controller
                     ->select('mp.id_bidang', DB::raw('COUNT(*) as total'))
                     ->where('spd.status', '0')
                     ->where(function ($query) use ($tglAwal, $tglAkhir) {
-                        if ($tglAwal) $query->where('spd.tgl_berangkat', '>=', $tglAwal);
-                        if ($tglAkhir) $query->where('spd.tgl_berangkat', '<=', $tglAkhir);
+                        if ($tglAwal)
+                            $query->where('spd.tgl_berangkat', '>=', $tglAwal);
+                        if ($tglAkhir)
+                            $query->where('spd.tgl_berangkat', '<=', $tglAkhir);
                     })
                     ->where(function ($query) use ($branchId) {
-                        if ($branchId) $query->where('spd.id_branch', $branchId);
+                        if ($branchId)
+                            $query->where('spd.id_branch', $branchId);
                     })
                     ->whereRaw('COALESCE(spd.is_deleted, false) = false')
                     ->groupBy('mp.id_bidang'),
@@ -381,11 +387,14 @@ class PageController extends Controller
                     ->select('mp.id_bidang', DB::raw('COUNT(*) as total'))
                     ->where('spd.status', '1')
                     ->where(function ($query) use ($tglAwal, $tglAkhir) {
-                        if ($tglAwal) $query->where('spd.tgl_berangkat', '>=', $tglAwal);
-                        if ($tglAkhir) $query->where('spd.tgl_berangkat', '<=', $tglAkhir);
+                        if ($tglAwal)
+                            $query->where('spd.tgl_berangkat', '>=', $tglAwal);
+                        if ($tglAkhir)
+                            $query->where('spd.tgl_berangkat', '<=', $tglAkhir);
                     })
                     ->where(function ($query) use ($branchId) {
-                        if ($branchId) $query->where('spd.id_branch', $branchId);
+                        if ($branchId)
+                            $query->where('spd.id_branch', $branchId);
                     })
                     ->whereRaw('COALESCE(spd.is_deleted, false) = false')
                     ->groupBy('mp.id_bidang'),
@@ -402,11 +411,14 @@ class PageController extends Controller
                     ->select('mp.id_bidang', DB::raw('COUNT(*) as total'))
                     ->where('spd.status', '2')
                     ->where(function ($query) use ($tglAwal, $tglAkhir) {
-                        if ($tglAwal) $query->where('spd.tgl_berangkat', '>=', $tglAwal);
-                        if ($tglAkhir) $query->where('spd.tgl_berangkat', '<=', $tglAkhir);
+                        if ($tglAwal)
+                            $query->where('spd.tgl_berangkat', '>=', $tglAwal);
+                        if ($tglAkhir)
+                            $query->where('spd.tgl_berangkat', '<=', $tglAkhir);
                     })
                     ->where(function ($query) use ($branchId) {
-                        if ($branchId) $query->where('spd.id_branch', $branchId);
+                        if ($branchId)
+                            $query->where('spd.id_branch', $branchId);
                     })
                     ->whereRaw('COALESCE(spd.is_deleted, false) = false')
                     ->groupBy('mp.id_bidang'),
@@ -423,11 +435,14 @@ class PageController extends Controller
                     ->select('mp.id_bidang', DB::raw('COUNT(*) as total'))
                     ->where('spd.status', '3')
                     ->where(function ($query) use ($tglAwal, $tglAkhir) {
-                        if ($tglAwal) $query->where('spd.tgl_berangkat', '>=', $tglAwal);
-                        if ($tglAkhir) $query->where('spd.tgl_berangkat', '<=', $tglAkhir);
+                        if ($tglAwal)
+                            $query->where('spd.tgl_berangkat', '>=', $tglAwal);
+                        if ($tglAkhir)
+                            $query->where('spd.tgl_berangkat', '<=', $tglAkhir);
                     })
                     ->where(function ($query) use ($branchId) {
-                        if ($branchId) $query->where('spd.id_branch', $branchId);
+                        if ($branchId)
+                            $query->where('spd.id_branch', $branchId);
                     })
                     ->whereRaw('COALESCE(spd.is_deleted, false) = false')
                     ->groupBy('mp.id_bidang'),
@@ -445,11 +460,14 @@ class PageController extends Controller
                     ->select('mp.id_bidang', DB::raw('COUNT(*) as total'))
                     ->where('pd.status', '0')
                     ->where(function ($query) use ($tglAwal, $tglAkhir) {
-                        if ($tglAwal) $query->where('pd.tgl_berangkat', '>=', $tglAwal);
-                        if ($tglAkhir) $query->where('pd.tgl_berangkat', '<=', $tglAkhir);
+                        if ($tglAwal)
+                            $query->where('pd.tgl_berangkat', '>=', $tglAwal);
+                        if ($tglAkhir)
+                            $query->where('pd.tgl_berangkat', '<=', $tglAkhir);
                     })
                     ->where(function ($query) use ($branchId) {
-                        if ($branchId) $query->where('pd.id_branch', $branchId);
+                        if ($branchId)
+                            $query->where('pd.id_branch', $branchId);
                     })
                     ->whereRaw('COALESCE(pd.is_deleted, false) = false')
                     ->groupBy('mp.id_bidang'),
@@ -467,11 +485,14 @@ class PageController extends Controller
                     ->select('mp.id_bidang', DB::raw('COUNT(*) as total'))
                     ->where('pd.status', '1')
                     ->where(function ($query) use ($tglAwal, $tglAkhir) {
-                        if ($tglAwal) $query->where('pd.tgl_berangkat', '>=', $tglAwal);
-                        if ($tglAkhir) $query->where('pd.tgl_berangkat', '<=', $tglAkhir);
+                        if ($tglAwal)
+                            $query->where('pd.tgl_berangkat', '>=', $tglAwal);
+                        if ($tglAkhir)
+                            $query->where('pd.tgl_berangkat', '<=', $tglAkhir);
                     })
                     ->where(function ($query) use ($branchId) {
-                        if ($branchId) $query->where('pd.id_branch', $branchId);
+                        if ($branchId)
+                            $query->where('pd.id_branch', $branchId);
                     })
                     ->whereRaw('COALESCE(pd.is_deleted, false) = false')
                     ->groupBy('mp.id_bidang'),
@@ -489,11 +510,14 @@ class PageController extends Controller
                     ->select('mp.id_bidang', DB::raw('COUNT(*) as total'))
                     ->where('pd.status', '2')
                     ->where(function ($query) use ($tglAwal, $tglAkhir) {
-                        if ($tglAwal) $query->where('pd.tgl_berangkat', '>=', $tglAwal);
-                        if ($tglAkhir) $query->where('pd.tgl_berangkat', '<=', $tglAkhir);
+                        if ($tglAwal)
+                            $query->where('pd.tgl_berangkat', '>=', $tglAwal);
+                        if ($tglAkhir)
+                            $query->where('pd.tgl_berangkat', '<=', $tglAkhir);
                     })
                     ->where(function ($query) use ($branchId) {
-                        if ($branchId) $query->where('pd.id_branch', $branchId);
+                        if ($branchId)
+                            $query->where('pd.id_branch', $branchId);
                     })
                     ->whereRaw('COALESCE(pd.is_deleted, false) = false')
                     ->groupBy('mp.id_bidang'),
@@ -511,11 +535,14 @@ class PageController extends Controller
                     ->select('mp.id_bidang', DB::raw('COUNT(*) as total'))
                     ->where('pd.status', '3')
                     ->where(function ($query) use ($tglAwal, $tglAkhir) {
-                        if ($tglAwal) $query->where('pd.tgl_berangkat', '>=', $tglAwal);
-                        if ($tglAkhir) $query->where('pd.tgl_berangkat', '<=', $tglAkhir);
+                        if ($tglAwal)
+                            $query->where('pd.tgl_berangkat', '>=', $tglAwal);
+                        if ($tglAkhir)
+                            $query->where('pd.tgl_berangkat', '<=', $tglAkhir);
                     })
                     ->where(function ($query) use ($branchId) {
-                        if ($branchId) $query->where('pd.id_branch', $branchId);
+                        if ($branchId)
+                            $query->where('pd.id_branch', $branchId);
                     })
                     ->whereRaw('COALESCE(pd.is_deleted, false) = false')
                     ->groupBy('mp.id_bidang'),
@@ -525,12 +552,12 @@ class PageController extends Controller
                 'bpd_revisi.id_bidang'
             )
             ->where('mb.is_deleted', false);
-        
+
         // Apply bidang filter jika ada
         if ($bidangId) {
             $query->where('mb.id', $bidangId);
         }
-        
+
         $data = $query->orderBy('mb.nama')->get();
         return $data;
     }
@@ -611,8 +638,10 @@ class PageController extends Controller
                     ->leftJoin('perjalanan_dinas as pd', function ($join) use ($tglAwal, $tglAkhir) {
                         $join->on('pd.id', '=', 'pdp.id_perjalanan_dinas')
                             ->where('pd.id_jenis_perjalanan_dinas', '=', 'true');
-                        if ($tglAwal) $join->whereDate('pd.tgl_berangkat', '>=', $tglAwal);
-                        if ($tglAkhir) $join->whereDate('pd.tgl_berangkat', '<=', $tglAkhir);
+                        if ($tglAwal)
+                            $join->whereDate('pd.tgl_berangkat', '>=', $tglAwal);
+                        if ($tglAkhir)
+                            $join->whereDate('pd.tgl_berangkat', '<=', $tglAkhir);
                     })
                     ->leftJoin('perjalanan_dinas_biaya as pdb', function ($join) {
                         $join->on('pdp.id', '=', 'pdb.id_bpd_pegawai')
@@ -1390,7 +1419,7 @@ class PageController extends Controller
             'tglAkhir' => $tglAkhir,
             'jobdesc' => $jobdesc
         ];
-        
+
         return response()->json($dataoutput, 200)
             ->header('Content-Type', 'application/json; charset=utf-8');
     }
@@ -1670,7 +1699,7 @@ class PageController extends Controller
             'tglAkhir' => $tglAkhir,
             'jobdesc' => $jobdesc
         ];
-        
+
         return response()->json($dataoutput, 200)
             ->header('Content-Type', 'application/json; charset=utf-8');
     }
@@ -1940,7 +1969,7 @@ class PageController extends Controller
             'jobdesc' => $jobdesc,
             'jenis_aktivitas' => $jenis_aktivitas
         ];
-        
+
         return response()->json($dataoutput, 200)
             ->header('Content-Type', 'application/json; charset=utf-8');
     }
@@ -2417,6 +2446,16 @@ class PageController extends Controller
         return view('pages/lm34_tab', compact('plantList', 'regionalList', 'tahunList', 'tahunSekarang'));
     }
 
+    public function lm62()
+    {
+        $plantList = Plant::orderBy('plant', 'asc')->get();
+        $regionalList = Plant::distinct()->orderBy('regional', 'asc')->get(['regional']);
+        $tahunSekarang = (int) date('Y');
+        $tahunList = range($tahunSekarang, $tahunSekarang + 9); // [2026, 2027, ..., 2035]
+
+        return view('pages/lm62', compact('plantList', 'regionalList', 'tahunList', 'tahunSekarang'));
+    }
+
     public function under_construction()
     {
         return view('pages/under-construction');
@@ -2575,7 +2614,7 @@ class PageController extends Controller
             // Filter by status if requested
             $status = trim((string) $request->get('status', ''));
             if ($status !== '') {
-                $rows = array_values(array_filter($rows, function($row) use ($status) {
+                $rows = array_values(array_filter($rows, function ($row) use ($status) {
                     $isBelumAbsen = ($row->checkin_time === '-' && $row->checkout_time === '-');
                     if (strtolower($status) === 'sudah') {
                         return !$isBelumAbsen;
@@ -2834,7 +2873,7 @@ class PageController extends Controller
     {
         $regional = self::HRIS_REGIONAL_FILTER;
 
-                $sql = "
+        $sql = "
             SELECT
                 p.pegawai_id,
                 COALESCE(NULLIF(TRIM(p.nik), ''), '-') AS pegawai_nik,
@@ -2968,7 +3007,8 @@ class PageController extends Controller
         ";
 
         $params = [$tanggal, $tanggal, $periodeHris, $periodeHris, $regional];
-        if ($divisi !== '') $params[] = $divisi;
+        if ($divisi !== '')
+            $params[] = $divisi;
 
         return DB::connection('hris')->select($sql, $params);
     }
@@ -3020,7 +3060,8 @@ class PageController extends Controller
         ";
 
         $params = [$tanggal, $tanggal, $tanggal, $periodeHris, $periodeHris, $regional];
-        if ($divisi !== '') $params[] = $divisi;
+        if ($divisi !== '')
+            $params[] = $divisi;
 
         return DB::connection('hris')->select($sql, $params);
     }
@@ -3183,7 +3224,12 @@ class PageController extends Controller
         ";
 
         return DB::connection('hris')->select($sql, [
-            $tanggal_awal, $tanggal_akhir, $periodeHris, $periodeHris, $pegawai_id, $regional,
+            $tanggal_awal,
+            $tanggal_akhir,
+            $periodeHris,
+            $periodeHris,
+            $pegawai_id,
+            $regional,
         ]);
     }
 
@@ -3221,7 +3267,12 @@ class PageController extends Controller
         ";
 
         return DB::connection('hris')->select($sql, [
-            $tanggal_awal, $tanggal_akhir, $periodeHris, $periodeHris, $pegawai_id, $regional,
+            $tanggal_awal,
+            $tanggal_akhir,
+            $periodeHris,
+            $periodeHris,
+            $pegawai_id,
+            $regional,
         ]);
     }
 

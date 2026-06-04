@@ -394,15 +394,6 @@ class BigQueryController extends Controller
     public function get_data_lm34_by_customer(Request $request)
     {
         $komoditi = strtolower($request->komoditi);
-        $nama_komoditi = '';
-        if ($komoditi == 'kr') {
-            $nama_komoditi = 'karet';
-        } else if ($komoditi == 'th') {
-            $nama_komoditi = 'teh';
-        } else if ($komoditi == 'kp') {
-            $nama_komoditi = 'kopi';
-        }
-
         $region = $request->region;
         $plant = $request->plant;
         $tahun = $request->tahun;
@@ -416,7 +407,7 @@ class BigQueryController extends Controller
         try {
             $query = "
             CALL `dashboard-cockpit.data_dash.sp_laporan_lm34_by_customer`(
-                '$nama_komoditi',
+                '$komoditi',
                 '$region',
                 '$plant',
                 '$tahun',
@@ -437,4 +428,43 @@ class BigQueryController extends Controller
             ], 500);
         }
     }
+
+    public function get_data_lm62(Request $request)
+    {
+        $komoditi = strtolower($request->komoditi);
+        $region = $request->region;
+        $plant = $request->plant;
+        $tahun = $request->tahun;
+        $bulan = $request->bulan;
+        if ($bulan < 10) {
+            $bulan = '00' . $bulan;
+        } elseif ($bulan >= 10 && $bulan <= 12) {
+            $bulan = '0' . $bulan;
+        }
+
+        try {
+            $query = "
+            CALL `dashboard-cockpit.data_dash.sp_laporan_lm62`(
+                '$komoditi',
+                '$region',
+                '$plant',
+                '$tahun',
+                '$bulan'
+            )";
+
+            $rows = $this->runBigQueryCall($query);
+
+            return response()->json([
+                'status' => 'success',
+                'total' => count($rows),
+                'data' => $rows,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
 }
