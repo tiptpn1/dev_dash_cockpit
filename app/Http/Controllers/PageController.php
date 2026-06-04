@@ -1811,6 +1811,8 @@ class PageController extends Controller
             FROM pegawai
             WHERE TRIM(regional) = ?
               AND NULLIF(TRIM(divisi), '') IS NOT NULL
+              AND (penugasan_mutasi_ke IS NULL OR TRIM(penugasan_mutasi_ke) = '')
+              AND (status_ckp IS NULL OR status_ckp != 'Ya')
             ORDER BY divisi ASC
         ", [$regional]);
     }
@@ -1865,6 +1867,8 @@ class PageController extends Controller
                 AND b.periode = ?
             WHERE TRIM(p.regional) = ?
               AND NULLIF(TRIM(p.divisi), '') IS NOT NULL
+              AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
+              AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
         ", [$periodeHris, $periodeHris, $regional]);
 
         return $this->formatRegionalSummary($rows[0] ?? null);
@@ -1896,6 +1900,8 @@ class PageController extends Controller
                 AND b.periode = ?
             WHERE TRIM(p.regional) = ?
               AND NULLIF(TRIM(p.divisi), '') IS NOT NULL
+              AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
+              AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
         ", [$periodeHris, $periodeHris, $regional]);
 
         return $this->formatRegionalSummary($rows[0] ?? null);
@@ -1967,6 +1973,8 @@ class PageController extends Controller
                 AND b.periode = ?
             WHERE TRIM(p.regional) = ?
               AND NULLIF(TRIM(p.divisi), '') IS NOT NULL
+              AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
+              AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
             GROUP BY TRIM(p.divisi)
             ORDER BY divisi ASC
         ";
@@ -2001,6 +2009,8 @@ class PageController extends Controller
                 AND b.periode = ?
             WHERE TRIM(p.regional) = ?
               AND NULLIF(TRIM(p.divisi), '') IS NOT NULL
+              AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
+              AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
             GROUP BY TRIM(p.divisi)
             ORDER BY divisi ASC
         ";
@@ -2049,6 +2059,8 @@ class PageController extends Controller
                 AND b.periode = ?
             WHERE TRIM(p.regional) = ?
               AND TRIM(p.divisi) = ?
+              AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
+              AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
             ORDER BY belum_absen DESC, persentase_kehadiran ASC, p.nama ASC
         ";
 
@@ -2096,6 +2108,8 @@ class PageController extends Controller
                 AND b.periode = ?
             WHERE TRIM(p.regional) = ?
               AND TRIM(p.divisi) = ?
+              AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
+              AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
             ORDER BY belum_absen DESC, persentase_kehadiran ASC, p.nama ASC
         ";
 
@@ -2135,6 +2149,8 @@ class PageController extends Controller
                 AND b.periode = ?
             WHERE TRIM(p.regional) = ?
               AND NULLIF(TRIM(p.divisi), '') IS NOT NULL
+              AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
+              AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
               {$divisiCondition}
             ORDER BY p.divisi ASC, p.nama ASC
         ";
@@ -2184,6 +2200,8 @@ class PageController extends Controller
                 AND b.periode = ?
             WHERE TRIM(p.regional) = ?
               AND NULLIF(TRIM(p.divisi), '') IS NOT NULL
+              AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
+              AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
               {$divisiCondition}
             GROUP BY p.pegawai_id, p.nama, p.nik, p.jabatan, b.hari_kerja, p.divisi, pp.mood_masuk, pp.mood_pulang
             ORDER BY p.divisi ASC, p.nama ASC
@@ -2226,6 +2244,8 @@ class PageController extends Controller
                 FROM pegawai p
                 WHERE TRIM(p.regional) = ?
                   AND (p.nama LIKE ? OR p.nik LIKE ?)
+                  AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
+                  AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
                 ORDER BY p.nama ASC
                 LIMIT 20
             ";
@@ -2344,6 +2364,8 @@ class PageController extends Controller
                 AND b.periode = ?
             WHERE p.pegawai_id = ?
               AND TRIM(p.regional) = ?
+              AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
+              AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
             GROUP BY p.pegawai_id, p.nama, p.nik, p.jabatan, DATE(a.jam), b.hari_kerja, pp.mood_masuk, pp.mood_pulang
             ORDER BY DATE(a.jam) DESC
         ";
@@ -2381,6 +2403,8 @@ class PageController extends Controller
                 AND b.periode = ?
             WHERE p.pegawai_id = ?
               AND TRIM(p.regional) = ?
+              AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
+              AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
             ORDER BY ai.tanggal_date DESC
         ";
 
