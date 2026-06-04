@@ -766,10 +766,12 @@
                         <input type="hidden" id="app_select_hidden" value="HRIS">
                     @else
                         <select id="app_select" class="form-select">
-                            <option value="Digital Farming">Digital Farming</option>
+                            <option value="Digital Farming">DFarm Presensi</option>
+                            <option value="Digital Farming Produksi">DFarm Prestasi</option>
                             <option value="HRIS" selected>HRIS</option>
                             <option value="MAIA">MAIA</option>
                             <option value="MONIKA">MONIKA</option>
+                            <option value="BPD">Aplikasi BPD</option>
                             <option value="SAPA-Amanah">SAPA-Amanah</option>
                         </select>
                     @endif
@@ -1722,9 +1724,39 @@
         }
 
         function updateDashboard() {
-            const selectedApp = appSelect.value;
+            const selectedApp = appSelect.value.trim();
             const periodVal = periodeSelect.value;
             const formattedPeriod = formatPeriodLabel(periodVal);
+
+            console.log('Selected App:', selectedApp, '| App Select Value:', appSelect.value);
+
+            // Redirect to Digital Farming if selected
+            if (selectedApp === 'Digital Farming') {
+                console.log('Redirecting to Digital Farming...');
+                window.location.replace('/dfarmkaret');
+                return;
+            }
+
+            // Redirect to Digital Farming Produksi if selected
+            if (selectedApp === 'Digital Farming Produksi') {
+                console.log('Redirecting to Digital Farming Produksi...');
+                window.location.replace('/dfarmkaretproduksi');
+                return;
+            }
+
+            // Redirect to SAPA-Amanah if selected
+            if (selectedApp === 'SAPA-Amanah') {
+                console.log('Redirecting to SAPA-Amanah...');
+                window.location.replace('/sapa-evaluasi');
+                return;
+            }
+
+            // Redirect to BPD if selected
+            if (selectedApp === 'BPD') {
+                console.log('Redirecting to BPD...');
+                window.location.replace('/bpd-evaluasi');
+                return;
+            }
 
             tableTitle.textContent = `Hasil Evaluasi Aplikasi ${selectedApp} &mdash; Periode ${formattedPeriod}`;
 
@@ -1803,15 +1835,14 @@
                 mainContent.style.width = '100%';
             }
 
-            // Blok event change app_select (sudah disabled tapi double-safety)
-            appSelect.addEventListener('change', function(e) {
-                e.preventDefault();
-                e.stopImmediatePropagation();
-                this.value = 'HRIS';
-            }, true);
+            // Disable app_select change untuk token mode - jangan ubah value
+            appSelect.disabled = true;
+            appSelect.style.opacity = '0.6';
+            appSelect.style.cursor = 'not-allowed';
         }
 
-        appSelect.addEventListener('change', updateDashboard);
+        // Only periodeSelect triggers updateDashboard
+        // appSelect redirect handled by application-select-handler.js
         periodeSelect.addEventListener('change', updateDashboard);
 
         updateDashboard();
@@ -1888,5 +1919,9 @@
         });
     });
 </script>
+
+<!-- Application Select Handler for redirects -->
+<script src="{{ asset('js/components/application-select-handler.js') }}"></script>
+
 @endsection
 

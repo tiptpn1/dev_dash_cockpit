@@ -63,4 +63,22 @@ class ApiController extends Controller
         ]);
     }
 
+    public static function get_data_aktivitas()
+    {
+        $komoditas = $_GET['komoditas'] ?? 1;
+        
+        // Get all aktivitas for selected komoditas
+        $data = DB::connection('pgsql_secondary')
+            ->table('m_jenis_aktivitas')
+            ->where('comodity_id', $komoditas)
+            ->where('jenis', 'pemeliharaan')
+            ->orderBy('nama')
+            ->get();
+        
+        return response()->json([
+            'data' => $data,
+            'selected_komoditas' => $komoditas
+        ]);
+    }
+
 }

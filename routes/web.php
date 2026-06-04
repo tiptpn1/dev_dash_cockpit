@@ -7,6 +7,9 @@ use App\Http\Controllers\AiResponseController;
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\BigQueryController;
 use App\Http\Controllers\SkyviewController;
+use App\Http\Controllers\Management\UserManagementController;
+use App\Http\Controllers\Management\FeatureManagementController;
+use App\Http\Controllers\Management\UserFeatureAccessController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -57,9 +60,18 @@ Route::middleware('auth:custom')->group(function () {
     Route::get('/dfarmkaretproduksi', [PageController::class, 'dfarmkaretproduksi'])->name('dfarmkaretproduksi');
     Route::get('/dfarmteh', [PageController::class, 'dfarmtehpresensi'])->name('dfarmtehpresensi');
     Route::get('/dfarmtehproduksi', [PageController::class, 'dfarmtehproduksi'])->name('dfarmtehproduksi');
+    Route::post('/ajax_dfarmtehproduksi', [PageController::class, 'ajax_dfarmtehproduksi'])->name('ajax_dfarmtehproduksi');
     Route::get('/dfarmkopiproduksi', [PageController::class, 'dfarmkopiproduksi'])->name('dfarmkopiproduksi');
+    Route::post('/ajax_dfarmkopiproduksi', [PageController::class, 'ajax_dfarmkopiproduksi'])->name('ajax_dfarmkopiproduksi');
     Route::get('/dfarmpemeliharaan', [PageController::class, 'dfarmpemeliharaan'])->name('dfarmpemeliharaan');
+    Route::post('/ajax_dfarmpemeliharaan', [PageController::class, 'ajax_dfarmpemeliharaan'])->name('ajax_dfarmpemeliharaan');
     Route::get('/get_data_kebun', [ApiController::class, 'get_data_kebun'])->name('get_data_kebun');
+    Route::get('/get_data_aktivitas', [ApiController::class, 'get_data_aktivitas'])->name('get_data_aktivitas');
+
+    Route::get('/sapa-evaluasi', [PageController::class, 'sapaEvaluasi'])->name('sapa.evaluasi');
+    Route::get('/bpd-evaluasi', [PageController::class, 'bpdEvaluasi'])->name('bpd.evaluasi');
+    Route::get('/api/bpd/bidang-status', [PageController::class, 'getBidangStatusApi'])->name('api.bpd.bidang.status');
+    Route::get('/api/bpd/biaya-anggaran', [PageController::class, 'getBiayaAnggaranApi'])->name('api.bpd.biaya.anggaran');
 
     Route::get('/fin_console', [PageController::class, 'fin_console'])->name('fin_console');
     Route::get('/fin_parent', [PageController::class, 'fin_parent'])->name('fin_parent');
@@ -114,6 +126,15 @@ Route::middleware('auth:custom')->group(function () {
     Route::get('/get_data_lm34', [BigQueryController::class, 'get_data_lm34'])->name('get_data_lm34');
     Route::get('/get_data_lm34_by_negara', [BigQueryController::class, 'get_data_lm34_by_negara'])->name('get_data_lm34_by_negara');
     Route::get('/get_data_lm34_by_customer', [BigQueryController::class, 'get_data_lm34_by_customer'])->name('get_data_lm34_by_customer');
+
+    // Management Routes
+    Route::prefix('management')->name('management.')->group(function () {
+        Route::resource('users', UserManagementController::class);
+        Route::resource('features', FeatureManagementController::class);
+        Route::get('access', [UserFeatureAccessController::class, 'index'])->name('access.index');
+        Route::get('access/{user}/edit', [UserFeatureAccessController::class, 'edit'])->name('access.edit');
+        Route::put('access/{user}', [UserFeatureAccessController::class, 'update'])->name('access.update');
+    });
 
     // AI Response Route
     Route::post('/ai/response', [AiResponseController::class, 'aiResponse']);

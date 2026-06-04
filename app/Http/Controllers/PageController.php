@@ -305,6 +305,375 @@ class PageController extends Controller
 
         return view('pages/dfarm/dfarm_karet_presensi', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'presensiData', 'totalData', 'tglAwal', 'tglAkhir', 'jobdesc'));
     }
+    public function sapaEvaluasi()
+    {
+        return view('pages/dfarm/sapa_evaluasi');
+    }
+    public function bpdEvaluasi()
+    {
+        $db_bidang = DB::connection('pgsql_bpd')
+            ->table('m_bidang as mb')
+            ->select(
+                'mb.nama as nama_bidang',
+                'mb.id')
+            ->get();
+        $tglAwal = date('Y-m-d');
+        $tglAkhir = date('Y-m-d');
+        $bidangData = $this->getBidangWithStatus($tglAwal, $tglAkhir);
+        // dd($bidangData);
+        return view('pages/dfarm/bpd_evaluasi', compact('bidangData', 'db_bidang'));
+    }
+
+    /**
+     * Get data bidang dengan status SPPD dan BPD
+     * @param string $tglAwal Tanggal awal filter (format: Y-m-d)
+     * @param string $tglAkhir Tanggal akhir filter (format: Y-m-d)
+     * @param string|null $bidangId ID bidang untuk filter spesifik
+     * @param string|null $branchId ID branch untuk filter
+     * @return array Array of bidang dengan status count
+     */
+    private function getBidangWithStatus($tglAwal = '', $tglAkhir = '', $bidangId = '', $branchId = '')
+    {
+        // Jika parameter kosong, gunakan default
+        if (!$tglAwal) $tglAwal = '';
+        if (!$tglAkhir) $tglAkhir = '';
+        
+        $query = DB::connection('pgsql_bpd')
+            ->table('m_bidang as mb')
+            ->select(
+                'mb.nama as nama_bidang',
+                'mb.id',
+                DB::raw("COALESCE(sppd_draft.total, 0) as sppd_draft"),
+                DB::raw("COALESCE(sppd_pengajuan.total, 0) as sppd_pengajuan"),
+                DB::raw("COALESCE(sppd_disetujui.total, 0) as sppd_disetujui"),
+                DB::raw("COALESCE(sppd_revisi.total, 0) as sppd_revisi"),
+                DB::raw("COALESCE(bpd_draft.total, 0) as bpd_draft"),
+                DB::raw("COALESCE(bpd_pengajuan.total, 0) as bpd_pengajuan"),
+                DB::raw("COALESCE(bpd_disetujui.total, 0) as bpd_disetujui"),
+                DB::raw("COALESCE(bpd_revisi.total, 0) as bpd_revisi")
+            )
+            // SPPD Draft
+            ->leftJoinSub(
+                DB::connection('pgsql_bpd')
+                    ->table('surat_perjalanan_dinas as spd')
+                    ->join('m_pegawai as mp', 'spd.id_pegawai', '=', 'mp.id')
+                    ->select('mp.id_bidang', DB::raw('COUNT(*) as total'))
+                    ->where('spd.status', '0')
+                    ->where(function ($query) use ($tglAwal, $tglAkhir) {
+                        if ($tglAwal) $query->where('spd.tgl_berangkat', '>=', $tglAwal);
+                        if ($tglAkhir) $query->where('spd.tgl_berangkat', '<=', $tglAkhir);
+                    })
+                    ->where(function ($query) use ($branchId) {
+                        if ($branchId) $query->where('spd.id_branch', $branchId);
+                    })
+                    ->whereRaw('COALESCE(spd.is_deleted, false) = false')
+                    ->groupBy('mp.id_bidang'),
+                'sppd_draft',
+                'mb.id',
+                '=',
+                'sppd_draft.id_bidang'
+            )
+            // SPPD Pengajuan
+            ->leftJoinSub(
+                DB::connection('pgsql_bpd')
+                    ->table('surat_perjalanan_dinas as spd')
+                    ->join('m_pegawai as mp', 'spd.id_pegawai', '=', 'mp.id')
+                    ->select('mp.id_bidang', DB::raw('COUNT(*) as total'))
+                    ->where('spd.status', '1')
+                    ->where(function ($query) use ($tglAwal, $tglAkhir) {
+                        if ($tglAwal) $query->where('spd.tgl_berangkat', '>=', $tglAwal);
+                        if ($tglAkhir) $query->where('spd.tgl_berangkat', '<=', $tglAkhir);
+                    })
+                    ->where(function ($query) use ($branchId) {
+                        if ($branchId) $query->where('spd.id_branch', $branchId);
+                    })
+                    ->whereRaw('COALESCE(spd.is_deleted, false) = false')
+                    ->groupBy('mp.id_bidang'),
+                'sppd_pengajuan',
+                'mb.id',
+                '=',
+                'sppd_pengajuan.id_bidang'
+            )
+            // SPPD Disetujui
+            ->leftJoinSub(
+                DB::connection('pgsql_bpd')
+                    ->table('surat_perjalanan_dinas as spd')
+                    ->join('m_pegawai as mp', 'spd.id_pegawai', '=', 'mp.id')
+                    ->select('mp.id_bidang', DB::raw('COUNT(*) as total'))
+                    ->where('spd.status', '2')
+                    ->where(function ($query) use ($tglAwal, $tglAkhir) {
+                        if ($tglAwal) $query->where('spd.tgl_berangkat', '>=', $tglAwal);
+                        if ($tglAkhir) $query->where('spd.tgl_berangkat', '<=', $tglAkhir);
+                    })
+                    ->where(function ($query) use ($branchId) {
+                        if ($branchId) $query->where('spd.id_branch', $branchId);
+                    })
+                    ->whereRaw('COALESCE(spd.is_deleted, false) = false')
+                    ->groupBy('mp.id_bidang'),
+                'sppd_disetujui',
+                'mb.id',
+                '=',
+                'sppd_disetujui.id_bidang'
+            )
+            // SPPD Revisi
+            ->leftJoinSub(
+                DB::connection('pgsql_bpd')
+                    ->table('surat_perjalanan_dinas as spd')
+                    ->join('m_pegawai as mp', 'spd.id_pegawai', '=', 'mp.id')
+                    ->select('mp.id_bidang', DB::raw('COUNT(*) as total'))
+                    ->where('spd.status', '3')
+                    ->where(function ($query) use ($tglAwal, $tglAkhir) {
+                        if ($tglAwal) $query->where('spd.tgl_berangkat', '>=', $tglAwal);
+                        if ($tglAkhir) $query->where('spd.tgl_berangkat', '<=', $tglAkhir);
+                    })
+                    ->where(function ($query) use ($branchId) {
+                        if ($branchId) $query->where('spd.id_branch', $branchId);
+                    })
+                    ->whereRaw('COALESCE(spd.is_deleted, false) = false')
+                    ->groupBy('mp.id_bidang'),
+                'sppd_revisi',
+                'mb.id',
+                '=',
+                'sppd_revisi.id_bidang'
+            )
+            // BPD Draft
+            ->leftJoinSub(
+                DB::connection('pgsql_bpd')
+                    ->table('perjalanan_dinas as pd')
+                    ->join('perjalanan_dinas_pegawai as pdp', 'pd.id', '=', 'pdp.id_perjalanan_dinas')
+                    ->join('m_pegawai as mp', 'pdp.id_pegawai', '=', 'mp.id')
+                    ->select('mp.id_bidang', DB::raw('COUNT(*) as total'))
+                    ->where('pd.status', '0')
+                    ->where(function ($query) use ($tglAwal, $tglAkhir) {
+                        if ($tglAwal) $query->where('pd.tgl_berangkat', '>=', $tglAwal);
+                        if ($tglAkhir) $query->where('pd.tgl_berangkat', '<=', $tglAkhir);
+                    })
+                    ->where(function ($query) use ($branchId) {
+                        if ($branchId) $query->where('pd.id_branch', $branchId);
+                    })
+                    ->whereRaw('COALESCE(pd.is_deleted, false) = false')
+                    ->groupBy('mp.id_bidang'),
+                'bpd_draft',
+                'mb.id',
+                '=',
+                'bpd_draft.id_bidang'
+            )
+            // BPD Pengajuan
+            ->leftJoinSub(
+                DB::connection('pgsql_bpd')
+                    ->table('perjalanan_dinas as pd')
+                    ->join('perjalanan_dinas_pegawai as pdp', 'pd.id', '=', 'pdp.id_perjalanan_dinas')
+                    ->join('m_pegawai as mp', 'pdp.id_pegawai', '=', 'mp.id')
+                    ->select('mp.id_bidang', DB::raw('COUNT(*) as total'))
+                    ->where('pd.status', '1')
+                    ->where(function ($query) use ($tglAwal, $tglAkhir) {
+                        if ($tglAwal) $query->where('pd.tgl_berangkat', '>=', $tglAwal);
+                        if ($tglAkhir) $query->where('pd.tgl_berangkat', '<=', $tglAkhir);
+                    })
+                    ->where(function ($query) use ($branchId) {
+                        if ($branchId) $query->where('pd.id_branch', $branchId);
+                    })
+                    ->whereRaw('COALESCE(pd.is_deleted, false) = false')
+                    ->groupBy('mp.id_bidang'),
+                'bpd_pengajuan',
+                'mb.id',
+                '=',
+                'bpd_pengajuan.id_bidang'
+            )
+            // BPD Disetujui
+            ->leftJoinSub(
+                DB::connection('pgsql_bpd')
+                    ->table('perjalanan_dinas as pd')
+                    ->join('perjalanan_dinas_pegawai as pdp', 'pd.id', '=', 'pdp.id_perjalanan_dinas')
+                    ->join('m_pegawai as mp', 'pdp.id_pegawai', '=', 'mp.id')
+                    ->select('mp.id_bidang', DB::raw('COUNT(*) as total'))
+                    ->where('pd.status', '2')
+                    ->where(function ($query) use ($tglAwal, $tglAkhir) {
+                        if ($tglAwal) $query->where('pd.tgl_berangkat', '>=', $tglAwal);
+                        if ($tglAkhir) $query->where('pd.tgl_berangkat', '<=', $tglAkhir);
+                    })
+                    ->where(function ($query) use ($branchId) {
+                        if ($branchId) $query->where('pd.id_branch', $branchId);
+                    })
+                    ->whereRaw('COALESCE(pd.is_deleted, false) = false')
+                    ->groupBy('mp.id_bidang'),
+                'bpd_disetujui',
+                'mb.id',
+                '=',
+                'bpd_disetujui.id_bidang'
+            )
+            // BPD Revisi
+            ->leftJoinSub(
+                DB::connection('pgsql_bpd')
+                    ->table('perjalanan_dinas as pd')
+                    ->join('perjalanan_dinas_pegawai as pdp', 'pd.id', '=', 'pdp.id_perjalanan_dinas')
+                    ->join('m_pegawai as mp', 'pdp.id_pegawai', '=', 'mp.id')
+                    ->select('mp.id_bidang', DB::raw('COUNT(*) as total'))
+                    ->where('pd.status', '3')
+                    ->where(function ($query) use ($tglAwal, $tglAkhir) {
+                        if ($tglAwal) $query->where('pd.tgl_berangkat', '>=', $tglAwal);
+                        if ($tglAkhir) $query->where('pd.tgl_berangkat', '<=', $tglAkhir);
+                    })
+                    ->where(function ($query) use ($branchId) {
+                        if ($branchId) $query->where('pd.id_branch', $branchId);
+                    })
+                    ->whereRaw('COALESCE(pd.is_deleted, false) = false')
+                    ->groupBy('mp.id_bidang'),
+                'bpd_revisi',
+                'mb.id',
+                '=',
+                'bpd_revisi.id_bidang'
+            )
+            ->where('mb.is_deleted', false);
+        
+        // Apply bidang filter jika ada
+        if ($bidangId) {
+            $query->where('mb.id', $bidangId);
+        }
+        
+        $data = $query->orderBy('mb.nama')->get();
+        return $data;
+    }
+
+    public function getBidangStatusApi()
+    {
+        try {
+            $tglAwal = request()->get('tgl_awal', '');
+            $tglAkhir = request()->get('tgl_akhir', '');
+            $bidangId = request()->get('bidang_id', '');
+            $branchId = request()->get('branch_id', '');
+
+            // Validate dates if provided
+            if ($tglAwal && !$this->isValidDate($tglAwal)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Format tanggal awal tidak valid (gunakan format Y-m-d)'
+                ], 400);
+            }
+            if ($tglAkhir && !$this->isValidDate($tglAkhir)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Format tanggal akhir tidak valid (gunakan format Y-m-d)'
+                ], 400);
+            }
+
+            // Get data
+            $bidangData = $this->getBidangWithStatus($tglAwal, $tglAkhir, $bidangId, $branchId);
+
+            return response()->json([
+                'success' => true,
+                'data' => $bidangData,
+                'count' => count($bidangData)
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    private function isValidDate($date, $format = 'Y-m-d')
+    {
+        $d = \DateTime::createFromFormat($format, $date);
+        return $d && $d->format($format) === $date;
+    }
+
+    /**
+     * Get biaya dan anggaran per bidang
+     * @param string $tglAwal Tanggal awal filter (format: Y-m-d)
+     * @param string $tglAkhir Tanggal akhir filter (format: Y-m-d)
+     * @param string $bidangId ID bidang untuk filter spesifik (optional)
+     * @return \Illuminate\Support\Collection Array of bidang dengan biaya, anggaran, dan sisa anggaran
+     */
+    private function getBiayaAnggaranBidang($tglAwal = '', $tglAkhir = '', $bidangId = '')
+    {
+        $tahunAnggaran = date('Y');
+
+        $query = DB::connection('pgsql_bpd')
+            ->table('m_bidang as mb')
+            ->select(
+                'ab.id as id_anggaran',
+                'mb.id as id_bidang',
+                'mb.nama as bidang',
+                DB::raw("COALESCE(biaya_summary.total_biaya, 0) as total_biaya"),
+                DB::raw("COALESCE(ab.anggaran, 0) as anggaran"),
+                DB::raw("COALESCE(ab.anggaran, 0) - COALESCE(biaya_summary.total_biaya, 0) as sisa_anggaran")
+            )
+            ->leftJoin('m_anggaran_bidang as ab', function ($join) use ($tahunAnggaran) {
+                $join->on('mb.id', '=', 'ab.id_bidang')
+                    ->where('ab.tahun_anggaran', '=', $tahunAnggaran);
+            })
+            ->leftJoinSub(
+                DB::connection('pgsql_bpd')
+                    ->table('m_pegawai as mp')
+                    ->leftJoin('perjalanan_dinas_pegawai as pdp', 'pdp.id_pegawai', '=', 'mp.id')
+                    ->leftJoin('perjalanan_dinas as pd', function ($join) use ($tglAwal, $tglAkhir) {
+                        $join->on('pd.id', '=', 'pdp.id_perjalanan_dinas')
+                            ->where('pd.id_jenis_perjalanan_dinas', '=', 'true');
+                        if ($tglAwal) $join->whereDate('pd.tgl_berangkat', '>=', $tglAwal);
+                        if ($tglAkhir) $join->whereDate('pd.tgl_berangkat', '<=', $tglAkhir);
+                    })
+                    ->leftJoin('perjalanan_dinas_biaya as pdb', function ($join) {
+                        $join->on('pdp.id', '=', 'pdb.id_bpd_pegawai')
+                            ->where('pdb.is_deleted', false);
+                    })
+                    ->whereNotNull('pd.id')
+                    ->select('mp.id_bidang', DB::raw('SUM(pdb.nominal::numeric) as total_biaya'))
+                    ->groupBy('mp.id_bidang'),
+                'biaya_summary',
+                'mb.id',
+                '=',
+                'biaya_summary.id_bidang'
+            )
+            ->where('mb.nama', '!=', null)
+            ->where(DB::raw('COALESCE(mb.is_deleted, false)'), false)
+            ->when($bidangId, function ($query) use ($bidangId) {
+                return $query->where('mb.id', $bidangId);
+            })
+            ->groupBy('mb.id', 'mb.nama', 'ab.id', 'ab.anggaran', 'biaya_summary.total_biaya')
+            ->havingRaw("COALESCE(biaya_summary.total_biaya, 0) > 0 OR COALESCE(ab.anggaran, 0) > 0")
+            ->orderBy('mb.nama');
+
+        return $query->get();
+    }
+
+    public function getBiayaAnggaranApi()
+    {
+        try {
+            $tglAwal = request()->get('tgl_awal', '');
+            $tglAkhir = request()->get('tgl_akhir', '');
+            $bidangId = request()->get('bidang_id', '');
+
+            // Validate dates if provided
+            if ($tglAwal && !$this->isValidDate($tglAwal)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Format tanggal awal tidak valid (gunakan format Y-m-d)'
+                ], 400);
+            }
+            if ($tglAkhir && !$this->isValidDate($tglAkhir)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Format tanggal akhir tidak valid (gunakan format Y-m-d)'
+                ], 400);
+            }
+
+            // Get data
+            $biayaData = $this->getBiayaAnggaranBidang($tglAwal, $tglAkhir, $bidangId);
+
+            return response()->json([
+                'success' => true,
+                'data' => $biayaData,
+                'count' => count($biayaData)
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 
     public function dfarmkaretpresensitabular()
     {
@@ -884,6 +1253,147 @@ class PageController extends Controller
 
         return view('pages/dfarm/dfarm_teh_produksi', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'prestasiData', 'prestasiDataLite', 'totalData', 'tglAwal', 'tglAkhir', 'jobdesc'));
     }
+    public function ajax_dfarmtehproduksi(Request $request)
+    {
+        // Validate input parameters
+        $request->validate([
+            'id_reg' => 'nullable|string',
+            'tgl_awal' => 'nullable|date_format:Y-m-d',
+            'tgl_akhir' => 'nullable|date_format:Y-m-d',
+            'kode_kebun' => 'nullable|string',
+            'jobdesc' => 'nullable|string',
+        ]);
+
+        $regional = $request->input('id_reg', '');
+        $tglAwal = $request->input('tgl_awal', date('Y-m-d'));
+        $tglAkhir = $request->input('tgl_akhir', date('Y-m-d'));
+        $kebun = $request->input('kode_kebun', '');
+        $jobdesc = $request->input('jobdesc', 'PEMETIK');
+        $komoditas = 1;
+
+        if ($tglAwal > $tglAkhir) {
+            return response()->json(['error' => 'Tanggal awal tidak boleh lebih besar dari tanggal akhir'], 400);
+        }
+
+        // Initialize variables
+        $prestasiData = [];
+        $prestasiDataLite = [];
+        $totalData = [];
+
+        // Gunakan INNER JOIN (lebih cepat) dan tambahkan filter regional
+        $data = DB::connection('pgsql_secondary')
+            ->table('person_data')
+            ->select('person_data.kebun_id', 'person_data.regional_id', 'm_kebun.nama as nama_kebun')
+            ->leftJoin('m_kebun', 'person_data.kebun_id', '=', 'm_kebun.id')
+            ->whereNotNull('person_data.regional_id')
+            ->orderBy('person_data.regional_id');
+
+        if ($komoditas == 1) {
+            $data->where(function ($query) {
+                $query->where('positionsdesc', 'like', '%Pemetik%')
+                    ->orWhere('positionsdesc', 'like', '%PEMETIK%')
+                    ->orWhere('positionsdesc', 'like', '%pemetik%');
+            });
+        }
+
+        if ($regional) {
+            $data->where('person_data.regional_id', $regional);
+        }
+        // Gunakan pagination untuk data besar
+        $allDatakebun = $data->groupBy('person_data.kebun_id', 'person_data.regional_id', 'm_kebun.nama')
+            ->get();
+
+        $selectedRegional = $regional;
+        $selectedKomoditas = $komoditas;
+        $selectedKebun = $kebun;
+        if ($regional != '' and $kebun == '') {
+            $prestasiData = DB::connection('pgsql_secondary')->select(
+                'SELECT * FROM fn_rekap_prestasi_teh_kebun(?,?, ?) AS (
+                    id integer, 
+                    nama varchar, 
+                    panen_manual numeric, 
+                    panen_gunting numeric, 
+                    panen_mesin_group numeric, 
+                    panen_mesin_individu numeric,
+                    total numeric
+                )',
+                [$regional, $tglAwal, $tglAkhir]
+            );
+            $totalData = $this->calculateTotalPrestasiTeh($prestasiData);
+            $prestasiDataLite = DB::connection('pgsql_secondary')->select(
+                'SELECT nama, persen_input_presensi, persen_input_produksi 
+                FROM fn_report_n1_karet_rekap_presensi_prestasi_kebun_lite(?, ?, ?, ?, ?, ?)',
+                ['PEMETIK', $regional, '', 1, $tglAwal, $tglAkhir]
+            );
+        }
+        if ($regional == '') {
+
+            $prestasiData = DB::connection('pgsql_secondary')->select(
+                'SELECT * FROM fn_rekap_prestasi_teh_regional(?, ?) AS (
+                    id integer, 
+                    nama varchar, 
+                    panen_manual numeric, 
+                    panen_gunting numeric, 
+                    panen_mesin_group numeric, 
+                    panen_mesin_individu numeric,
+                    total numeric
+                )',
+                [$tglAwal, $tglAkhir]
+            );
+            $totalData = $this->calculateTotalPrestasiTeh($prestasiData);
+            $prestasiDataLite = DB::connection('pgsql_secondary')->select(
+                'SELECT nama, persen_input_presensi, persen_input_produksi 
+                FROM fn_report_n1_karet_rekap_presensi_prestasi_regional_lite(?, ?, ?, ?, ?)',
+                ['PEMETIK', '', 1, $tglAwal, $tglAkhir]
+            );
+        }
+        if ($regional != '' and $kebun != '') {
+
+            $prestasiData = DB::connection('pgsql_secondary')->select(
+                'SELECT * FROM fn_rekap_prestasi_teh_afdeling(?,?, ?) AS (
+                    id integer, 
+                    nama varchar, 
+                    panen_manual numeric, 
+                    panen_gunting numeric, 
+                    panen_mesin_group numeric, 
+                    panen_mesin_individu numeric,
+                    total numeric
+                )',
+                [$kebun, $tglAwal, $tglAkhir]
+            );
+            $totalData = $this->calculateTotalPrestasiTeh($prestasiData);
+            $prestasiDataLite = DB::connection('pgsql_secondary')->select(
+                'SELECT nama, persen_input_presensi, persen_input_produksi 
+                FROM fn_report_n1_karet_rekap_presensi_prestasi_afdeling_lite(?, ?, ?, ?, ?)',
+                ['PEMETIK', $kebun, 1, $tglAwal, $tglAkhir]
+            );
+        }
+
+        // Hitung total untuk masing-masing kolom
+        if (empty($prestasiData) || empty($totalData)) {
+            return response()->json([
+                'error' => 'Data tidak ditemukan untuk filter yang dipilih',
+                'success' => false
+            ], 404);
+        }
+
+        $dataoutput = [
+            'success' => true,
+            'allDatakebun' => $allDatakebun,
+            'selectedRegional' => $selectedRegional,
+            'selectedKebun' => $selectedKebun,
+            'selectedKomoditas' => $selectedKomoditas,
+            'prestasiData' => $prestasiData,
+            'prestasiDataLite' => $prestasiDataLite,
+            'totalData' => $totalData,
+            'tglAwal' => $tglAwal,
+            'tglAkhir' => $tglAkhir,
+            'jobdesc' => $jobdesc
+        ];
+        
+        return response()->json($dataoutput, 200)
+            ->header('Content-Type', 'application/json; charset=utf-8');
+    }
     public function dfarmkopiproduksi()
     {
         $regional = $_GET['id_reg'] ?? '';
@@ -1008,6 +1518,162 @@ class PageController extends Controller
 
         return view('pages/dfarm/dfarm_kopi_produksi', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'prestasiData', 'prestasiDataLite', 'totalData', 'tglAwal', 'tglAkhir', 'jobdesc'));
     }
+    public function ajax_dfarmkopiproduksi(Request $request)
+    {
+        // Validate input parameters
+        $request->validate([
+            'id_reg' => 'nullable|string',
+            'tgl_awal' => 'nullable|date_format:Y-m-d',
+            'tgl_akhir' => 'nullable|date_format:Y-m-d',
+            'kode_kebun' => 'nullable|string',
+            'jobdesc' => 'nullable|string',
+        ]);
+
+        $regional = $request->input('id_reg', '');
+        $tglAwal = $request->input('tgl_awal', date('Y-m-d'));
+        $tglAkhir = $request->input('tgl_akhir', date('Y-m-d'));
+        $kebun = $request->input('kode_kebun', '');
+        $jobdesc = $request->input('jobdesc', 'PANEN KOPI');
+        $komoditas = 3;
+
+        if ($tglAwal > $tglAkhir) {
+            return response()->json(['error' => 'Tanggal awal tidak boleh lebih besar dari tanggal akhir'], 400);
+        }
+
+        // Initialize variables
+        $prestasiData = [];
+        $prestasiDataLite = [];
+        $totalData = [];
+
+        // Gunakan INNER JOIN (lebih cepat) dan tambahkan filter regional
+        $data = DB::connection('pgsql_secondary')
+            ->table('person_data')
+            ->select('person_data.kebun_id', 'person_data.regional_id', 'm_kebun.nama as nama_kebun')
+            ->leftJoin('m_kebun', 'person_data.kebun_id', '=', 'm_kebun.id')
+            ->whereNotNull('person_data.regional_id')
+            ->orderBy('person_data.regional_id');
+
+        if ($komoditas == 3) {
+            $data->where(function ($query) {
+                $query->where('positionsdesc', 'like', '%Panen Kopi%')
+                    ->orWhere('positionsdesc', 'like', '%PANEN KOPI%')
+                    ->orWhere('positionsdesc', 'like', '%panen kopi%');
+            });
+        }
+
+        if ($regional) {
+            $data->where('person_data.regional_id', $regional);
+        }
+        // Gunakan pagination untuk data besar
+        $allDatakebun = $data->groupBy('person_data.kebun_id', 'person_data.regional_id', 'm_kebun.nama')
+            ->get();
+
+        $selectedRegional = $regional;
+        $selectedKomoditas = $komoditas;
+        $selectedKebun = $kebun;
+        if ($regional != '' and $kebun == '') {
+            $prestasiData = DB::connection('pgsql_secondary')->select(
+                'SELECT * FROM fn_rekap_prestasi_kopi_kebun(?, ?, ?, ?) AS (
+                    id integer, 
+                    nama varchar, 
+                    basah_merah numeric, 
+                    basah_kuning numeric, 
+                    basah_hijau numeric, 
+                    basah_hitam numeric, 
+                    total_basah numeric,
+                    kering_merah numeric, 
+                    kering_kuning numeric, 
+                    kering_hijau numeric, 
+                    kering_hitam numeric, 
+                    total_kering numeric
+                )',
+                [$komoditas, $regional, $tglAwal, $tglAkhir]
+            );
+            $totalData = $this->calculateTotalPrestasiKopi($prestasiData);
+            $prestasiDataLite = DB::connection('pgsql_secondary')->select(
+                'SELECT nama, persen_input_presensi, persen_input_produksi 
+                FROM fn_report_n1_karet_rekap_presensi_prestasi_kebun_lite(?, ?, ?, ?, ?, ?)',
+                ['PANEN KOPI', $regional, '', 3, $tglAwal, $tglAkhir]
+            );
+        }
+        if ($regional == '') {
+
+            $prestasiData = DB::connection('pgsql_secondary')->select(
+                'SELECT * FROM fn_rekap_prestasi_kopi_regional(?, ?, ?) AS (
+                    id integer, 
+                    nama varchar, 
+                    basah_merah numeric, 
+                    basah_kuning numeric, 
+                    basah_hijau numeric, 
+                    basah_hitam numeric, 
+                    total_basah numeric,
+                    kering_merah numeric, 
+                    kering_kuning numeric, 
+                    kering_hijau numeric, 
+                    kering_hitam numeric, 
+                    total_kering numeric
+                )',
+                [$komoditas, $tglAwal, $tglAkhir]
+            );
+            $totalData = $this->calculateTotalPrestasiKopi($prestasiData);
+            $prestasiDataLite = DB::connection('pgsql_secondary')->select(
+                'SELECT nama, persen_input_presensi, persen_input_produksi 
+                FROM fn_report_n1_karet_rekap_presensi_prestasi_regional_lite(?, ?, ?, ?, ?)',
+                ['PANEN KOPI', '', 3, $tglAwal, $tglAkhir]
+            );
+        }
+        if ($regional != '' and $kebun != '') {
+
+            $prestasiData = DB::connection('pgsql_secondary')->select(
+                'SELECT * FROM fn_rekap_prestasi_kopi_afdeling(?, ?, ?, ?) AS (
+                    id integer, 
+                    nama varchar, 
+                    basah_merah numeric, 
+                    basah_kuning numeric, 
+                    basah_hijau numeric, 
+                    basah_hitam numeric, 
+                    total_basah numeric,
+                    kering_merah numeric, 
+                    kering_kuning numeric, 
+                    kering_hijau numeric, 
+                    kering_hitam numeric, 
+                    total_kering numeric
+                )',
+                [$komoditas, $kebun, $tglAwal, $tglAkhir]
+            );
+            $totalData = $this->calculateTotalPrestasiKopi($prestasiData);
+            $prestasiDataLite = DB::connection('pgsql_secondary')->select(
+                'SELECT nama, persen_input_presensi, persen_input_produksi 
+                FROM fn_report_n1_karet_rekap_presensi_prestasi_afdeling_lite(?, ?, ?, ?, ?)',
+                ['PANEN KOPI', $kebun, 3, $tglAwal, $tglAkhir]
+            );
+        }
+
+        // Hitung total untuk masing-masing kolom
+        if (empty($prestasiData) || empty($totalData)) {
+            return response()->json([
+                'error' => 'Data tidak ditemukan untuk filter yang dipilih',
+                'success' => false
+            ], 404);
+        }
+
+        $dataoutput = [
+            'success' => true,
+            'allDatakebun' => $allDatakebun,
+            'selectedRegional' => $selectedRegional,
+            'selectedKebun' => $selectedKebun,
+            'selectedKomoditas' => $selectedKomoditas,
+            'prestasiData' => $prestasiData,
+            'prestasiDataLite' => $prestasiDataLite,
+            'totalData' => $totalData,
+            'tglAwal' => $tglAwal,
+            'tglAkhir' => $tglAkhir,
+            'jobdesc' => $jobdesc
+        ];
+        
+        return response()->json($dataoutput, 200)
+            ->header('Content-Type', 'application/json; charset=utf-8');
+    }
     public function dfarmpemeliharaan()
     {
         $regional = $_GET['id_reg'] ?? '';
@@ -1131,6 +1797,152 @@ class PageController extends Controller
 
 
         return view('pages/dfarm/dfarm_pemeliharaan', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'selectedaktivitas', 'prestasiData', 'prestasiDataLite', 'totalData', 'tglAwal', 'tglAkhir', 'jobdesc', 'detaildatapemeliharaan', 'alldatapemeliharaan'));
+    }
+    public function ajax_dfarmpemeliharaan(Request $request)
+    {
+        // Validate input parameters
+        $request->validate([
+            'id_reg' => 'nullable|string',
+            'tgl_awal' => 'nullable|date_format:Y-m-d',
+            'tgl_akhir' => 'nullable|date_format:Y-m-d',
+            'kode_kebun' => 'nullable|string',
+            'jenis_aktivitas' => 'nullable|string',
+            'jobdesc' => 'nullable|string',
+        ]);
+
+        $regional = $request->input('id_reg', '');
+        $tglAwal = $request->input('tgl_awal', date('Y-m-d'));
+        $tglAkhir = $request->input('tgl_akhir', date('Y-m-d'));
+        $kebun = $request->input('kode_kebun', '');
+        $jenis_aktivitas = $request->input('jenis_aktivitas', '19');
+        $jobdesc = $request->input('jobdesc', 'PEMELIHARAAN');
+        $komoditas = $request->input('komoditas', 1);
+
+        if ($tglAwal > $tglAkhir) {
+            return response()->json(['error' => 'Tanggal awal tidak boleh lebih besar dari tanggal akhir'], 400);
+        }
+
+        // Initialize variables
+        $prestasiData = [];
+        $prestasiDataLite = [];
+        $totalData = [];
+
+        // Gunakan INNER JOIN (lebih cepat) dan tambahkan filter regional
+        $data = DB::connection('pgsql_secondary')
+            ->table('person_data')
+            ->select('person_data.kebun_id', 'person_data.regional_id', 'm_kebun.nama as nama_kebun')
+            ->leftJoin('m_kebun', 'person_data.kebun_id', '=', 'm_kebun.id')
+            ->whereNotNull('person_data.regional_id')
+            ->orderBy('person_data.regional_id');
+
+        if ($komoditas == 1) {
+            $data->where(function ($query) {
+                $query->where('positionsdesc', 'like', '%Pemetik%')
+                    ->orWhere('positionsdesc', 'like', '%PEMETIK%')
+                    ->orWhere('positionsdesc', 'like', '%pemetik%');
+            });
+        }
+        if ($komoditas == 2) {
+            $data->where(function ($query) {
+                $query->where('positionsdesc', 'like', '%penyadap%')
+                    ->orWhere('positionsdesc', 'like', '%PENYADAP%')
+                    ->orWhere('positionsdesc', 'like', '%penyadap%');
+            });
+        }
+        if ($komoditas == 3) {
+            $data->where(function ($query) {
+                $query->where('positionsdesc', 'like', '%Panen Kopi%')
+                    ->orWhere('positionsdesc', 'like', '%PANEN KOPI%')
+                    ->orWhere('positionsdesc', 'like', '%panen kopi%');
+            });
+        }
+
+        if ($regional) {
+            $data->where('person_data.regional_id', $regional);
+        }
+        // Gunakan pagination untuk data besar
+        $allDatakebun = $data->groupBy('person_data.kebun_id', 'person_data.regional_id', 'm_kebun.nama')
+            ->get();
+
+        $selectedRegional = $regional;
+        $selectedKomoditas = $komoditas;
+        $selectedKebun = $kebun;
+        if ($regional != '' and $kebun == '') {
+            $prestasiData = DB::connection('pgsql_secondary')->select(
+                'SELECT * FROM fn_rekap_prestasi_pemeliharaan_kebun(?,?,?,?,?) AS (
+                    id integer, 
+                    nama varchar, 
+                    hasil_pemeliharaan numeric
+                )',
+                [$komoditas, $jenis_aktivitas, $regional, $tglAwal, $tglAkhir]
+            );
+            $totalData = $this->calculateTotalPrestasiPemeliharaan($prestasiData);
+            $prestasiDataLite = DB::connection('pgsql_secondary')->select(
+                'SELECT nama, persen_input_presensi, persen_input_produksi 
+                FROM fn_report_n1_karet_rekap_presensi_prestasi_kebun_lite(?, ?, ?, ?, ?, ?)',
+                ['PEMELIHARAAN', $regional, '', $komoditas, $tglAwal, $tglAkhir]
+            );
+        }
+        if ($regional == '') {
+
+            $prestasiData = DB::connection('pgsql_secondary')->select(
+                'SELECT * FROM fn_rekap_prestasi_pemeliharaan_regional(?, ?, ?, ?) AS (
+                    id integer, 
+                    nama varchar, 
+                    hasil_pemeliharaan numeric
+                )',
+                [$komoditas, $jenis_aktivitas, $tglAwal, $tglAkhir]
+            );
+            $totalData = $this->calculateTotalPrestasiPemeliharaan($prestasiData);
+            $prestasiDataLite = DB::connection('pgsql_secondary')->select(
+                'SELECT nama, persen_input_presensi, persen_input_produksi 
+                FROM fn_report_n1_karet_rekap_presensi_prestasi_regional_lite(?, ?, ?, ?, ?)',
+                ['PEMELIHARAAN', '', $komoditas, $tglAwal, $tglAkhir]
+            );
+        }
+        if ($regional != '' and $kebun != '') {
+
+            $prestasiData = DB::connection('pgsql_secondary')->select(
+                'SELECT * FROM fn_rekap_prestasi_pemeliharaan_afdeling(?,?,?,?,?) AS (
+                    id integer, 
+                    nama varchar, 
+                    hasil_pemeliharaan numeric
+                )',
+                [$komoditas, $jenis_aktivitas, $kebun, $tglAwal, $tglAkhir]
+            );
+            $totalData = $this->calculateTotalPrestasiPemeliharaan($prestasiData);
+            $prestasiDataLite = DB::connection('pgsql_secondary')->select(
+                'SELECT nama, persen_input_presensi, persen_input_produksi 
+                FROM fn_report_n1_karet_rekap_presensi_prestasi_afdeling_lite(?, ?, ?, ?, ?)',
+                ['PEMELIHARAAN', $kebun, $komoditas, $tglAwal, $tglAkhir]
+            );
+        }
+
+        // Hitung total untuk masing-masing kolom
+        if (empty($prestasiData) || empty($totalData)) {
+            return response()->json([
+                'error' => 'Data tidak ditemukan untuk filter yang dipilih',
+                'success' => false
+            ], 404);
+        }
+
+        $dataoutput = [
+            'success' => true,
+            'allDatakebun' => $allDatakebun,
+            'selectedRegional' => $selectedRegional,
+            'selectedKebun' => $selectedKebun,
+            'selectedKomoditas' => $selectedKomoditas,
+            'prestasiData' => $prestasiData,
+            'prestasiDataLite' => $prestasiDataLite,
+            'totalData' => $totalData,
+            'tglAwal' => $tglAwal,
+            'tglAkhir' => $tglAkhir,
+            'jobdesc' => $jobdesc,
+            'jenis_aktivitas' => $jenis_aktivitas
+        ];
+        
+        return response()->json($dataoutput, 200)
+            ->header('Content-Type', 'application/json; charset=utf-8');
     }
     public function dfarmtehold()
     {
