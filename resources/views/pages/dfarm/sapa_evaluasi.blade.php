@@ -987,7 +987,7 @@
         datePickerStart.value = currentMonth;
         
         // Set default regional to 2
-        document.getElementById('selectRegional').value = '2';
+        document.getElementById('selectRegional').value = '';
 
         // Update display
         function updateDateDisplay() {

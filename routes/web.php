@@ -72,6 +72,7 @@ Route::middleware('auth:custom')->group(function () {
     Route::get('/bpd-evaluasi', [PageController::class, 'bpdEvaluasi'])->name('bpd.evaluasi');
     Route::get('/api/bpd/bidang-status', [PageController::class, 'getBidangStatusApi'])->name('api.bpd.bidang.status');
     Route::get('/api/bpd/biaya-anggaran', [PageController::class, 'getBiayaAnggaranApi'])->name('api.bpd.biaya.anggaran');
+    Route::get('/api/bpd/detailbpd', [PageController::class, 'SelectListBpdBiaya'])->name('api.bpd.listbpdbiaya');
 
     Route::get('/fin_console', [PageController::class, 'fin_console'])->name('fin_console');
     Route::get('/fin_parent', [PageController::class, 'fin_parent'])->name('fin_parent');

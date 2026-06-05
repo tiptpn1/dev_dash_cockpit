@@ -549,18 +549,41 @@
                         <label class="form-label">Periode</label>
                         <div style="position: relative;">
                           <input type="text" id="dateRangeDetail" placeholder="2026-05-01 s/d 2026-06-02" readonly class="form-input" style="cursor: pointer; width: 100%;">
+                          <div id="datePickerPopupDetail" class="hidden" style="position: absolute; top: 100%; left: 0; background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; z-index: 1000; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); min-width: 300px; margin-top: 4px;">
+                            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                              <input type="date" id="datePickerStartDetail" style="flex: 1; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px;">
+                              <span style="display: flex; align-items: center; color: #6b7280;">s/d</span>
+                              <input type="date" id="datePickerEndDetail" style="flex: 1; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px;">
+                            </div>
+                            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                              <button id="datePickerApplyDetail" style="padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Terapkan</button>
+                              <button id="datePickerCancelDetail" style="padding: 8px 16px; background: #6b7280; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Batal</button>
+                            </div>
+                          </div>
                         </div>
                       </div>
 
                       <div class="form-group">
-                        <label class="form-label">Dinas</label>
-                        <select id="selectDinas" class="form-select">
-                          <option value="" selected>Pilih Dinas</option>
-                          <option value="1">Dinas 1</option>
-                          <option value="2">Dinas 2</option>
-                          <option value="3">Dinas 3</option>
+                        <label class="form-label">Bidang</label>
+                        <select id="selectBidangBiayaBPD" class="form-select">
+                          <option value="" selected>Semua Bidang</option>
+                          @foreach($db_bidang as $bidang)
+                            <option value="{{ $bidang->id }}">{{ $bidang->nama_bidang }}</option>
+                          @endforeach
                         </select>
-                      </div>
+                      </div> 
+                      <div class="form-group">
+                        <label class="form-label">Nama Pegawai / Nomor BPD</label>
+                        <div style="position: relative;">
+                          <input type="text" id="inputNama" placeholder="" class="form-input" style= width: 100%;">
+                        </div>
+                      </div>   
+                      <div class="form-group">
+                        <label class="form-label">Keperluan / Tujuan / Lokasi Kota</label>
+                        <div style="position: relative;">
+                          <input type="text" id="keperluan" placeholder="" class="form-input" style= width: 100%;">
+                        </div>
+                      </div> 
                     </div>
                   </div>
 
@@ -584,12 +607,20 @@
                       <div class="table-wrapper">
                         <table class="report-table" style="width: 100%; border-collapse: collapse; font-size: 12.5px; color: #1f2937;">
                           <thead>
-                            <tr style="background: #f9fafb; border-bottom: 1px solid #e5e7eb;">
-                              <th style="padding: 10px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">No</th>
-                              <th style="padding: 10px 16px; text-align: left; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Nama Dinas</th>
-                              <th style="padding: 10px 16px; text-align: center; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Regional</th>
-                              <th style="padding: 10px 16px; text-align: center; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Periode</th>
-                              <th style="padding: 10px 16px; text-align: right; font-weight: 700; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Status</th>
+                            <tr style="background: #15803d; border-bottom: 1px solid #e5e7eb;">
+                              <th style="padding: 10px 12px; text-align: center; font-weight: 700; color: #fff; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">No</th>
+                              <th style="padding: 10px 12px; text-align: left; font-weight: 700; color: #fff; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">Nama Pegawai</th>
+                              <th style="padding: 10px 12px; text-align: left; font-weight: 700; color: #fff; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">Nama Bidang</th>
+                              <th style="padding: 10px 12px; text-align: center; font-weight: 700; color: #fff; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">Tgl Berangkat</th>
+                              <th style="padding: 10px 12px; text-align: center; font-weight: 700; color: #fff; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">Tgl Kembali</th>
+                              <th style="padding: 10px 12px; text-align: left; font-weight: 700; color: #fff; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">Jenis Tujuan</th>
+                              <th style="padding: 10px 12px; text-align: left; font-weight: 700; color: #fff; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">Keperluan</th>
+                              <th style="padding: 10px 12px; text-align: left; font-weight: 700; color: #fff; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">Tujuan</th>
+                              <th style="padding: 10px 12px; text-align: left; font-weight: 700; color: #fff; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">Lokasi Kota</th>
+                              <th style="padding: 10px 12px; text-align: left; font-weight: 700; color: #fff; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">Nama Rombongan</th>
+                              <th style="padding: 10px 12px; text-align: right; font-weight: 700; color: #fff; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">Biaya Dinas</th>
+                              <th style="padding: 10px 12px; text-align: right; font-weight: 700; color: #fff; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">Biaya Reimbursement</th>
+                              <th style="padding: 10px 12px; text-align: right; font-weight: 700; color: #fff; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">Biaya Akomodasi</th>
                             </tr>
                           </thead>
                           <tbody id="detailDinasTableBody">
@@ -1430,6 +1461,255 @@
             selectRegional.addEventListener('change', (e) => {
               const selectedRegional = e.target.value;
               console.log('Regional selected:', selectedRegional);
+            });
+          }
+
+          // ===== DETAIL DINAS TAB - Filter Detail Handler =====
+          const btnFilterDetail = document.getElementById('btnFilterDetail');
+          const btnResetDetail = document.getElementById('btnResetDetail');
+          const dateRangeDetail = document.getElementById('dateRangeDetail');
+          const datePickerPopupDetail = document.getElementById('datePickerPopupDetail');
+          const datePickerStartDetail = document.getElementById('datePickerStartDetail');
+          const datePickerEndDetail = document.getElementById('datePickerEndDetail');
+          const datePickerApplyDetail = document.getElementById('datePickerApplyDetail');
+          const datePickerCancelDetail = document.getElementById('datePickerCancelDetail');
+          const selectBidangDetail = document.getElementById('selectBidangBiayaBPD');
+          const inputNamaDetail = document.getElementById('inputNama');
+          const inputKeperluan = document.getElementById('keperluan');
+
+          // Initialize date picker for Detail tab
+          if (dateRangeDetail && datePickerStartDetail && datePickerEndDetail) {
+            const today = new Date();
+            const oneMonthAgo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+            datePickerStartDetail.value = formatDate(oneMonthAgo.toISOString().split('T')[0]);
+            datePickerEndDetail.value = formatDate(today.toISOString().split('T')[0]);
+            dateRangeDetail.value = `${datePickerStartDetail.value} s/d ${datePickerEndDetail.value}`;
+          }
+
+          // Format currency helper
+          function formatCurrencyIDR(value) {
+            return new Intl.NumberFormat('id-ID', {
+              style: 'currency',
+              currency: 'IDR',
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0
+            }).format(value || 0);
+          }
+
+          // Date range picker handlers for Detail tab
+          if (dateRangeDetail) {
+            dateRangeDetail.addEventListener('click', () => {
+              datePickerPopupDetail.classList.toggle('hidden');
+            });
+          }
+
+          if (datePickerApplyDetail) {
+            datePickerApplyDetail.addEventListener('click', () => {
+              if (datePickerStartDetail.value && datePickerEndDetail.value) {
+                if (datePickerStartDetail.value <= datePickerEndDetail.value) {
+                  dateRangeDetail.value = `${datePickerStartDetail.value} s/d ${datePickerEndDetail.value}`;
+                  datePickerPopupDetail.classList.add('hidden');
+                  console.log('Periode terpilih:', datePickerStartDetail.value, 's/d', datePickerEndDetail.value);
+                } else {
+                  alert('Tanggal awal tidak boleh lebih besar dari tanggal akhir');
+                }
+              } else {
+                alert('Silakan isi kedua tanggal');
+              }
+            });
+          }
+
+          if (datePickerCancelDetail) {
+            datePickerCancelDetail.addEventListener('click', () => {
+              datePickerPopupDetail.classList.add('hidden');
+            });
+          }
+
+          // Close popup when clicking outside (Detail tab)
+          document.addEventListener('click', (e) => {
+            if (datePickerPopupDetail && dateRangeDetail) {
+              const isClickInsideDatePicker = dateRangeDetail.contains(e.target) || datePickerPopupDetail.contains(e.target);
+              if (!isClickInsideDatePicker && !datePickerPopupDetail.classList.contains('hidden')) {
+                datePickerPopupDetail.classList.add('hidden');
+              }
+            }
+          });
+
+          // Filter Detail Button Handler
+          if (btnFilterDetail) {
+            btnFilterDetail.addEventListener('click', () => {
+              const dateRange = dateRangeDetail ? dateRangeDetail.value : '';
+              const bidangId = selectBidangDetail ? selectBidangDetail.value : '';
+              const namaPegawai = inputNamaDetail ? inputNamaDetail.value : '';
+              const keterangan = inputKeperluan ? inputKeperluan.value : '';
+
+              // Show loading state
+              btnFilterDetail.disabled = true;
+              btnFilterDetail.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+
+              // Build query params
+              let params = new URLSearchParams();
+              if (dateRange) {
+                const [tglAwal, tglAkhir] = dateRange.split(' s/d ');
+                if (tglAwal) params.append('tgl_awal', tglAwal.trim());
+                if (tglAkhir) params.append('tgl_akhir', tglAkhir.trim());
+              }
+              if (bidangId) params.append('bidang_id', bidangId);
+              if (namaPegawai) params.append('nama_pegawai', namaPegawai);
+              if (keterangan) params.append('keterangan', keterangan);
+
+              // Make AJAX call
+              fetch(`/api/bpd/detailbpd?${params.toString()}`)
+                .then(response => {
+                  if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                  }
+                  return response.json();
+                })
+                .then(data => {
+                  const tableBody = document.getElementById('detailDinasTableBody');
+                  if (!tableBody) {
+                    console.error('Table body not found');
+                    return;
+                  }
+
+                  // Clear existing rows
+                  tableBody.innerHTML = '';
+
+                  // Handle different response structures
+                  let dataArray = [];
+                  
+                  // Check if data is directly an array
+                  if (Array.isArray(data)) {
+                    dataArray = data;
+                  }
+                  // Check if data has .data property that is an array
+                  else if (data.data && Array.isArray(data.data)) {
+                    dataArray = data.data;
+                  }
+                  // Check if data has .data property that is a single object - wrap it in array
+                  else if (data.data && typeof data.data === 'object') {
+                    dataArray = [data.data];
+                  }
+                  // If data itself is an object (not array) - wrap it in array
+                  else if (typeof data === 'object' && !Array.isArray(data) && data.id) {
+                    dataArray = [data];
+                  }
+
+                  // Populate table with new data
+                  if (dataArray && dataArray.length > 0) {
+                    dataArray.forEach((item, index) => {
+                      try {
+                        // Calculate total biaya_dinas
+                        const biayaDinas = (
+                          (parseFloat(item.biaya_dinas_uang_perdiem) || 0) +
+                          (parseFloat(item.biaya_dinas_transport_lokal) || 0) +
+                          (parseFloat(item.biaya_dinas_transport_dari_bandara) || 0) +
+                          (parseFloat(item.biaya_dinas_transport_ke_bandara) || 0)
+                        );
+
+                        // Calculate total biaya_reimbursement
+                        const biayaReimbursement = (
+                          (parseFloat(item.reimbursement_penginapan) || 0) +
+                          (parseFloat(item.reimbursement_tiketberangkat) || 0) +
+                          (parseFloat(item.reimbursement_tiketpulang) || 0) +
+                          (parseFloat(item.reimbursement_uangcuci) || 0)
+                        );
+
+                        // Calculate total biaya_akomodasi
+                        const biayaAkomodasi = (
+                          (parseFloat(item.akomodasi_tiketberangkat) || 0) +
+                          (parseFloat(item.akomodasi_tiketpulang) || 0) +
+                          (parseFloat(item.akomodasi_penginapan) || 0)
+                        );
+
+                        const row = document.createElement('tr');
+                        row.style.borderBottom = '1px solid #e5e7eb';
+                        row.innerHTML = `
+                          <td style="padding: 8px 12px; text-align: center; color: #374151;">${item.nomor}</td>
+                          <td style="padding: 8px 12px; text-align: left; color: #374151;">${item.nama_pegawai || '-'}</td>
+                          <td style="padding: 8px 12px; text-align: left; color: #374151;">${item.nama_bidang || '-'}</td>
+                          <td style="padding: 8px 12px; text-align: center; color: #374151;">${item.tgl_berangkat || '-'}</td>
+                          <td style="padding: 8px 12px; text-align: center; color: #374151;">${item.tgl_kembali || '-'}</td>
+                          <td style="padding: 8px 12px; text-align: left; color: #374151;">${item.jenis_tujuan || '-'}</td>
+                          <td style="padding: 8px 12px; text-align: left; color: #374151;">${item.keperluan || '-'}</td>
+                          <td style="padding: 8px 12px; text-align: left; color: #374151;">${item.tujuan || '-'}</td>
+                          <td style="padding: 8px 12px; text-align: left; color: #374151;">${item.lokasi_kota || '-'}</td>
+                          <td style="padding: 8px 12px; text-align: left; color: #374151;">${item.nama_rombongan || '-'}</td>
+                          <td style="padding: 8px 12px; text-align: right; color: #374151;">${formatCurrencyIDR(biayaDinas)}</td>
+                          <td style="padding: 8px 12px; text-align: right; color: #374151;">${formatCurrencyIDR(biayaReimbursement)}</td>
+                          <td style="padding: 8px 12px; text-align: right; color: #374151;">${formatCurrencyIDR(biayaAkomodasi)}</td>
+                        `;
+                        tableBody.appendChild(row);
+                      } catch (err) {
+                        console.error('Error processing row:', err, item);
+                      }
+                    });
+                  } else {
+                    const emptyRow = document.createElement('tr');
+                    emptyRow.innerHTML = `
+                      <td colspan="13" style="padding: 32px 16px; text-align: center; color: #9ca3af;">
+                        <i class="fas fa-database" style="font-size: 24px; margin-bottom: 8px; display: block;"></i>
+                        Tidak ada data detail dinas
+                      </td>
+                    `;
+                    tableBody.appendChild(emptyRow);
+                  }
+                })
+                .catch(error => {
+                  console.error('Error fetching data:', error);
+                  const tableBody = document.getElementById('detailDinasTableBody');
+                  if (tableBody) {
+                    tableBody.innerHTML = `
+                      <tr>
+                        <td colspan="13" style="padding: 32px 16px; text-align: center; color: #ef4444;">
+                          <i class="fas fa-exclamation-circle" style="font-size: 24px; margin-bottom: 8px; display: block;"></i>
+                          Terjadi kesalahan: ${error.message}
+                        </td>
+                      </tr>
+                    `;
+                  }
+                  const errorPopup = document.getElementById('errorPopup');
+                  const errorMessage = document.getElementById('errorMessage');
+                  if (errorPopup && errorMessage) {
+                    errorMessage.textContent = 'Terjadi kesalahan: ' + error.message;
+                    errorPopup.classList.remove('hidden');
+                  }
+                })
+                .finally(() => {
+                  btnFilterDetail.disabled = false;
+                  btnFilterDetail.innerHTML = '<i class="fas fa-filter"></i> Filter';
+                });
+            });
+          }
+
+          // Reset Button Handler for Detail Tab
+          if (btnResetDetail) {
+            btnResetDetail.addEventListener('click', () => {
+              const today = new Date();
+              const oneMonthAgo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+              
+              // Reset date range
+              datePickerStartDetail.value = formatDate(oneMonthAgo.toISOString().split('T')[0]);
+              datePickerEndDetail.value = formatDate(today.toISOString().split('T')[0]);
+              dateRangeDetail.value = `${datePickerStartDetail.value} s/d ${datePickerEndDetail.value}`;
+              
+              // Reset form inputs
+              if (selectBidangDetail) {
+                selectBidangDetail.value = '';
+              }
+              if (inputNamaDetail) {
+                inputNamaDetail.value = '';
+              }
+              if (inputKeperluan) {
+                inputKeperluan.value = '';
+              }
+              
+              // Clear table
+              const tableBody = document.getElementById('detailDinasTableBody');
+              if (tableBody) {
+                tableBody.innerHTML = '';
+              }
             });
           }
         });

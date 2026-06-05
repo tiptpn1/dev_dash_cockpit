@@ -317,6 +317,7 @@ class PageController extends Controller
                 'mb.nama as nama_bidang',
                 'mb.id'
             )
+            ->Where('is_deleted','FALSE')
             ->get();
         $tglAwal = date('Y-m-d');
         $tglAkhir = date('Y-m-d');
@@ -324,6 +325,54 @@ class PageController extends Controller
         // dd($bidangData);
         return view('pages/dfarm/bpd_evaluasi', compact('bidangData', 'db_bidang'));
     }
+    public function SelectListBpdBiaya(Request $request)
+    {
+        $param1 = '';
+        $param2 = '';
+        $param3 = '';
+
+        // Start with a clean query instance
+        $query = DB::connection('pgsql_bpd')->query();
+
+        // Use fromRaw directly on the query builder instance, NOT the connection
+        $query->fromRaw("fn_list_bpd_biaya(?, ?, ?) as pd", [$param1, $param2, $param3]);
+
+        if ($request->has('tgl_awal') && $request->has('tgl_akhir')) {
+            $query->whereBetween('tgl_berangkat', [$request->input('tgl_awal'), $request->input('tgl_akhir')]);
+        }
+
+        if ($request->has('bidang_id')) {
+            $query->where('id_bidang', $request->input('bidang_id'));
+        }
+
+        if ($request->filled('nama_pegawai')) {
+            $namaSearch = '%' . $request->input('nama_pegawai') . '%';
+
+            // Bungkus di dalam fungsi closure agar menghasilkan: AND (nama_pegawai ILIKE ... OR nama_rombongan ILIKE ...)
+            $query->where(function ($q) use ($namaSearch) {
+                $q->where('pd.nama_pegawai', 'ilike', $namaSearch)
+                ->orWhere('pd.nama_rombongan', 'ilike', $namaSearch)
+                ->orWhere('pd.nomor', 'ilike', $namaSearch); // Pastikan orWhere huruf kecil
+            });
+        }
+
+        if ($request->has('keterangan')) {
+            $keperluanSearch = '%' . $request->input('keterangan') . '%';
+
+            // Bungkus di dalam fungsi closure agar menghasilkan: AND (keperluan ILIKE ... OR tujuan ILIKE ...)
+            $query->where(function ($q) use ($keperluanSearch) {
+                $q->where('keperluan', 'ilike', $keperluanSearch)
+                ->orWhere('tujuan', 'ilike', $keperluanSearch)
+                ->orWhere('lokasi_kota', 'ilike', $keperluanSearch); // Pastikan orWhere huruf kecil
+            });
+        }
+
+        $data = $query->orderBy('nomor', 'desc')
+            ->get();
+
+        return response()->json($data);
+    }
+
 
     /**
      * Get data bidang dengan status SPPD dan BPD
