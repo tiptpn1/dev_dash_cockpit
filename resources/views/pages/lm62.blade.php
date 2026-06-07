@@ -528,6 +528,13 @@
                         </button>
                     </div>
                 </div>
+                
+                <!-- Local Filter Box -->
+                <div id="localFilterContainer" style="padding: 12px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display:flex; align-items:center; gap: 12px;">
+                    <i class="fas fa-search" style="color:#94a3b8;"></i>
+                    <input type="text" id="localMaterialFilter" placeholder="Ketik kode atau nama material untuk menyaring hasil di bawah..." style="flex:1; border:1px solid #cbd5e1; padding:6px 12px; border-radius:6px; font-size:13px; outline:none; color:#1f2937; background-color:#ffffff;" />
+                </div>
+                
                 <div class="table-wrapper">
                     <div id="tableLoading" style="display:none; text-align:center; padding:24px; color:#6b7280;">
                         <i class="fas fa-spinner fa-spin"></i> Memuat data...
@@ -543,11 +550,41 @@
     <script>
         // Data mentah untuk export Excel (disimpan saat data diterima)
         let _exportData = null;
+        let _rawData_lm62 = [];
 
         // Semua plant dari server (untuk filter dinamis)
         const allPlants = @json($plantList->map(fn($p) => ['plant' => $p->plant, 'nama' => $p->nama, 'regional' => $p->regional]));
 
+        const getVal = (r, ...keys) => {
+            for (const k of keys) {
+                if (r[k] !== undefined && r[k] !== null && r[k] !== '') return r[k];
+                const lK = k.toLowerCase();
+                const f = Object.keys(r).find(key => key.toLowerCase() === lK);
+                if (f && r[f] !== undefined && r[f] !== null && r[f] !== '') return r[f];
+            }
+            return null;
+        };
+
         document.addEventListener('DOMContentLoaded', function () {
+            
+            // Listener untuk Local Filter (dengan Debounce agar tidak lag)
+            let filterTimeout;
+            document.getElementById('localMaterialFilter')?.addEventListener('input', function(e) {
+                clearTimeout(filterTimeout);
+                const keyword = e.target.value.toLowerCase();
+                
+                filterTimeout = setTimeout(() => {
+                    const filtered = _rawData_lm62.filter(r => {
+                        const matCode = (getVal(r, 'material', 'kode', 'kdbe', 'material_code', 'id_material') || '').toString().toLowerCase();
+                        const matDesc = (getVal(r, 'material_desc', 'nama_material', 'description') || '').toString().toLowerCase();
+                        return matCode.includes(keyword) || matDesc.includes(keyword);
+                    });
+                    if (typeof window.renderTableLM62 === 'function') {
+                        window.renderTableLM62(filtered);
+                    }
+                }, 400); // render dijalankan 400ms setelah user berhenti mengetik
+            });
+
             const tahunSel = document.getElementById('tahunFilter');
             const bulanSel = document.getElementById('bulanFilter');
 
@@ -646,16 +683,34 @@
                             errBox.textContent = '⚠️ ' + (data.message || 'Terjadi kesalahan.');
                             return;
                         }
-                        const rows = data.data;
-                        info.textContent = `${data.total} baris ditemukan`;
+                        _rawData_lm62 = data.data || [];
+                        const localFilter = document.getElementById('localMaterialFilter');
+                        if (localFilter) localFilter.value = '';
+                        window.renderTableLM62(_rawData_lm62);
+                    })
+                    .catch(err => {
+                        loading.style.display = 'none';
+                        errBox.style.display = '';
+                        errBox.textContent = '⚠️ Gagal menghubungi server: ' + err.message;
+                    });
+            }
 
-                        if (!rows || rows.length === 0) {
-                            result.innerHTML = '<p style="padding:16px 20px;color:#6b7280;font-size:13px;">Tidak ada data untuk filter yang dipilih.</p>';
-                            return;
-                        }
+            // ── Fungsi Render Tabel ──────────────────────────────────────────────────────
+            window.renderTableLM62 = function(rows) {
+                const result = document.getElementById('tableResult');
+                const info = document.getElementById('resultInfo');
 
-                        // Ambil semua key dari baris pertama sebagai header
-                        const headers = Object.keys(rows[0]);
+                if (!rows || rows.length === 0) {
+                    result.innerHTML = '<p style="padding:16px 20px;color:#6b7280;font-size:13px;">Tidak ada data untuk filter yang dipilih.</p>';
+                    info.textContent = `Ditampilkan 0 baris (dari total ${_rawData_lm62.length})`;
+                    _exportData = null;
+                    return;
+                }
+
+                info.textContent = `Ditampilkan ${rows.length} baris (dari total ${_rawData_lm62.length})`;
+
+                // Ambil semua key dari baris pertama RAW data agar konsisten
+                const headers = Object.keys(_rawData_lm62[0] || rows[0]);
 
                         // Kolom yang dipaksa menjadi string (tidak dihitung sebagai angka)
                         const STRING_COLS = new Set(['group_id', 'material', 'plant']);
@@ -742,15 +797,6 @@
                         let accTotal = initAcc();  // ← Grand total
 
                         // Step 1: Grouping by material_type_desc then material
-                        const getVal = (r, ...keys) => {
-                            for (const k of keys) {
-                                if (r[k] !== undefined && r[k] !== null && r[k] !== '') return r[k];
-                                const lK = k.toLowerCase();
-                                const f = Object.keys(r).find(key => key.toLowerCase() === lK);
-                                if (f && r[f] !== undefined && r[f] !== null && r[f] !== '') return r[f];
-                            }
-                            return null;
-                        };
 
                         const groupedData = {};
                         rows.forEach(row => {
@@ -882,13 +928,7 @@
                         html += '</tbody></table>';
 
                         result.innerHTML = html;
-                    })
-                    .catch(err => {
-                        loading.style.display = 'none';
-                        errBox.style.display = '';
-                        errBox.textContent = '⚠️ Gagal menghubungi server: ' + err.message;
-                    });
-            }
+            };
 
             // Filter form submit
             document.getElementById('filterForm').addEventListener('submit', function (e) {

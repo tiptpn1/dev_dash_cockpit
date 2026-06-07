@@ -141,7 +141,7 @@ if (isset($user)) {
                 <a href="{{url('')}}/lm14"><i class="fa-solid fa-book-open menu-icon"></i>LM14</a>
                 <a href="{{url('')}}/lm16"><i class="fa-solid fa-book-open menu-icon"></i>LM16</a>
                 <a href="{{url('')}}/lm34_tab"><i class="fa-solid fa-book-open menu-icon"></i>LM34</a>
-                <!-- <a href="{{url('')}}/lm62"><i class="fa-solid fa-book-open menu-icon"></i>LM62</a> -->
+                <a href="{{url('')}}/lm62"><i class="fa-solid fa-book-open menu-icon"></i>LM62</a>
             </div>
         @endif
     </div>
