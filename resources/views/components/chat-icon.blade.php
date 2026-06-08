@@ -232,8 +232,87 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initially hide the chat container
     chatContainer.style.display = 'none';
 
+    // --- Drag and Drop for Chat Icon ---
+    const chatIconContainer = document.querySelector('.chat-icon-container');
+    let isDragging = false;
+    let isMoved = false;
+    let shiftX, shiftY;
+
+    function startDrag(e) {
+        if (e.button !== 0 && e.type !== 'touchstart') return; // only left click
+        
+        isDragging = true;
+        isMoved = false;
+
+        const rect = chatIconContainer.getBoundingClientRect();
+        
+        let clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+        let clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+
+        shiftX = clientX - rect.left;
+        shiftY = clientY - rect.top;
+
+        // Switch to absolute positioning based on fixed viewport
+        chatIconContainer.style.bottom = 'auto';
+        chatIconContainer.style.right = 'auto';
+
+        function moveAt(cX, cY) {
+            // Constrain within window bounds
+            let newLeft = cX - shiftX;
+            let newTop = cY - shiftY;
+
+            const maxLeft = window.innerWidth - chatIconContainer.offsetWidth;
+            const maxTop = window.innerHeight - chatIconContainer.offsetHeight;
+
+            newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+            newTop = Math.max(0, Math.min(newTop, maxTop));
+
+            chatIconContainer.style.left = newLeft + 'px';
+            chatIconContainer.style.top = newTop + 'px';
+        }
+
+        function onMouseMove(event) {
+            if (!isDragging) return;
+            isMoved = true;
+            
+            if (event.type === 'touchmove') {
+                event.preventDefault(); // Prevent scrolling while dragging
+            }
+            
+            let currentClientX = event.type === 'touchmove' ? event.touches[0].clientX : event.clientX;
+            let currentClientY = event.type === 'touchmove' ? event.touches[0].clientY : event.clientY;
+            
+            moveAt(currentClientX, currentClientY);
+        }
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('touchmove', onMouseMove, { passive: false });
+
+        function onMouseUp() {
+            isDragging = false;
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('touchmove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+            document.removeEventListener('touchend', onMouseUp);
+        }
+
+        document.addEventListener('mouseup', onMouseUp);
+        document.addEventListener('touchend', onMouseUp);
+    }
+
+    chatIconContainer.addEventListener('mousedown', startDrag);
+    chatIconContainer.addEventListener('touchstart', startDrag, { passive: false });
+
+    chatIconContainer.ondragstart = function() {
+        return false;
+    };
+
     // Toggle chat container when clicking the icon
-    chatIcon.addEventListener('click', function() {
+    chatIcon.addEventListener('click', function(e) {
+        if (isMoved) {
+            e.preventDefault();
+            return;
+        }
         chatContainer.style.display = 'flex';
     });
 

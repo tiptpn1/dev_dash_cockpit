@@ -103,6 +103,18 @@ class PageController extends Controller
         return view('pages/overview_page', compact('linkiframe'));
     }
 
+    public function overview_sales()
+    {
+        $linkiframe = 'https://datastudio.google.com/embed/reporting/9ec9269b-caf0-452e-8f07-308f27e86edb/page/kADdF';
+        return view('pages/overview_page', compact('linkiframe'));
+    }
+
+    public function penjualan_karet()
+    {
+        $linkiframe = 'https://lookerstudio.google.com/embed/reporting/ce31becb-de14-4268-bfcf-97938d72c144/page/p_axin2walxd';
+        return view('pages/overview_page', compact('linkiframe'));
+    }
+
     public function agraria_tax()
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/5fed7d89-b764-4a87-b5da-6fada9560516/page/joCQE';
@@ -2623,23 +2635,8 @@ class PageController extends Controller
 
     public function evaluasi_hris_harian(Request $request)
     {
-        $periode = $request->get('periode', date('Y-m'));
         $divisi = trim((string) $request->get('divisi', ''));
         $tanggal = trim((string) $request->get('tanggal', ''));
-
-        if (!preg_match('/^\d{4}-\d{2}$/', $periode)) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Format periode tidak valid (gunakan YYYY-MM).',
-            ], 400);
-        }
-
-        if ($tanggal !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal)) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Format tanggal tidak valid (gunakan YYYY-MM-DD).',
-            ], 400);
-        }
 
         if ($tanggal === '') {
             return response()->json([
@@ -2648,16 +2645,15 @@ class PageController extends Controller
             ], 400);
         }
 
-        [$tahun, $bulan] = array_map('intval', explode('-', $periode));
-        $periodePrefix = sprintf('%04d-%02d', $tahun, $bulan);
-        if (strpos($tanggal, $periodePrefix) !== 0) {
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal)) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Tanggal harus berada dalam periode yang dipilih.',
+                'message' => 'Format tanggal tidak valid (gunakan YYYY-MM-DD).',
             ], 400);
         }
 
         try {
+            [$tahun, $bulan] = array_map('intval', explode('-', $tanggal));
             $rows = $this->fetchAbsenHarian($tahun, $bulan, $divisi, $tanggal);
 
             // Filter by status if requested
@@ -2673,6 +2669,8 @@ class PageController extends Controller
                     return true;
                 }));
             }
+
+            $periode = sprintf('%04d-%02d', $tahun, $bulan);
 
             return response()->json([
                 'status' => 'success',
@@ -2838,10 +2836,10 @@ class PageController extends Controller
         $periodeHris = $this->periodeYmToHris($tahun, $bulan);
 
         if ($this->hrisUsesImportData($periodeHris)) {
-            return $this->fetchHarianFromImport($periodeHris, $divisi, $tanggal);
+            return $this->fetchHarianFromImport($divisi, $tanggal);
         }
 
-        return $this->fetchHarianFromAbsensi($periodeHris, $divisi, $tanggal);
+        return $this->fetchHarianFromAbsensi($divisi, $tanggal);
     }
 
     private function fetchRekapAbsenFromImport(string $periodeHris): array
@@ -3016,7 +3014,7 @@ class PageController extends Controller
         return DB::connection('hris')->select($sql, [$periodeHris, $periodeHris, $regional, $divisi]);
     }
 
-    private function fetchHarianFromImport(string $periodeHris, string $divisi, string $tanggal): array
+    private function fetchHarianFromImport(string $divisi, string $tanggal): array
     {
         $regional = self::HRIS_REGIONAL_FILTER;
 
@@ -3042,11 +3040,11 @@ class PageController extends Controller
             LEFT JOIN absensi_import ai
                 ON ai.pegawai_id = p.pegawai_id
                 AND ai.tanggal_date = ?
-                AND ai.periode = ?
+                AND ai.periode = DATE_FORMAT(?, '%m%Y')
             LEFT JOIN absensi_periode b
                 ON p.regional_kode = b.regional_kode
                 AND p.area_kode = b.area_kode
-                AND b.periode = ?
+                AND b.periode = DATE_FORMAT(?, '%m%Y')
             WHERE TRIM(p.regional) = ?
               AND NULLIF(TRIM(p.divisi), '') IS NOT NULL
               AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
@@ -3055,14 +3053,14 @@ class PageController extends Controller
             ORDER BY p.divisi ASC, p.nama ASC
         ";
 
-        $params = [$tanggal, $tanggal, $periodeHris, $periodeHris, $regional];
+        $params = [$tanggal, $tanggal, $tanggal, $tanggal, $regional];
         if ($divisi !== '')
             $params[] = $divisi;
 
         return DB::connection('hris')->select($sql, $params);
     }
 
-    private function fetchHarianFromAbsensi(string $periodeHris, string $divisi, string $tanggal): array
+    private function fetchHarianFromAbsensi(string $divisi, string $tanggal): array
     {
         $regional = self::HRIS_REGIONAL_FILTER;
 
@@ -3094,11 +3092,11 @@ class PageController extends Controller
             LEFT JOIN presensi_pegawai pp
                 ON pp.id_pegawai = p.pegawai_id
                 AND pp.tanggal = ?
-                AND pp.periode = ?
+                AND pp.periode = DATE_FORMAT(?, '%m%Y')
             LEFT JOIN absensi_periode b
                 ON p.regional_kode = b.regional_kode
                 AND p.area_kode = b.area_kode
-                AND b.periode = ?
+                AND b.periode = DATE_FORMAT(?, '%m%Y')
             WHERE TRIM(p.regional) = ?
               AND NULLIF(TRIM(p.divisi), '') IS NOT NULL
               AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
@@ -3108,7 +3106,7 @@ class PageController extends Controller
             ORDER BY p.divisi ASC, p.nama ASC
         ";
 
-        $params = [$tanggal, $tanggal, $tanggal, $periodeHris, $periodeHris, $regional];
+        $params = [$tanggal, $tanggal, $tanggal, $tanggal, $tanggal, $regional];
         if ($divisi !== '')
             $params[] = $divisi;
 
@@ -3172,14 +3170,6 @@ class PageController extends Controller
         $pegawai_id = trim((string) $request->get('pegawai_id', ''));
         $tanggal_awal = trim((string) $request->get('tanggal_awal', ''));
         $tanggal_akhir = trim((string) $request->get('tanggal_akhir', ''));
-        $periode = $request->get('periode', date('Y-m'));
-
-        if (!preg_match('/^\d{4}-\d{2}$/', $periode)) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Format periode tidak valid (gunakan YYYY-MM).',
-            ], 400);
-        }
 
         if ($pegawai_id === '' || $tanggal_awal === '' || $tanggal_akhir === '') {
             return response()->json([
@@ -3195,29 +3185,19 @@ class PageController extends Controller
             ], 400);
         }
 
-        [$tahun, $bulan] = array_map('intval', explode('-', $periode));
-        $periodePrefix = sprintf('%04d-%02d', $tahun, $bulan);
-
-        if (strpos($tanggal_awal, $periodePrefix) !== 0 || strpos($tanggal_akhir, $periodePrefix) !== 0) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Tanggal harus berada dalam periode yang dipilih.',
-            ], 400);
-        }
-
         try {
-            $regional = self::HRIS_REGIONAL_FILTER;
+            [$tahun, $bulan] = array_map('intval', explode('-', $tanggal_awal));
             $periodeHris = $this->periodeYmToHris($tahun, $bulan);
+            $regional = self::HRIS_REGIONAL_FILTER;
 
             if ($this->hrisUsesImportData($periodeHris)) {
-                $rows = $this->fetchPerKaryawanFromImport($periodeHris, $pegawai_id, $tanggal_awal, $tanggal_akhir, $regional);
+                $rows = $this->fetchPerKaryawanFromImport($pegawai_id, $tanggal_awal, $tanggal_akhir, $regional);
             } else {
-                $rows = $this->fetchPerKaryawanFromAbsensi($periodeHris, $pegawai_id, $tanggal_awal, $tanggal_akhir, $regional);
+                $rows = $this->fetchPerKaryawanFromAbsensi($pegawai_id, $tanggal_awal, $tanggal_akhir, $regional);
             }
 
             return response()->json([
                 'status' => 'success',
-                'periode' => $periode,
                 'pegawai_id' => $pegawai_id,
                 'tanggal_awal' => $tanggal_awal,
                 'tanggal_akhir' => $tanggal_akhir,
@@ -3232,7 +3212,7 @@ class PageController extends Controller
         }
     }
 
-    private function fetchPerKaryawanFromAbsensi(string $periodeHris, string $pegawai_id, string $tanggal_awal, string $tanggal_akhir, string $regional): array
+    private function fetchPerKaryawanFromAbsensi(string $pegawai_id, string $tanggal_awal, string $tanggal_akhir, string $regional): array
     {
         $sql = "
             SELECT
@@ -3259,11 +3239,11 @@ class PageController extends Controller
             LEFT JOIN presensi_pegawai pp
                 ON pp.id_pegawai = p.pegawai_id
                 AND pp.tanggal = DATE(a.jam)
-                AND pp.periode = ?
+                AND pp.periode = DATE_FORMAT(a.jam, '%m%Y')
             LEFT JOIN absensi_periode b
                 ON p.regional_kode = b.regional_kode
                 AND p.area_kode = b.area_kode
-                AND b.periode = ?
+                AND b.periode = DATE_FORMAT(a.jam, '%m%Y')
             WHERE p.pegawai_id = ?
               AND TRIM(p.regional) = ?
               AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
@@ -3275,14 +3255,12 @@ class PageController extends Controller
         return DB::connection('hris')->select($sql, [
             $tanggal_awal,
             $tanggal_akhir,
-            $periodeHris,
-            $periodeHris,
             $pegawai_id,
             $regional,
         ]);
     }
 
-    private function fetchPerKaryawanFromImport(string $periodeHris, string $pegawai_id, string $tanggal_awal, string $tanggal_akhir, string $regional): array
+    private function fetchPerKaryawanFromImport(string $pegawai_id, string $tanggal_awal, string $tanggal_akhir, string $regional): array
     {
         $sql = "
             SELECT
@@ -3303,11 +3281,11 @@ class PageController extends Controller
             LEFT JOIN absensi_import ai
                 ON ai.pegawai_id = p.pegawai_id
                 AND ai.tanggal_date BETWEEN ? AND ?
-                AND ai.periode = ?
+                AND ai.periode = DATE_FORMAT(ai.tanggal_date, '%m%Y')
             LEFT JOIN absensi_periode b
                 ON p.regional_kode = b.regional_kode
                 AND p.area_kode = b.area_kode
-                AND b.periode = ?
+                AND b.periode = DATE_FORMAT(ai.tanggal_date, '%m%Y')
             WHERE p.pegawai_id = ?
               AND TRIM(p.regional) = ?
               AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
@@ -3318,8 +3296,6 @@ class PageController extends Controller
         return DB::connection('hris')->select($sql, [
             $tanggal_awal,
             $tanggal_akhir,
-            $periodeHris,
-            $periodeHris,
             $pegawai_id,
             $regional,
         ]);

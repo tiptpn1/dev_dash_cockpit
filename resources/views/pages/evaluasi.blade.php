@@ -1040,6 +1040,7 @@
         const hrisRegionalListUrl = @json(route('evaluasi_hris_regional_list'));
         let activeDivisi = null;
         let currentPeriode = null;
+        let lastHarianPeriode = null;
         let activeHrisTab = 'rekap';
         let _harianData = [];
 
@@ -1327,24 +1328,18 @@
             btn.addEventListener('click', () => setHrisTab(btn.dataset.tab));
         });
 
-        function updateHarianDateBounds() {
-            if (!currentPeriode) return;
-            const [y, m] = currentPeriode.split('-');
-            const lastDay = new Date(parseInt(y), parseInt(m), 0).getDate();
-            const min = `${y}-${m}-01`;
-            const max = `${y}-${m}-${String(lastDay).padStart(2, '0')}`;
-            harianTanggalSelect.min = min;
-            harianTanggalSelect.max = max;
-
-            const today = new Date();
-            const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-
-            if (todayStr >= min && todayStr <= max) {
-                harianTanggalSelect.value = todayStr;
-            } else if (todayStr > max) {
-                harianTanggalSelect.value = max;
+        function handleHarianDateChange() {
+            const tanggal = harianTanggalSelect.value;
+            if (!tanggal) return;
+            const computedPeriode = tanggal.substring(0, 7);
+            
+            if (computedPeriode !== lastHarianPeriode) {
+                lastHarianPeriode = computedPeriode;
+                loadHarianDivisiOptions(computedPeriode)
+                    .then(() => loadHarianData())
+                    .catch(() => loadHarianData());
             } else {
-                harianTanggalSelect.value = min;
+                loadHarianData();
             }
         }
 
@@ -1370,13 +1365,13 @@
             const tanggal = harianTanggalSelect.value;
             const status = harianStatusSelect.value;
             _harianData = [];
-            if (!tanggal || !currentPeriode) {
+            if (!tanggal) {
                 harianTbody.innerHTML = '<tr class="loading-row"><td colspan="12">Pilih tanggal untuk menampilkan data.</td></tr>';
                 return;
             }
 
             harianTbody.innerHTML = '<tr class="loading-row"><td colspan="12"><i class="fas fa-spinner fa-spin"></i> Memuat detail harian...</td></tr>';
-            const params = new URLSearchParams({ periode: currentPeriode, divisi, tanggal, status });
+            const params = new URLSearchParams({ periode: tanggal.substring(0, 7), divisi, tanggal, status });
             fetch(`${hrisHarianUrl}?${params}`)
                 .then(res => res.json())
                 .then(data => {
@@ -1424,7 +1419,7 @@
 
         harianDivisiSelect.addEventListener('change', loadHarianData);
         harianStatusSelect.addEventListener('change', loadHarianData);
-        harianTanggalSelect.addEventListener('change', loadHarianData);
+        harianTanggalSelect.addEventListener('change', handleHarianDateChange);
 
         const btnExportExcelHarian = document.getElementById('btnExportExcelHarian');
         if (btnExportExcelHarian) {
@@ -1577,13 +1572,13 @@
             const tanggal_awal = perkaryawanTanggalAwal.value;
             const tanggal_akhir = perkaryawanTanggalAkhir.value;
 
-            if (!regional || !pegawai_id || !tanggal_awal || !tanggal_akhir || !currentPeriode) {
+            if (!regional || !pegawai_id || !tanggal_awal || !tanggal_akhir) {
                 perkaryawanTbody.innerHTML = '<tr class="loading-row"><td colspan="9">Pilih regional, karyawan, dan range tanggal untuk menampilkan data.</td></tr>';
                 return;
             }
 
-                        perkaryawanTbody.innerHTML = '<tr class="loading-row"><td colspan="10"><i class="fas fa-spinner fa-spin"></i> Memuat detail per karyawan...</td></tr>';
-            const params = new URLSearchParams({ periode: currentPeriode, pegawai_id, tanggal_awal, tanggal_akhir });
+            perkaryawanTbody.innerHTML = '<tr class="loading-row"><td colspan="10"><i class="fas fa-spinner fa-spin"></i> Memuat detail per karyawan...</td></tr>';
+            const params = new URLSearchParams({ pegawai_id, tanggal_awal, tanggal_akhir });
             fetch(`${hrisPerKaryawanUrl}?${params}`)
                 .then(res => res.json())
                 .then(data => {
@@ -1767,10 +1762,22 @@
                 hrisTabsWrap.style.display = 'block';
                 nonHrisWrapper.style.display = 'none';
                 placeholderState.style.display = 'none';
-                updateHarianDateBounds();
-                loadHarianDivisiOptions(periodVal)
-                    .then(() => loadHarianData())
-                    .catch(() => loadHarianData());
+                
+                if (!harianTanggalSelect.value) {
+                    const today = new Date();
+                    harianTanggalSelect.value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                }
+                
+                const harianDate = harianTanggalSelect.value;
+                const harianPeriode = harianDate.substring(0, 7);
+                if (harianPeriode !== lastHarianPeriode) {
+                    lastHarianPeriode = harianPeriode;
+                    loadHarianDivisiOptions(harianPeriode)
+                        .then(() => loadHarianData())
+                        .catch(() => loadHarianData());
+                } else {
+                    loadHarianData();
+                }
                 loadRegionalList();
 
                 fetchHrisData(periodVal)

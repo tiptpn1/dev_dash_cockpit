@@ -46,9 +46,11 @@ if (isset($user)) {
             <a href="#sales" id="sales" class="parent"><i class="fa-solid fa-chart-line menu-icon"></i>Sales<span
                     class="toggle-icon">&#9654;</span></a>
             <div class="submenu" id="salesSubmenu">
-                <a href="{{url('')}}/sales_comodities"><i class="fa-solid fa-boxes-stacked menu-icon"></i>Comodities
-                    Sales</a>
-                <a href="{{url('')}}/soptea"><i class="fa-solid fa-mug-hot menu-icon"></i>S&OP Tea</a>
+                <a href="{{url('')}}/overview_sales"><i class="fa-solid fa-chart-bar menu-icon"></i>Overview Sales</a>
+                <!-- <a href="{{url('')}}/sales_comodities"><i class="fa-solid fa-boxes-stacked menu-icon"></i>Comodities
+                    Sales</a> -->
+                <a href="{{url('')}}/soptea"><i class="fa-solid fa-mug-hot menu-icon"></i>Tea Inventory</a>
+                <a href="{{url('')}}/penjualan_karet"><i class="fa-solid fa-tree menu-icon"></i>Rubber Delivery</a>
             </div>
         @endif
         @if($user && $user->hasFeature('aset'))
