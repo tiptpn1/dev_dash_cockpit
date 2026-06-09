@@ -276,6 +276,21 @@ function renderDashboard(data) {
                 </tr>
             `;
         });
+        
+        // Add summary row at the bottom
+        rowsHtml += `
+            <tr style="background: #f1f5f9; border-top: 2px solid #cbd5e1; font-weight: 700;">
+                <td colspan="2" style="padding: 12px; text-align: center; border: 1px solid #cbd5e1; text-transform: uppercase;">Total Keseluruhan</td>
+                <td style="padding: 12px; text-align: right; border: 1px solid #cbd5e1;">${formattedTotal}</td>
+                <td style="padding: 12px; text-align: right; border: 1px solid #cbd5e1; color: #16a34a;">${formattedSelesai}</td>
+                <td style="padding: 12px; text-align: right; border: 1px solid #cbd5e1; color: #dc2626;">${formattedBelum}</td>
+                <td style="padding: 12px; text-align: center; border: 1px solid #cbd5e1;">
+                    <div class="flex items-center gap-2 justify-center">
+                        <span class="text-xs font-bold">${formattedPct}</span>
+                    </div>
+                </td>
+            </tr>
+        `;
     } else {
         rowsHtml = '<tr><td colspan="6" style="text-align: center; padding: 20px; color: #6b7280;">Tidak ada data regional</td></tr>';
     }
