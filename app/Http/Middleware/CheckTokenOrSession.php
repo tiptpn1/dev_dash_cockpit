@@ -37,16 +37,11 @@ class CheckTokenOrSession
             $token = $request->get('token');
 
             if (array_key_exists($token, $this->validTokens)) {
-                // Token valid → login sebagai user "token_user" jika belum login
+                // Token valid → cek session login biasa
                 if (!Auth::guard('custom')->check()) {
-                    // Cari atau buat user khusus untuk akses token
-                    $tokenUser = CustomUser::where('username', 'token_access_user')->first();
-
-                    if ($tokenUser) {
-                        Auth::guard('custom')->login($tokenUser, false);
-                    }
-                    // Jika user token_access_user tidak ada di DB,
-                    // kita tetap izinkan akses dengan menyimpan token ke session
+                    // Simpan flag token access di session.
+                    // Tidak perlu query ke DB untuk user token (menghindari error
+                    // jika database default belum tersedia / bukan yang dimaksud).
                     session(['token_access_granted' => true, 'token_source' => $this->validTokens[$token]]);
                 }
 

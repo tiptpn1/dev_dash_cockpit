@@ -31,7 +31,11 @@ if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php'))
 |
 */
 
-require __DIR__.'/../vendor/autoload.php';
+$vendorPath = dirname(__DIR__).'/vendor/autoload.php';
+if (!file_exists($vendorPath)) {
+    die("Vendor autoload not found. Run 'composer install' in project root.\n");
+}
+require $vendorPath;
 
 /*
 |--------------------------------------------------------------------------

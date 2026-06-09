@@ -1731,6 +1731,14 @@
                 window.location.href = '/dfarmkaret';
                 return;
             }
+            if (selectedApp === 'MONIKA') {
+                window.location.href = '/evaluasi-aplikasi/monika';
+                return;
+            }
+            if (selectedApp === 'MAIA') {
+                window.location.href = '/evaluasi-aplikasi/maia';
+                return;
+            }
 
             tableTitle.textContent = `Hasil Evaluasi Aplikasi ${selectedApp} &mdash; Periode ${formattedPeriod}`;
 
