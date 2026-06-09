@@ -18,6 +18,9 @@ class BigQueryController extends Controller
      */
     private function runBigQueryCall(string $query): array
     {
+        // Matikan batas waktu tunggu agar skrip PHP tidak terhenti jika BigQuery lambat
+        set_time_limit(0);
+
         $projectId = config('bigquery.projectId', 'dashboard-cockpit');
         $location = 'asia-southeast2';
 
