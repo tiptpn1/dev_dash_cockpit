@@ -2529,6 +2529,371 @@ class PageController extends Controller
         return view('pages/evaluasi', compact('tokenMode'));
     }
 
+    public function evaluasi_monika()
+    {
+        $tokenMode = session('url_token_valid') === true;
+        return view('pages/evaluasi_monika', compact('tokenMode'));
+    }
+
+    public function evaluasi_maia()
+    {
+        $tokenMode = session('url_token_valid') === true;
+        return view('pages/evaluasi_maia', compact('tokenMode'));
+    }
+
+    public function monika_dashboard(Request $request)
+    {
+        $year = $request->get('year', date('Y'));
+        $month = $request->get('month', date('n'));
+        $cacheKey = 'monika_dashboard_stats_' . $year . '_' . $month . '_v2';
+
+        $data = \Illuminate\Support\Facades\Cache::remember($cacheKey, 86400, function () use ($year, $month) {
+            try {
+                $regionsList = [
+                    (object)[
+                        'id_region' => 1,
+                        'master_region_nama' => 'Head Office',
+                        'master_region_kode' => 'HO',
+                        'merge_sources' => ['Head Office']
+                    ],
+                    (object)[
+                        'id_region' => 3,
+                        'master_region_nama' => 'Regional 1 PTPN I',
+                        'master_region_kode' => 'R1',
+                        'merge_sources' => ['Regional 1 PTPN I', 'Regional 6 PTPN I']
+                    ],
+                    (object)[
+                        'id_region' => 5,
+                        'master_region_nama' => 'Regional 2 PTPN I',
+                        'master_region_kode' => 'R2',
+                        'merge_sources' => ['Regional 2 PTPN I']
+                    ],
+                    (object)[
+                        'id_region' => 6,
+                        'master_region_nama' => 'Regional 3 PTPN I',
+                        'master_region_kode' => 'R3',
+                        'merge_sources' => ['Regional 3 PTPN I']
+                    ],
+                    (object)[
+                        'id_region' => 8,
+                        'master_region_nama' => 'Regional 5 PTPN I',
+                        'master_region_kode' => 'R5',
+                        'merge_sources' => ['Regional 5 PTPN I', 'Regional 4 PTPN I']
+                    ],
+                    (object)[
+                        'id_region' => 4,
+                        'master_region_nama' => 'Regional 7 PTPN I',
+                        'master_region_kode' => 'R7',
+                        'merge_sources' => ['Regional 7 PTPN I']
+                    ],
+                    (object)[
+                        'id_region' => 9,
+                        'master_region_nama' => 'Regional 8 PTPN I',
+                        'master_region_kode' => 'R8',
+                        'merge_sources' => ['Regional 8 PTPN I']
+                    ],
+                ];
+                
+                $apiKey = env('INTERNAL_API_KEY', 'RahasiaAPIKey123');
+                
+                // Fetch from external API via direct IP to bypass DNS issues
+                $response = \Illuminate\Support\Facades\Http::withoutVerifying()
+                    ->withHeaders([
+                        'x-api-key' => $apiKey,
+                        'Host' => 'aset.ptpn1.co.id'
+                    ])
+                    ->timeout(10)
+                    ->get('https://10.100.11.242/api/report/rekap-presentase?year=' . $year . '&month=' . $month);
+                
+                if (!$response->successful()) {
+                    throw new \Exception('Failed to fetch data from external API: Status ' . $response->status());
+                }
+                
+                $apiData = $response->json();
+                $regionsData = [];
+                
+                $sumBelumDiisi = 0;
+                $sumAkhirBelum = 0;
+                $sumAkhirLengkap = 0;
+                $sumJalanBelum = 0;
+                $sumJalanLengkap = 0;
+                $sumPotensial = 0;
+                $sumPraKerjasama = 0;
+                $sumTotalKerjasama = 0;
+                
+                foreach ($regionsList as $r) {
+                    $belumDiisi = 0;
+                    $akhirBelum = 0;
+                    $akhirLengkap = 0;
+                    $jalanBelum = 0;
+                    $jalanLengkap = 0;
+                    $potensial = 0;
+                    $praKerjasama = 0;
+                    
+                    foreach ($r->merge_sources as $source) {
+                        // Find match in API response
+                        $match = null;
+                        foreach ($apiData as $item) {
+                            if (isset($item['region']) && trim($item['region']) === trim($source)) {
+                                $match = $item;
+                                break;
+                            }
+                        }
+                        
+                        if ($match) {
+                            $belumDiisi += (int)($match['Belum Diisi'] ?? 0);
+                            $akhirBelum += (int)($match['Kerjasama Berakhir']['Belum Lengkap'] ?? 0);
+                            $akhirLengkap += (int)($match['Kerjasama Berakhir']['Lengkap'] ?? 0);
+                            $jalanBelum += (int)($match['Kerjasama Berjalan']['Belum Lengkap'] ?? 0);
+                            $jalanLengkap += (int)($match['Kerjasama Berjalan']['Lengkap'] ?? 0);
+                            $potensial += (int)($match['Potensial'] ?? 0);
+                            $praKerjasama += (int)($match['Pra Kerjasama'] ?? 0);
+                        }
+                    }
+                    
+                    $totalKerjasama = $jalanBelum + $jalanLengkap + $akhirBelum + $akhirLengkap + $potensial + $praKerjasama + $belumDiisi;
+                    
+                    $sumBelumDiisi += $belumDiisi;
+                    $sumAkhirBelum += $akhirBelum;
+                    $sumAkhirLengkap += $akhirLengkap;
+                    $sumJalanBelum += $jalanBelum;
+                    $sumJalanLengkap += $jalanLengkap;
+                    $sumPotensial += $potensial;
+                    $sumPraKerjasama += $praKerjasama;
+                    $sumTotalKerjasama += $totalKerjasama;
+                    
+                    $regionsData[] = [
+                        'id_region' => $r->id_region,
+                        'master_region_nama' => $r->master_region_nama,
+                        'master_region_kode' => $r->master_region_kode,
+                        'belum_diisi' => $belumDiisi,
+                        'akhir_belum' => $akhirBelum,
+                        'akhir_lengkap' => $akhirLengkap,
+                        'jalan_belum' => $jalanBelum,
+                        'jalan_lengkap' => $jalanLengkap,
+                        'potensial' => $potensial,
+                        'pra_kerjasama' => $praKerjasama,
+                        'total_kerjasama' => $totalKerjasama,
+                    ];
+                }
+                
+                return [
+                    'summary' => [
+                        'belum_diisi' => $sumBelumDiisi,
+                        'akhir_belum' => $sumAkhirBelum,
+                        'akhir_lengkap' => $sumAkhirLengkap,
+                        'jalan_belum' => $sumJalanBelum,
+                        'jalan_lengkap' => $sumJalanLengkap,
+                        'potensial' => $sumPotensial,
+                        'pra_kerjasama' => $sumPraKerjasama,
+                        'total_kerjasama' => $sumTotalKerjasama,
+                    ],
+                    'regions' => $regionsData
+                ];
+                
+            } catch (\Throwable $e) {
+                $fallbackRegions = [
+                    ['id_region' => 1, 'master_region_nama' => 'Head Office', 'master_region_kode' => 'HO', 'belum_diisi' => 0, 'akhir_belum' => 0, 'akhir_lengkap' => 0, 'jalan_belum' => 0, 'jalan_lengkap' => 0, 'potensial' => 0, 'pra_kerjasama' => 0, 'total_kerjasama' => 0],
+                    ['id_region' => 3, 'master_region_nama' => 'Regional 1 PTPN I', 'master_region_kode' => 'R1', 'belum_diisi' => 47, 'akhir_belum' => 0, 'akhir_lengkap' => 0, 'jalan_belum' => 0, 'jalan_lengkap' => 0, 'potensial' => 0, 'pra_kerjasama' => 0, 'total_kerjasama' => 47],
+                    ['id_region' => 5, 'master_region_nama' => 'Regional 2 PTPN I', 'master_region_kode' => 'R2', 'belum_diisi' => 296, 'akhir_belum' => 0, 'akhir_lengkap' => 0, 'jalan_belum' => 2, 'jalan_lengkap' => 8, 'potensial' => 0, 'pra_kerjasama' => 0, 'total_kerjasama' => 306],
+                    ['id_region' => 6, 'master_region_nama' => 'Regional 3 PTPN I', 'master_region_kode' => 'R3', 'belum_diisi' => 121, 'akhir_belum' => 0, 'akhir_lengkap' => 0, 'jalan_belum' => 1, 'jalan_lengkap' => 3, 'potensial' => 0, 'pra_kerjasama' => 0, 'total_kerjasama' => 125],
+                    ['id_region' => 8, 'master_region_nama' => 'Regional 5 PTPN I', 'master_region_kode' => 'R5', 'belum_diisi' => 271, 'akhir_belum' => 0, 'akhir_lengkap' => 0, 'jalan_belum' => 3, 'jalan_lengkap' => 31, 'potensial' => 0, 'pra_kerjasama' => 0, 'total_kerjasama' => 305],
+                    ['id_region' => 4, 'master_region_nama' => 'Regional 7 PTPN I', 'master_region_kode' => 'R7', 'belum_diisi' => 66, 'akhir_belum' => 0, 'akhir_lengkap' => 0, 'jalan_belum' => 1, 'jalan_lengkap' => 1, 'potensial' => 0, 'pra_kerjasama' => 0, 'total_kerjasama' => 68],
+                    ['id_region' => 9, 'master_region_nama' => 'Regional 8 PTPN I', 'master_region_kode' => 'R8', 'belum_diisi' => 23, 'akhir_belum' => 0, 'akhir_lengkap' => 0, 'jalan_belum' => 0, 'jalan_lengkap' => 0, 'potensial' => 0, 'pra_kerjasama' => 0, 'total_kerjasama' => 23]
+                ];
+                
+                $sumTotalKerjasama = 0;
+                $sumBelumDiisi = 0;
+                $sumAkhirBelum = 0;
+                $sumAkhirLengkap = 0;
+                $sumJalanBelum = 0;
+                $sumJalanLengkap = 0;
+                $sumPotensial = 0;
+                $sumPraKerjasama = 0;
+                foreach ($fallbackRegions as $fr) {
+                    $sumTotalKerjasama += $fr['total_kerjasama'];
+                    $sumBelumDiisi += $fr['belum_diisi'];
+                    $sumAkhirBelum += $fr['akhir_belum'];
+                    $sumAkhirLengkap += $fr['akhir_lengkap'];
+                    $sumJalanBelum += $fr['jalan_belum'];
+                    $sumJalanLengkap += $fr['jalan_lengkap'];
+                    $sumPotensial += $fr['potensial'];
+                    $sumPraKerjasama += $fr['pra_kerjasama'];
+                }
+                
+                return [
+                    'summary' => [
+                        'belum_diisi' => $sumBelumDiisi,
+                        'akhir_belum' => $sumAkhirBelum,
+                        'akhir_lengkap' => $sumAkhirLengkap,
+                        'jalan_belum' => $sumJalanBelum,
+                        'jalan_lengkap' => $sumJalanLengkap,
+                        'potensial' => $sumPotensial,
+                        'pra_kerjasama' => $sumPraKerjasama,
+                        'total_kerjasama' => $sumTotalKerjasama,
+                    ],
+                    'regions' => $fallbackRegions,
+                    'is_fallback' => true,
+                    'error' => $e->getMessage()
+                ];
+            }
+        });
+        
+        return response()->json(array_merge(['status' => 'success'], $data));
+    }
+
+
+    public function maia_dashboard()
+    {
+        $data = \Illuminate\Support\Facades\Cache::remember('maia_dashboard_stats_grouped_v4', 86400, function () { // Bust cache with v4
+            try {
+                $regionsList = [
+                    (object)[
+                        'id_region' => 1,
+                        'master_region_nama' => 'Head Office',
+                        'master_region_kode' => 'HO',
+                        'merge_sources' => ['Head Office']
+                    ],
+                    (object)[
+                        'id_region' => 3,
+                        'master_region_nama' => 'Regional 1 PTPN I',
+                        'master_region_kode' => 'R1',
+                        'merge_sources' => ['Regional 1 PTPN I', 'Regional 6 PTPN I']
+                    ],
+                    (object)[
+                        'id_region' => 5,
+                        'master_region_nama' => 'Regional 2 PTPN I',
+                        'master_region_kode' => 'R2',
+                        'merge_sources' => ['Regional 2 PTPN I']
+                    ],
+                    (object)[
+                        'id_region' => 6,
+                        'master_region_nama' => 'Regional 3 PTPN I',
+                        'master_region_kode' => 'R3',
+                        'merge_sources' => ['Regional 3 PTPN I']
+                    ],
+                    (object)[
+                        'id_region' => 8,
+                        'master_region_nama' => 'Regional 5 PTPN I',
+                        'master_region_kode' => 'R5',
+                        'merge_sources' => ['Regional 5 PTPN I', 'Regional 4 PTPN I']
+                    ],
+                    (object)[
+                        'id_region' => 4,
+                        'master_region_nama' => 'Regional 7 PTPN I',
+                        'master_region_kode' => 'R7',
+                        'merge_sources' => ['Regional 7 PTPN I']
+                    ],
+                    (object)[
+                        'id_region' => 9,
+                        'master_region_nama' => 'Regional 8 PTPN I',
+                        'master_region_kode' => 'R8',
+                        'merge_sources' => ['Regional 8 PTPN I']
+                    ],
+                ];
+
+                $apiKey = env('INTERNAL_API_KEY', 'RahasiaAPIKey123');
+                
+                // Fetch from external API via direct IP to bypass DNS issues
+                $response = \Illuminate\Support\Facades\Http::withoutVerifying()
+                    ->withHeaders([
+                        'x-api-key' => $apiKey,
+                        'Host' => 'aset.ptpn1.co.id'
+                    ])
+                    ->timeout(15)
+                    ->get('https://10.100.11.242/api/report/maia');
+                
+                if (!$response->successful()) {
+                    throw new \Exception('Failed to fetch MAIA data: ' . $response->status());
+                }
+
+                $apiData = $response->json();
+                $regionItems = $apiData['summary_region'] ?? [];
+                
+                $regionsData = [];
+                $sumTotal = 0;
+                $sumIdentified = 0;
+
+                foreach ($regionsList as $r) {
+                    $total = 0;
+                    $ident = 0;
+                    
+                    foreach ($r->merge_sources as $source) {
+                        foreach ($regionItems as $item) {
+                            if (isset($item['master_region_nama']) && trim($item['master_region_nama']) === trim($source)) {
+                                $total += (int)($item['Total Aset'] ?? 0);
+                                $ident += (int)($item['Sudah Teridentifikasi'] ?? 0);
+                            }
+                        }
+                    }
+                    
+                    $belum = $total - $ident;
+                    $pct = $total > 0 ? round(($ident / $total) * 100, 2) : 0;
+                    
+                    $sumTotal += $total;
+                    $sumIdentified += $ident;
+                    
+                    $regionsData[] = [
+                        'id_region' => $r->id_region,
+                        'master_region_nama' => $r->master_region_nama,
+                        'master_region_kode' => $r->master_region_kode,
+                        'total_aset' => $total,
+                        'sudah_teridentifikasi' => $ident,
+                        'belum_teridentifikasi' => $belum,
+                        'persentase_teridentifikasi' => $pct
+                    ];
+                }
+
+                $sumBelum = $sumTotal - $sumIdentified;
+                $sumPct = $sumTotal > 0 ? round(($sumIdentified / $sumTotal) * 100, 2) : 0;
+
+                return [
+                    'summary' => [
+                        'total_aset' => $sumTotal,
+                        'sudah_teridentifikasi' => $sumIdentified,
+                        'belum_teridentifikasi' => $sumBelum,
+                        'persentase_teridentifikasi' => $sumPct
+                    ],
+                    'regions' => $regionsData
+                ];
+            } catch (\Throwable $e) {
+                $fallbackRegions = [
+                    ['id_region' => 1, 'master_region_nama' => 'Head Office', 'master_region_kode' => 'HO', 'total_aset' => 0, 'sudah_teridentifikasi' => 0, 'belum_teridentifikasi' => 0, 'persentase_teridentifikasi' => 0.00],
+                    ['id_region' => 3, 'master_region_nama' => 'Regional 1 PTPN I', 'master_region_kode' => 'R1', 'total_aset' => 48746, 'sudah_teridentifikasi' => 6144, 'belum_teridentifikasi' => 42602, 'persentase_teridentifikasi' => 12.60],
+                    ['id_region' => 5, 'master_region_nama' => 'Regional 2 PTPN I', 'master_region_kode' => 'R2', 'total_aset' => 27131, 'sudah_teridentifikasi' => 254, 'belum_teridentifikasi' => 26877, 'persentase_teridentifikasi' => 0.94],
+                    ['id_region' => 6, 'master_region_nama' => 'Regional 3 PTPN I', 'master_region_kode' => 'R3', 'total_aset' => 27569, 'sudah_teridentifikasi' => 17584, 'belum_teridentifikasi' => 9985, 'persentase_teridentifikasi' => 63.78],
+                    ['id_region' => 8, 'master_region_nama' => 'Regional 5 PTPN I', 'master_region_kode' => 'R5', 'total_aset' => 33758, 'sudah_teridentifikasi' => 1157, 'belum_teridentifikasi' => 32601, 'persentase_teridentifikasi' => 3.43],
+                    ['id_region' => 4, 'master_region_nama' => 'Regional 7 PTPN I', 'master_region_kode' => 'R7', 'total_aset' => 15330, 'sudah_teridentifikasi' => 2495, 'belum_teridentifikasi' => 12835, 'persentase_teridentifikasi' => 16.28],
+                    ['id_region' => 9, 'master_region_nama' => 'Regional 8 PTPN I', 'master_region_kode' => 'R8', 'total_aset' => 24270, 'sudah_teridentifikasi' => 460, 'belum_teridentifikasi' => 23810, 'persentase_teridentifikasi' => 1.90]
+                ];
+                
+                $sumTotal = 0;
+                $sumIdentified = 0;
+                foreach ($fallbackRegions as $fr) {
+                    $sumTotal += $fr['total_aset'];
+                    $sumIdentified += $fr['sudah_teridentifikasi'];
+                }
+                $sumBelum = $sumTotal - $sumIdentified;
+                $sumPct = $sumTotal > 0 ? round(($sumIdentified / $sumTotal) * 100, 2) : 0;
+                
+                return [
+                    'summary' => [
+                        'total_aset' => $sumTotal,
+                        'sudah_teridentifikasi' => $sumIdentified,
+                        'belum_teridentifikasi' => $sumBelum,
+                        'persentase_teridentifikasi' => $sumPct
+                    ],
+                    'regions' => $fallbackRegions,
+                    'is_fallback' => true,
+                    'error' => $e->getMessage()
+                ];
+            }
+        });
+
+        return response()->json(array_merge(['status' => 'success'], $data));
+    }
+
+
     private const HRIS_REGIONAL_FILTER = 'SuppCo HO';
 
     /** Jenis absen yang dihitung sebagai absensi */

@@ -108,7 +108,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | Some session drivers must manually sweep their storage location to get
-    | rid of old sessions from storage. Here are the chances that it will
+    | rid of old sessions for storage. Here are the chances that it will
     | happen on a given request. By default, the odds are 2 out of 100.
     |
     */
@@ -166,9 +166,12 @@ return [
     | to the server if the browser has a HTTPS connection. This will keep
     | the cookie from being sent to you when it can't be done securely.
     |
+    | NOTE: Untuk environment local (HTTP), set ke false agar cookie session
+    | bisa dikirim. Untuk production HTTPS, set ke true.
+    |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE', true),
+    'secure' => env('SESSION_SECURE_COOKIE', false),
 
     /*
     |--------------------------------------------------------------------------
@@ -196,8 +199,7 @@ return [
     |
     */
 
-    //'same_site' => 'lax',
-    'same_site' => 'none',
+    'same_site' => 'lax',
 
     /*
     |--------------------------------------------------------------------------

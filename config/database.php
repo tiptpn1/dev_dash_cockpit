@@ -122,6 +122,21 @@ return [
             'sslmode' => 'prefer',
         ],
 
+        'monika' => [
+            'driver' => 'mysql',
+            'host' => env('DB_HOST_MONIKA', 'cpanel1-monika.ptpn1.co.id'),
+            'port' => env('DB_PORT_MONIKA', '3306'),
+            'database' => env('DB_DATABASE_MONIKA', 'monika_aset_all_test'),
+            'username' => env('DB_USERNAME_MONIKA', 'monika'),
+            'password' => env('DB_PASSWORD_MONIKA', 'GAQQQ4}zVH61'),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'strict' => true,
+            'engine' => null,
+        ],
+
+
         'sqlsrv' => [
             'driver' => 'sqlsrv',
             'url' => env('DATABASE_URL'),
@@ -169,7 +184,7 @@ return [
 
         'options' => [
             'cluster' => env('REDIS_CLUSTER', 'redis'),
-            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_').'_database_'),
+            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_') . '_database_'),
         ],
 
         'default' => [
