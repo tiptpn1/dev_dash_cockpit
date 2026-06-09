@@ -133,6 +133,7 @@ Route::middleware('auth:custom')->group(function () {
     Route::get('/get_data_lm62', [BigQueryController::class, 'get_data_lm62'])->name('get_data_lm62');
     // Management Routes
     Route::prefix('management')->name('management.')->group(function () {
+        Route::get('users/export', [UserManagementController::class, 'export'])->name('users.export');
         Route::resource('users', UserManagementController::class);
         Route::resource('features', FeatureManagementController::class);
         Route::get('access', [UserFeatureAccessController::class, 'index'])->name('access.index');
