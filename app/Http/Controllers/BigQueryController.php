@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use BigQuery;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class BigQueryController extends Controller
 {
@@ -95,6 +96,9 @@ class BigQueryController extends Controller
         // Iterasi semua child jobs; simpan hasil dari SETIAP child job yang punya rows.
         // Dengan selalu meng-overwrite, $finalRows akan berisi hasil dari child job
         // terakhir yang menghasilkan data — yaitu final SELECT dari stored procedure.
+        // Iterasi dari belakang (child job terakhir = eksekusi terakhir)
+        // untuk langsung mendapatkan hasil akhir tanpa perlu mengunduh data intermediate.
+        $allChildJobs = array_reverse($allChildJobs);
         $finalRows = [];
 
         foreach ($allChildJobs as $childJob) {
@@ -107,19 +111,16 @@ class BigQueryController extends Controller
                     continue;
                 }
 
-                $tempRows = [];
                 foreach ($childQR->rows() as $row) {
                     $rowArr = [];
                     foreach ($row as $key => $val) {
                         $rowArr[$key] = $bqValue($val);
                     }
-                    $tempRows[] = $rowArr;
+                    $finalRows[] = $rowArr;
                 }
 
-                // Overwrite dengan hasil terbaru — yang terakhir adalah output akhir
-                if (!empty($tempRows)) {
-                    $finalRows = $tempRows;
-                }
+                // Setelah mendapatkan hasil SELECT (iterasi dari belakang), langsung break.
+                break;
             } catch (\Throwable $e) {
                 // Child job non-SELECT bisa throw error — skip
                 continue;
@@ -169,7 +170,10 @@ class BigQueryController extends Controller
                 '$bulan'
             )";
 
-            $rows = $this->runBigQueryCall($query);
+            $cacheKey = "bq_lm13_{$komoditi}_{$region}_{$plant}_{$tahun}_{$bulan}";
+            $rows = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($query) {
+                return $this->runBigQueryCall($query);
+            });
 
             return response()->json([
                 'status' => 'success',
@@ -224,7 +228,10 @@ class BigQueryController extends Controller
                 '$bulan'
             )";
 
-            $rows = $this->runBigQueryCall($query);
+            $cacheKey = "bq_lm14_{$komoditi}_{$region}_{$plant}_{$tahun}_{$bulan}";
+            $rows = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($query) {
+                return $this->runBigQueryCall($query);
+            });
 
             return response()->json([
                 'status' => 'success',
@@ -279,7 +286,10 @@ class BigQueryController extends Controller
                 '$bulan'
             )";
 
-            $rows = $this->runBigQueryCall($query);
+            $cacheKey = "bq_lm16_{$komoditi}_{$region}_{$plant}_{$tahun}_{$bulan}";
+            $rows = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($query) {
+                return $this->runBigQueryCall($query);
+            });
 
             return response()->json([
                 'status' => 'success',
@@ -328,7 +338,10 @@ class BigQueryController extends Controller
                 '$bulan'
             )";
 
-            $rows = $this->runBigQueryCall($query);
+            $cacheKey = "bq_lm34_{$komoditi}_{$region}_{$plant}_{$tahun}_{$bulan}";
+            $rows = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($query) {
+                return $this->runBigQueryCall($query);
+            });
 
             return response()->json([
                 'status' => 'success',
@@ -377,7 +390,10 @@ class BigQueryController extends Controller
                 '$bulan'
             )";
 
-            $rows = $this->runBigQueryCall($query);
+            $cacheKey = "bq_lm34_by_negara_{$komoditi}_{$region}_{$plant}_{$tahun}_{$bulan}";
+            $rows = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($query) {
+                return $this->runBigQueryCall($query);
+            });
 
             return response()->json([
                 'status' => 'success',
@@ -417,7 +433,10 @@ class BigQueryController extends Controller
                 '$bulan'
             )";
 
-            $rows = $this->runBigQueryCall($query);
+            $cacheKey = "bq_lm34_by_customer_{$komoditi}_{$region}_{$plant}_{$tahun}_{$bulan}";
+            $rows = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($query) {
+                return $this->runBigQueryCall($query);
+            });
 
             return response()->json([
                 'status' => 'success',
@@ -455,7 +474,10 @@ class BigQueryController extends Controller
                 '$bulan'
             )";
 
-            $rows = $this->runBigQueryCall($query);
+            $cacheKey = "bq_lm62_{$komoditi}_{$region}_{$plant}_{$tahun}_{$bulan}";
+            $rows = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($query) {
+                return $this->runBigQueryCall($query);
+            });
 
             return response()->json([
                 'status' => 'success',
