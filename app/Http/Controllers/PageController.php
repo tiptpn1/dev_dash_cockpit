@@ -2072,9 +2072,13 @@ class PageController extends Controller
         return view('pages/evaluasi_maia', compact('tokenMode'));
     }
 
-    public function monika_dashboard()
+    public function monika_dashboard(Request $request)
     {
-        $data = \Illuminate\Support\Facades\Cache::remember('monika_dashboard_stats_v4', 86400, function () {
+        $year = $request->get('year', date('Y'));
+        $month = $request->get('month', date('n'));
+        $cacheKey = 'monika_dashboard_stats_' . $year . '_' . $month;
+
+        $data = \Illuminate\Support\Facades\Cache::remember($cacheKey, 86400, function () use ($year, $month) {
             try {
                 $db = \Illuminate\Support\Facades\DB::connection('monika');
                 
@@ -2092,7 +2096,7 @@ class PageController extends Controller
                         'Host' => 'aset.ptpn1.co.id'
                     ])
                     ->timeout(10)
-                    ->get('https://10.100.11.242/api/report/rekap-presentase?year=2026&month=6');
+                    ->get('https://10.100.11.242/api/report/rekap-presentase?year=' . $year . '&month=' . $month);
                 
                 if (!$response->successful()) {
                     throw new \Exception('Failed to fetch data from external API: Status ' . $response->status());
