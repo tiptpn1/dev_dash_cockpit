@@ -447,9 +447,20 @@ Jika tim data mengubah struktur SP (nama kolom, penambahan parameter, dll):
 | **Masalah** | Referensi ke variabel `RATIO_COLS` yang tidak pernah dideklarasikan menyebabkan JS error |
 | **Fix** | Hapus/ganti referensi variabel tersebut |
 
+#### 2026-06-09 — FIX: 504 Timeout Handling & Optimasi Child Job Iterator
+
+| Field | Detail |
+|-------|--------|
+| **Tipe** | FIX + REFACTOR |
+| **File** | `app/Http/Controllers/BigQueryController.php`, `resources/views/pages/lm13.blade.php` |
+| **Masalah** | SP BigQuery memakan waktu > batas timeout Nginx (~60 detik) di production, menyebabkan 504 Gateway Timeout. Frontend menampilkan error "Unexpected token '<'" karena mencoba parse HTML error page sebagai JSON |
+| **Perubahan** | (1) Tambah `ignore_user_abort(true)` agar PHP tetap jalan di background meski koneksi user putus. (2) Tambah `Cache::remember` 30 menit per kombinasi parameter. (3) Ganti iterasi child jobs dari sequential ke **reverse + break** — langsung ambil child job terakhir tanpa download intermediate results. (4) Frontend LM13: cek HTTP status sebelum parse JSON, tampilkan pesan 504 yang ramah, dan **auto-retry otomatis** maksimal 3x setiap 12 detik jika 504 terjadi |
+| **Dampak** | Semua endpoint LM (LM13, LM14, LM16, LM34, LM34_by_negara, LM34_by_customer, LM62). LM13 frontend mendapat auto-retry |
+| **Catatan** | Root cause sesungguhnya adalah timeout Nginx di server managed service. Solusi permanen: minta pihak server naikkan `fastcgi_read_timeout` dan `proxy_read_timeout` ke 300 detik |
+
 ---
 
-<!-- 
+ 
 ========================================================
   TEMPLATE ENTRY BARU — copy-paste di atas baris ini
 ========================================================

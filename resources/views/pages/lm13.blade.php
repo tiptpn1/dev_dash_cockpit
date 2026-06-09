@@ -622,24 +622,57 @@
             tahunSel.addEventListener('change', updateLabels);
             bulanSel.addEventListener('change', updateLabels);
 
-            // ── Fetch + Render data dari route get_data_lm14 ─────────────────
-            function get_data_lm13(komoditas, region, plant, tahun, bulan) {
-                const card = document.getElementById('resultCard');
+            // ── Fetch + Render data dari route get_data_lm13 ─────────────────
+            function get_data_lm13(komoditas, region, plant, tahun, bulan, _retryCount = 0) {
+                const MAX_RETRY    = 3;   // maks 3x retry
+                const RETRY_DELAY  = 12000; // tunggu 12 detik sebelum retry
+
+                const card    = document.getElementById('resultCard');
                 const loading = document.getElementById('tableLoading');
-                const errBox = document.getElementById('tableError');
-                const result = document.getElementById('tableResult');
-                const info = document.getElementById('resultInfo');
+                const errBox  = document.getElementById('tableError');
+                const result  = document.getElementById('tableResult');
+                const info    = document.getElementById('resultInfo');
 
                 // Tampilkan card + loading
-                card.style.display = '';
+                card.style.display    = '';
                 loading.style.display = '';
-                errBox.style.display = 'none';
-                result.innerHTML = '';
-                info.textContent = '';
+                errBox.style.display  = 'none';
+                result.innerHTML      = '';
+                info.textContent      = _retryCount > 0
+                    ? `⏳ Sedang memuat... (percobaan ke-${_retryCount + 1}/${MAX_RETRY + 1})`
+                    : '';
 
                 const params = new URLSearchParams({ komoditi: komoditas, region, plant, tahun, bulan });
                 fetch(`{{ route('get_data_lm13') }}?${params}`)
-                    .then(res => res.json())
+                    .then(res => {
+                        // Cek HTTP status SEBELUM parse JSON
+                        // Ini mencegah error "Unexpected token '<'" saat server mengembalikan HTML error
+                        if (res.status === 504 || res.status === 502 || res.status === 503) {
+                            if (_retryCount < MAX_RETRY) {
+                                // Server timeout — kemungkinan cache sedang dibangun di background
+                                const detikBerikutnya = RETRY_DELAY / 1000;
+                                info.textContent = `⏳ Server sedang memproses data BigQuery... Mencoba ulang dalam ${detikBerikutnya} detik (${_retryCount + 1}/${MAX_RETRY})`;
+                                setTimeout(() => {
+                                    get_data_lm13(komoditas, region, plant, tahun, bulan, _retryCount + 1);
+                                }, RETRY_DELAY);
+                            } else {
+                                loading.style.display = 'none';
+                                errBox.style.display  = '';
+                                errBox.innerHTML = `⚠️ <strong>Server timeout (504)</strong>.<br>
+                                    Data BigQuery membutuhkan waktu lebih lama dari biasanya untuk diproses.<br>
+                                    Silakan coba beberapa saat lagi atau hubungi administrator.`;
+                            }
+                            return Promise.reject('timeout'); // stop chain
+                        }
+
+                        if (!res.ok) {
+                            return res.text().then(text => {
+                                throw new Error(`Server error ${res.status}: ${text.substring(0, 100)}`);
+                            });
+                        }
+
+                        return res.json();
+                    })
                     .then(data => {
                         loading.style.display = 'none';
                         if (data.status !== 'success') {
@@ -822,10 +855,13 @@
                         result.innerHTML = html;
                     })
                     .catch(err => {
+                        // 'timeout' adalah reject internal dari handler 504 — sudah ditangani di atas
+                        if (err === 'timeout') return;
                         loading.style.display = 'none';
-                        errBox.style.display = '';
-                        errBox.textContent = '⚠️ Gagal menghubungi server: ' + err.message;
+                        errBox.style.display  = '';
+                        errBox.textContent    = '⚠️ Gagal menghubungi server: ' + (err.message || err);
                     });
+
             }
 
             // Filter form submit
