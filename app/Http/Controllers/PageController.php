@@ -2080,12 +2080,17 @@ class PageController extends Controller
 
         $data = \Illuminate\Support\Facades\Cache::remember($cacheKey, 86400, function () use ($year, $month) {
             try {
-                $db = \Illuminate\Support\Facades\DB::connection('monika');
-                
-                $regionsList = $db->table('master_region')
-                    ->where('master_region_perusahaan_kode', 'PTPN1')
-                    ->orderBy('master_region_nama')
-                    ->get();
+                $regionsList = [
+                    (object)['id_region' => 1, 'master_region_nama' => 'Head Office', 'master_region_kode' => 'HO'],
+                    (object)['id_region' => 3, 'master_region_nama' => 'Regional 1 PTPN I', 'master_region_kode' => 'R1'],
+                    (object)['id_region' => 5, 'master_region_nama' => 'Regional 2 PTPN I', 'master_region_kode' => 'R2'],
+                    (object)['id_region' => 6, 'master_region_nama' => 'Regional 3 PTPN I', 'master_region_kode' => 'R3'],
+                    (object)['id_region' => 7, 'master_region_nama' => 'Regional 4 PTPN I', 'master_region_kode' => 'R4'],
+                    (object)['id_region' => 8, 'master_region_nama' => 'Regional 5 PTPN I', 'master_region_kode' => 'R5'],
+                    (object)['id_region' => 2, 'master_region_nama' => 'Regional 6 PTPN I', 'master_region_kode' => 'R6'],
+                    (object)['id_region' => 4, 'master_region_nama' => 'Regional 7 PTPN I', 'master_region_kode' => 'R7'],
+                    (object)['id_region' => 9, 'master_region_nama' => 'Regional 8 PTPN I', 'master_region_kode' => 'R8'],
+                ];
                 
                 $apiKey = env('INTERNAL_API_KEY', 'RahasiaAPIKey123');
                 
@@ -2240,48 +2245,52 @@ class PageController extends Controller
 
     public function maia_dashboard()
     {
-        $data = \Illuminate\Support\Facades\Cache::remember('maia_dashboard_stats_grouped_v2', 86400, function () {
+        $data = \Illuminate\Support\Facades\Cache::remember('maia_dashboard_stats_grouped_v3', 86400, function () {
             try {
-                $db = \Illuminate\Support\Facades\DB::connection('monika');
+                $regionsList = [
+                    (object)['id_region' => 1, 'master_region_nama' => 'Head Office', 'master_region_kode' => 'HO'],
+                    (object)['id_region' => 3, 'master_region_nama' => 'Regional 1 PTPN I', 'master_region_kode' => 'R1'],
+                    (object)['id_region' => 5, 'master_region_nama' => 'Regional 2 PTPN I', 'master_region_kode' => 'R2'],
+                    (object)['id_region' => 6, 'master_region_nama' => 'Regional 3 PTPN I', 'master_region_kode' => 'R3'],
+                    (object)['id_region' => 7, 'master_region_nama' => 'Regional 4 PTPN I', 'master_region_kode' => 'R4'],
+                    (object)['id_region' => 8, 'master_region_nama' => 'Regional 5 PTPN I', 'master_region_kode' => 'R5'],
+                    (object)['id_region' => 2, 'master_region_nama' => 'Regional 6 PTPN I', 'master_region_kode' => 'R6'],
+                    (object)['id_region' => 4, 'master_region_nama' => 'Regional 7 PTPN I', 'master_region_kode' => 'R7'],
+                    (object)['id_region' => 9, 'master_region_nama' => 'Regional 8 PTPN I', 'master_region_kode' => 'R8'],
+                ];
 
-                $regionsList = $db->table('master_region')
-                    ->where('master_region_perusahaan_kode', 'PTPN1')
-                    ->orderBy('master_region_nama')
-                    ->get();
+                $apiKey = env('INTERNAL_API_KEY', 'RahasiaAPIKey123');
+                
+                // Fetch from external API via direct IP to bypass DNS issues
+                $response = \Illuminate\Support\Facades\Http::withoutVerifying()
+                    ->withHeaders([
+                        'x-api-key' => $apiKey,
+                        'Host' => 'aset.ptpn1.co.id'
+                    ])
+                    ->timeout(15)
+                    ->get('https://10.100.11.242/api/report/maia');
+                
+                if (!$response->successful()) {
+                    throw new \Exception('Failed to fetch MAIA data: ' . $response->status());
+                }
 
-                $totals = $db->table('maia_masterlist as m')
-                    ->leftJoin('master_region as r', 'm.id_region', '=', 'r.id_region')
-                    ->where('r.master_region_perusahaan_kode', 'PTPN1')
-                    ->select('r.id_region', \Illuminate\Support\Facades\DB::raw('COUNT(m.nomor_aset) as total_aset'))
-                    ->groupBy('r.id_region')
-                    ->get()
-                    ->keyBy('id_region');
-
-                $identified = $db->table('maia_masterlist as m')
-                    ->leftJoin('master_region as r', 'm.id_region', '=', 'r.id_region')
-                    ->join('data_aset as d', function ($join) {
-                        $join->on(function ($query) {
-                            $query->on('m.nomor_aset', '=', 'd.nomor_sap')
-                                  ->orOn('m.nomor_amanat', '=', 'd.nomor_sap')
-                                  ->orOn('m.nomor_maia_baru', '=', 'd.nomor_sap');
-                        })
-                        ->on('m.unit_id', '=', 'd.unit_id');
-                    })
-                    ->where('r.master_region_perusahaan_kode', 'PTPN1')
-                    ->select('r.id_region', \Illuminate\Support\Facades\DB::raw('COUNT(DISTINCT m.nomor_aset) as identified_aset'))
-                    ->groupBy('r.id_region')
-                    ->get()
-                    ->keyBy('id_region');
-
+                $apiData = $response->json();
+                
                 $regionsData = [];
                 $sumTotal = 0;
                 $sumIdentified = 0;
 
                 foreach ($regionsList as $r) {
-                    if ($r->master_region_kode === 'ADM') continue;
+                    $total = 0;
+                    $ident = 0;
                     
-                    $total = isset($totals[$r->id_region]) ? (int)$totals[$r->id_region]->total_aset : 0;
-                    $ident = isset($identified[$r->id_region]) ? (int)$identified[$r->id_region]->identified_aset : 0;
+                    foreach ($apiData as $item) {
+                        if (isset($item['master_region_nama']) && trim($item['master_region_nama']) === trim($r->master_region_nama)) {
+                            $total += (int)($item['Total Aset'] ?? 0);
+                            $ident += (int)($item['Sudah Teridentifikasi'] ?? 0);
+                        }
+                    }
+                    
                     $belum = $total - $ident;
                     $pct = $total > 0 ? round(($ident / $total) * 100, 2) : 0;
                     
