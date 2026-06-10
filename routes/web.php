@@ -135,7 +135,11 @@ Route::middleware('auth:custom')->group(function () {
     Route::prefix('management')->name('management.')->group(function () {
         Route::get('users/export', [UserManagementController::class, 'export'])->name('users.export');
         Route::resource('users', UserManagementController::class);
+        
+        Route::get('features/export', [FeatureManagementController::class, 'export'])->name('features.export');
         Route::resource('features', FeatureManagementController::class);
+        
+        Route::get('access/export', [UserFeatureAccessController::class, 'export'])->name('access.export');
         Route::get('access', [UserFeatureAccessController::class, 'index'])->name('access.index');
         Route::get('access/{user}/edit', [UserFeatureAccessController::class, 'edit'])->name('access.edit');
         Route::put('access/{user}', [UserFeatureAccessController::class, 'update'])->name('access.update');

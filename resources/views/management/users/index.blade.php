@@ -57,7 +57,7 @@
                         </a>
                     @endif
                     <a href="{{ route('management.users.export', ['search' => request('search')]) }}"
-                        class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-lg transition shadow-sm flex items-center ml-auto">
+                        class="text-white font-bold py-3 px-6 rounded-lg transition shadow-sm flex items-center ml-auto" style="background-color: #059669;">
                         <i class="fas fa-file-excel mr-2"></i> Export Excel
                     </a>
                 </form>
