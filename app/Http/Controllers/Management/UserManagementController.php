@@ -191,88 +191,41 @@ class UserManagementController extends Controller
 
         $users = $query->get();
 
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('Data User');
+        $fileName = 'Export_Manajemen_User_' . date('Y-m-d_His') . '.xls';
 
-        // Set header
-        $headers = ['No.', 'Username', 'NIK', 'Plant', 'Role'];
-        $columnLetter = 'A';
-        foreach ($headers as $header) {
-            $sheet->setCellValue($columnLetter . '1', $header);
-            $columnLetter++;
-        }
-
-        // Styling for header
-        $headerStyleArray = [
-            'font' => [
-                'bold' => true,
-                'color' => ['argb' => 'FFFFFFFF'],
-                'size' => 12,
-            ],
-            'fill' => [
-                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                'startColor' => ['argb' => 'FF16A34A'], // Green-600
-            ],
-            'alignment' => [
-                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
-                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
-            ],
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                ],
-            ],
+        $headers = [
+            "Content-type"        => "application/vnd.ms-excel",
+            "Content-Disposition" => "attachment; filename=$fileName",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
         ];
-        $sheet->getStyle('A1:E1')->applyFromArray($headerStyleArray);
-        $sheet->getRowDimension(1)->setRowHeight(25);
 
-        // Populate data
-        $row = 2;
-        foreach ($users as $index => $user) {
-            $sheet->setCellValue('A' . $row, $index + 1);
-            $sheet->setCellValue('B' . $row, $user->username);
-            $sheet->setCellValue('C' . $row, $user->nik ?? '-');
-            $sheet->setCellValue('D' . $row, $user->plant ?? '-');
-            
-            $roleDisplay = $user->role ?? '-';
-            if ($user->role === 'admin') $roleDisplay = 'ADMIN';
-            elseif ($user->role === 'superadmin') $roleDisplay = 'SUPERADMIN';
-            elseif ($user->role === 'viewer_ho' || $user->role === 'viewer_unit') $roleDisplay = 'VIEWER';
-            else $roleDisplay = strtoupper($roleDisplay);
-            
-            $sheet->setCellValue('E' . $row, $roleDisplay);
+        $callback = function() use($users) {
+            echo '<table border="1">';
+            echo '<tr style="background-color: #16A34A; color: #FFFFFF;">';
+            echo '<th>No.</th><th>Username</th><th>NIK</th><th>Plant</th><th>Role</th>';
+            echo '</tr>';
 
-            $sheet->getStyle('A' . $row . ':E' . $row)->applyFromArray([
-                'borders' => [
-                    'allBorders' => [
-                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                    ],
-                ],
-                'alignment' => [
-                    'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
-                ],
-            ]);
-            
-            $sheet->getStyle('A' . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            foreach ($users as $index => $user) {
+                $roleDisplay = $user->role ?? '-';
+                if ($user->role === 'admin') $roleDisplay = 'ADMIN';
+                elseif ($user->role === 'superadmin') $roleDisplay = 'SUPERADMIN';
+                elseif ($user->role === 'viewer_ho' || $user->role === 'viewer_unit') $roleDisplay = 'VIEWER';
+                else $roleDisplay = strtoupper($roleDisplay);
 
-            $row++;
-        }
+                echo '<tr>';
+                echo '<td style="text-align: center;">' . ($index + 1) . '</td>';
+                echo '<td>' . htmlspecialchars($user->username) . '</td>';
+                echo '<td>' . htmlspecialchars($user->nik ?? '-') . '</td>';
+                echo '<td>' . htmlspecialchars($user->plant ?? '-') . '</td>';
+                echo '<td>' . htmlspecialchars($roleDisplay) . '</td>';
+                echo '</tr>';
+            }
+            echo '</table>';
+        };
 
-        // Auto size columns
-        foreach (range('A', 'E') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
-
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-        $fileName = 'Export_Manajemen_User_' . date('Y-m-d_His') . '.xlsx';
-
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment; filename="'. urlencode($fileName).'"');
-        header('Cache-Control: max-age=0');
-
-        $writer->save('php://output');
-        exit;
+        return response()->stream($callback, 200, $headers);
     }
 
     /**

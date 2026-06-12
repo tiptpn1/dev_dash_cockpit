@@ -53,6 +53,10 @@
                             Clear
                         </a>
                     @endif
+                    <a href="{{ route('management.features.export', ['search' => request('search')]) }}"
+                        class="text-white font-bold py-2 px-6 rounded-lg transition shadow-sm flex items-center ml-auto" style="background-color: #059669;">
+                        <i class="fas fa-file-excel mr-2"></i> Export Excel
+                    </a>
                 </form>
             </div>
 
