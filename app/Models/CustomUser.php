@@ -25,6 +25,11 @@ class CustomUser extends Model implements AuthenticatableContract
         'role',
         'plant',
         'regional',
+        'last_login_at',
+    ];
+
+    protected $casts = [
+        'last_login_at' => 'datetime',
     ];
 
     protected $hidden = ['password', 'remember_token'];

@@ -39,6 +39,11 @@ Route::get('/portallm', [PageController::class, 'portallm'])->name('portallm');
 
 Route::middleware('auth:custom')->group(function () {
     Route::get('/', [PageController::class, 'overview'])->name('overview');
+    
+    // Change Password Routes
+    Route::get('/ubah-password', [\App\Http\Controllers\Auth\PasswordController::class, 'showChangePasswordForm'])->name('password.change');
+    Route::post('/ubah-password', [\App\Http\Controllers\Auth\PasswordController::class, 'updatePassword'])->name('password.update');
+
     Route::get('/mrc', [PageController::class, 'mrc'])->name('mrc');
     Route::get('/aigri', [PageController::class, 'aigri'])->name('aigri');
     Route::get('/gardai', [PageController::class, 'gardai'])->name('gardai');
@@ -136,9 +141,12 @@ Route::middleware('auth:custom')->group(function () {
         Route::get('users/export', [UserManagementController::class, 'export'])->name('users.export');
         Route::resource('users', UserManagementController::class);
         Route::resource('features', FeatureManagementController::class);
+        Route::get('access/export', [UserFeatureAccessController::class, 'export'])->name('access.export');
         Route::get('access', [UserFeatureAccessController::class, 'index'])->name('access.index');
         Route::get('access/{user}/edit', [UserFeatureAccessController::class, 'edit'])->name('access.edit');
         Route::put('access/{user}', [UserFeatureAccessController::class, 'update'])->name('access.update');
+        Route::get('lastlogin/export', [UserManagementController::class, 'exportLastLogin'])->name('lastlogin.export');
+        Route::get('lastlogin', [UserManagementController::class, 'lastLogin'])->name('lastlogin.index');
     });
 
     // AI Response Route

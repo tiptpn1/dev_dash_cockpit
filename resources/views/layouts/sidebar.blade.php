@@ -176,12 +176,13 @@ if (isset($user)) {
                 <a href="{{ route('management.features.index') }}"><i class="fa-solid fa-cube menu-icon"></i>Fitur</a>
             @endif
             @if($user->hasFeature('management_access'))
-                <a href="{{ route('management.access.index') }}"><i class="fa-solid fa-shield-halved menu-icon"></i>Hak
-                    Akses</a>
+                <a href="{{ route('management.access.index') }}"><i class="fa-solid fa-shield-halved menu-icon"></i>Hak Akses</a>
+                <a href="{{ route('management.lastlogin.index') }}"><i class="fa-solid fa-clock-rotate-left menu-icon"></i>Last Login</a>
             @endif
         </div>
     @endif
 
+    <a href="{{ route('password.change') }}" class="menu-item" id="change-password"><i class="fa-solid fa-key menu-icon"></i>Ubah Password</a>
     <a href="{{url('')}}/logout" class="menu-item" id="logout"><i
             class="fa-solid fa-right-from-bracket menu-icon"></i>Logout</a>
 </div>
