@@ -35,6 +35,14 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.href = '/bpd-evaluasi';
         return;
       }
+      if (selectedApp === 'MAIA') {
+        window.location.href = '/evaluasi-aplikasi/maia';
+        return;
+      }
+      if (selectedApp === 'MONIKA') {
+        window.location.href = '/evaluasi-aplikasi/monika';
+        return;
+      }
     });
   }
 });

@@ -42,13 +42,13 @@ function initializeApplicationSelect() {
 
       // Redirect to MAIA if selected
       if (selectedApp === 'MAIA') {
-        window.location.href = '/evaluasi-aplikasi';
+        window.location.href = '/evaluasi-aplikasi/maia';
         return;
       }
 
       // Redirect to MONIKA if selected
       if (selectedApp === 'MONIKA') {
-        window.location.href = '/evaluasi-aplikasi';
+        window.location.href = '/evaluasi-aplikasi/monika';
         return;
       }
     });
@@ -87,13 +87,13 @@ function initializeApplicationSelect() {
 
       // Redirect to MAIA if selected
       if (selectedApp === 'MAIA') {
-        window.location.href = '/evaluasi-aplikasi';
+        window.location.href = '/evaluasi-aplikasi/maia';
         return;
       }
 
       // Redirect to MONIKA if selected
       if (selectedApp === 'MONIKA') {
-        window.location.href = '/evaluasi-aplikasi';
+        window.location.href = '/evaluasi-aplikasi/monika';
         return;
       }
 
