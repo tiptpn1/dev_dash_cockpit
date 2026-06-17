@@ -2931,6 +2931,169 @@ class PageController extends Controller
         }
     }
 
+    public function evaluasi_hris_rekap_regional(Request $request)
+    {
+        $periode = $request->get('periode', date('Y-m'));
+        if (!preg_match('/^\d{4}-\d{2}$/', $periode)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Format periode tidak valid (gunakan YYYY-MM).',
+            ], 400);
+        }
+
+        [$tahun, $bulan] = array_map('intval', explode('-', $periode));
+
+        try {
+            $rows = $this->fetchRekapSeluruhRegional($tahun, $bulan);
+
+            usort($rows, function ($a, $b) {
+                if ($a->regional === 'SuppCo HO') return -1;
+                if ($b->regional === 'SuppCo HO') return 1;
+                return strcmp($a->regional, $b->regional);
+            });
+
+            return response()->json([
+                'status' => 'success',
+                'periode' => $periode,
+                'total' => count($rows),
+                'data' => $rows,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function evaluasi_hris_rekap_regional_detail(Request $request)
+    {
+        $periode = $request->get('periode', date('Y-m'));
+        $regionalName = trim((string) $request->get('regional_name', ''));
+
+        if (!preg_match('/^\d{4}-\d{2}$/', $periode)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Format periode tidak valid (gunakan YYYY-MM).',
+            ], 400);
+        }
+
+        if (empty($regionalName)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Nama regional wajib diisi.',
+            ], 400);
+        }
+
+        [$tahun, $bulan] = array_map('intval', explode('-', $periode));
+
+        try {
+            $rows = $this->fetchRekapSeluruhRegionalDetail($tahun, $bulan, $regionalName);
+
+            // Sort by attendance descending
+            usort($rows, function ($a, $b) {
+                return $b->persentase_kehadiran <=> $a->persentase_kehadiran;
+            });
+
+            return response()->json([
+                'status' => 'success',
+                'periode' => $periode,
+                'regional_name' => $regionalName,
+                'total' => count($rows),
+                'data' => $rows,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function evaluasi_hris_rekap_regional_pegawai(Request $request)
+    {
+        $periode = $request->get('periode', date('Y-m'));
+        $area = trim((string) $request->get('area', ''));
+        $unit = trim((string) $request->get('unit', ''));
+
+        if (!preg_match('/^\d{4}-\d{2}$/', $periode)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Format periode tidak valid (gunakan YYYY-MM).',
+            ], 400);
+        }
+
+        if (empty($area)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Parameter area wajib diisi.',
+            ], 400);
+        }
+
+        if ($unit === '-') {
+            $unit = '';
+        }
+
+        [$tahun, $bulan] = array_map('intval', explode('-', $periode));
+
+        try {
+            $rows = $this->fetchRekapSeluruhRegionalPegawai($tahun, $bulan, $area, $unit);
+
+            return response()->json([
+                'status' => 'success',
+                'periode' => $periode,
+                'area' => $area,
+                'unit' => $unit,
+                'total' => count($rows),
+                'data' => $rows,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function evaluasi_hris_rekap_regional_pegawai_detail(Request $request)
+    {
+        $periode = $request->get('periode', date('Y-m'));
+        $pegawai_id = trim((string) $request->get('pegawai_id', ''));
+
+        if (!preg_match('/^\d{4}-\d{2}$/', $periode)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Format periode tidak valid (gunakan YYYY-MM).',
+            ], 400);
+        }
+
+        if (empty($pegawai_id)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Parameter pegawai_id wajib diisi.',
+            ], 400);
+        }
+
+        [$tahun, $bulan] = array_map('intval', explode('-', $periode));
+
+        try {
+            $rows = $this->fetchRekapSeluruhRegionalPegawaiDetail($tahun, $bulan, $pegawai_id);
+
+            return response()->json([
+                'status' => 'success',
+                'periode' => $periode,
+                'pegawai_id' => $pegawai_id,
+                'total' => count($rows),
+                'data' => $rows,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function evaluasi_hris_detail(Request $request)
     {
         $periode = $request->get('periode', date('Y-m'));
@@ -3090,6 +3253,407 @@ class PageController extends Controller
         }
 
         return $this->fetchRekapAbsenFromAbsensi($periodeHris);
+    }
+
+    private function fetchRekapSeluruhRegional(int $tahun, int $bulan): array
+    {
+        $periodeHris = $this->periodeYmToHris($tahun, $bulan);
+
+        if ($this->hrisUsesImportData($periodeHris)) {
+            return $this->fetchRekapSeluruhRegionalFromImport($periodeHris);
+        }
+
+        return $this->fetchRekapSeluruhRegionalFromAbsensi($periodeHris);
+    }
+
+    private function fetchRekapSeluruhRegionalFromImport(string $periodeHris): array
+    {
+        $sql = "
+            SELECT
+                CASE 
+                    WHEN UPPER(p.regional) LIKE '%REG%01%' OR UPPER(p.regional) LIKE '%REGIONAL 1%' THEN 'Regional 1'
+                    WHEN UPPER(p.regional) LIKE '%REG%02%' OR UPPER(p.regional) LIKE '%REGIONAL 2%' THEN 'Regional 2'
+                    WHEN UPPER(p.regional) LIKE '%REG%03%' OR UPPER(p.regional) LIKE '%REGIONAL 3%' THEN 'Regional 3'
+                    WHEN UPPER(p.regional) LIKE '%REG%04%' OR UPPER(p.regional) LIKE '%REGIONAL 4%' THEN 'Regional 4'
+                    WHEN UPPER(p.regional) LIKE '%REG%05%' OR UPPER(p.regional) LIKE '%REGIONAL 5%' THEN 'Regional 5'
+                    WHEN UPPER(p.regional) LIKE '%REG%06%' OR UPPER(p.regional) LIKE '%REGIONAL 6%' THEN 'Regional 6'
+                    WHEN UPPER(p.regional) LIKE '%REG%07%' OR UPPER(p.regional) LIKE '%REGIONAL 7%' THEN 'Regional 7'
+                    WHEN UPPER(p.regional) LIKE '%REG%08%' OR UPPER(p.regional) LIKE '%REGIONAL 8%' THEN 'Regional 8'
+                    WHEN UPPER(p.regional) LIKE '%HO%' OR UPPER(p.regional) LIKE '%HEAD OFFICE%' THEN 'SuppCo HO'
+                    ELSE 'Lainnya'
+                END AS regional,
+                ROUND(AVG(b.hari_kerja), 0) AS hari_kerja,
+                COUNT(DISTINCT p.pegawai_id) AS jumlah_pegawai,
+                ROUND(AVG(
+                    CASE WHEN COALESCE(b.hari_kerja, 0) > 0
+                    THEN COALESCE(att.check_in, 0) / b.hari_kerja * 100
+                    ELSE 0 END
+                ), 1) AS persentase_kehadiran
+            FROM pegawai p
+            LEFT JOIN (
+                SELECT
+                    pegawai_id,
+                    SUM(CASE WHEN checkin_time IS NULL OR TRIM(checkin_time) = '' THEN 0 ELSE 1 END) AS check_in
+                FROM absensi_import
+                WHERE periode = ?
+                GROUP BY pegawai_id
+            ) att ON p.pegawai_id = att.pegawai_id
+            LEFT JOIN absensi_periode b
+                ON p.regional_kode = b.regional_kode
+                AND p.area_kode = b.area_kode
+                AND b.periode = ?
+            WHERE NULLIF(TRIM(p.regional), '') IS NOT NULL
+              AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
+              AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
+              AND LOWER(p.status_pegawai) IN ('aktif', 'active')
+            GROUP BY 
+                CASE 
+                    WHEN UPPER(p.regional) LIKE '%REG%01%' OR UPPER(p.regional) LIKE '%REGIONAL 1%' THEN 'Regional 1'
+                    WHEN UPPER(p.regional) LIKE '%REG%02%' OR UPPER(p.regional) LIKE '%REGIONAL 2%' THEN 'Regional 2'
+                    WHEN UPPER(p.regional) LIKE '%REG%03%' OR UPPER(p.regional) LIKE '%REGIONAL 3%' THEN 'Regional 3'
+                    WHEN UPPER(p.regional) LIKE '%REG%04%' OR UPPER(p.regional) LIKE '%REGIONAL 4%' THEN 'Regional 4'
+                    WHEN UPPER(p.regional) LIKE '%REG%05%' OR UPPER(p.regional) LIKE '%REGIONAL 5%' THEN 'Regional 5'
+                    WHEN UPPER(p.regional) LIKE '%REG%06%' OR UPPER(p.regional) LIKE '%REGIONAL 6%' THEN 'Regional 6'
+                    WHEN UPPER(p.regional) LIKE '%REG%07%' OR UPPER(p.regional) LIKE '%REGIONAL 7%' THEN 'Regional 7'
+                    WHEN UPPER(p.regional) LIKE '%REG%08%' OR UPPER(p.regional) LIKE '%REGIONAL 8%' THEN 'Regional 8'
+                    WHEN UPPER(p.regional) LIKE '%HO%' OR UPPER(p.regional) LIKE '%HEAD OFFICE%' THEN 'SuppCo HO'
+                    ELSE 'Lainnya'
+                END
+        ";
+
+        return DB::connection('hris')->select($sql, [$periodeHris, $periodeHris]);
+    }
+
+    private function fetchRekapSeluruhRegionalFromAbsensi(string $periodeHris): array
+    {
+        $sql = "
+            SELECT
+                CASE 
+                    WHEN UPPER(p.regional) LIKE '%REG%01%' OR UPPER(p.regional) LIKE '%REGIONAL 1%' THEN 'Regional 1'
+                    WHEN UPPER(p.regional) LIKE '%REG%02%' OR UPPER(p.regional) LIKE '%REGIONAL 2%' THEN 'Regional 2'
+                    WHEN UPPER(p.regional) LIKE '%REG%03%' OR UPPER(p.regional) LIKE '%REGIONAL 3%' THEN 'Regional 3'
+                    WHEN UPPER(p.regional) LIKE '%REG%04%' OR UPPER(p.regional) LIKE '%REGIONAL 4%' THEN 'Regional 4'
+                    WHEN UPPER(p.regional) LIKE '%REG%05%' OR UPPER(p.regional) LIKE '%REGIONAL 5%' THEN 'Regional 5'
+                    WHEN UPPER(p.regional) LIKE '%REG%06%' OR UPPER(p.regional) LIKE '%REGIONAL 6%' THEN 'Regional 6'
+                    WHEN UPPER(p.regional) LIKE '%REG%07%' OR UPPER(p.regional) LIKE '%REGIONAL 7%' THEN 'Regional 7'
+                    WHEN UPPER(p.regional) LIKE '%REG%08%' OR UPPER(p.regional) LIKE '%REGIONAL 8%' THEN 'Regional 8'
+                    WHEN UPPER(p.regional) LIKE '%HO%' OR UPPER(p.regional) LIKE '%HEAD OFFICE%' THEN 'SuppCo HO'
+                    ELSE 'Lainnya'
+                END AS regional,
+                ROUND(AVG(b.hari_kerja), 0) AS hari_kerja,
+                COUNT(DISTINCT p.pegawai_id) AS jumlah_pegawai,
+                ROUND(AVG(
+                    CASE WHEN COALESCE(b.hari_kerja, 0) > 0
+                    THEN COALESCE(att.check_in, 0) / b.hari_kerja * 100
+                    ELSE 0 END
+                ), 1) AS persentase_kehadiran
+            FROM pegawai p
+            LEFT JOIN (
+                SELECT pegawai_id, COUNT(DISTINCT DATE(jam)) AS check_in
+                FROM absensi
+                WHERE DATE_FORMAT(jam, '%m%Y') = ?
+                GROUP BY pegawai_id
+            ) att ON p.pegawai_id = att.pegawai_id
+            LEFT JOIN absensi_periode b
+                ON p.regional_kode = b.regional_kode
+                AND p.area_kode = b.area_kode
+                AND b.periode = ?
+            WHERE NULLIF(TRIM(p.regional), '') IS NOT NULL
+              AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
+              AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
+              AND LOWER(p.status_pegawai) IN ('aktif', 'active')
+            GROUP BY 
+                CASE 
+                    WHEN UPPER(p.regional) LIKE '%REG%01%' OR UPPER(p.regional) LIKE '%REGIONAL 1%' THEN 'Regional 1'
+                    WHEN UPPER(p.regional) LIKE '%REG%02%' OR UPPER(p.regional) LIKE '%REGIONAL 2%' THEN 'Regional 2'
+                    WHEN UPPER(p.regional) LIKE '%REG%03%' OR UPPER(p.regional) LIKE '%REGIONAL 3%' THEN 'Regional 3'
+                    WHEN UPPER(p.regional) LIKE '%REG%04%' OR UPPER(p.regional) LIKE '%REGIONAL 4%' THEN 'Regional 4'
+                    WHEN UPPER(p.regional) LIKE '%REG%05%' OR UPPER(p.regional) LIKE '%REGIONAL 5%' THEN 'Regional 5'
+                    WHEN UPPER(p.regional) LIKE '%REG%06%' OR UPPER(p.regional) LIKE '%REGIONAL 6%' THEN 'Regional 6'
+                    WHEN UPPER(p.regional) LIKE '%REG%07%' OR UPPER(p.regional) LIKE '%REGIONAL 7%' THEN 'Regional 7'
+                    WHEN UPPER(p.regional) LIKE '%REG%08%' OR UPPER(p.regional) LIKE '%REGIONAL 8%' THEN 'Regional 8'
+                    WHEN UPPER(p.regional) LIKE '%HO%' OR UPPER(p.regional) LIKE '%HEAD OFFICE%' THEN 'SuppCo HO'
+                    ELSE 'Lainnya'
+                END
+        ";
+
+        return DB::connection('hris')->select($sql, [$periodeHris, $periodeHris]);
+    }
+
+    private function fetchRekapSeluruhRegionalDetail(int $tahun, int $bulan, string $regionalName): array
+    {
+        $periodeHris = $this->periodeYmToHris($tahun, $bulan);
+
+        if ($this->hrisUsesImportData($periodeHris)) {
+            return $this->fetchRekapSeluruhRegionalDetailFromImport($periodeHris, $regionalName);
+        }
+
+        return $this->fetchRekapSeluruhRegionalDetailFromAbsensi($periodeHris, $regionalName);
+    }
+
+    private function fetchRekapSeluruhRegionalDetailFromImport(string $periodeHris, string $regionalName): array
+    {
+        $sql = "
+            SELECT
+                p.area AS area_name,
+                d.nama AS unit_name,
+                ROUND(AVG(b.hari_kerja), 0) AS hari_kerja,
+                COUNT(DISTINCT p.pegawai_id) AS jumlah_pegawai,
+                ROUND(AVG(
+                    CASE WHEN COALESCE(b.hari_kerja, 0) > 0
+                    THEN COALESCE(att.check_in, 0) / b.hari_kerja * 100
+                    ELSE 0 END
+                ), 1) AS persentase_kehadiran
+            FROM pegawai p
+            LEFT JOIN (
+                SELECT nip, COUNT(DISTINCT tanggal) AS check_in
+                FROM absensi_import
+                WHERE periode = ?
+                GROUP BY nip
+            ) att ON p.nik = att.nip
+            LEFT JOIN absensi_periode b
+                ON p.regional_kode = b.regional_kode
+                AND p.area_kode = b.area_kode
+                AND b.periode = ?
+            LEFT JOIN divisi d ON p.cost_center_kode = d.kode
+            WHERE NULLIF(TRIM(p.regional), '') IS NOT NULL
+              AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
+              AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
+              AND LOWER(p.status_pegawai) IN ('aktif', 'active')
+              AND (
+                  CASE 
+                      WHEN UPPER(p.regional) LIKE '%REG%01%' OR UPPER(p.regional) LIKE '%REGIONAL 1%' THEN 'Regional 1'
+                      WHEN UPPER(p.regional) LIKE '%REG%02%' OR UPPER(p.regional) LIKE '%REGIONAL 2%' THEN 'Regional 2'
+                      WHEN UPPER(p.regional) LIKE '%REG%03%' OR UPPER(p.regional) LIKE '%REGIONAL 3%' THEN 'Regional 3'
+                      WHEN UPPER(p.regional) LIKE '%REG%04%' OR UPPER(p.regional) LIKE '%REGIONAL 4%' THEN 'Regional 4'
+                      WHEN UPPER(p.regional) LIKE '%REG%05%' OR UPPER(p.regional) LIKE '%REGIONAL 5%' THEN 'Regional 5'
+                      WHEN UPPER(p.regional) LIKE '%REG%06%' OR UPPER(p.regional) LIKE '%REGIONAL 6%' THEN 'Regional 6'
+                      WHEN UPPER(p.regional) LIKE '%REG%07%' OR UPPER(p.regional) LIKE '%REGIONAL 7%' THEN 'Regional 7'
+                      WHEN UPPER(p.regional) LIKE '%REG%08%' OR UPPER(p.regional) LIKE '%REGIONAL 8%' THEN 'Regional 8'
+                      WHEN UPPER(p.regional) LIKE '%HO%' OR UPPER(p.regional) LIKE '%HEAD OFFICE%' THEN 'SuppCo HO'
+                      ELSE 'Lainnya'
+                  END
+              ) = ?
+            GROUP BY p.area, d.nama
+        ";
+
+        return DB::connection('hris')->select($sql, [$periodeHris, $periodeHris, $regionalName]);
+    }
+
+    private function fetchRekapSeluruhRegionalDetailFromAbsensi(string $periodeHris, string $regionalName): array
+    {
+        $sql = "
+            SELECT
+                p.area AS area_name,
+                d.nama AS unit_name,
+                ROUND(AVG(b.hari_kerja), 0) AS hari_kerja,
+                COUNT(DISTINCT p.pegawai_id) AS jumlah_pegawai,
+                ROUND(AVG(
+                    CASE WHEN COALESCE(b.hari_kerja, 0) > 0
+                    THEN COALESCE(att.check_in, 0) / b.hari_kerja * 100
+                    ELSE 0 END
+                ), 1) AS persentase_kehadiran
+            FROM pegawai p
+            LEFT JOIN (
+                SELECT pegawai_id, COUNT(DISTINCT DATE(jam)) AS check_in
+                FROM absensi
+                WHERE DATE_FORMAT(jam, '%m%Y') = ?
+                GROUP BY pegawai_id
+            ) att ON p.pegawai_id = att.pegawai_id
+            LEFT JOIN absensi_periode b
+                ON p.regional_kode = b.regional_kode
+                AND p.area_kode = b.area_kode
+                AND b.periode = ?
+            LEFT JOIN divisi d ON p.cost_center_kode = d.kode
+            WHERE NULLIF(TRIM(p.regional), '') IS NOT NULL
+              AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
+              AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
+              AND LOWER(p.status_pegawai) IN ('aktif', 'active')
+              AND (
+                  CASE 
+                      WHEN UPPER(p.regional) LIKE '%REG%01%' OR UPPER(p.regional) LIKE '%REGIONAL 1%' THEN 'Regional 1'
+                      WHEN UPPER(p.regional) LIKE '%REG%02%' OR UPPER(p.regional) LIKE '%REGIONAL 2%' THEN 'Regional 2'
+                      WHEN UPPER(p.regional) LIKE '%REG%03%' OR UPPER(p.regional) LIKE '%REGIONAL 3%' THEN 'Regional 3'
+                      WHEN UPPER(p.regional) LIKE '%REG%04%' OR UPPER(p.regional) LIKE '%REGIONAL 4%' THEN 'Regional 4'
+                      WHEN UPPER(p.regional) LIKE '%REG%05%' OR UPPER(p.regional) LIKE '%REGIONAL 5%' THEN 'Regional 5'
+                      WHEN UPPER(p.regional) LIKE '%REG%06%' OR UPPER(p.regional) LIKE '%REGIONAL 6%' THEN 'Regional 6'
+                      WHEN UPPER(p.regional) LIKE '%REG%07%' OR UPPER(p.regional) LIKE '%REGIONAL 7%' THEN 'Regional 7'
+                      WHEN UPPER(p.regional) LIKE '%REG%08%' OR UPPER(p.regional) LIKE '%REGIONAL 8%' THEN 'Regional 8'
+                      WHEN UPPER(p.regional) LIKE '%HO%' OR UPPER(p.regional) LIKE '%HEAD OFFICE%' THEN 'SuppCo HO'
+                      ELSE 'Lainnya'
+                  END
+              ) = ?
+            GROUP BY p.area, d.nama
+        ";
+
+        return DB::connection('hris')->select($sql, [$periodeHris, $periodeHris, $regionalName]);
+    }
+
+    private function fetchRekapSeluruhRegionalPegawai(int $tahun, int $bulan, string $area, string $unit): array
+    {
+        $periodeHris = $this->periodeYmToHris($tahun, $bulan);
+
+        if ($this->hrisUsesImportData($periodeHris)) {
+            return $this->fetchRekapSeluruhRegionalPegawaiFromImport($periodeHris, $area, $unit);
+        }
+
+        return $this->fetchRekapSeluruhRegionalPegawaiFromAbsensi($periodeHris, $area, $unit);
+    }
+
+    private function fetchRekapSeluruhRegionalPegawaiFromImport(string $periodeHris, string $area, string $unit): array
+    {
+        $unitCondition = $unit === '' ? "AND (d.nama IS NULL OR TRIM(d.nama) = '')" : "AND d.nama = ?";
+        $bindings = [$periodeHris, $periodeHris, $area];
+        if ($unit !== '') {
+            $bindings[] = $unit;
+        }
+
+        $sql = "
+            SELECT
+                p.pegawai_id,
+                p.nik,
+                p.nama,
+                p.jabatan,
+                COALESCE(b.hari_kerja, 0) AS hari_kerja,
+                COALESCE(att.check_in, 0) AS check_in,
+                ROUND(
+                    CASE WHEN COALESCE(b.hari_kerja, 0) > 0
+                    THEN COALESCE(att.check_in, 0) / b.hari_kerja * 100
+                    ELSE 0 END
+                , 1) AS persentase_kehadiran
+            FROM pegawai p
+            LEFT JOIN (
+                SELECT nip, COUNT(DISTINCT tanggal) AS check_in
+                FROM absensi_import
+                WHERE periode = ?
+                GROUP BY nip
+            ) att ON p.nik = att.nip
+            LEFT JOIN absensi_periode b
+                ON p.regional_kode = b.regional_kode
+                AND p.area_kode = b.area_kode
+                AND b.periode = ?
+            LEFT JOIN divisi d ON p.cost_center_kode = d.kode
+            WHERE NULLIF(TRIM(p.regional), '') IS NOT NULL
+              AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
+              AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
+              AND LOWER(p.status_pegawai) IN ('aktif', 'active')
+              AND p.area = ?
+              $unitCondition
+            ORDER BY p.nama ASC
+        ";
+
+        return DB::connection('hris')->select($sql, $bindings);
+    }
+
+    private function fetchRekapSeluruhRegionalPegawaiFromAbsensi(string $periodeHris, string $area, string $unit): array
+    {
+        $unitCondition = $unit === '' ? "AND (d.nama IS NULL OR TRIM(d.nama) = '')" : "AND d.nama = ?";
+        $bindings = [$periodeHris, $periodeHris, $area];
+        if ($unit !== '') {
+            $bindings[] = $unit;
+        }
+
+        $sql = "
+            SELECT
+                p.pegawai_id,
+                p.nik,
+                p.nama,
+                p.jabatan,
+                COALESCE(b.hari_kerja, 0) AS hari_kerja,
+                COALESCE(att.check_in, 0) AS check_in,
+                ROUND(
+                    CASE WHEN COALESCE(b.hari_kerja, 0) > 0
+                    THEN COALESCE(att.check_in, 0) / b.hari_kerja * 100
+                    ELSE 0 END
+                , 1) AS persentase_kehadiran
+            FROM pegawai p
+            LEFT JOIN (
+                SELECT pegawai_id, COUNT(DISTINCT DATE(jam)) AS check_in
+                FROM absensi
+                WHERE DATE_FORMAT(jam, '%m%Y') = ?
+                GROUP BY pegawai_id
+            ) att ON p.pegawai_id = att.pegawai_id
+            LEFT JOIN absensi_periode b
+                ON p.regional_kode = b.regional_kode
+                AND p.area_kode = b.area_kode
+                AND b.periode = ?
+            LEFT JOIN divisi d ON p.cost_center_kode = d.kode
+            WHERE NULLIF(TRIM(p.regional), '') IS NOT NULL
+              AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
+              AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
+              AND LOWER(p.status_pegawai) IN ('aktif', 'active')
+              AND p.area = ?
+              $unitCondition
+            ORDER BY p.nama ASC
+        ";
+
+        return DB::connection('hris')->select($sql, $bindings);
+    }
+
+    private function fetchRekapSeluruhRegionalPegawaiDetail(int $tahun, int $bulan, string $pegawai_id): array
+    {
+        $periodeHris = $this->periodeYmToHris($tahun, $bulan);
+
+        if ($this->hrisUsesImportData($periodeHris)) {
+            return $this->fetchRekapSeluruhRegionalPegawaiDetailFromImport($periodeHris, $pegawai_id);
+        }
+
+        return $this->fetchRekapSeluruhRegionalPegawaiDetailFromAbsensi($periodeHris, $pegawai_id);
+    }
+
+    private function fetchRekapSeluruhRegionalPegawaiDetailFromImport(string $periodeHris, string $pegawai_id): array
+    {
+        $sql = "
+            SELECT
+                a.tanggal_date AS tanggal,
+                a.checkin_time,
+                a.checkout_time,
+                a.mood_in,
+                a.mood_out,
+                a.keterangan_checkin AS lokasi
+            FROM absensi_import a
+            JOIN pegawai p ON a.nip = p.nik
+            WHERE a.periode = ? AND p.pegawai_id = ?
+            ORDER BY a.tanggal_date ASC
+        ";
+
+        return DB::connection('hris')->select($sql, [$periodeHris, $pegawai_id]);
+    }
+
+    private function fetchRekapSeluruhRegionalPegawaiDetailFromAbsensi(string $periodeHris, string $pegawai_id): array
+    {
+        $sql = "
+            SELECT
+                jam,
+                validator AS mood,
+                alamat AS lokasi
+            FROM absensi
+            WHERE DATE_FORMAT(jam, '%m%Y') = ? AND pegawai_id = ?
+            ORDER BY jam ASC
+        ";
+
+        $rawRows = DB::connection('hris')->select($sql, [$periodeHris, $pegawai_id]);
+
+        $grouped = [];
+        foreach ($rawRows as $row) {
+            $date = date('Y-m-d', strtotime($row->jam));
+            if (!isset($grouped[$date])) {
+                $grouped[$date] = (object) [
+                    'tanggal' => $date,
+                    'checkin_time' => $row->jam,
+                    'checkout_time' => null,
+                    'mood_in' => $row->mood ?: '-',
+                    'mood_out' => '-',
+                    'lokasi' => $row->lokasi,
+                ];
+            } else {
+                $grouped[$date]->checkout_time = $row->jam;
+                $grouped[$date]->mood_out = $row->mood ?: '-';
+                $grouped[$date]->lokasi = $row->lokasi;
+            }
+        }
+
+        return array_values($grouped);
     }
 
     private function fetchRekapAbsenRegionalSummary(int $tahun, int $bulan): ?object

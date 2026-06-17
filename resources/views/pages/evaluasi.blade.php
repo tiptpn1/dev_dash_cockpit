@@ -800,6 +800,9 @@
                     <button type="button" class="hris-tab-btn" data-tab="perkaryawan">
                         <i class="fas fa-user"></i> Detail per Karyawan
                     </button>
+                    <button type="button" class="hris-tab-btn" data-tab="rekap_regional">
+                        <i class="fas fa-globe"></i> Rekap Seluruh Regional
+                    </button>
                 </div>
 
                 <div id="hris-error" class="error-banner" style="display: none;"></div>
@@ -934,6 +937,34 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- Tab 4: Rekap Seluruh Regional -->
+                <div id="tab-rekap_regional" class="hris-tab-panel">
+                    <div class="filter-card-tab2" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <label class="form-label" style="margin:0; white-space:nowrap;"><i class="fas fa-calendar-alt" style="color:#166534;"></i> Periode:</label>
+                            <input type="month" id="rekap_regional_periode_select" class="form-input" value="{{ date('Y-m') }}" style="width:160px;">
+                        </div>
+                        <div id="rekap-regional-periode-info" style="font-size:12px; color:#6b7280; font-style:italic;"></div>
+                    </div>
+                    <div id="rekap-regional-chart-container" style="padding: 20px; background: #fff; border-radius: 8px; border: 1px solid #e5e7eb; margin-top: 16px;">
+                        <div style="text-align:center; padding:20px; color:#6b7280;"><i class="fas fa-spinner fa-spin"></i> Memuat data...</div>
+                    </div>
+                    <div id="rekap-regional-detail-container" style="display: none; padding: 20px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 16px;">
+                        <div style="font-weight: bold; font-size: 14px; color: #1e293b; margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;" id="rekap-regional-detail-title">Detail Regional</div>
+                        <div id="rekap-regional-detail-content"></div>
+                    </div>
+                    
+                    <div id="pegawai-log-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+                        <div style="background: #fff; border-radius: 8px; width: 90%; max-width: 800px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+                            <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border-radius: 8px 8px 0 0;">
+                                <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #1e293b;"><i class="fas fa-calendar-check" style="color: #2563eb; margin-right: 8px;"></i>Riwayat Absensi: <span id="pegawai-log-name" style="color: #2563eb;"></span></h3>
+                                <button onclick="document.getElementById('pegawai-log-modal').style.display='none'" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #64748b; line-height: 1;">&times;</button>
+                            </div>
+                            <div id="pegawai-log-content" style="padding: 20px; overflow-y: auto; flex-grow: 1;"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="table-wrapper" id="non-hris-wrapper">
@@ -1031,6 +1062,8 @@
         const perkaryawanTanggalAwal = document.getElementById('perkaryawan_tanggal_awal');
         const perkaryawanTanggalAkhir = document.getElementById('perkaryawan_tanggal_akhir');
         const perkaryawanTbody = document.getElementById('perkaryawan-tbody');
+        const rekapRegionalPeriodeSelect = document.getElementById('rekap_regional_periode_select');
+        const rekapRegionalChartContainer = document.getElementById('rekap-regional-chart-container');
         const hrisDataUrl = @json(route('evaluasi_hris_data'));
         const hrisDetailUrl = @json(route('evaluasi_hris_detail'));
         const hrisDivisiUrl = @json(route('evaluasi_hris_divisi'));
@@ -1038,6 +1071,10 @@
         const hrisPerKaryawanUrl = @json(route('evaluasi_hris_perkaryawan'));
         const hrisPegawaiListUrl = @json(route('evaluasi_hris_pegawai_list'));
         const hrisRegionalListUrl = @json(route('evaluasi_hris_regional_list'));
+        const hrisRekapRegionalUrl = @json(route('evaluasi_hris_rekap_regional'));
+        const hrisRekapRegionalDetailUrl = @json(route('evaluasi_hris_rekap_regional_detail'));
+        const hrisRekapRegionalPegawaiUrl = @json(route('evaluasi_hris_rekap_regional_pegawai'));
+        const hrisRekapRegionalPegawaiDetailUrl = @json(route('evaluasi_hris_rekap_regional_pegawai_detail'));
         let activeDivisi = null;
         let currentPeriode = null;
         let lastHarianPeriode = null;
@@ -1317,10 +1354,14 @@
             document.getElementById('tab-rekap').classList.toggle('active', tab === 'rekap');
             document.getElementById('tab-harian').classList.toggle('active', tab === 'harian');
             document.getElementById('tab-perkaryawan').classList.toggle('active', tab === 'perkaryawan');
+            document.getElementById('tab-rekap_regional').classList.toggle('active', tab === 'rekap_regional');
 
             // Auto-load data harian saat tab dibuka jika tanggal sudah terisi
             if (tab === 'harian' && harianTanggalSelect.value) {
                 loadHarianData();
+            }
+            if (tab === 'rekap_regional' && rekapRegionalPeriodeSelect.value) {
+                loadRekapRegionalData();
             }
         }
 
@@ -1915,6 +1956,303 @@
             mapInfoLatitude.textContent = latitude;
             mapInfoLongitude.textContent = longitude;
         }
+
+        function renderRekapRegionalColumn(row) {
+            const regional = row.regional || '-';
+            const attendance = parseFloat(row.persentase_kehadiran ?? 0).toFixed(1);
+
+            let barColor = '#60a5fa'; // standard blue
+            if (regional.includes('HO')) barColor = '#3b82f6';
+            else if (regional.includes('Regional 1')) barColor = '#2563eb';
+            else if (regional.includes('Regional 2')) barColor = '#38bdf8';
+            else if (regional.includes('Regional 3')) barColor = '#0284c7';
+            else if (regional.includes('Regional 4')) barColor = '#0ea5e9';
+            else if (regional.includes('Regional 5')) barColor = '#1d4ed8';
+            else if (regional.includes('Regional 6')) barColor = '#7dd3fc';
+            else if (regional.includes('Regional 7')) barColor = '#1e3a8a';
+            else if (regional.includes('Regional 8')) barColor = '#1e40af';
+
+            const div = document.createElement('div');
+            div.className = 'regional-chart-col';
+            div.style.cssText = 'display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; width: 60px; position: relative; z-index: 1; cursor: pointer; transition: transform 0.2s ease;';
+            div.innerHTML = `
+                <div style="font-size: 13px; font-weight: 700; color: #374151; margin-bottom: 6px;">${attendance}%</div>
+                <div class="regional-bar" style="width: 50px; background: ${barColor}; height: ${attendance}%; border-radius: 4px 4px 0 0; transition: all 0.3s ease; box-shadow: 0 -2px 4px rgba(0,0,0,0.1);"></div>
+                <div style="font-size: 12px; font-weight: 600; color: #4b5563; position: absolute; bottom: -35px; text-align: center; width: 100px; white-space: normal; line-height: 1.2;">${escapeHtml(regional)}</div>
+            `;
+
+            div.addEventListener('mouseenter', () => {
+                div.querySelector('.regional-bar').style.filter = 'brightness(1.1)';
+                div.style.transform = 'scale(1.05)';
+            });
+            div.addEventListener('mouseleave', () => {
+                div.querySelector('.regional-bar').style.filter = 'none';
+                div.style.transform = 'scale(1)';
+            });
+
+            div.addEventListener('click', () => {
+                loadRekapRegionalDetail(regional, barColor);
+            });
+
+            return div;
+        }
+
+        function loadRekapRegionalDetail(regionalName, barColor) {
+            const periode = rekapRegionalPeriodeSelect.value;
+            const detailContainer = document.getElementById('rekap-regional-detail-container');
+            const detailTitle = document.getElementById('rekap-regional-detail-title');
+            const detailContent = document.getElementById('rekap-regional-detail-content');
+            
+            detailContainer.style.display = 'block';
+            detailTitle.innerHTML = `Detail Persentase: <span style="color: ${barColor};">${escapeHtml(regionalName)}</span>`;
+            detailContent.innerHTML = '<div style="text-align:center; padding:10px; color:#6b7280;"><i class="fas fa-spinner fa-spin"></i> Memuat detail data...</div>';
+
+            const params = new URLSearchParams({ periode, regional_name: regionalName });
+            fetch(`${hrisRekapRegionalDetailUrl}?${params}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status !== 'success') throw new Error(data.message);
+                    
+                    if (!data.data || !data.data.length) {
+                        detailContent.innerHTML = '<div style="text-align:center; padding:10px; color:#6b7280;">Tidak ada data detail untuk unit ini.</div>';
+                        return;
+                    }
+
+                    let html = '';
+                    data.data.forEach((row, index) => {
+                        const area = row.area_name || '-';
+                        const unit = row.unit_name || '-';
+                        const label = `${area} - ${unit}`;
+                        const attendance = parseFloat(row.persentase_kehadiran ?? 0).toFixed(1);
+                        const pegawai = row.jumlah_pegawai || 0;
+                        
+                        html += `
+                            <div style="margin-bottom: 12px; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; background: #fff;">
+                                <div class="area-unit-row" style="display: flex; align-items: center; padding: 8px 12px; cursor: pointer; transition: background 0.2s ease;" onclick="togglePegawaiDetail(this, '${escapeHtml(area)}', '${escapeHtml(unit)}', '${barColor}')">
+                                    <div style="width: 250px; font-weight: 600; font-size: 13px; color: #1f2937; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(label)}">
+                                        <i class="fas fa-chevron-right chevron-icon" style="margin-right: 6px; font-size: 10px; color: #94a3b8; transition: transform 0.2s ease;"></i>
+                                        ${escapeHtml(label)}
+                                    </div>
+                                    <div style="flex-grow: 1; margin: 0 16px; background: #e2e8f0; height: 24px; border-radius: 4px; overflow: hidden; position: relative; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);">
+                                        <div style="width: ${attendance}%; background: ${barColor}; height: 100%; transition: width 0.5s ease;"></div>
+                                        <div style="position: absolute; left: 8px; top: 0; bottom: 0; display: flex; align-items: center; font-size: 11px; color: ${attendance > 20 ? '#fff' : '#1f2937'}; font-weight: bold; text-shadow: ${attendance > 20 ? '0px 0px 2px rgba(0,0,0,0.5)' : 'none'}; z-index: 2;">
+                                            ${attendance}% &nbsp;&nbsp;<span style="font-weight:500; opacity:0.9;">(${pegawai} Pegawai)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="pegawai-detail-container" style="display: none; padding: 12px; background: #f8fafc; border-top: 1px dashed #e2e8f0;"></div>
+                            </div>
+                        `;
+                    });
+                    detailContent.innerHTML = html;
+                })
+                .catch(err => {
+                    detailContent.innerHTML = `<div style="text-align:center; padding:10px; color:#991b1b;">⚠️ ${escapeHtml(err.message)}</div>`;
+                });
+        }
+
+        window.togglePegawaiDetail = function(rowElement, area, unit, barColor) {
+            const container = rowElement.nextElementSibling;
+            const chevron = rowElement.querySelector('.chevron-icon');
+            
+            if (container.style.display === 'block') {
+                container.style.display = 'none';
+                rowElement.style.background = '#fff';
+                chevron.style.transform = 'rotate(0deg)';
+                return;
+            }
+            
+            container.style.display = 'block';
+            rowElement.style.background = '#f1f5f9';
+            chevron.style.transform = 'rotate(90deg)';
+            
+            if (!container.dataset.loaded) {
+                container.innerHTML = '<div style="text-align:center; padding:10px; color:#6b7280; font-size: 12px;"><i class="fas fa-spinner fa-spin"></i> Memuat daftar pegawai...</div>';
+                
+                const periode = document.getElementById('rekap_regional_periode_select').value;
+                const params = new URLSearchParams({ periode, area, unit });
+                
+                fetch(`${hrisRekapRegionalPegawaiUrl}?${params}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status !== 'success') throw new Error(data.message);
+                        container.dataset.loaded = 'true';
+                        
+                        if (!data.data || !data.data.length) {
+                            container.innerHTML = '<div style="text-align:center; color:#6b7280; font-size: 12px;">Tidak ada pegawai yang sesuai dengan kriteria.</div>';
+                            return;
+                        }
+                        
+                        let pegHtml = `
+                            <table style="width: 100%; border-collapse: collapse; font-size: 12px; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.05); border-radius: 4px; overflow: hidden;">
+                                <thead style="background: #e2e8f0; color: #475569; text-align: left;">
+                                    <tr>
+                                        <th style="padding: 8px 12px; font-weight: 600;">NIK</th>
+                                        <th style="padding: 8px 12px; font-weight: 600;">Nama</th>
+                                        <th style="padding: 8px 12px; font-weight: 600;">Jabatan</th>
+                                        <th style="padding: 8px 12px; font-weight: 600; text-align: center;">H. Kerja</th>
+                                        <th style="padding: 8px 12px; font-weight: 600; text-align: center;">Hadir</th>
+                                        <th style="padding: 8px 12px; font-weight: 600; text-align: center;">Persentase</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+                        
+                        data.data.forEach(p => {
+                            const att = parseFloat(p.persentase_kehadiran ?? 0).toFixed(1);
+                            let attColor = '#10b981'; // green
+                            if (att < 50) attColor = '#ef4444'; // red
+                            else if (att < 80) attColor = '#f59e0b'; // yellow
+                            
+                            pegHtml += `
+                                <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.1s ease; cursor: pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'" onclick="openPegawaiLogModal('${escapeHtml(p.pegawai_id)}', '${escapeHtml(p.nama)}')">
+                                    <td style="padding: 6px 12px; color: #64748b;">${escapeHtml(p.nik)}</td>
+                                    <td style="padding: 6px 12px; font-weight: 600; color: #1e293b;">${escapeHtml(p.nama)}</td>
+                                    <td style="padding: 6px 12px; color: #475569;">${escapeHtml(p.jabatan || '-')}</td>
+                                    <td style="padding: 6px 12px; text-align: center; color: #475569;">${p.hari_kerja}</td>
+                                    <td style="padding: 6px 12px; text-align: center; color: #475569;">${p.check_in}</td>
+                                    <td style="padding: 6px 12px; text-align: center;">
+                                        <span style="display: inline-block; padding: 2px 6px; border-radius: 4px; background: ${attColor}20; color: ${attColor}; font-weight: 700;">${att}%</span>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                        
+                        pegHtml += `</tbody></table>`;
+                        container.innerHTML = pegHtml;
+                    })
+                    .catch(err => {
+                        container.innerHTML = `<div style="text-align:center; color:#991b1b; font-size: 12px;">⚠️ ${escapeHtml(err.message)}</div>`;
+                    });
+            }
+        }
+
+        function formatHariTanggal(dateStr) {
+            if (!dateStr) return '-';
+            const d = new Date(dateStr + (dateStr.length === 10 ? 'T00:00:00' : ''));
+            if (isNaN(d.getTime())) return dateStr;
+            const hariList = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const hari = hariList[d.getDay()];
+            const tgl = String(d.getDate()).padStart(2, '0');
+            const bln = String(d.getMonth() + 1).padStart(2, '0');
+            const thn = d.getFullYear();
+            return `${hari}, ${tgl}-${bln}-${thn}`;
+        }
+
+        window.openPegawaiLogModal = function(pegawaiId, nama) {
+            const modal = document.getElementById('pegawai-log-modal');
+            const titleName = document.getElementById('pegawai-log-name');
+            const content = document.getElementById('pegawai-log-content');
+            
+            modal.style.display = 'flex';
+            titleName.textContent = nama;
+            content.innerHTML = '<div style="text-align:center; padding:30px; color:#6b7280;"><i class="fas fa-spinner fa-spin fa-2x"></i><p style="margin-top:12px;">Memuat riwayat absensi...</p></div>';
+            
+            const periode = document.getElementById('rekap_regional_periode_select').value;
+            const params = new URLSearchParams({ periode, pegawai_id: pegawaiId });
+            
+            fetch(`${hrisRekapRegionalPegawaiDetailUrl}?${params}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status !== 'success') throw new Error(data.message);
+                    
+                    if (!data.data || !data.data.length) {
+                        content.innerHTML = '<div style="text-align:center; padding:30px; color:#6b7280;">Tidak ada riwayat absensi pada bulan ini.</div>';
+                        return;
+                    }
+                    
+                    let html = `
+                        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                            <thead style="background: #f1f5f9; color: #475569; text-align: left; position: sticky; top: -20px;">
+                                <tr>
+                                    <th style="padding: 10px 12px; font-weight: 600; border-bottom: 2px solid #cbd5e1;">Tanggal</th>
+                                    <th style="padding: 10px 12px; font-weight: 600; border-bottom: 2px solid #cbd5e1;">Jam Masuk</th>
+                                    <th style="padding: 10px 12px; font-weight: 600; border-bottom: 2px solid #cbd5e1;">Jam Pulang</th>
+                                    <th style="padding: 10px 12px; font-weight: 600; border-bottom: 2px solid #cbd5e1; text-align: center;">Mood Masuk</th>
+                                    <th style="padding: 10px 12px; font-weight: 600; border-bottom: 2px solid #cbd5e1; text-align: center;">Mood Pulang</th>
+                                    <th style="padding: 10px 12px; font-weight: 600; border-bottom: 2px solid #cbd5e1;">Lokasi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    
+                    data.data.forEach(log => {
+                        html += `
+                            <tr style="border-bottom: 1px solid #e2e8f0;">
+                                <td style="padding: 8px 12px; font-weight: 500; color: #1e293b; white-space: nowrap;">${escapeHtml(formatHariTanggal(log.tanggal))}</td>
+                                <td style="padding: 8px 12px; color: #475569;">${escapeHtml(log.checkin_time || '-')}</td>
+                                <td style="padding: 8px 12px; color: #475569;">${escapeHtml(log.checkout_time || '-')}</td>
+                                <td style="padding: 8px 12px; text-align: center;">
+                                    ${log.mood_in && log.mood_in !== '-' ? `<span style="background:#e0e7ff; color:#4f46e5; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:600;">${escapeHtml(log.mood_in)}</span>` : '-'}
+                                </td>
+                                <td style="padding: 8px 12px; text-align: center;">
+                                    ${log.mood_out && log.mood_out !== '-' ? `<span style="background:#e0e7ff; color:#4f46e5; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:600;">${escapeHtml(log.mood_out)}</span>` : '-'}
+                                </td>
+                                <td style="padding: 8px 12px; color: #64748b; font-size: 11px;">${escapeHtml(log.lokasi || '-')}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `</tbody></table>`;
+                    content.innerHTML = html;
+                })
+                .catch(err => {
+                    content.innerHTML = `<div style="text-align:center; padding:30px; color:#ef4444;">⚠️ ${escapeHtml(err.message)}</div>`;
+                });
+        }
+
+
+        function loadRekapRegionalData() {
+            const periode = rekapRegionalPeriodeSelect.value;
+            if (!periode) return;
+
+            rekapRegionalChartContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#6b7280;"><i class="fas fa-spinner fa-spin"></i> Memuat rekap seluruh regional...</div>';
+            document.getElementById('rekap-regional-periode-info').textContent = formatPeriodLabel(periode);
+
+            const params = new URLSearchParams({ periode });
+            fetch(`${hrisRekapRegionalUrl}?${params}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status !== 'success') throw new Error(data.message);
+                    
+                    rekapRegionalChartContainer.innerHTML = '';
+                    if (!data.data || !data.data.length) {
+                        rekapRegionalChartContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#6b7280;">Tidak ada data untuk periode ini.</div>';
+                        return;
+                    }
+
+                    const chartArea = document.createElement('div');
+                    chartArea.style.cssText = 'position: relative; height: 350px; margin-bottom: 50px; margin-left: 30px; margin-top: 20px;';
+
+                    for (let i = 0; i <= 100; i += 20) {
+                        const line = document.createElement('div');
+                        const borderStyle = i === 0 ? 'solid #94a3b8' : 'dashed #cbd5e1';
+                        line.style.cssText = `position: absolute; left: 0; right: 0; bottom: ${i}%; height: 1px; border-bottom: 1px ${borderStyle}; z-index: 0;`;
+                        
+                        const label = document.createElement('div');
+                        label.style.cssText = `position: absolute; left: -35px; bottom: calc(${i}% - 7px); width: 30px; text-align: right; font-size: 11px; color: #64748b; font-weight: 500;`;
+                        label.textContent = i;
+                        
+                        chartArea.appendChild(line);
+                        chartArea.appendChild(label);
+                    }
+
+                    const colsContainer = document.createElement('div');
+                    colsContainer.style.cssText = 'position: absolute; top: 0; bottom: 0; left: 0; right: 0; display: flex; align-items: flex-end; justify-content: space-around; z-index: 1;';
+
+                    data.data.forEach((row) => {
+                        colsContainer.appendChild(renderRekapRegionalColumn(row));
+                    });
+
+                    chartArea.appendChild(colsContainer);
+                    rekapRegionalChartContainer.appendChild(chartArea);
+                })
+                .catch(err => {
+                    rekapRegionalChartContainer.innerHTML = `<div style="text-align:center; padding:20px; color:#991b1b;">⚠️ ${escapeHtml(err.message)}</div>`;
+                });
+        }
+
+        rekapRegionalPeriodeSelect.addEventListener('change', loadRekapRegionalData);
 
         mapPopupClose.addEventListener('click', () => {
             mapPopupOverlay.classList.remove('show');
