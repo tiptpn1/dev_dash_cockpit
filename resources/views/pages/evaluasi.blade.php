@@ -768,6 +768,7 @@
                         <select id="app_select" class="form-select">
                             <option value="Digital Farming">DFarm Presensi</option>
                             <option value="Digital Farming Produksi">DFarm Prestasi</option>
+                            <option value="Digital Farming BKM">DFarm & BKM SAP</option>
                             <option value="HRIS" selected>HRIS</option>
                             <option value="MAIA">MAIA</option>
                             <option value="MONIKA">MONIKA</option>
@@ -1738,6 +1739,14 @@
                 window.location.replace('/dfarmkaretproduksi');
                 return;
             }
+             console.log(selectedApp);
+            // Redirect to Digital Farming BKM if selected
+            if (selectedApp === 'Digital Farming BKM') {
+                console.log('Redirecting to Digital Farming BKM...');
+                // window.location.href = '/dfarmkaretbkmsap';
+                window.location.replace('/dfarmkaretbkmsap');
+                return;
+            }
 
             // Redirect to SAPA-Amanah if selected
             if (selectedApp === 'SAPA-Amanah') {
@@ -1859,6 +1868,7 @@
         // Only periodeSelect triggers updateDashboard
         // appSelect redirect handled by application-select-handler.js
         periodeSelect.addEventListener('change', updateDashboard);
+        appSelect.addEventListener('change', updateDashboard);
 
         updateDashboard();
 

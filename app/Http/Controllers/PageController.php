@@ -179,6 +179,11 @@ class PageController extends Controller
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/719192ff-2e4c-4680-a6f1-ad1591eac05c/page/p_wsn4ogdumd';
         return view('pages/overview_page', compact('linkiframe'));
     }
+    public function dfarmkaretbkm()
+    {
+        $linkiframe = 'https://datastudio.google.com/embed/reporting/f95793e2-da46-4e77-b98d-9dcb4ac0a156/page/78vkF';
+        return view('pages/dfarm/dfarm_karet_presensi_bkm_dfarm', compact('linkiframe'));
+    }
     public function dfarmkaretpresensi()
     {
         $regional = $_GET['id_reg'] ?? '';

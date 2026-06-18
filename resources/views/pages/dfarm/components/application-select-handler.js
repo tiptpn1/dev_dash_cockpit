@@ -19,6 +19,13 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.href = '/dfarmkaretproduksi';
         return;
       }
+      console.log(selectedApp);
+      // Redirect to Digital Farming BKM if selected
+      if (selectedApp === 'Digital Farming BKM') {
+        console.log('TEST data');
+        window.location.href = '/dfarmkaretbkmsap';
+        return;
+      }
 
       // Redirect to HRIS if selected
       if (selectedApp === 'HRIS') {

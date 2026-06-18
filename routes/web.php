@@ -72,6 +72,7 @@ Route::middleware('auth:custom')->group(function () {
     Route::post('/ajax_dfarmpemeliharaan', [PageController::class, 'ajax_dfarmpemeliharaan'])->name('ajax_dfarmpemeliharaan');
     Route::get('/get_data_kebun', [ApiController::class, 'get_data_kebun'])->name('get_data_kebun');
     Route::get('/get_data_aktivitas', [ApiController::class, 'get_data_aktivitas'])->name('get_data_aktivitas');
+    Route::get('/dfarmkaretbkmsap', [PageController::class, 'dfarmkaretbkm'])->name('dfarmkaretbkm');
 
     Route::get('/sapa-evaluasi', [PageController::class, 'sapaEvaluasi'])->name('sapa.evaluasi');
     Route::get('/bpd-evaluasi', [PageController::class, 'bpdEvaluasi'])->name('bpd.evaluasi');

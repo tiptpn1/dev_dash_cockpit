@@ -22,6 +22,12 @@ function initializeApplicationSelect() {
         return;
       }
 
+      // Redirect to Digital Farming Produksi if selected
+      if (selectedApp === 'Digital Farming BKM') {
+        window.location.href = '/dfarmkaretbkmsap';
+        return;
+      }
+
       // Redirect to HRIS if selected
       if (selectedApp === 'HRIS') {
         window.location.href = '/evaluasi-aplikasi';
