@@ -184,6 +184,10 @@ Route::middleware(['check.token.or.session'])->group(function () {
     Route::get('/evaluasi-aplikasi/hris-perkaryawan', [PageController::class, 'evaluasi_hris_perkaryawan'])->name('evaluasi_hris_perkaryawan');
     Route::get('/evaluasi-aplikasi/hris-pegawai-list', [PageController::class, 'evaluasi_hris_pegawai_list'])->name('evaluasi_hris_pegawai_list');
     Route::get('/evaluasi-aplikasi/hris-regional-list', [PageController::class, 'evaluasi_hris_regional_list'])->name('evaluasi_hris_regional_list');
+    Route::get('/evaluasi-aplikasi/hris-rekap-regional', [PageController::class, 'evaluasi_hris_rekap_regional'])->name('evaluasi_hris_rekap_regional');
+    Route::get('/evaluasi-aplikasi/hris-rekap-regional-detail', [PageController::class, 'evaluasi_hris_rekap_regional_detail'])->name('evaluasi_hris_rekap_regional_detail');
+    Route::get('/evaluasi-aplikasi/hris-rekap-regional-pegawai', [PageController::class, 'evaluasi_hris_rekap_regional_pegawai'])->name('evaluasi_hris_rekap_regional_pegawai');
+    Route::get('/evaluasi-aplikasi/hris-rekap-regional-pegawai-detail', [PageController::class, 'evaluasi_hris_rekap_regional_pegawai_detail'])->name('evaluasi_hris_rekap_regional_pegawai_detail');
 
 });
 
