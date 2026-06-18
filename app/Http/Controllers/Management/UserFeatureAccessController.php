@@ -35,67 +35,6 @@ class UserFeatureAccessController extends Controller
         return view('management.access.index', compact('users'));
     }
 
-    /**
-     * Export access to Excel
-     */
-    public function export(Request $request)
-    {
-        if (!auth('custom')->user() || !auth('custom')->user()->hasFeature('management_access')) {
-            abort(403, 'Akses ditolak: Anda tidak memiliki fitur Access Management.');
-        }
-
-        $query = CustomUser::with('features');
-
-        // Search functionality
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('username', 'like', "%{$search}%")
-                  ->orWhere('nik', 'like', "%{$search}%");
-            });
-        }
-
-        $users = $query->get();
-
-        $fileName = 'Export_Manajemen_Akses_' . date('Y-m-d_His') . '.xls';
-
-        $headers = [
-            "Content-type"        => "application/vnd.ms-excel",
-            "Content-Disposition" => "attachment; filename=$fileName",
-            "Pragma"              => "no-cache",
-            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
-            "Expires"             => "0"
-        ];
-
-        $callback = function() use($users) {
-            echo '<table border="1">';
-            echo '<tr style="background-color: #16A34A; color: #FFFFFF;">';
-            echo '<th>No.</th><th>Username</th><th>NIK</th><th>Plant</th><th>Role</th><th>Fitur Akses</th>';
-            echo '</tr>';
-
-            foreach ($users as $index => $user) {
-                $roleDisplay = $user->role ?? '-';
-                if ($user->role === 'admin') $roleDisplay = 'ADMIN';
-                elseif ($user->role === 'superadmin') $roleDisplay = 'SUPERADMIN';
-                elseif ($user->role === 'viewer_ho' || $user->role === 'viewer_unit') $roleDisplay = 'VIEWER';
-                else $roleDisplay = strtoupper($roleDisplay);
-                
-                $featuresList = $user->features->pluck('name')->implode(', ');
-
-                echo '<tr>';
-                echo '<td style="text-align: center;">' . ($index + 1) . '</td>';
-                echo '<td>' . htmlspecialchars($user->username) . '</td>';
-                echo '<td>' . htmlspecialchars($user->nik ?? '-') . '</td>';
-                echo '<td>' . htmlspecialchars($user->plant ?? '-') . '</td>';
-                echo '<td>' . htmlspecialchars($roleDisplay) . '</td>';
-                echo '<td>' . htmlspecialchars($featuresList ?: 'Tidak ada fitur') . '</td>';
-                echo '</tr>';
-            }
-            echo '</table>';
-        };
-
-        return response()->stream($callback, 200, $headers);
-    }
 
     /**
      * Show form to assign features to a specific user
