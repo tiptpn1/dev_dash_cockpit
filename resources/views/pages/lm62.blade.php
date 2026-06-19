@@ -513,28 +513,31 @@
                     <div style="display:flex; align-items:center; gap:8px;">
                         <span id="resultInfo" style="color:#93c5fd; font-size:12px;"></span>
                         <button id="btnExportExcel" onclick="exportExcel()" style="
-                                                                                    display:inline-flex; align-items:center; gap:5px;
-                                                                                    padding:6px 14px; background:#16a34a; color:#fff;
-                                                                                    border:none; border-radius:6px; font-size:12px;
-                                                                                    font-weight:700; cursor:pointer;">
+                                                                                        display:inline-flex; align-items:center; gap:5px;
+                                                                                        padding:6px 14px; background:#16a34a; color:#fff;
+                                                                                        border:none; border-radius:6px; font-size:12px;
+                                                                                        font-weight:700; cursor:pointer;">
                             <i class="fas fa-file-excel"></i> Excel
                         </button>
                         <button id="btnExportPdf" onclick="exportPdf()" style="
-                                                                                    display:inline-flex; align-items:center; gap:5px;
-                                                                                    padding:6px 14px; background:#dc2626; color:#fff;
-                                                                                    border:none; border-radius:6px; font-size:12px;
-                                                                                    font-weight:700; cursor:pointer;">
+                                                                                        display:inline-flex; align-items:center; gap:5px;
+                                                                                        padding:6px 14px; background:#dc2626; color:#fff;
+                                                                                        border:none; border-radius:6px; font-size:12px;
+                                                                                        font-weight:700; cursor:pointer;">
                             <i class="fas fa-file-pdf"></i> PDF
                         </button>
                     </div>
                 </div>
-                
+
                 <!-- Local Filter Box -->
-                <div id="localFilterContainer" style="padding: 12px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display:flex; align-items:center; gap: 12px;">
+                <div id="localFilterContainer"
+                    style="padding: 12px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display:flex; align-items:center; gap: 12px;">
                     <i class="fas fa-search" style="color:#94a3b8;"></i>
-                    <input type="text" id="localMaterialFilter" placeholder="Ketik kode atau nama material untuk menyaring hasil di bawah..." style="flex:1; border:1px solid #cbd5e1; padding:6px 12px; border-radius:6px; font-size:13px; outline:none; color:#1f2937; background-color:#ffffff;" />
+                    <input type="text" id="localMaterialFilter"
+                        placeholder="Ketik kode atau nama material untuk menyaring hasil di bawah..."
+                        style="flex:1; border:1px solid #cbd5e1; padding:6px 12px; border-radius:6px; font-size:13px; outline:none; color:#1f2937; background-color:#ffffff;" />
                 </div>
-                
+
                 <div class="table-wrapper">
                     <div id="tableLoading" style="display:none; text-align:center; padding:24px; color:#6b7280;">
                         <i class="fas fa-spinner fa-spin"></i> Memuat data...
@@ -566,13 +569,13 @@
         };
 
         document.addEventListener('DOMContentLoaded', function () {
-            
+
             // Listener untuk Local Filter (dengan Debounce agar tidak lag)
             let filterTimeout;
-            document.getElementById('localMaterialFilter')?.addEventListener('input', function(e) {
+            document.getElementById('localMaterialFilter')?.addEventListener('input', function (e) {
                 clearTimeout(filterTimeout);
                 const keyword = e.target.value.toLowerCase();
-                
+
                 filterTimeout = setTimeout(() => {
                     const filtered = _rawData_lm62.filter(r => {
                         const matCode = (getVal(r, 'material', 'kode', 'kdbe', 'material_code', 'id_material') || '').toString().toLowerCase();
@@ -696,7 +699,7 @@
             }
 
             // ── Fungsi Render Tabel ──────────────────────────────────────────────────────
-            window.renderTableLM62 = function(rows) {
+            window.renderTableLM62 = function (rows) {
                 const result = document.getElementById('tableResult');
                 const info = document.getElementById('resultInfo');
 
@@ -712,222 +715,222 @@
                 // Ambil semua key dari baris pertama RAW data agar konsisten
                 const headers = Object.keys(_rawData_lm62[0] || rows[0]);
 
-                        // Kolom yang dipaksa menjadi string (tidak dihitung sebagai angka)
-                        const STRING_COLS = new Set(['group_id', 'material', 'plant']);
+                // Kolom yang dipaksa menjadi string (tidak dihitung sebagai angka)
+                const STRING_COLS = new Set(['group_id', 'material', 'plant']);
 
-                        // ── Kolom yang disubtotal: scan SEMUA baris agar kolom yg null di row[0] tetap terdeteksi ────
-                        const NUMERIC_COLS = new Set(
-                            headers.filter(h =>
-                                !STRING_COLS.has(h.toLowerCase()) && rows.some(r => {
-                                    const v = r[h];
-                                    return v !== null && v !== '' && v !== undefined && !isNaN(parseFloat(v));
-                                })
-                            )
-                        );
-                        const isSubtotalCol = h => NUMERIC_COLS.has(h);
+                // ── Kolom yang disubtotal: scan SEMUA baris agar kolom yg null di row[0] tetap terdeteksi ────
+                const NUMERIC_COLS = new Set(
+                    headers.filter(h =>
+                        !STRING_COLS.has(h.toLowerCase()) && rows.some(r => {
+                            const v = r[h];
+                            return v !== null && v !== '' && v !== undefined && !isNaN(parseFloat(v));
+                        })
+                    )
+                );
+                const isSubtotalCol = h => NUMERIC_COLS.has(h);
 
-                        // ── Helper: format angka ID ───────────────────────────────────
-                        const fmt = v => {
-                            if (v === null || v === '' || v === undefined) return '-';
-                            const n = parseFloat(v);
-                            if (isNaN(n)) return v ?? '-';
-                            // Jika nilai asli dari BigQuery punya desimal → paksa 2 digit di belakang koma
-                            const hasDecimal = String(v).includes('.');
-                            return n.toLocaleString('id-ID', {
-                                minimumFractionDigits: hasDecimal ? 2 : 0,
-                                maximumFractionDigits: 2,
-                            });
-                        };
-                        const isNum = v => v !== null && v !== '' && v !== undefined && !isNaN(parseFloat(v));
+                // ── Helper: format angka ID ───────────────────────────────────
+                const fmt = v => {
+                    if (v === null || v === '' || v === undefined) return '-';
+                    const n = parseFloat(v);
+                    if (isNaN(n)) return v ?? '-';
+                    // Cek apakah angka benar-benar memiliki nilai desimal (bukan sekedar .00)
+                    const hasDecimal = n % 1 !== 0;
+                    return n.toLocaleString('id-ID', {
+                        minimumFractionDigits: hasDecimal ? 2 : 0,
+                        maximumFractionDigits: 2,
+                    });
+                };
+                const isNum = v => v !== null && v !== '' && v !== undefined && !isNaN(parseFloat(v));
 
-                        // ── Judul dinamis dari nilai filter ──────────────────────────
-                        const bulanNames = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei',
-                            'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                // ── Judul dinamis dari nilai filter ──────────────────────────
+                const bulanNames = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei',
+                    'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
-                        const regionalSel = document.getElementById('regionalFilter');
-                        const plantSel = document.getElementById('plantFilter');
-                        const bulanSel2 = document.getElementById('bulanFilter');
-                        const tahunSel2 = document.getElementById('tahunFilter');
-                        const regionalText = regionalSel.selectedIndex >= 0 && regionalSel.value
-                            ? 'Regional ' + regionalSel.options[regionalSel.selectedIndex].text
-                            : 'Semua Regional';
-                        const plantText = plantSel.selectedIndex >= 0 && plantSel.value
-                            ? plantSel.options[plantSel.selectedIndex].text
-                            : 'Semua Kebun';
-                        const bulanText = bulanSel2.value ? 'Periode ' + bulanNames[parseInt(bulanSel2.value)] : 'Semua Bulan';
-                        const tahunText = tahunSel2.value || 'Semua Tahun';
+                const regionalSel = document.getElementById('regionalFilter');
+                const plantSel = document.getElementById('plantFilter');
+                const bulanSel2 = document.getElementById('bulanFilter');
+                const tahunSel2 = document.getElementById('tahunFilter');
+                const regionalText = regionalSel.selectedIndex >= 0 && regionalSel.value
+                    ? 'Regional ' + regionalSel.options[regionalSel.selectedIndex].text
+                    : 'Semua Regional';
+                const plantText = plantSel.selectedIndex >= 0 && plantSel.value
+                    ? plantSel.options[plantSel.selectedIndex].text
+                    : 'Semua Kebun';
+                const bulanText = bulanSel2.value ? 'Periode ' + bulanNames[parseInt(bulanSel2.value)] : 'Semua Bulan';
+                const tahunText = tahunSel2.value || 'Semua Tahun';
 
-                        const judulLaporan = `LM62 - ${regionalText} - ${plantText}  ${bulanText}  ${tahunText}`;
+                const judulLaporan = `LM62 - ${regionalText} - ${plantText}  ${bulanText}  ${tahunText}`;
 
-                        // Simpan data mentah untuk export ─────────────────────────────
-                        _exportData = {
-                            rows,
-                            headers: Object.keys(rows[0]),
-                            judul: judulLaporan,
-                            numericCols: NUMERIC_COLS,
-                        };
+                // Simpan data mentah untuk export ─────────────────────────────
+                _exportData = {
+                    rows,
+                    headers: Object.keys(rows[0]),
+                    judul: judulLaporan,
+                    numericCols: NUMERIC_COLS,
+                };
 
-                        // ── Header ───────────────────────────────────────────────────
-                        let html = '<table class="report-table" style="font-size:12.5px;">';
-                        html += '<thead>';
-                        // Baris judul (full colspan)
-                        html += `<tr>
-                                                                                                        <th colspan="${headers.length}" style="
-                                                                                                            background:#ffffff; color:#111827;
-                                                                                                            text-align:center; font-size:13px;
-                                                                                                            font-weight:800; padding:10px 16px;
-                                                                                                            letter-spacing:0.05em; border-bottom:2px solid #16a34a;">
-                                                                                                            ${judulLaporan}
-                                                                                                        </th>
-                                                                                                    </tr>`;
-                        // Baris kolom header
-                        html += '<tr>';
-                        headers.forEach(h => {
-                            html += `<th style="text-align:left; padding:8px 12px; background:#15803d; color:#fff; white-space:nowrap;">${h.replace(/_/g, ' ').toUpperCase()}</th>`;
-                        });
-                        html += '</tr></thead>';
+                // ── Header ───────────────────────────────────────────────────
+                let html = '<table class="report-table" style="font-size:12.5px;">';
+                html += '<thead>';
+                // Baris judul (full colspan)
+                html += `<tr>
+                                                                                                            <th colspan="${headers.length}" style="
+                                                                                                                background:#ffffff; color:#111827;
+                                                                                                                text-align:center; font-size:13px;
+                                                                                                                font-weight:800; padding:10px 16px;
+                                                                                                                letter-spacing:0.05em; border-bottom:2px solid #16a34a;">
+                                                                                                                ${judulLaporan}
+                                                                                                            </th>
+                                                                                                        </tr>`;
+                // Baris kolom header
+                html += '<tr>';
+                headers.forEach(h => {
+                    html += `<th style="text-align:left; padding:8px 12px; background:#15803d; color:#fff; white-space:nowrap;">${h.replace(/_/g, ' ').toUpperCase()}</th>`;
+                });
+                html += '</tr></thead>';
 
-                        // ── Body dengan subtotal ─────────────────────────────────────
-                        html += '<tbody>';
+                // ── Body dengan subtotal ─────────────────────────────────────
+                html += '<tbody>';
 
-                        // Akumulator subtotal
-                        const initAcc = () => Object.fromEntries(headers.map(h => [h, 0]));
-                        const addToAcc = (acc, row) => headers.forEach(h => { if (isSubtotalCol(h) && isNum(row[h])) acc[h] += parseFloat(row[h]); });
+                // Akumulator subtotal
+                const initAcc = () => Object.fromEntries(headers.map(h => [h, 0]));
+                const addToAcc = (acc, row) => headers.forEach(h => { if (isSubtotalCol(h) && isNum(row[h])) acc[h] += parseFloat(row[h]); });
 
-                        let accTotal = initAcc();  // ← Grand total
+                let accTotal = initAcc();  // ← Grand total
 
-                        // Step 1: Grouping by material_type_desc then material
+                // Step 1: Grouping by material_type_desc then material
 
-                        const groupedData = {};
-                        rows.forEach(row => {
-                            const typeDesc = getVal(row, 'material_type_desc', 'material_group_desc') || 'Tidak Diketahui';
-                            const matCode = getVal(row, 'material', 'kode', 'kdbe', 'material_code', 'id_material');
-                            const matDesc = getVal(row, 'material_desc', 'nama_material', 'description');
+                const groupedData = {};
+                rows.forEach(row => {
+                    const typeDesc = getVal(row, 'material_type_desc', 'material_group_desc') || 'Tidak Diketahui';
+                    const matCode = getVal(row, 'material', 'kode', 'kdbe', 'material_code', 'id_material');
+                    const matDesc = getVal(row, 'material_desc', 'nama_material', 'description');
 
-                            let mat = 'Tidak Diketahui';
-                            if (matCode && matDesc) mat = `${matCode} - ${matDesc}`;
-                            else if (matCode) mat = matCode;
-                            else if (matDesc) mat = matDesc;
+                    let mat = 'Tidak Diketahui';
+                    if (matCode && matDesc) mat = `${matCode} - ${matDesc}`;
+                    else if (matCode) mat = matCode;
+                    else if (matDesc) mat = matDesc;
 
-                            if (!groupedData[typeDesc]) {
-                                groupedData[typeDesc] = { rows: [], acc: initAcc(), materials: {} };
-                            }
-                            groupedData[typeDesc].rows.push(row);
-                            addToAcc(groupedData[typeDesc].acc, row);
+                    if (!groupedData[typeDesc]) {
+                        groupedData[typeDesc] = { rows: [], acc: initAcc(), materials: {} };
+                    }
+                    groupedData[typeDesc].rows.push(row);
+                    addToAcc(groupedData[typeDesc].acc, row);
 
-                            if (!groupedData[typeDesc].materials[mat]) {
-                                groupedData[typeDesc].materials[mat] = { rows: [], acc: initAcc() };
-                            }
-                            groupedData[typeDesc].materials[mat].rows.push(row);
-                            addToAcc(groupedData[typeDesc].materials[mat].acc, row);
+                    if (!groupedData[typeDesc].materials[mat]) {
+                        groupedData[typeDesc].materials[mat] = { rows: [], acc: initAcc() };
+                    }
+                    groupedData[typeDesc].materials[mat].rows.push(row);
+                    addToAcc(groupedData[typeDesc].materials[mat].acc, row);
 
-                            addToAcc(accTotal, row);
-                        });
+                    addToAcc(accTotal, row);
+                });
 
-                        // Function untuk toggle wrapper
-                        window.toggleWrapper = function (id) {
-                            const icon = document.querySelector(`.expand-icon-${id}`);
-                            const rowsToToggle = document.querySelectorAll(`.wrapper-${id}`);
+                // Function untuk toggle wrapper
+                window.toggleWrapper = function (id) {
+                    const icon = document.querySelector(`.expand-icon-${id}`);
+                    const rowsToToggle = document.querySelectorAll(`.wrapper-${id}`);
 
-                            let isExpanded = false;
-                            if (icon) {
-                                if (icon.style.transform === 'rotate(90deg)') {
-                                    icon.style.transform = 'rotate(0deg)';
-                                    isExpanded = false;
-                                } else {
-                                    icon.style.transform = 'rotate(90deg)';
-                                    isExpanded = true;
-                                }
-                            }
+                    let isExpanded = false;
+                    if (icon) {
+                        if (icon.style.transform === 'rotate(90deg)') {
+                            icon.style.transform = 'rotate(0deg)';
+                            isExpanded = false;
+                        } else {
+                            icon.style.transform = 'rotate(90deg)';
+                            isExpanded = true;
+                        }
+                    }
 
-                            rowsToToggle.forEach(r => {
-                                if (isExpanded) {
-                                    r.style.display = '';
-                                } else {
-                                    r.style.display = 'none';
-                                    if (r.classList.contains('mat-row')) {
-                                        const match = r.className.match(/mat-id-([^\s]+)/);
-                                        if (match) {
-                                            const childId = match[1];
-                                            const childIcon = document.querySelector(`.expand-icon-${childId}`);
-                                            if (childIcon && childIcon.style.transform === 'rotate(90deg)') {
-                                                childIcon.style.transform = 'rotate(0deg)';
-                                            }
-                                            document.querySelectorAll(`.wrapper-${childId}`).forEach(cr => cr.style.display = 'none');
-                                        }
+                    rowsToToggle.forEach(r => {
+                        if (isExpanded) {
+                            r.style.display = '';
+                        } else {
+                            r.style.display = 'none';
+                            if (r.classList.contains('mat-row')) {
+                                const match = r.className.match(/mat-id-([^\s]+)/);
+                                if (match) {
+                                    const childId = match[1];
+                                    const childIcon = document.querySelector(`.expand-icon-${childId}`);
+                                    if (childIcon && childIcon.style.transform === 'rotate(90deg)') {
+                                        childIcon.style.transform = 'rotate(0deg)';
                                     }
+                                    document.querySelectorAll(`.wrapper-${childId}`).forEach(cr => cr.style.display = 'none');
                                 }
-                            });
-                        };
-
-                        let typeIdx = 0;
-                        for (const [typeDesc, typeData] of Object.entries(groupedData)) {
-                            typeIdx++;
-                            const typeId = `type-${typeIdx}`;
-
-                            html += `<tr class="divisi-row type-row" onclick="toggleWrapper('${typeId}')" style="background:#e0f2fe; cursor:pointer; border-top: 2px solid #bae6fd;">`;
-                            html += `<td colspan="2" style="font-weight:700; color:#0369a1; padding:8px 12px; border:1px solid #bae6fd; white-space:nowrap;"><i class="fas fa-chevron-right expand-icon-${typeId}" style="margin-right:6px; transition:transform 0.2s;"></i> ${typeDesc}</td>`;
-
-                            headers.forEach((h, idx) => {
-                                if (idx < 2) return;
-                                if (isSubtotalCol(h)) {
-                                    html += `<td style="font-weight:700; color:#0369a1; text-align:right; padding:8px 12px; border:1px solid #bae6fd; white-space:nowrap;">${fmt(typeData.acc[h])}</td>`;
-                                } else {
-                                    html += `<td style="border:1px solid #bae6fd;"></td>`;
-                                }
-                            });
-                            html += `</tr>`;
-
-                            let matIdx = 0;
-                            for (const [mat, matData] of Object.entries(typeData.materials)) {
-                                matIdx++;
-                                const matId = `${typeId}-mat-${matIdx}`;
-
-                                html += `<tr class="divisi-row mat-row mat-id-${matId} wrapper-${typeId}" onclick="toggleWrapper('${matId}')" style="background:#f0fdf4; cursor:pointer; display:none; border-top: 1px solid #bbf7d0;">`;
-                                html += `<td colspan="2" style="font-weight:600; color:#166534; padding:6px 12px 6px 24px; border:1px solid #bbf7d0; white-space:nowrap;"><i class="fas fa-chevron-right expand-icon-${matId}" style="margin-right:6px; transition:transform 0.2s;"></i> ${mat}</td>`;
-
-                                headers.forEach((h, idx) => {
-                                    if (idx < 2) return;
-                                    if (isSubtotalCol(h)) {
-                                        html += `<td style="font-weight:600; color:#166534; text-align:right; padding:6px 12px; border:1px solid #bbf7d0; white-space:nowrap;">${fmt(matData.acc[h])}</td>`;
-                                    } else {
-                                        html += `<td style="border:1px solid #bbf7d0;"></td>`;
-                                    }
-                                });
-                                html += `</tr>`;
-
-                                matData.rows.forEach((row, i) => {
-                                    const bg = i % 2 === 0 ? '#fff' : '#f9fafb';
-                                    html += `<tr class="data-row wrapper-${matId} wrapper-${typeId}-data" style="background:${bg}; display:none;">`;
-                                    headers.forEach(h => {
-                                        const val = row[h];
-                                        const num = NUMERIC_COLS.has(h) && isNum(val);
-                                        html += `<td style="padding:5px 12px; border:1px solid #e5e7eb; text-align:${num ? 'right' : 'left'}; white-space:nowrap;">${num ? fmt(val) : (val ?? '-')}</td>`;
-                                    });
-                                    html += `</tr>`;
-                                });
                             }
                         }
+                    });
+                };
 
-                        // ── Grand Total ───────────────────────────────────────────────
-                        let gt = `<tr style="background:#14532d; color:#fff; font-weight:900; border-top:3px solid #052e16;">`;
+                let typeIdx = 0;
+                for (const [typeDesc, typeData] of Object.entries(groupedData)) {
+                    typeIdx++;
+                    const typeId = `type-${typeIdx}`;
+
+                    html += `<tr class="divisi-row type-row" onclick="toggleWrapper('${typeId}')" style="background:#e0f2fe; cursor:pointer; border-top: 2px solid #bae6fd;">`;
+                    html += `<td colspan="2" style="font-weight:700; color:#0369a1; padding:8px 12px; border:1px solid #bae6fd; white-space:nowrap;"><i class="fas fa-chevron-right expand-icon-${typeId}" style="margin-right:6px; transition:transform 0.2s;"></i> ${typeDesc}</td>`;
+
+                    headers.forEach((h, idx) => {
+                        if (idx < 2) return;
+                        if (isSubtotalCol(h)) {
+                            html += `<td style="font-weight:700; color:#0369a1; text-align:right; padding:8px 12px; border:1px solid #bae6fd; white-space:nowrap;">${fmt(typeData.acc[h])}</td>`;
+                        } else {
+                            html += `<td style="border:1px solid #bae6fd;"></td>`;
+                        }
+                    });
+                    html += `</tr>`;
+
+                    let matIdx = 0;
+                    for (const [mat, matData] of Object.entries(typeData.materials)) {
+                        matIdx++;
+                        const matId = `${typeId}-mat-${matIdx}`;
+
+                        html += `<tr class="divisi-row mat-row mat-id-${matId} wrapper-${typeId}" onclick="toggleWrapper('${matId}')" style="background:#f0fdf4; cursor:pointer; display:none; border-top: 1px solid #bbf7d0;">`;
+                        html += `<td colspan="2" style="font-weight:600; color:#166534; padding:6px 12px 6px 24px; border:1px solid #bbf7d0; white-space:nowrap;"><i class="fas fa-chevron-right expand-icon-${matId}" style="margin-right:6px; transition:transform 0.2s;"></i> ${mat}</td>`;
+
                         headers.forEach((h, idx) => {
-                            if (idx === 0) {
-                                gt += `<td colspan="2" style="padding:7px 12px; border:1px solid #166534; text-align:right; white-space:nowrap; color:#fff;">JUMLAH TOTAL</td>`;
-                            } else if (idx === 1) {
-                                return;
-                            } else if (isSubtotalCol(h)) {
-                                gt += `<td style="padding:7px 12px; border:1px solid #166534; text-align:right; white-space:nowrap; color:#fff;">${fmt(accTotal[h])}</td>`;
+                            if (idx < 2) return;
+                            if (isSubtotalCol(h)) {
+                                html += `<td style="font-weight:600; color:#166534; text-align:right; padding:6px 12px; border:1px solid #bbf7d0; white-space:nowrap;">${fmt(matData.acc[h])}</td>`;
                             } else {
-                                gt += `<td style="padding:7px 12px; border:1px solid #166534; color:#fff;"></td>`;
+                                html += `<td style="border:1px solid #bbf7d0;"></td>`;
                             }
                         });
-                        gt += '</tr>';
-                        html += gt;
+                        html += `</tr>`;
 
-                        html += '</tbody></table>';
+                        matData.rows.forEach((row, i) => {
+                            const bg = i % 2 === 0 ? '#fff' : '#f9fafb';
+                            html += `<tr class="data-row wrapper-${matId} wrapper-${typeId}-data" style="background:${bg}; display:none;">`;
+                            headers.forEach(h => {
+                                const val = row[h];
+                                const num = NUMERIC_COLS.has(h) && isNum(val);
+                                html += `<td style="padding:5px 12px; border:1px solid #e5e7eb; text-align:${num ? 'right' : 'left'}; white-space:nowrap;">${num ? fmt(val) : (val ?? '-')}</td>`;
+                            });
+                            html += `</tr>`;
+                        });
+                    }
+                }
 
-                        result.innerHTML = html;
+                // ── Grand Total ───────────────────────────────────────────────
+                let gt = `<tr style="background:#14532d; color:#fff; font-weight:900; border-top:3px solid #052e16;">`;
+                headers.forEach((h, idx) => {
+                    if (idx === 0) {
+                        gt += `<td colspan="2" style="padding:7px 12px; border:1px solid #166534; text-align:right; white-space:nowrap; color:#fff;">JUMLAH TOTAL</td>`;
+                    } else if (idx === 1) {
+                        return;
+                    } else if (isSubtotalCol(h)) {
+                        gt += `<td style="padding:7px 12px; border:1px solid #166534; text-align:right; white-space:nowrap; color:#fff;">${fmt(accTotal[h])}</td>`;
+                    } else {
+                        gt += `<td style="padding:7px 12px; border:1px solid #166534; color:#fff;"></td>`;
+                    }
+                });
+                gt += '</tr>';
+                html += gt;
+
+                html += '</tbody></table>';
+
+                result.innerHTML = html;
             };
 
             // Filter form submit

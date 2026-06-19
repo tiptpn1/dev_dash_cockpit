@@ -414,6 +414,15 @@ class BigQueryController extends Controller
     public function get_data_lm34_by_customer(Request $request)
     {
         $komoditi = strtolower($request->komoditi);
+        $nama_komoditi = '';
+        if ($komoditi == 'kr') {
+            $nama_komoditi = 'karet';
+        } else if ($komoditi == 'th') {
+            $nama_komoditi = 'teh';
+        } else if ($komoditi == 'kp') {
+            $nama_komoditi = 'kopi';
+        }
+
         $region = $request->region;
         $plant = $request->plant;
         $tahun = $request->tahun;
@@ -427,7 +436,7 @@ class BigQueryController extends Controller
         try {
             $query = "
             CALL `dashboard-cockpit.data_dash.sp_laporan_lm34_by_customer`(
-                '$komoditi',
+                '$nama_komoditi',
                 '$region',
                 '$plant',
                 '$tahun',
