@@ -39,7 +39,7 @@ Route::get('/portallm', [PageController::class, 'portallm'])->name('portallm');
 
 Route::middleware('auth:custom')->group(function () {
     Route::get('/', [PageController::class, 'overview'])->name('overview');
-    
+
     // Change Password Routes
     Route::get('/ubah-password', [\App\Http\Controllers\Auth\PasswordController::class, 'showChangePasswordForm'])->name('password.change');
     Route::post('/ubah-password', [\App\Http\Controllers\Auth\PasswordController::class, 'updatePassword'])->name('password.update');
@@ -113,7 +113,9 @@ Route::middleware('auth:custom')->group(function () {
 
     Route::get('/lm13', [PageController::class, 'lm13'])->name('lm13');
     Route::get('/lm14', [PageController::class, 'lm14'])->name('lm14');
+    Route::get('/lm14_rev', [PageController::class, 'lm14_rev'])->name('lm14_rev');
     Route::get('/lm16', [PageController::class, 'lm16'])->name('lm16');
+    Route::get('/lm16_rev', [PageController::class, 'lm16_rev'])->name('lm16_rev');
     Route::get('/lm34', [PageController::class, 'lm34'])->name('lm34');
     Route::get('/lm34_tab', [PageController::class, 'lm34_tab'])->name('lm34_tab');
     Route::get('/lm62', [PageController::class, 'lm62'])->name('lm62');
@@ -132,7 +134,9 @@ Route::middleware('auth:custom')->group(function () {
 
     Route::get('/get_data_lm13', [BigQueryController::class, 'get_data_lm13'])->name('get_data_lm13');
     Route::get('/get_data_lm14', [BigQueryController::class, 'get_data_lm14'])->name('get_data_lm14');
+    Route::get('/get_data_lm14_rev', [BigQueryController::class, 'get_data_lm14_rev'])->name('get_data_lm14_rev');
     Route::get('/get_data_lm16', [BigQueryController::class, 'get_data_lm16'])->name('get_data_lm16');
+    Route::get('/get_data_lm16_rev', [BigQueryController::class, 'get_data_lm16_rev'])->name('get_data_lm16_rev');
     Route::get('/get_data_lm34', [BigQueryController::class, 'get_data_lm34'])->name('get_data_lm34');
     Route::get('/get_data_lm34_by_negara', [BigQueryController::class, 'get_data_lm34_by_negara'])->name('get_data_lm34_by_negara');
     Route::get('/get_data_lm34_by_customer', [BigQueryController::class, 'get_data_lm34_by_customer'])->name('get_data_lm34_by_customer');
@@ -141,10 +145,10 @@ Route::middleware('auth:custom')->group(function () {
     Route::prefix('management')->name('management.')->group(function () {
         Route::get('users/export', [UserManagementController::class, 'export'])->name('users.export');
         Route::resource('users', UserManagementController::class);
-        
+
         Route::get('features/export', [FeatureManagementController::class, 'export'])->name('features.export');
         Route::resource('features', FeatureManagementController::class);
-        
+
         Route::get('access/export', [UserFeatureAccessController::class, 'export'])->name('access.export');
         Route::get('access', [UserFeatureAccessController::class, 'index'])->name('access.index');
         Route::get('access/{user}/edit', [UserFeatureAccessController::class, 'edit'])->name('access.edit');
@@ -193,15 +197,15 @@ Route::middleware(['check.token.or.session'])->group(function () {
 
 Route::get('/test-external-api', function () {
     $apiKey = env('INTERNAL_API_KEY', 'RahasiaAPIKey123');
-    
+
     $rekapUrl = 'https://aset.ptpn1.co.id/api/report/rekap-presentase?year=2026&month=6';
     $detailUrl = 'https://aset.ptpn1.co.id/api/report/presentase?year=2026&month=6';
-    
+
     $rekapResponse = null;
     $detailResponse = null;
     $rekapError = null;
     $detailError = null;
-    
+
     try {
         $res = \Illuminate\Support\Facades\Http::withoutVerifying()
             ->withHeaders(['x-api-key' => $apiKey])
@@ -211,7 +215,7 @@ Route::get('/test-external-api', function () {
     } catch (\Throwable $e) {
         $rekapError = $e->getMessage();
     }
-    
+
     try {
         $res = \Illuminate\Support\Facades\Http::withoutVerifying()
             ->withHeaders(['x-api-key' => $apiKey])
@@ -221,7 +225,7 @@ Route::get('/test-external-api', function () {
     } catch (\Throwable $e) {
         $detailError = $e->getMessage();
     }
-    
+
     return response()->json([
         'rekap_url' => $rekapUrl,
         'rekap_response' => $rekapResponse,

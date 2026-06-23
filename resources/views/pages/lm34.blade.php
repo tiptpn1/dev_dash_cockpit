@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('styles')
     <!-- Select2 CSS -->
@@ -771,7 +771,13 @@
                         // Baris kolom header
                         html += '<tr>';
                         headers.forEach(h => {
-                            html += `<th style="text-align:left; padding:8px 12px; background:#15803d; color:#fff; white-space:nowrap;">${h.replace(/_/g, ' ').toUpperCase()}</th>`;
+                            const isNum = isSubtotalCol(h);
+                            const align = isNum ? 'flex-end' : 'flex-start';
+                            html += `<th style="padding:8px 12px; background:#15803d; color:#fff; white-space:nowrap;">
+                                <div style="display:flex; justify-content:${align}; align-items:center; resize:horizontal; overflow:hidden; min-width:60px; width:100%;">
+                                    ${h.replace(/_/g, ' ').toUpperCase()}
+                                </div>
+                            </th>`;
                         });
                         html += '</tr></thead>';
 

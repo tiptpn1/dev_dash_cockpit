@@ -737,19 +737,25 @@
                         html += '<thead>';
                         // Baris judul (full colspan)
                         html += `<tr>
-                                                                    <th colspan="${headers.length}" style="
-                                                                        background:#ffffff; color:#111827;
-                                                                        text-align:center; font-size:12px;
-                                                                        font-weight:800; padding:8px 12px;
-                                                                        letter-spacing:0.04em; border-bottom:2px solid #16a34a;">
-                                                                        ${judulLaporan}
-                                                                    </th>
-                                                                </tr>`;
+                                    <th colspan="${headers.length}" style="
+                                        background:#ffffff; color:#111827;
+                                        text-align:center; font-size:12px;
+                                        font-weight:800; padding:8px 12px;
+                                        letter-spacing:0.04em; border-bottom:2px solid #16a34a;">
+                                        ${judulLaporan}
+                                    </th>
+                                </tr>`;
                         // Baris kolom header
                         html += '<tr>';
                         headers.forEach(h => {
-                            const isText = colTypes[h] === 'text';
-                            html += `<th style="text-align:${isText ? 'left' : 'center'}; padding:5px 4px; background:#15803d; color:#fff; white-space:normal; overflow:hidden; word-break:break-word;">${h.replace(/_/g, ' ').toUpperCase()}</th>`;
+                            const isText = h.toLowerCase().includes('regional') || h.toLowerCase().includes('plant') || h.toLowerCase().includes('desc');
+                            const isNum = isSubtotalCol(h);
+                            const align = isNum ? 'flex-end' : (isText ? 'flex-start' : 'center');
+                            html += `<th style="padding:5px 4px; background:#15803d; color:#fff; white-space:nowrap; overflow:hidden; word-break:break-word;">
+                                <div style="display:flex; justify-content:${align}; align-items:center; resize:horizontal; overflow:hidden; min-width:60px; width:100%;">
+                                    ${h.replace(/_/g, ' ').toUpperCase()}
+                                </div>
+                            </th>`;
                         });
                         html += '</tr></thead>';
 

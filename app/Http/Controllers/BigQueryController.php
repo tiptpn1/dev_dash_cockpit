@@ -247,6 +247,62 @@ class BigQueryController extends Controller
         }
     }
 
+    public function get_data_lm14_rev(Request $request)
+    {
+        $komoditi = strtolower($request->komoditi);
+        $nama_sp = '';
+        if ($komoditi == 'kr') {
+            $nama_sp = 'sp_laporan_lm14_karet_rev';
+        } else if ($komoditi == 'th') {
+            $nama_sp = 'sp_laporan_lm14_teh_rev';
+        } else if ($komoditi == 'kp') {
+            $nama_sp = 'sp_laporan_lm14_kopi_rev';
+        }
+
+        if (empty($nama_sp)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Komoditi tidak valid. Pilih salah satu Komoditi',
+            ], 400);
+        }
+
+        $region = $request->region;
+        $plant = $request->plant;
+        $tahun = $request->tahun;
+        $bulan = $request->bulan;
+        if ($bulan < 10) {
+            $bulan = '00' . $bulan;
+        } elseif ($bulan >= 10 && $bulan <= 12) {
+            $bulan = '0' . $bulan;
+        }
+
+        try {
+            $query = "
+            CALL `dashboard-cockpit.data_dash.$nama_sp`(
+                '$region',
+                '$plant',
+                '$tahun',
+                '$bulan'
+            )";
+
+            $cacheKey = "bq_lm14_rev_{$komoditi}_{$region}_{$plant}_{$tahun}_{$bulan}";
+            $rows = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($query) {
+                return $this->runBigQueryCall($query);
+            });
+
+            return response()->json([
+                'status' => 'success',
+                'total' => count($rows),
+                'data' => $rows,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     // ── LM16 ─────────────────────────────────────────────────────────────────
 
     public function get_data_lm16(Request $request)
@@ -259,6 +315,62 @@ class BigQueryController extends Controller
             $nama_sp = 'sp_laporan_lm16_teh';
         } else if ($komoditi == 'kp') {
             $nama_sp = 'sp_laporan_lm16_kopi';
+        }
+
+        if (empty($nama_sp)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Komoditi tidak valid. Pilih salah satu Komoditi',
+            ], 400);
+        }
+
+        $region = $request->region;
+        $plant = $request->plant;
+        $tahun = $request->tahun;
+        $bulan = $request->bulan;
+        if ($bulan < 10) {
+            $bulan = '00' . $bulan;
+        } elseif ($bulan >= 10 && $bulan <= 12) {
+            $bulan = '0' . $bulan;
+        }
+
+        try {
+            $query = "
+            CALL `dashboard-cockpit.data_dash.$nama_sp`(
+                '$region',
+                '$plant',
+                '$tahun',
+                '$bulan'
+            )";
+
+            $cacheKey = "bq_lm16_{$komoditi}_{$region}_{$plant}_{$tahun}_{$bulan}";
+            $rows = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($query) {
+                return $this->runBigQueryCall($query);
+            });
+
+            return response()->json([
+                'status' => 'success',
+                'total' => count($rows),
+                'data' => $rows,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function get_data_lm16_rev(Request $request)
+    {
+        $komoditi = strtolower($request->komoditi);
+        $nama_sp = '';
+        if ($komoditi == 'kr') {
+            $nama_sp = 'sp_laporan_lm16_karet_rev';
+        } else if ($komoditi == 'th') {
+            $nama_sp = 'sp_laporan_lm16_teh_rev';
+        } else if ($komoditi == 'kp') {
+            $nama_sp = 'sp_laporan_lm16_kopi_rev';
         }
 
         if (empty($nama_sp)) {

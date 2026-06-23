@@ -1014,9 +1014,15 @@
             let html = '<table class="report-table" style="font-size:12.5px;">';
             html += '<thead><tr><th colspan="' + headers.length + '" style="background:#ffffff; color:#111827; text-align:center; font-size:13px; font-weight:800; padding:10px 16px; letter-spacing:0.05em; border-bottom:2px solid #16a34a;">' + judulLaporan + '</th></tr>';
             html += '<tr>';
-            headers.forEach(h => {
-                html += '<th style="text-align:left; padding:8px 12px; background:#15803d; color:#fff; white-space:nowrap;">' + h.replace(/_/g, ' ').toUpperCase() + '</th>';
-            });
+                headers.forEach(h => {
+                    const isNum = isSubtotalCol(h);
+                    const align = isNum ? 'flex-end' : 'flex-start';
+                    html += `<th style="padding:8px 12px; background:#15803d; color:#fff; white-space:nowrap;">
+                        <div style="display:flex; justify-content:${align}; align-items:center; resize:horizontal; overflow:hidden; min-width:60px; width:100%;">
+                            ${h.replace(/_/g, ' ').toUpperCase()}
+                        </div>
+                    </th>`;
+                });
             html += '</tr></thead><tbody>';
 
             const initAcc = () => Object.fromEntries(headers.map(h => [h, 0]));

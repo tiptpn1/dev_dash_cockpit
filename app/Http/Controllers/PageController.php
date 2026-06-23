@@ -334,7 +334,7 @@ class PageController extends Controller
                 'mb.nama as nama_bidang',
                 'mb.id'
             )
-            ->Where('is_deleted','FALSE')
+            ->Where('is_deleted', 'FALSE')
             ->get();
         $tglAwal = date('Y-m-d');
         $tglAkhir = date('Y-m-d');
@@ -368,8 +368,8 @@ class PageController extends Controller
             // Bungkus di dalam fungsi closure agar menghasilkan: AND (nama_pegawai ILIKE ... OR nama_rombongan ILIKE ...)
             $query->where(function ($q) use ($namaSearch) {
                 $q->where('pd.nama_pegawai', 'ilike', $namaSearch)
-                ->orWhere('pd.nama_rombongan', 'ilike', $namaSearch)
-                ->orWhere('pd.nomor', 'ilike', $namaSearch); // Pastikan orWhere huruf kecil
+                    ->orWhere('pd.nama_rombongan', 'ilike', $namaSearch)
+                    ->orWhere('pd.nomor', 'ilike', $namaSearch); // Pastikan orWhere huruf kecil
             });
         }
 
@@ -379,8 +379,8 @@ class PageController extends Controller
             // Bungkus di dalam fungsi closure agar menghasilkan: AND (keperluan ILIKE ... OR tujuan ILIKE ...)
             $query->where(function ($q) use ($keperluanSearch) {
                 $q->where('keperluan', 'ilike', $keperluanSearch)
-                ->orWhere('tujuan', 'ilike', $keperluanSearch)
-                ->orWhere('lokasi_kota', 'ilike', $keperluanSearch); // Pastikan orWhere huruf kecil
+                    ->orWhere('tujuan', 'ilike', $keperluanSearch)
+                    ->orWhere('lokasi_kota', 'ilike', $keperluanSearch); // Pastikan orWhere huruf kecil
             });
         }
 
@@ -2482,6 +2482,28 @@ class PageController extends Controller
         return view('pages/lm14', compact('plantList', 'regionalList', 'tahunList', 'tahunSekarang'));
     }
 
+    public function lm14_rev()
+    {
+
+        $regionalList = Plant::distinct()->orderBy('regional', 'asc')->get(['regional']);
+        $plantList = Plant::orderBy('plant', 'asc')->get();
+        $tahunSekarang = (int) date('Y');
+        $tahunList = range($tahunSekarang, $tahunSekarang + 9); // [2026, 2027, ..., 2035]
+
+        return view('pages/lm14_rev', compact('plantList', 'regionalList', 'tahunList', 'tahunSekarang'));
+    }
+
+    public function lm16_rev()
+    {
+
+        $regionalList = Plant::distinct()->orderBy('regional', 'asc')->get(['regional']);
+        $plantList = Plant::orderBy('plant', 'asc')->get();
+        $tahunSekarang = (int) date('Y');
+        $tahunList = range($tahunSekarang, $tahunSekarang + 9); // [2026, 2027, ..., 2035]
+
+        return view('pages/lm16_rev', compact('plantList', 'regionalList', 'tahunList', 'tahunSekarang'));
+    }
+
     public function lm16()
     {
         $plantList = Plant::orderBy('plant', 'asc')->get();
@@ -2555,52 +2577,52 @@ class PageController extends Controller
         $data = \Illuminate\Support\Facades\Cache::remember($cacheKey, 86400, function () use ($year, $month) {
             try {
                 $regionsList = [
-                    (object)[
+                    (object) [
                         'id_region' => 1,
                         'master_region_nama' => 'Head Office',
                         'master_region_kode' => 'HO',
                         'merge_sources' => ['Head Office']
                     ],
-                    (object)[
+                    (object) [
                         'id_region' => 3,
                         'master_region_nama' => 'Regional 1 PTPN I',
                         'master_region_kode' => 'R1',
                         'merge_sources' => ['Regional 1 PTPN I', 'Regional 6 PTPN I']
                     ],
-                    (object)[
+                    (object) [
                         'id_region' => 5,
                         'master_region_nama' => 'Regional 2 PTPN I',
                         'master_region_kode' => 'R2',
                         'merge_sources' => ['Regional 2 PTPN I']
                     ],
-                    (object)[
+                    (object) [
                         'id_region' => 6,
                         'master_region_nama' => 'Regional 3 PTPN I',
                         'master_region_kode' => 'R3',
                         'merge_sources' => ['Regional 3 PTPN I']
                     ],
-                    (object)[
+                    (object) [
                         'id_region' => 8,
                         'master_region_nama' => 'Regional 5 PTPN I',
                         'master_region_kode' => 'R5',
                         'merge_sources' => ['Regional 5 PTPN I', 'Regional 4 PTPN I']
                     ],
-                    (object)[
+                    (object) [
                         'id_region' => 4,
                         'master_region_nama' => 'Regional 7 PTPN I',
                         'master_region_kode' => 'R7',
                         'merge_sources' => ['Regional 7 PTPN I']
                     ],
-                    (object)[
+                    (object) [
                         'id_region' => 9,
                         'master_region_nama' => 'Regional 8 PTPN I',
                         'master_region_kode' => 'R8',
                         'merge_sources' => ['Regional 8 PTPN I']
                     ],
                 ];
-                
+
                 $apiKey = env('INTERNAL_API_KEY', 'RahasiaAPIKey123');
-                
+
                 // Fetch from external API via direct IP to bypass DNS issues
                 $response = \Illuminate\Support\Facades\Http::withoutVerifying()
                     ->withHeaders([
@@ -2609,14 +2631,14 @@ class PageController extends Controller
                     ])
                     ->timeout(10)
                     ->get('https://10.100.11.242/api/report/rekap-presentase?year=' . $year . '&month=' . $month);
-                
+
                 if (!$response->successful()) {
                     throw new \Exception('Failed to fetch data from external API: Status ' . $response->status());
                 }
-                
+
                 $apiData = $response->json();
                 $regionsData = [];
-                
+
                 $sumBelumDiisi = 0;
                 $sumAkhirBelum = 0;
                 $sumAkhirLengkap = 0;
@@ -2625,7 +2647,7 @@ class PageController extends Controller
                 $sumPotensial = 0;
                 $sumPraKerjasama = 0;
                 $sumTotalKerjasama = 0;
-                
+
                 foreach ($regionsList as $r) {
                     $belumDiisi = 0;
                     $akhirBelum = 0;
@@ -2634,7 +2656,7 @@ class PageController extends Controller
                     $jalanLengkap = 0;
                     $potensial = 0;
                     $praKerjasama = 0;
-                    
+
                     foreach ($r->merge_sources as $source) {
                         // Find match in API response
                         $match = null;
@@ -2644,20 +2666,20 @@ class PageController extends Controller
                                 break;
                             }
                         }
-                        
+
                         if ($match) {
-                            $belumDiisi += (int)($match['Belum Diisi'] ?? 0);
-                            $akhirBelum += (int)($match['Kerjasama Berakhir']['Belum Lengkap'] ?? 0);
-                            $akhirLengkap += (int)($match['Kerjasama Berakhir']['Lengkap'] ?? 0);
-                            $jalanBelum += (int)($match['Kerjasama Berjalan']['Belum Lengkap'] ?? 0);
-                            $jalanLengkap += (int)($match['Kerjasama Berjalan']['Lengkap'] ?? 0);
-                            $potensial += (int)($match['Potensial'] ?? 0);
-                            $praKerjasama += (int)($match['Pra Kerjasama'] ?? 0);
+                            $belumDiisi += (int) ($match['Belum Diisi'] ?? 0);
+                            $akhirBelum += (int) ($match['Kerjasama Berakhir']['Belum Lengkap'] ?? 0);
+                            $akhirLengkap += (int) ($match['Kerjasama Berakhir']['Lengkap'] ?? 0);
+                            $jalanBelum += (int) ($match['Kerjasama Berjalan']['Belum Lengkap'] ?? 0);
+                            $jalanLengkap += (int) ($match['Kerjasama Berjalan']['Lengkap'] ?? 0);
+                            $potensial += (int) ($match['Potensial'] ?? 0);
+                            $praKerjasama += (int) ($match['Pra Kerjasama'] ?? 0);
                         }
                     }
-                    
+
                     $totalKerjasama = $jalanBelum + $jalanLengkap + $akhirBelum + $akhirLengkap + $potensial + $praKerjasama + $belumDiisi;
-                    
+
                     $sumBelumDiisi += $belumDiisi;
                     $sumAkhirBelum += $akhirBelum;
                     $sumAkhirLengkap += $akhirLengkap;
@@ -2666,7 +2688,7 @@ class PageController extends Controller
                     $sumPotensial += $potensial;
                     $sumPraKerjasama += $praKerjasama;
                     $sumTotalKerjasama += $totalKerjasama;
-                    
+
                     $regionsData[] = [
                         'id_region' => $r->id_region,
                         'master_region_nama' => $r->master_region_nama,
@@ -2681,7 +2703,7 @@ class PageController extends Controller
                         'total_kerjasama' => $totalKerjasama,
                     ];
                 }
-                
+
                 return [
                     'summary' => [
                         'belum_diisi' => $sumBelumDiisi,
@@ -2695,7 +2717,7 @@ class PageController extends Controller
                     ],
                     'regions' => $regionsData
                 ];
-                
+
             } catch (\Throwable $e) {
                 $fallbackRegions = [
                     ['id_region' => 1, 'master_region_nama' => 'Head Office', 'master_region_kode' => 'HO', 'belum_diisi' => 0, 'akhir_belum' => 0, 'akhir_lengkap' => 0, 'jalan_belum' => 0, 'jalan_lengkap' => 0, 'potensial' => 0, 'pra_kerjasama' => 0, 'total_kerjasama' => 0],
@@ -2706,7 +2728,7 @@ class PageController extends Controller
                     ['id_region' => 4, 'master_region_nama' => 'Regional 7 PTPN I', 'master_region_kode' => 'R7', 'belum_diisi' => 66, 'akhir_belum' => 0, 'akhir_lengkap' => 0, 'jalan_belum' => 1, 'jalan_lengkap' => 1, 'potensial' => 0, 'pra_kerjasama' => 0, 'total_kerjasama' => 68],
                     ['id_region' => 9, 'master_region_nama' => 'Regional 8 PTPN I', 'master_region_kode' => 'R8', 'belum_diisi' => 23, 'akhir_belum' => 0, 'akhir_lengkap' => 0, 'jalan_belum' => 0, 'jalan_lengkap' => 0, 'potensial' => 0, 'pra_kerjasama' => 0, 'total_kerjasama' => 23]
                 ];
-                
+
                 $sumTotalKerjasama = 0;
                 $sumBelumDiisi = 0;
                 $sumAkhirBelum = 0;
@@ -2725,7 +2747,7 @@ class PageController extends Controller
                     $sumPotensial += $fr['potensial'];
                     $sumPraKerjasama += $fr['pra_kerjasama'];
                 }
-                
+
                 return [
                     'summary' => [
                         'belum_diisi' => $sumBelumDiisi,
@@ -2743,7 +2765,7 @@ class PageController extends Controller
                 ];
             }
         });
-        
+
         return response()->json(array_merge(['status' => 'success'], $data));
     }
 
@@ -2753,43 +2775,43 @@ class PageController extends Controller
         $data = \Illuminate\Support\Facades\Cache::remember('maia_dashboard_stats_grouped_v4', 86400, function () { // Bust cache with v4
             try {
                 $regionsList = [
-                    (object)[
+                    (object) [
                         'id_region' => 1,
                         'master_region_nama' => 'Head Office',
                         'master_region_kode' => 'HO',
                         'merge_sources' => ['Head Office']
                     ],
-                    (object)[
+                    (object) [
                         'id_region' => 3,
                         'master_region_nama' => 'Regional 1 PTPN I',
                         'master_region_kode' => 'R1',
                         'merge_sources' => ['Regional 1 PTPN I', 'Regional 6 PTPN I']
                     ],
-                    (object)[
+                    (object) [
                         'id_region' => 5,
                         'master_region_nama' => 'Regional 2 PTPN I',
                         'master_region_kode' => 'R2',
                         'merge_sources' => ['Regional 2 PTPN I']
                     ],
-                    (object)[
+                    (object) [
                         'id_region' => 6,
                         'master_region_nama' => 'Regional 3 PTPN I',
                         'master_region_kode' => 'R3',
                         'merge_sources' => ['Regional 3 PTPN I']
                     ],
-                    (object)[
+                    (object) [
                         'id_region' => 8,
                         'master_region_nama' => 'Regional 5 PTPN I',
                         'master_region_kode' => 'R5',
                         'merge_sources' => ['Regional 5 PTPN I', 'Regional 4 PTPN I']
                     ],
-                    (object)[
+                    (object) [
                         'id_region' => 4,
                         'master_region_nama' => 'Regional 7 PTPN I',
                         'master_region_kode' => 'R7',
                         'merge_sources' => ['Regional 7 PTPN I']
                     ],
-                    (object)[
+                    (object) [
                         'id_region' => 9,
                         'master_region_nama' => 'Regional 8 PTPN I',
                         'master_region_kode' => 'R8',
@@ -2798,7 +2820,7 @@ class PageController extends Controller
                 ];
 
                 $apiKey = env('INTERNAL_API_KEY', 'RahasiaAPIKey123');
-                
+
                 // Fetch from external API via direct IP to bypass DNS issues
                 $response = \Illuminate\Support\Facades\Http::withoutVerifying()
                     ->withHeaders([
@@ -2807,14 +2829,14 @@ class PageController extends Controller
                     ])
                     ->timeout(15)
                     ->get('https://10.100.11.242/api/report/maia');
-                
+
                 if (!$response->successful()) {
                     throw new \Exception('Failed to fetch MAIA data: ' . $response->status());
                 }
 
                 $apiData = $response->json();
                 $regionItems = $apiData['summary_region'] ?? [];
-                
+
                 $regionsData = [];
                 $sumTotal = 0;
                 $sumIdentified = 0;
@@ -2822,22 +2844,22 @@ class PageController extends Controller
                 foreach ($regionsList as $r) {
                     $total = 0;
                     $ident = 0;
-                    
+
                     foreach ($r->merge_sources as $source) {
                         foreach ($regionItems as $item) {
                             if (isset($item['master_region_nama']) && trim($item['master_region_nama']) === trim($source)) {
-                                $total += (int)($item['Total Aset'] ?? 0);
-                                $ident += (int)($item['Sudah Teridentifikasi'] ?? 0);
+                                $total += (int) ($item['Total Aset'] ?? 0);
+                                $ident += (int) ($item['Sudah Teridentifikasi'] ?? 0);
                             }
                         }
                     }
-                    
+
                     $belum = $total - $ident;
                     $pct = $total > 0 ? round(($ident / $total) * 100, 2) : 0;
-                    
+
                     $sumTotal += $total;
                     $sumIdentified += $ident;
-                    
+
                     $regionsData[] = [
                         'id_region' => $r->id_region,
                         'master_region_nama' => $r->master_region_nama,
@@ -2871,7 +2893,7 @@ class PageController extends Controller
                     ['id_region' => 4, 'master_region_nama' => 'Regional 7 PTPN I', 'master_region_kode' => 'R7', 'total_aset' => 15330, 'sudah_teridentifikasi' => 2495, 'belum_teridentifikasi' => 12835, 'persentase_teridentifikasi' => 16.28],
                     ['id_region' => 9, 'master_region_nama' => 'Regional 8 PTPN I', 'master_region_kode' => 'R8', 'total_aset' => 24270, 'sudah_teridentifikasi' => 460, 'belum_teridentifikasi' => 23810, 'persentase_teridentifikasi' => 1.90]
                 ];
-                
+
                 $sumTotal = 0;
                 $sumIdentified = 0;
                 foreach ($fallbackRegions as $fr) {
@@ -2880,7 +2902,7 @@ class PageController extends Controller
                 }
                 $sumBelum = $sumTotal - $sumIdentified;
                 $sumPct = $sumTotal > 0 ? round(($sumIdentified / $sumTotal) * 100, 2) : 0;
-                
+
                 return [
                     'summary' => [
                         'total_aset' => $sumTotal,
@@ -2952,8 +2974,10 @@ class PageController extends Controller
             $rows = $this->fetchRekapSeluruhRegional($tahun, $bulan);
 
             usort($rows, function ($a, $b) {
-                if ($a->regional === 'SuppCo HO') return -1;
-                if ($b->regional === 'SuppCo HO') return 1;
+                if ($a->regional === 'SuppCo HO')
+                    return -1;
+                if ($b->regional === 'SuppCo HO')
+                    return 1;
                 return strcmp($a->regional, $b->regional);
             });
 

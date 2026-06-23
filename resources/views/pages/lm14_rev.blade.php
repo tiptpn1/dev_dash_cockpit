@@ -419,7 +419,7 @@
                     <path
                         d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3A5 5 0 008 22c12 0 15-17 15-17-1 2-8 2-13 3-5 1-6 7-6 7s5.5-2 8.5-2 5 2 5 2-3-5-3-5 3 5 3 5-5 3-5 3 2 3 2 6-2 6-2 6 3-3 3-6-2-6-2-6z" />
                 </svg>
-                <h1>LM 13 &mdash; Biaya Produksi</h1>
+                <h1>LM 14 &mdash; Biaya Tanaman</h1>
             </div>
             <div class="lm-header-right">
                 <img src="{{ asset('ptpn1.png') }}" alt="PTPN 1">
@@ -509,22 +509,22 @@
             <div class="table-card" id="resultCard" style="display:none;">
                 <div class="table-header">
                     <div class="table-title">
-                        <i class="fas fa-seedling"></i> Hasil Data LM13
+                        <i class="fas fa-seedling"></i> Hasil Data LM14
                     </div>
                     <div style="display:flex; align-items:center; gap:8px;">
                         <span id="resultInfo" style="color:#93c5fd; font-size:12px;"></span>
                         <button id="btnExportExcel" onclick="exportExcel()" style="
-                                                                                display:inline-flex; align-items:center; gap:5px;
-                                                                                padding:6px 14px; background:#16a34a; color:#fff;
-                                                                                border:none; border-radius:6px; font-size:12px;
-                                                                                font-weight:700; cursor:pointer;">
+                                                                display:inline-flex; align-items:center; gap:5px;
+                                                                padding:6px 14px; background:#16a34a; color:#fff;
+                                                                border:none; border-radius:6px; font-size:12px;
+                                                                font-weight:700; cursor:pointer;">
                             <i class="fas fa-file-excel"></i> Excel
                         </button>
                         <button id="btnExportPdf" onclick="exportPdf()" style="
-                                                                                display:inline-flex; align-items:center; gap:5px;
-                                                                                padding:6px 14px; background:#dc2626; color:#fff;
-                                                                                border:none; border-radius:6px; font-size:12px;
-                                                                                font-weight:700; cursor:pointer;">
+                                                                display:inline-flex; align-items:center; gap:5px;
+                                                                padding:6px 14px; background:#dc2626; color:#fff;
+                                                                border:none; border-radius:6px; font-size:12px;
+                                                                font-weight:700; cursor:pointer;">
                             <i class="fas fa-file-pdf"></i> PDF
                         </button>
                     </div>
@@ -565,6 +565,20 @@
                 if (lblBulan) lblBulan.textContent = bln ? bulanNames[bln] : '-';
             }
 
+            // ── Enable tombol Cari hanya jika Tahun & Bulan sudah dipilih ────────
+            const btnFilter = document.getElementById('btnFilter');
+            function checkEnableSearch() {
+                const tahunOk = !!document.getElementById('tahunFilter').value;
+                const bulanOk = !!document.getElementById('bulanFilter').value;
+                const ok = tahunOk && bulanOk;
+                btnFilter.disabled = !ok;
+                btnFilter.style.opacity = ok ? '1' : '0.45';
+                btnFilter.style.cursor = ok ? 'pointer' : 'not-allowed';
+            }
+            document.getElementById('tahunFilter').addEventListener('change', checkEnableSearch);
+            document.getElementById('bulanFilter').addEventListener('change', checkEnableSearch);
+            checkEnableSearch(); // init
+
             // ── Filter plant by regional ──────────────────────────────────────
             function rebuildPlantFilter(selectedRegional) {
                 const plantSel = document.getElementById('plantFilter');
@@ -601,20 +615,6 @@
                 rebuildPlantFilter(this.value);
             });
 
-            // ── Enable tombol Cari hanya jika Tahun & Bulan sudah dipilih ────────
-            const btnFilter = document.getElementById('btnFilter');
-            function checkEnableSearch() {
-                const tahunOk = !!document.getElementById('tahunFilter').value;
-                const bulanOk = !!document.getElementById('bulanFilter').value;
-                const ok = tahunOk && bulanOk;
-                btnFilter.disabled = !ok;
-                btnFilter.style.opacity = ok ? '1' : '0.45';
-                btnFilter.style.cursor = ok ? 'pointer' : 'not-allowed';
-            }
-            document.getElementById('tahunFilter').addEventListener('change', checkEnableSearch);
-            document.getElementById('bulanFilter').addEventListener('change', checkEnableSearch);
-            checkEnableSearch(); // init
-
             // Init on page load
             updateLabels();
 
@@ -622,57 +622,24 @@
             tahunSel.addEventListener('change', updateLabels);
             bulanSel.addEventListener('change', updateLabels);
 
-            // ── Fetch + Render data dari route get_data_lm13 ─────────────────
-            function get_data_lm13(komoditas, region, plant, tahun, bulan, _retryCount = 0) {
-                const MAX_RETRY    = 3;   // maks 3x retry
-                const RETRY_DELAY  = 12000; // tunggu 12 detik sebelum retry
-
-                const card    = document.getElementById('resultCard');
+            // ── Fetch + Render data dari route get_data_lm14 ─────────────────
+            function get_data_lm14(plant, region, tahun, bulan, komoditi) {
+                const card = document.getElementById('resultCard');
                 const loading = document.getElementById('tableLoading');
-                const errBox  = document.getElementById('tableError');
-                const result  = document.getElementById('tableResult');
-                const info    = document.getElementById('resultInfo');
+                const errBox = document.getElementById('tableError');
+                const result = document.getElementById('tableResult');
+                const info = document.getElementById('resultInfo');
 
                 // Tampilkan card + loading
-                card.style.display    = '';
+                card.style.display = '';
                 loading.style.display = '';
-                errBox.style.display  = 'none';
-                result.innerHTML      = '';
-                info.textContent      = _retryCount > 0
-                    ? `⏳ Sedang memuat... (percobaan ke-${_retryCount + 1}/${MAX_RETRY + 1})`
-                    : '';
+                errBox.style.display = 'none';
+                result.innerHTML = '';
+                info.textContent = '';
 
-                const params = new URLSearchParams({ komoditi: komoditas, region, plant, tahun, bulan });
-                fetch(`{{ route('get_data_lm13') }}?${params}`)
-                    .then(res => {
-                        // Cek HTTP status SEBELUM parse JSON
-                        // Ini mencegah error "Unexpected token '<'" saat server mengembalikan HTML error
-                        if (res.status === 504 || res.status === 502 || res.status === 503) {
-                            if (_retryCount < MAX_RETRY) {
-                                // Server timeout — kemungkinan cache sedang dibangun di background
-                                const detikBerikutnya = RETRY_DELAY / 1000;
-                                info.textContent = `⏳ Server sedang memproses data BigQuery... Mencoba ulang dalam ${detikBerikutnya} detik (${_retryCount + 1}/${MAX_RETRY})`;
-                                setTimeout(() => {
-                                    get_data_lm13(komoditas, region, plant, tahun, bulan, _retryCount + 1);
-                                }, RETRY_DELAY);
-                            } else {
-                                loading.style.display = 'none';
-                                errBox.style.display  = '';
-                                errBox.innerHTML = `⚠️ <strong>Server timeout (504)</strong>.<br>
-                                    Data BigQuery membutuhkan waktu lebih lama dari biasanya untuk diproses.<br>
-                                    Silakan coba beberapa saat lagi atau hubungi administrator.`;
-                            }
-                            return Promise.reject('timeout'); // stop chain
-                        }
-
-                        if (!res.ok) {
-                            return res.text().then(text => {
-                                throw new Error(`Server error ${res.status}: ${text.substring(0, 100)}`);
-                            });
-                        }
-
-                        return res.json();
-                    })
+                const params = new URLSearchParams({ plant, region, tahun, bulan, komoditi });
+                fetch(`{{ route('get_data_lm14_rev') }}?${params}`)
+                    .then(res => res.json())
                     .then(data => {
                         loading.style.display = 'none';
                         if (data.status !== 'success') {
@@ -691,30 +658,40 @@
                         // Ambil semua key dari baris pertama sebagai header
                         const headers = Object.keys(rows[0]);
 
-                        // ── Kolom yang disubtotal: scan SEMUA baris agar kolom yg null di row[0] tetap terdeteksi ────
-                        const NUMERIC_COLS = new Set(
-                            headers.filter(h =>
-                                rows.some(r => {
-                                    const v = r[h];
-                                    return v !== null && v !== '' && v !== undefined && !isNaN(parseFloat(v));
-                                })
-                            )
-                        );
-                        const isSubtotalCol = h => NUMERIC_COLS.has(h);
-
                         // ── Helper: format angka ID ───────────────────────────────────
                         const fmt = v => {
                             if (v === null || v === '' || v === undefined) return '-';
                             const n = parseFloat(v);
-                            if (isNaN(n)) return v ?? '-';
-                            // Jika nilai asli dari BigQuery punya desimal → paksa 2 digit di belakang koma
-                            const hasDecimal = String(v).includes('.');
-                            return n.toLocaleString('id-ID', {
-                                minimumFractionDigits: hasDecimal ? 2 : 0,
-                                maximumFractionDigits: 2,
-                            });
+                            return isNaN(n) ? (v ?? '-') : n.toLocaleString('id-ID');
+                        };
+                        // Format 2 desimal — khusus biaya_per_ha
+                        const fmt2 = v => {
+                            if (v === null || v === '' || v === undefined) return '-';
+                            const n = parseFloat(v);
+                            return isNaN(n) ? (v ?? '-') : n.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                         };
                         const isNum = v => v !== null && v !== '' && v !== undefined && !isNaN(parseFloat(v));
+
+                        // ── Identifikasi tipe kolom (teks vs angka) ─────────────────
+                        const colTypes = {};
+                        const sampleSize = Math.min(10, rows.length);
+                        headers.forEach(h => {
+                            colTypes[h] = rows.slice(0, sampleSize).some(r => isNum(r[h])) ? 'num' : 'text';
+                        });
+                        const textColsList = headers.filter(h => colTypes[h] === 'text');
+                        const numColsList = headers.filter(h => colTypes[h] === 'num');
+
+                        // ── Kolom yang disubtotal (semua angka kecuali biaya_per_ha & kode) ──────────
+                        const isSubtotalCol = h => colTypes[h] === 'num' && !h.toLowerCase().includes('biaya_per_ha') && !h.toLowerCase().includes('kode');
+
+                        // Distribusi lebar kolom proporsional (persentase)
+                        const textPct = textColsList.length > 0
+                            ? Math.min(22, Math.floor(50 / textColsList.length))
+                            : 20;
+                        const usedPct = textPct * textColsList.length;
+                        const numPct = numColsList.length > 0
+                            ? Math.max(4, Math.floor((100 - usedPct) / numColsList.length))
+                            : Math.floor(100 / headers.length);
 
                         // ── Judul dinamis dari nilai filter ──────────────────────────
                         const bulanNames = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei',
@@ -725,6 +702,7 @@
                         const bulanSel2 = document.getElementById('bulanFilter');
                         const tahunSel2 = document.getElementById('tahunFilter');
                         const komoSel = document.getElementById('komoditasFilter');
+
                         const regionalText = regionalSel.selectedIndex >= 0 && regionalSel.value
                             ? 'Regional ' + regionalSel.options[regionalSel.selectedIndex].text
                             : 'Semua Regional';
@@ -735,35 +713,37 @@
                         const tahunText = tahunSel2.value || 'Semua Tahun';
                         const komoText = komoSel.value ? komoSel.options[komoSel.selectedIndex].text : 'Semua Komoditas';
 
-                        const judulLaporan = `LM13 - ${regionalText} - ${plantText} - Komoditas: ${komoText}  ${bulanText}  ${tahunText}`;
+                        const judulLaporan = `LM14 - ${regionalText} - ${plantText} - Komoditas: ${komoText}  ${bulanText}  ${tahunText}`;
 
                         // Simpan data mentah untuk export ─────────────────────────────
                         _exportData = {
                             rows,
                             headers: Object.keys(rows[0]),
                             judul: judulLaporan,
-                            numericCols: NUMERIC_COLS,
+                            subtotalCols: headers.filter(h => isSubtotalCol(h)),
                         };
 
                         // ── Header ───────────────────────────────────────────────────
-                        let html = '<table class="report-table" style="font-size:12.5px;">';
+                        let html = '<table class="report-table" style="font-size:10.5px; width:100%;">';
+
                         html += '<thead>';
                         // Baris judul (full colspan)
                         html += `<tr>
-                                                                                                    <th colspan="${headers.length}" style="
-                                                                                                        background:#ffffff; color:#111827;
-                                                                                                        text-align:center; font-size:13px;
-                                                                                                        font-weight:800; padding:10px 16px;
-                                                                                                        letter-spacing:0.05em; border-bottom:2px solid #16a34a;">
-                                                                                                        ${judulLaporan}
-                                                                                                    </th>
-                                                                                                </tr>`;
+                                                                    <th colspan="${headers.length}" style="
+                                                                        background:#ffffff; color:#111827;
+                                                                        text-align:center; font-size:12px;
+                                                                        font-weight:800; padding:8px 12px;
+                                                                        letter-spacing:0.04em; border-bottom:2px solid #16a34a;">
+                                                                        ${judulLaporan}
+                                                                    </th>
+                                                                </tr>`;
                         // Baris kolom header
                         html += '<tr>';
                         headers.forEach(h => {
-                            const isNum = isSubtotalCol(h);
-                            const align = isNum ? 'flex-end' : 'flex-start';
-                            html += `<th style="padding:8px 12px; background:#15803d; color:#fff; white-space:nowrap;">
+                            const isText = h.toLowerCase().includes('regional') || h.toLowerCase().includes('plant') || h.toLowerCase().includes('desc');
+                            const isNumCol = colTypes[h] === 'num';
+                            const align = isNumCol ? 'flex-end' : (isText ? 'flex-start' : 'center');
+                            html += `<th style="padding:5px 4px; background:#15803d; color:#fff; white-space:normal; overflow:hidden; word-break:break-word;">
                                 <div style="display:flex; justify-content:${align}; align-items:center; resize:horizontal; overflow:hidden; min-width:60px; width:100%;">
                                     ${h.replace(/_/g, ' ').toUpperCase()}
                                 </div>
@@ -778,96 +758,198 @@
                         const initAcc = () => Object.fromEntries(headers.map(h => [h, 0]));
                         const addToAcc = (acc, row) => headers.forEach(h => { if (isSubtotalCol(h) && isNum(row[h])) acc[h] += parseFloat(row[h]); });
 
-                        let acc2 = initAcc(), key2 = '', acc1 = initAcc(), key1 = '';
-                        let accTotal = initAcc();  // ← Grand total
+                        let accTotal = initAcc();
 
-                        const subtotalRow = (label, acc, bgColor, fontWeight, borderTop) => {
-                            let r = `<tr style="background:${bgColor}; font-weight:${fontWeight}; border-top:${borderTop};">`;
-                            headers.forEach((h, idx) => {
-                                if (idx === 0) {
-                                    r += `<td colspan="2" style="padding:5px 12px; border:1px solid #d1fae5; text-align:right; font-style:italic; white-space:nowrap;">${label}</td>`;
-                                } else if (idx === 1) {
-                                    return; // sudah di-colspan
-                                } else if (isSubtotalCol(h)) {
-                                    r += `<td style="padding:5px 12px; border:1px solid #d1fae5; text-align:right; white-space:nowrap;">${fmt(acc[h])}</td>`;
-                                } else {
-                                    r += `<td style="padding:5px 12px; border:1px solid #d1fae5;"></td>`;
-                                }
-                            });
-                            r += '</tr>';
-                            return r;
-                        };
-
-                        rows.forEach((row, i) => {
-                            const kode = (row['kode'] || row['kdbe'] || row['KODE'] || '').toString();
-                            const grp2 = kode.substring(0, 2).toUpperCase();
-                            const grp1 = kode.substring(0, 1).toUpperCase();
-
-                            // Deteksi pergantian grup 2-char
-                            if (key2 && grp2 !== key2) {
-                                // Subtotal level-2
-                                html += subtotalRow(`Jumlah ${key2}`, acc2, '#f0fdf4', '700', '2px solid #bbf7d0');
-                                acc2 = initAcc();
-
-                                // Deteksi pergantian grup 1-char
-                                if (grp1 !== key1) {
-                                    html += subtotalRow(`Jumlah ${key1}`, acc1, '#dcfce7', '800', '2px solid #16a34a');
-                                    acc1 = initAcc();
-                                }
-                            } else if (!key2) {
-                                acc2 = initAcc();
-                                acc1 = initAcc();
-                            }
-
-                            key2 = grp2;
-                            key1 = grp1;
-                            addToAcc(acc2, row);
-                            addToAcc(acc1, row);
-                            addToAcc(accTotal, row);  // ← akumulasi grand total
-
-                            // Baris data biasa
-                            const bg = i % 2 === 0 ? '#fff' : '#f9fafb';
-                            html += `<tr style="background:${bg};">`;
-                            headers.forEach(h => {
-                                const val = row[h];
-                                const num = isNum(val);
-                                html += `<td style="padding:5px 12px; border:1px solid #e5e7eb; text-align:${num ? 'right' : 'left'}; white-space:nowrap;">${fmt(val)}</td>`;
-                            });
-                            html += '</tr>';
+                        // ── Luas Areal: ambil dari baris kode='0'/'00', kolom qty ────────
+                        const row00 = rows.find(r => {
+                            const k = (r['kode'] ?? r['kdbe'] ?? r['KODE'] ?? r['Kode'] ?? '').toString().trim();
+                            const u = (r['uraian'] ?? r['URAIAN'] ?? '').toString().toLowerCase();
+                            return k === '00' || k === '0' || parseInt(k) === 0 || u.includes('luas areal');
                         });
 
-                        // Subtotal terakhir (sisa grup yang belum di-flush)
-                        if (key2) html += subtotalRow(`Jumlah ${key2}`, acc2, '#f0fdf4', '700', '2px solid #bbf7d0');
-                        if (key1) html += subtotalRow(`Jumlah ${key1}`, acc1, '#dcfce7', '800', '2px solid #166534');
+                        const perHaCols = headers.filter(h => h.toLowerCase().includes('biaya_per_ha'));
+                        const biayaTotCols = headers.filter(h => h.toLowerCase().includes('biaya_total'));
+                        const qtyCols = headers.filter(h => h.toLowerCase().includes('qty'));
+
+                        const luasArr = qtyCols.map(col => {
+                            if (!row00) return 0;
+                            const v = parseFloat(row00[col]);
+                            return isNaN(v) ? 0 : v;
+                        });
+
+                        const perHaMapping = {}; // { perHaCol: { totalCol, luas } }
+                        perHaCols.forEach((perHaCol, i) => {
+                            perHaMapping[perHaCol] = {
+                                totalCol: biayaTotCols[i] ?? biayaTotCols[0],
+                                luas: luasArr[i] ?? luasArr[0] ?? 0,
+                            };
+                        });
+
+                        const calcPerHa = (acc, perHaCol) => {
+                            const { totalCol, luas } = perHaMapping[perHaCol] || {};
+                            if (!totalCol || !luas) return 0;
+                            const total = acc[totalCol] || 0;
+                            return luas > 0 ? total / luas : 0;
+                        };
+
+                        // Grouping by lev2 then lev1
+                        const groupedData = {};
+                        rows.forEach(row => {
+                            const lev2Desc = row['lev2'] || row['LEV2'] || 'Tidak Diketahui';
+                            const lev1Desc = row['lev1'] || row['LEV1'] || 'Tidak Diketahui';
+
+                            if (!groupedData[lev2Desc]) {
+                                groupedData[lev2Desc] = { rows: [], acc: initAcc(), children: {} };
+                            }
+                            groupedData[lev2Desc].rows.push(row);
+                            addToAcc(groupedData[lev2Desc].acc, row);
+
+                            if (!groupedData[lev2Desc].children[lev1Desc]) {
+                                groupedData[lev2Desc].children[lev1Desc] = { rows: [], acc: initAcc() };
+                            }
+                            groupedData[lev2Desc].children[lev1Desc].rows.push(row);
+                            addToAcc(groupedData[lev2Desc].children[lev1Desc].acc, row);
+
+                            addToAcc(accTotal, row);
+                        });
+
+                        // Function untuk toggle wrapper
+                        window.toggleWrapper = function (id) {
+                            const icon = document.querySelector(`.expand-icon-${id}`);
+                            const rowsToToggle = document.querySelectorAll(`.wrapper-${id}`);
+
+                            let isExpanded = false;
+                            if (icon) {
+                                if (icon.style.transform === 'rotate(90deg)') {
+                                    icon.style.transform = 'rotate(0deg)';
+                                    isExpanded = false;
+                                } else {
+                                    icon.style.transform = 'rotate(90deg)';
+                                    isExpanded = true;
+                                }
+                            }
+
+                            rowsToToggle.forEach(r => {
+                                if (isExpanded) {
+                                    r.style.display = '';
+                                } else {
+                                    r.style.display = 'none';
+                                    if (r.classList.contains('child-row')) {
+                                        const match = r.className.match(/child-id-([^\s]+)/);
+                                        if (match) {
+                                            const childId = match[1];
+                                            const childIcon = document.querySelector(`.expand-icon-${childId}`);
+                                            if (childIcon && childIcon.style.transform === 'rotate(90deg)') {
+                                                childIcon.style.transform = 'rotate(0deg)';
+                                            }
+                                            document.querySelectorAll(`.wrapper-${childId}`).forEach(cr => cr.style.display = 'none');
+                                        }
+                                    }
+                                }
+                            });
+                        };
+
+                        let lev2Idx = 0;
+                        for (const [lev2Desc, lev2Data] of Object.entries(groupedData)) {
+                            lev2Idx++;
+                            const lev2Id = `lev2-${lev2Idx}`;
+
+                            html += `<tr class="parent-row" onclick="toggleWrapper('${lev2Id}')" style="background:#e0f2fe; cursor:pointer; border-top: 2px solid #bae6fd;">`;
+                            
+                            headers.forEach((h, idx) => {
+                                if (idx === 0) {
+                                    html += `<td colspan="2" style="font-weight:700; color:#0369a1; padding:8px 12px; border:1px solid #bae6fd; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><i class="fas fa-chevron-right expand-icon-${lev2Id}" style="margin-right:6px; transition:transform 0.2s;"></i> ${lev2Desc}</td>`;
+                                } else if (idx === 1) {
+                                    return; // sudah di-colspan
+                                } else if (h.toLowerCase().includes('biaya_per_ha') && perHaMapping[h]) {
+                                    const perHaVal = calcPerHa(lev2Data.acc, h);
+                                    html += `<td style="font-weight:700; color:#0369a1; text-align:right; padding:8px 12px; border:1px solid #bae6fd; white-space:nowrap;">${fmt2(perHaVal)}</td>`;
+                                } else if (isSubtotalCol(h)) {
+                                    const val = lev2Data.acc[h];
+                                    const useFmt2 = h.toLowerCase().includes('qty') || h.toLowerCase().includes('biaya_per_ha');
+                                    html += `<td style="font-weight:700; color:#0369a1; text-align:right; padding:8px 12px; border:1px solid #bae6fd; white-space:nowrap;">${useFmt2 ? fmt2(val) : fmt(val)}</td>`;
+                                } else {
+                                    html += `<td style="border:1px solid #bae6fd; padding:8px 12px;"></td>`;
+                                }
+                            });
+                            html += `</tr>`;
+
+                            let lev1Idx = 0;
+                            for (const [lev1Desc, lev1Data] of Object.entries(lev2Data.children)) {
+                                lev1Idx++;
+                                const lev1Id = `${lev2Id}-lev1-${lev1Idx}`;
+
+                                html += `<tr class="child-row child-id-${lev1Id} wrapper-${lev2Id}" onclick="toggleWrapper('${lev1Id}')" style="background:#f0fdf4; cursor:pointer; display:none; border-top: 1px solid #bbf7d0;">`;
+                                headers.forEach((h, idx) => {
+                                    if (idx === 0) {
+                                        html += `<td colspan="2" style="font-weight:600; color:#166534; padding:6px 12px 6px 24px; border:1px solid #bbf7d0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><i class="fas fa-chevron-right expand-icon-${lev1Id}" style="margin-right:6px; transition:transform 0.2s;"></i> ${lev1Desc}</td>`;
+                                    } else if (idx === 1) {
+                                        return;
+                                    } else if (h.toLowerCase().includes('biaya_per_ha') && perHaMapping[h]) {
+                                        const perHaVal = calcPerHa(lev1Data.acc, h);
+                                        html += `<td style="font-weight:600; color:#166534; text-align:right; padding:6px 12px; border:1px solid #bbf7d0; white-space:nowrap;">${fmt2(perHaVal)}</td>`;
+                                    } else if (isSubtotalCol(h)) {
+                                        const val = lev1Data.acc[h];
+                                        const useFmt2 = h.toLowerCase().includes('qty') || h.toLowerCase().includes('biaya_per_ha');
+                                        html += `<td style="font-weight:600; color:#166534; text-align:right; padding:6px 12px; border:1px solid #bbf7d0; white-space:nowrap;">${useFmt2 ? fmt2(val) : fmt(val)}</td>`;
+                                    } else {
+                                        html += `<td style="border:1px solid #bbf7d0; padding:6px 12px;"></td>`;
+                                    }
+                                });
+                                html += `</tr>`;
+
+                                lev1Data.rows.forEach((row, i) => {
+                                    const bg = i % 2 === 0 ? '#fff' : '#f9fafb';
+                                    html += `<tr class="detail-row wrapper-${lev1Id}" style="background:${bg}; display:none;">`;
+                                    headers.forEach((h, idx) => {
+                                        const val = row[h];
+                                        const num = isNum(val);
+                                        const isTextCol = colTypes[h] === 'text';
+                                        const isPerHa = h.toLowerCase().includes('biaya_per_ha') || h.toLowerCase().includes('qty');
+                                        
+                                        if (idx === 0) {
+                                            html += `<td style="padding:3px 5px 3px 40px; border:1px solid #e5e7eb; text-align:${num ? 'right' : 'left'}; ${isTextCol ? 'overflow:hidden; text-overflow:ellipsis; white-space:nowrap;' : 'white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'}">${isPerHa ? fmt2(val) : fmt(val)}</td>`;
+                                        } else {
+                                            html += `<td style="padding:3px 5px; border:1px solid #e5e7eb; text-align:${num ? 'right' : 'left'}; ${isTextCol ? 'overflow:hidden; text-overflow:ellipsis; white-space:nowrap;' : 'white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'}">${isPerHa ? fmt2(val) : fmt(val)}</td>`;
+                                        }
+                                    });
+                                    html += '</tr>';
+                                });
+                            }
+                        }
 
                         // ── Grand Total ───────────────────────────────────────────────
-                        // let gt = `<tr style="background:#14532d; color:#fff; font-weight:900; border-top:3px solid #052e16;">`;
-                        // headers.forEach((h, idx) => {
-                        //     if (idx === 0) {
-                        //         gt += `<td colspan="2" style="padding:7px 12px; border:1px solid #166534; text-align:right; white-space:nowrap; color:#fff;">JUMLAH TOTAL</td>`;
-                        //     } else if (idx === 1) {
-                        //         return;
-                        //     } else if (isSubtotalCol(h)) {
-                        //         gt += `<td style="padding:7px 12px; border:1px solid #166534; text-align:right; white-space:nowrap; color:#fff;">${fmt(accTotal[h])}</td>`;
-                        //     } else {
-                        //         gt += `<td style="padding:7px 12px; border:1px solid #166534; color:#fff;"></td>`;
-                        //     }
-                        // });
-                        // gt += '</tr>';
-                        // html += gt;
+                        let gt = `<tr style="background:#14532d; color:#fff; font-weight:900; border-top:3px solid #052e16;">`;
+                        headers.forEach((h, idx) => {
+                            if (idx === 0) {
+                                gt += `<td colspan="2" style="padding:6px 6px; border:1px solid #166534; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#fff;">JUMLAH TOTAL</td>`;
+                            } else if (idx === 1) {
+                                return;
+                            } else if (h.toLowerCase().includes('biaya_per_ha') && perHaMapping[h]) {
+                                const perHaVal = calcPerHa(accTotal, h);
+                                gt += `<td style="padding:6px 6px; border:1px solid #166534; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#fff;">${fmt2(perHaVal)}</td>`;
+                            } else if (isSubtotalCol(h)) {
+                                const val = accTotal[h];
+                                const useFmt2 = h.toLowerCase().includes('qty') || h.toLowerCase().includes('biaya_per_ha');
+                                gt += `<td style="padding:6px 6px; border:1px solid #166534; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#fff;">${useFmt2 ? fmt2(val) : fmt(val)}</td>`;
+                            } else {
+                                gt += `<td style="padding:6px 6px; border:1px solid #166534; color:#fff;"></td>`;
+                            }
+                        });
+                        gt += '</tr>';
+                        html += gt;
 
                         html += '</tbody></table>';
 
                         result.innerHTML = html;
+
+
                     })
                     .catch(err => {
-                        // 'timeout' adalah reject internal dari handler 504 — sudah ditangani di atas
-                        if (err === 'timeout') return;
                         loading.style.display = 'none';
-                        errBox.style.display  = '';
-                        errBox.textContent    = '⚠️ Gagal menghubungi server: ' + (err.message || err);
+                        errBox.style.display = '';
+                        errBox.textContent = '⚠️ Gagal menghubungi server: ' + err.message;
                     });
-
             }
 
             // Filter form submit
@@ -879,7 +961,7 @@
                 const tahun = document.getElementById('tahunFilter').value;
                 const bulan = document.getElementById('bulanFilter').value;
                 updateLabels();
-                get_data_lm13(komoditas, regional, plant, tahun, bulan);
+                get_data_lm14(plant, regional, tahun, bulan, komoditas);
             });
 
             // Reset — gunakan tahun berjalan dari server
@@ -927,15 +1009,12 @@
         async function exportExcel() {
             if (!_exportData) { alert('Belum ada data untuk diekspor.'); return; }
 
-            const { rows, headers, judul, numericCols } = _exportData;
-            const isSubCol = h => numericCols && numericCols.has(h);
+            const { rows, headers, judul, subtotalCols } = _exportData;
+            const isSubCol = h => subtotalCols.some(k => h.toLowerCase().includes(k));
             const isNum = v => v !== null && v !== '' && v !== undefined && !isNaN(parseFloat(v));
 
             const workbook = new ExcelJS.Workbook();
-            const ws = workbook.addWorksheet('LM13');
-
-            // ── Pastikan worksheet TIDAK diproteksi ──────────────────────────────
-            ws.properties = ws.properties || {};
+            const ws = workbook.addWorksheet('LM14');
 
             // ── Lebar kolom otomatis ─────────────────────────────────────────────
             ws.columns = headers.map(h => ({
@@ -958,7 +1037,6 @@
             titleCell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
             titleCell.fill = fillSolid('FFFFFFFF');
             titleCell.border = border();
-            titleCell.protection = { locked: false };
             ws.getRow(1).height = 22;
 
             // ── Baris 2: Header kolom ────────────────────────────────────────────
@@ -968,15 +1046,43 @@
                 cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 9 };
                 cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
                 cell.border = border();
-                cell.protection = { locked: false };
             });
             ws.getRow(2).height = 18;
+
+            // perHaMapping — pasangkan biaya_per_ha => biaya_total + luas areal
+            const _row00 = rows.find(r => {
+                const k = (r['kode'] ?? r['kdbe'] ?? r['KODE'] ?? r['Kode'] ?? '').toString().trim();
+                const u = (r['uraian'] ?? r['URAIAN'] ?? '').toString().toLowerCase();
+                return k === '00' || k === '0' || parseInt(k) === 0 || u.includes('luas areal');
+            });
+            const _phCols = headers.filter(h => h.toLowerCase().includes('biaya_per_ha'));
+            const _btCols = headers.filter(h => h.toLowerCase().includes('biaya_total'));
+            const _qtyCols = headers.filter(h => h.toLowerCase().includes('qty'));
+            const _luasArr = _qtyCols.map(col => {
+                if (!_row00) return 0;
+                const v = parseFloat(_row00[col]);
+                return isNaN(v) ? 0 : v;
+            });
+            const _phMap = {};
+            _phCols.forEach((col, i) => {
+                _phMap[col] = { totalCol: _btCols[i] ?? _btCols[0], luas: _luasArr[i] ?? _luasArr[0] ?? 0 };
+            });
+            const _calcPH = (acc, col) => {
+                const { totalCol, luas } = _phMap[col] || {};
+                if (!totalCol || !luas) return null;
+                const t = acc[totalCol] || 0;
+                return luas > 0 ? t / luas : null;
+            };
 
             // ── Helper: tambah baris subtotal ────────────────────────────────────
             const addSubRow = (label, acc, bgArgb) => {
                 const rowData = headers.map((h, idx) => {
                     if (idx === 0) return label;
                     if (idx === 1) return null;
+                    if (h.toLowerCase().includes('biaya_per_ha') && _phMap[h]) {
+                        const v = _calcPH(acc, h);
+                        return v !== null ? parseFloat(v.toFixed(2)) : null;
+                    }
                     return isSubCol(h) && isNum(acc[h]) ? parseFloat(acc[h]) : null;
                 });
                 const r = ws.addRow(rowData);
@@ -985,11 +1091,13 @@
                     cell.fill = fillSolid(bgArgb);
                     cell.font = { bold: true, italic: true, size: 9, color: { argb: 'FF111827' } };
                     cell.border = border();
-                    cell.protection = { locked: false };
                     const h = headers[colNum - 1];
-                    if (colNum > 2 && numericColsExport.has(h)) {
-                        cell.numFmt = '#,##0';
-                        cell.alignment = { horizontal: 'right' };
+                    if (colNum > 2 && h) {
+                        if (h.toLowerCase().includes('biaya_per_ha') || h.toLowerCase().includes('qty')) {
+                            cell.numFmt = '#,##0.00'; cell.alignment = { horizontal: 'right' };
+                        } else if (isSubCol(h)) {
+                            cell.numFmt = '#,##0'; cell.alignment = { horizontal: 'right' };
+                        }
                     }
                 });
                 try { ws.mergeCells(rNum, 1, rNum, 2); } catch (e) { }
@@ -997,35 +1105,32 @@
             };
 
             // ── Akumulator ───────────────────────────────────────────────────────
-            const numericColsExport = numericCols || new Set(headers.filter(h => {
-                const v = rows[0][h];
-                return v !== null && v !== '' && v !== undefined && !isNaN(parseFloat(v));
-            }));
             const initAcc = () => Object.fromEntries(headers.map(h => [h, 0]));
             const addToAcc = (acc, row) => headers.forEach(h => {
-                if (numericColsExport.has(h) && isNum(row[h])) acc[h] += parseFloat(row[h]);
+                if (isSubCol(h) && isNum(row[h])) acc[h] += parseFloat(row[h]);
             });
 
-            let acc2 = initAcc(), key2 = '', acc1 = initAcc(), key1 = '';
+            let accLev2 = initAcc(), keyLev2 = '';
+            let accLev1 = initAcc(), keyLev1 = '';
             let accTotal = initAcc();
             let rowIdx = 0;
 
             // ── Iterasi baris data ────────────────────────────────────────────────
             for (const row of rows) {
-                const kode = (row['kode'] || row['kdbe'] || row['KODE'] || '').toString();
-                const grp2 = kode.substring(0, 2).toUpperCase();
-                const grp1 = kode.substring(0, 1).toUpperCase();
+                const lev2 = row['lev2'] || row['LEV2'] || 'Tidak Diketahui';
+                const lev1 = row['lev1'] || row['LEV1'] || 'Tidak Diketahui';
 
-                if (key2 && grp2 !== key2) {
-                    addSubRow(`Jumlah ${key2}`, acc2, 'FFF0FDF4');
-                    acc2 = initAcc();
-                    if (grp1 !== key1) {
-                        addSubRow(`Jumlah ${key1}`, acc1, 'FFDCFCE7');
-                        acc1 = initAcc();
-                    }
+                if (keyLev2 && keyLev2 !== lev2) {
+                    if (keyLev1) { addSubRow(`Jumlah ${keyLev1}`, accLev1, 'FFDCFCE7'); accLev1 = initAcc(); }
+                    addSubRow(`Jumlah ${keyLev2}`, accLev2, 'FFBBF7D0');
+                    accLev2 = initAcc();
+                } else if (keyLev1 && keyLev1 !== lev1) {
+                    addSubRow(`Jumlah ${keyLev1}`, accLev1, 'FFDCFCE7');
+                    accLev1 = initAcc();
                 }
-                key2 = grp2; key1 = grp1;
-                addToAcc(acc2, row); addToAcc(acc1, row); addToAcc(accTotal, row);
+
+                keyLev2 = lev2; keyLev1 = lev1;
+                addToAcc(accLev2, row); addToAcc(accLev1, row); addToAcc(accTotal, row);
 
                 // Baris data
                 const rowData = headers.map(h => {
@@ -1038,10 +1143,10 @@
                     cell.fill = fillSolid(bg);
                     cell.font = { size: 9 };
                     cell.border = border();
-                    cell.protection = { locked: false };
                     const h = headers[colNum - 1];
                     if (h && isNum(row[h])) {
-                        cell.numFmt = '#,##0';
+                        const isFmt2 = h.toLowerCase().includes('biaya_per_ha') || h.toLowerCase().includes('qty');
+                        cell.numFmt = isFmt2 ? '#,##0.00' : '#,##0';
                         cell.alignment = { horizontal: 'right' };
                     } else {
                         cell.alignment = { horizontal: 'left' };
@@ -1051,13 +1156,17 @@
             }
 
             // Subtotal terakhir
-            if (key2) addSubRow(`Jumlah ${key2}`, acc2, 'FFF0FDF4');
-            if (key1) addSubRow(`Jumlah ${key1}`, acc1, 'FFDCFCE7');
+            if (keyLev1) addSubRow(`Jumlah ${keyLev1}`, accLev1, 'FFDCFCE7');
+            if (keyLev2) addSubRow(`Jumlah ${keyLev2}`, accLev2, 'FFBBF7D0');
 
             // ── Grand Total ──────────────────────────────────────────────────────
             const gtData = headers.map((h, idx) => {
                 if (idx === 0) return 'JUMLAH TOTAL';
                 if (idx === 1) return null;
+                if (h.toLowerCase().includes('biaya_per_ha') && _phMap[h]) {
+                    const v = _calcPH(accTotal, h);
+                    return v !== null ? parseFloat(v.toFixed(2)) : null;
+                }
                 return isSubCol(h) && isNum(accTotal[h]) ? parseFloat(accTotal[h]) : null;
             });
             const gtRow = ws.addRow(gtData);
@@ -1066,10 +1175,13 @@
                 cell.fill = fillSolid('FF14532D');
                 cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 10 };
                 cell.border = border('medium');
-                cell.protection = { locked: false };
-                if (colNum > 2 && numericColsExport.has(headers[colNum - 1])) {
-                    cell.numFmt = '#,##0';
-                    cell.alignment = { horizontal: 'right' };
+                const h = headers[colNum - 1];
+                if (colNum > 2 && h) {
+                    if (h.toLowerCase().includes('biaya_per_ha') || h.toLowerCase().includes('qty')) {
+                        cell.numFmt = '#,##0.00'; cell.alignment = { horizontal: 'right' };
+                    } else if (isSubCol(h)) {
+                        cell.numFmt = '#,##0'; cell.alignment = { horizontal: 'right' };
+                    }
                 }
             });
             try { ws.mergeCells(gtNum, 1, gtNum, 2); } catch (e) { }
@@ -1092,17 +1204,60 @@
         function exportPdf() {
             if (!_exportData) { alert('Belum ada data untuk diekspor.'); return; }
 
-            const { rows, headers, judul, numericCols } = _exportData;
+            const { rows, headers, judul, subtotalCols } = _exportData;
+            const isSubCol = h => subtotalCols.some(k => h.toLowerCase().includes(k));
             const isNum = v => v !== null && v !== '' && v !== undefined && !isNaN(parseFloat(v));
 
-            // Rebuild numericCols jika perlu
-            const numCols = numericCols instanceof Set ? numericCols : new Set(
-                headers.filter(h => { const v = rows[0]?.[h]; return isNum(v); })
-            );
-            const isSubCol = h => numCols.has(h);
-
-            // Format angka lokal ID
+            // ── Format helpers ────────────────────────────────────────────────
             const fmtNum = v => isNum(v) ? parseFloat(v).toLocaleString('id-ID') : (v ?? '');
+            const fmtDec2 = v => isNum(v) ? parseFloat(v).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : (v ?? '');
+
+            // ── perHaMapping sama seperti Excel ──────────────────────────────
+            const _row00 = rows.find(r => {
+                const k = (r['kode'] ?? r['kdbe'] ?? r['KODE'] ?? r['Kode'] ?? '').toString().trim();
+                const u = (r['uraian'] ?? r['URAIAN'] ?? '').toString().toLowerCase();
+                return k === '00' || k === '0' || parseInt(k) === 0 || u.includes('luas areal');
+            });
+            const _phCols = headers.filter(h => h.toLowerCase().includes('biaya_per_ha'));
+            const _btCols = headers.filter(h => h.toLowerCase().includes('biaya_total'));
+            const _qtyCols = headers.filter(h => h.toLowerCase().includes('qty'));
+            const _luasArr = _qtyCols.map(col => {
+                if (!_row00) return 0;
+                const v = parseFloat(_row00[col]);
+                return isNaN(v) ? 0 : v;
+            });
+            const _phMap = {};
+            _phCols.forEach((col, i) => {
+                _phMap[col] = { totalCol: _btCols[i] ?? _btCols[0], luas: _luasArr[i] ?? _luasArr[0] ?? 0 };
+            });
+            const _calcPH = (acc, col) => {
+                const { totalCol, luas } = _phMap[col] || {};
+                if (!totalCol || !luas) return null;
+                const t = acc[totalCol] || 0;
+                return luas > 0 ? t / luas : null;
+            };
+
+            // ── Tentukan lebar kolom (proporsi) ──────────────────────────────
+            // Kolom teks (kode, uraian, sat) lebih lebar; angka lebih sempit
+            const colWidths = headers.map(h => {
+                const lower = h.toLowerCase();
+                if (lower.includes('uraian')) return 60;
+                if (lower.includes('kode') || lower.includes('sat')) return 12;
+                return 24; // kolom angka
+            });
+            const totalW = colWidths.reduce((a, b) => a + b, 0);
+            const colPcts = colWidths.map(w => w / totalW * 100);
+
+            // ── Helper build row cells ───────────────────────────────────────
+            const buildCells = (values, styles) =>
+                values.map((v, i) => ({
+                    content: v ?? '',
+                    styles: {
+                        halign: (typeof v === 'number' || isNum(v)) &&
+                            !headers[i]?.toLowerCase().includes('kode') ? 'right' : 'left',
+                        ...styles,
+                    },
+                }));
 
             // ── Akumulasi + build body ───────────────────────────────────────
             const initAcc = () => Object.fromEntries(headers.map(h => [h, 0]));
@@ -1111,20 +1266,27 @@
             });
 
             const body = [];
-            let acc2 = initAcc(), key2 = '', acc1 = initAcc(), key1 = '';
+            let accLev2 = initAcc(), keyLev2 = '';
+            let accLev1 = initAcc(), keyLev1 = '';
             let accTotal = initAcc();
 
-            const makeSubRow = (label, acc, fillRgb) => {
+            const makeSubRow = (label, acc, fillRgb, bold) => {
                 const cells = headers.map((h, idx) => {
                     let val = '';
                     if (idx === 0) val = label;
                     else if (idx === 1) val = '';
-                    else if (isSubCol(h)) val = fmtNum(acc[h]);
+                    else if (h.toLowerCase().includes('biaya_per_ha') && _phMap[h]) {
+                        const v = _calcPH(acc, h);
+                        val = v !== null ? fmtDec2(v) : '';
+                    } else if (isSubCol(h)) {
+                        const v = acc[h];
+                        val = h.toLowerCase().includes('qty') ? fmtDec2(v) : fmtNum(v);
+                    }
                     return {
                         content: val,
                         styles: {
-                            halign: idx >= 2 && val !== '' ? 'right' : (idx === 0 ? 'right' : 'left'),
-                            fontStyle: 'bold',
+                            halign: idx >= 2 && val !== '' && val !== label ? 'right' : (idx === 0 ? 'right' : 'left'),
+                            fontStyle: bold ? 'bold' : 'bold',
                             fillColor: fillRgb,
                             textColor: [20, 83, 45],
                             fontSize: 6.5,
@@ -1135,25 +1297,26 @@
             };
 
             for (const row of rows) {
-                const kode = (row['kode'] || row['kdbe'] || row['KODE'] || '').toString();
-                const grp2 = kode.substring(0, 2).toUpperCase();
-                const grp1 = kode.substring(0, 1).toUpperCase();
+                const lev2 = row['lev2'] || row['LEV2'] || 'Tidak Diketahui';
+                const lev1 = row['lev1'] || row['LEV1'] || 'Tidak Diketahui';
 
-                if (key2 && grp2 !== key2) {
-                    makeSubRow(`Jumlah ${key2}`, acc2, [240, 253, 244]);
-                    acc2 = initAcc();
-                    if (grp1 !== key1) {
-                        makeSubRow(`Jumlah ${key1}`, acc1, [220, 252, 231]);
-                        acc1 = initAcc();
-                    }
+                if (keyLev2 && keyLev2 !== lev2) {
+                    if (keyLev1) { makeSubRow(`Jumlah ${keyLev1}`, accLev1, [220, 252, 231]); accLev1 = initAcc(); }
+                    makeSubRow(`Jumlah ${keyLev2}`, accLev2, [187, 247, 208]);
+                    accLev2 = initAcc();
+                } else if (keyLev1 && keyLev1 !== lev1) {
+                    makeSubRow(`Jumlah ${keyLev1}`, accLev1, [220, 252, 231]);
+                    accLev1 = initAcc();
                 }
-                key2 = grp2; key1 = grp1;
-                addToAcc(acc2, row); addToAcc(acc1, row); addToAcc(accTotal, row);
+
+                keyLev2 = lev2; keyLev1 = lev1;
+                addToAcc(accLev2, row); addToAcc(accLev1, row); addToAcc(accTotal, row);
 
                 // Baris data
                 const cells = headers.map((h, idx) => {
                     const v = row[h];
-                    const display = isNum(v) ? fmtNum(v) : (v ?? '');
+                    const isFmt2 = h.toLowerCase().includes('biaya_per_ha') || h.toLowerCase().includes('qty');
+                    const display = isFmt2 ? fmtDec2(v) : (isNum(v) ? fmtNum(v) : (v ?? ''));
                     return {
                         content: display,
                         styles: {
@@ -1166,19 +1329,24 @@
             }
 
             // Subtotal terakhir
-            if (key2) makeSubRow(`Jumlah ${key2}`, acc2, [240, 253, 244]);
-            if (key1) makeSubRow(`Jumlah ${key1}`, acc1, [220, 252, 231]);
+            if (keyLev1) makeSubRow(`Jumlah ${keyLev1}`, accLev1, [220, 252, 231]);
+            if (keyLev2) makeSubRow(`Jumlah ${keyLev2}`, accLev2, [187, 247, 208]);
 
             // Grand Total
             const gtCells = headers.map((h, idx) => {
                 let val = '';
                 if (idx === 0) val = 'JUMLAH TOTAL';
                 else if (idx === 1) val = '';
-                else if (isSubCol(h)) val = fmtNum(accTotal[h]);
+                else if (h.toLowerCase().includes('biaya_per_ha') && _phMap[h]) {
+                    const v = _calcPH(accTotal, h);
+                    val = v !== null ? fmtDec2(v) : '';
+                } else if (isSubCol(h)) {
+                    val = h.toLowerCase().includes('qty') ? fmtDec2(accTotal[h]) : fmtNum(accTotal[h]);
+                }
                 return {
                     content: val,
                     styles: {
-                        halign: idx >= 2 && val !== '' ? 'right' : (idx === 0 ? 'right' : 'left'),
+                        halign: idx >= 2 && val !== '' && val !== 'JUMLAH TOTAL' ? 'right' : (idx === 0 ? 'right' : 'left'),
                         fontStyle: 'bold',
                         fillColor: [20, 83, 45],
                         textColor: [255, 255, 255],
@@ -1217,6 +1385,9 @@
                     cellPadding: 3,
                 },
                 alternateRowStyles: { fillColor: [249, 250, 251] },
+                columnStyles: Object.fromEntries(
+                    headers.map((h, i) => [i, { cellWidth: 'auto' }])
+                ),
                 margin: { top: 42, left: 18, right: 18 },
                 tableWidth: 'auto',
             });
