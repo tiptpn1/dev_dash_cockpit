@@ -823,7 +823,7 @@
                                 <tr>
                                     <th style="width: 60px;">No</th>
                                     <th style="text-align: left;">Divisi <span style="font-weight:400;text-transform:none;">(klik untuk detail karyawan)</span></th>
-                                    <th style="width: 200px;">Jumlah Hari Kerja</th>
+                                    <th style="width: 200px;">Jumlah Hari Kerja<br><span style="font-size:11px;font-weight:400;text-transform:none;color:#e2e8f0;opacity:0.9;">s/d {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</span></th>
                                     <th style="width: 320px;">Persentase Kehadiran</th>
                                 </tr>
                             </thead>
@@ -1158,7 +1158,7 @@
         });
 
         function absensiColumnHeaderHtml() {
-            return `Absensi
+            return `Absensi / Hari Kerja
                 <button type="button" class="absensi-info-btn" title="Info ketentuan absensi" onclick="event.stopPropagation(); openAbsensiPopup(null);">
                     <i class="fas fa-info"></i>
                 </button>`;

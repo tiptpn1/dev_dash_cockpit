@@ -3251,6 +3251,109 @@ class PageController extends Controller
         return str_pad((string) $bulan, 2, '0', STR_PAD_LEFT) . $tahun;
     }
 
+    
+    private function buildDynamicHariKerjaSql(string $periodeHris, string $areaKodeField = 'p.area_kode', string $fallbackField = 'b.hari_kerja'): string
+    {
+        if (strlen($periodeHris) === 6 && is_numeric($periodeHris)) {
+            $bulan = (int) substr($periodeHris, 0, 2);
+            $tahun = (int) substr($periodeHris, 2, 4);
+        } else {
+            return $fallbackField;
+        }
+
+        $startDate = \Carbon\Carbon::createFromDate($tahun, $bulan, 1)->startOfDay();
+        $endDate = $startDate->copy()->endOfMonth();
+        $today = \Carbon\Carbon::now()->startOfDay();
+
+        $isCurrentMonth = $startDate->isSameMonth($today) && $startDate->isSameYear($today);
+        
+        if ($isCurrentMonth) {
+            $endDate = $today;
+        }
+
+        if ($today->lt($startDate)) {
+            return "0";
+        }
+
+        $startStr = $startDate->format('Y-m-d');
+        $endStr = $endDate->format('Y-m-d');
+
+        // Note: IF it's a past month, we COULD use " . $dynamicHariKerja . " as default, 
+        // but computing it dynamically ensures exact match with jam_detail and hari_libur.
+        // We will compute default_hari_kerja (Mon-Fri minus holidays) for the period.
+        $sql = "
+            WITH RECURSIVE
+            date_series AS (
+                SELECT CAST(? AS DATE) AS d
+                UNION ALL
+                SELECT DATE_ADD(d, INTERVAL 1 DAY)
+                FROM date_series
+                WHERE d < ?
+            ),
+            libur_dates AS (
+                SELECT ds.d
+                FROM date_series ds
+                JOIN hari_libur hl ON ds.d BETWEEN hl.tgl_awal AND hl.tgl_akhir
+            ),
+            area_work_days AS (
+                SELECT jd.area_kodex, COUNT(DISTINCT ds.d) AS hari_kerja
+                FROM date_series ds
+                JOIN jam_detail jd 
+                  ON jd.tgl_awalx <= ds.d AND jd.tgl_akhirx >= ds.d
+                  AND LOWER(jd.hari) = LOWER(DAYNAME(ds.d))
+                  AND jd.jam_masuk IS NOT NULL
+                  AND TRIM(jd.jam_masuk) != ''
+                LEFT JOIN libur_dates ld ON ds.d = ld.d
+                WHERE ld.d IS NULL
+                GROUP BY jd.area_kodex
+            ),
+            default_work_days AS (
+                SELECT COUNT(DISTINCT ds.d) AS default_hari_kerja
+                FROM date_series ds
+                LEFT JOIN libur_dates ld ON ds.d = ld.d
+                WHERE ld.d IS NULL AND DAYOFWEEK(ds.d) NOT IN (1, 7)
+            )
+            SELECT a.area_kodex, a.hari_kerja, d.default_hari_kerja 
+            FROM default_work_days d
+            LEFT JOIN area_work_days a ON 1=1
+        ";
+
+        try {
+            $workDays = \Illuminate\Support\Facades\DB::connection('hris')->select($sql, [$startStr, $endStr]);
+            
+            $defaultHariKerja = 0;
+            if (!empty($workDays)) {
+                $defaultHariKerja = (int) $workDays[0]->default_hari_kerja;
+            } else {
+                return $isCurrentMonth ? "0" : $fallbackField;
+            }
+
+            // Fallback for past months can be " . $dynamicHariKerja . " if we don't want to override it with our computed default.
+            // But if we override it, we ensure 100% consistency with jam_detail!
+            $elseValue = $isCurrentMonth ? $defaultHariKerja : "COALESCE({$fallbackField}, {$defaultHariKerja})";
+
+            $caseSql = "CASE {$areaKodeField} ";
+            $hasCases = false;
+            foreach ($workDays as $wd) {
+                if ($wd->area_kodex) {
+                    $area = addslashes($wd->area_kodex);
+                    $caseSql .= "WHEN '{$area}' THEN {$wd->hari_kerja} ";
+                    $hasCases = true;
+                }
+            }
+            
+            if (!$hasCases && !$isCurrentMonth) {
+                 return $fallbackField; // Nothing custom, past month, just use table
+            }
+            
+            $caseSql .= "ELSE {$elseValue} END";
+            
+            return $caseSql;
+        } catch (\Throwable $e) {
+            return $fallbackField;
+        }
+    }
+
     private function hrisUsesImportData(string $periodeHris): bool
     {
         $importCount = DB::connection('hris')
@@ -3297,6 +3400,8 @@ class PageController extends Controller
 
     private function fetchRekapSeluruhRegionalFromImport(string $periodeHris): array
     {
+        $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris);
+
         $sql = "
             SELECT
                 CASE 
@@ -3311,11 +3416,11 @@ class PageController extends Controller
                     WHEN UPPER(p.regional) LIKE '%HO%' OR UPPER(p.regional) LIKE '%HEAD OFFICE%' THEN 'SuppCo HO'
                     ELSE 'Lainnya'
                 END AS regional,
-                ROUND(AVG(b.hari_kerja), 0) AS hari_kerja,
+                ROUND(AVG(" . $dynamicHariKerja . "), 0) AS hari_kerja,
                 COUNT(DISTINCT p.pegawai_id) AS jumlah_pegawai,
                 ROUND(AVG(
-                    CASE WHEN COALESCE(b.hari_kerja, 0) > 0
-                    THEN COALESCE(att.check_in, 0) / b.hari_kerja * 100
+                    CASE WHEN COALESCE(" . $dynamicHariKerja . ", 0) > 0
+                    THEN COALESCE(att.check_in, 0) / " . $dynamicHariKerja . " * 100
                     ELSE 0 END
                 ), 1) AS persentase_kehadiran
             FROM pegawai p
@@ -3355,6 +3460,8 @@ class PageController extends Controller
 
     private function fetchRekapSeluruhRegionalFromAbsensi(string $periodeHris): array
     {
+        $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris);
+
         $sql = "
             SELECT
                 CASE 
@@ -3369,16 +3476,16 @@ class PageController extends Controller
                     WHEN UPPER(p.regional) LIKE '%HO%' OR UPPER(p.regional) LIKE '%HEAD OFFICE%' THEN 'SuppCo HO'
                     ELSE 'Lainnya'
                 END AS regional,
-                ROUND(AVG(b.hari_kerja), 0) AS hari_kerja,
+                ROUND(AVG(" . $dynamicHariKerja . "), 0) AS hari_kerja,
                 COUNT(DISTINCT p.pegawai_id) AS jumlah_pegawai,
                 ROUND(AVG(
-                    CASE WHEN COALESCE(b.hari_kerja, 0) > 0
-                    THEN COALESCE(att.check_in, 0) / b.hari_kerja * 100
+                    CASE WHEN COALESCE(" . $dynamicHariKerja . ", 0) > 0
+                    THEN COALESCE(att.check_in, 0) / " . $dynamicHariKerja . " * 100
                     ELSE 0 END
                 ), 1) AS persentase_kehadiran
             FROM pegawai p
             LEFT JOIN (
-                SELECT pegawai_id, COUNT(DISTINCT DATE(jam)) AS check_in
+                SELECT pegawai_id, COUNT(DISTINCT CASE WHEN UPPER(TRIM(jenis_absen)) IN ('WFO', 'WFH', 'IZIN', 'IJIN', 'DINAS') THEN DATE(jam) END) AS check_in
                 FROM absensi
                 WHERE DATE_FORMAT(jam, '%m%Y') = ?
                 GROUP BY pegawai_id
@@ -3422,15 +3529,17 @@ class PageController extends Controller
 
     private function fetchRekapSeluruhRegionalDetailFromImport(string $periodeHris, string $regionalName): array
     {
+        $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris);
+
         $sql = "
             SELECT
                 p.area AS area_name,
                 d.nama AS unit_name,
-                ROUND(AVG(b.hari_kerja), 0) AS hari_kerja,
+                ROUND(AVG(" . $dynamicHariKerja . "), 0) AS hari_kerja,
                 COUNT(DISTINCT p.pegawai_id) AS jumlah_pegawai,
                 ROUND(AVG(
-                    CASE WHEN COALESCE(b.hari_kerja, 0) > 0
-                    THEN COALESCE(att.check_in, 0) / b.hari_kerja * 100
+                    CASE WHEN COALESCE(" . $dynamicHariKerja . ", 0) > 0
+                    THEN COALESCE(att.check_in, 0) / " . $dynamicHariKerja . " * 100
                     ELSE 0 END
                 ), 1) AS persentase_kehadiran
             FROM pegawai p
@@ -3471,20 +3580,22 @@ class PageController extends Controller
 
     private function fetchRekapSeluruhRegionalDetailFromAbsensi(string $periodeHris, string $regionalName): array
     {
+        $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris);
+
         $sql = "
             SELECT
                 p.area AS area_name,
                 d.nama AS unit_name,
-                ROUND(AVG(b.hari_kerja), 0) AS hari_kerja,
+                ROUND(AVG(" . $dynamicHariKerja . "), 0) AS hari_kerja,
                 COUNT(DISTINCT p.pegawai_id) AS jumlah_pegawai,
                 ROUND(AVG(
-                    CASE WHEN COALESCE(b.hari_kerja, 0) > 0
-                    THEN COALESCE(att.check_in, 0) / b.hari_kerja * 100
+                    CASE WHEN COALESCE(" . $dynamicHariKerja . ", 0) > 0
+                    THEN COALESCE(att.check_in, 0) / " . $dynamicHariKerja . " * 100
                     ELSE 0 END
                 ), 1) AS persentase_kehadiran
             FROM pegawai p
             LEFT JOIN (
-                SELECT pegawai_id, COUNT(DISTINCT DATE(jam)) AS check_in
+                SELECT pegawai_id, COUNT(DISTINCT CASE WHEN UPPER(TRIM(jenis_absen)) IN ('WFO', 'WFH', 'IZIN', 'IJIN', 'DINAS') THEN DATE(jam) END) AS check_in
                 FROM absensi
                 WHERE DATE_FORMAT(jam, '%m%Y') = ?
                 GROUP BY pegawai_id
@@ -3531,6 +3642,8 @@ class PageController extends Controller
 
     private function fetchRekapSeluruhRegionalPegawaiFromImport(string $periodeHris, string $area, string $unit): array
     {
+        $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris);
+
         $unitCondition = $unit === '' ? "AND (d.nama IS NULL OR TRIM(d.nama) = '')" : "AND d.nama = ?";
         $bindings = [$periodeHris, $periodeHris, $area];
         if ($unit !== '') {
@@ -3543,11 +3656,11 @@ class PageController extends Controller
                 p.nik,
                 p.nama,
                 p.jabatan,
-                COALESCE(b.hari_kerja, 0) AS hari_kerja,
+                COALESCE(" . $dynamicHariKerja . ", 0) AS hari_kerja,
                 COALESCE(att.check_in, 0) AS check_in,
                 ROUND(
-                    CASE WHEN COALESCE(b.hari_kerja, 0) > 0
-                    THEN COALESCE(att.check_in, 0) / b.hari_kerja * 100
+                    CASE WHEN COALESCE(" . $dynamicHariKerja . ", 0) > 0
+                    THEN COALESCE(att.check_in, 0) / " . $dynamicHariKerja . " * 100
                     ELSE 0 END
                 , 1) AS persentase_kehadiran
             FROM pegawai p
@@ -3576,6 +3689,8 @@ class PageController extends Controller
 
     private function fetchRekapSeluruhRegionalPegawaiFromAbsensi(string $periodeHris, string $area, string $unit): array
     {
+        $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris);
+
         $unitCondition = $unit === '' ? "AND (d.nama IS NULL OR TRIM(d.nama) = '')" : "AND d.nama = ?";
         $bindings = [$periodeHris, $periodeHris, $area];
         if ($unit !== '') {
@@ -3588,16 +3703,16 @@ class PageController extends Controller
                 p.nik,
                 p.nama,
                 p.jabatan,
-                COALESCE(b.hari_kerja, 0) AS hari_kerja,
+                COALESCE(" . $dynamicHariKerja . ", 0) AS hari_kerja,
                 COALESCE(att.check_in, 0) AS check_in,
                 ROUND(
-                    CASE WHEN COALESCE(b.hari_kerja, 0) > 0
-                    THEN COALESCE(att.check_in, 0) / b.hari_kerja * 100
+                    CASE WHEN COALESCE(" . $dynamicHariKerja . ", 0) > 0
+                    THEN COALESCE(att.check_in, 0) / " . $dynamicHariKerja . " * 100
                     ELSE 0 END
                 , 1) AS persentase_kehadiran
             FROM pegawai p
             LEFT JOIN (
-                SELECT pegawai_id, COUNT(DISTINCT DATE(jam)) AS check_in
+                SELECT pegawai_id, COUNT(DISTINCT CASE WHEN UPPER(TRIM(jenis_absen)) IN ('WFO', 'WFH', 'IZIN', 'IJIN', 'DINAS') THEN DATE(jam) END) AS check_in
                 FROM absensi
                 WHERE DATE_FORMAT(jam, '%m%Y') = ?
                 GROUP BY pegawai_id
@@ -3632,6 +3747,8 @@ class PageController extends Controller
 
     private function fetchRekapSeluruhRegionalPegawaiDetailFromImport(string $periodeHris, string $pegawai_id): array
     {
+        $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris);
+
         $sql = "
             SELECT
                 a.tanggal_date AS tanggal,
@@ -3651,6 +3768,8 @@ class PageController extends Controller
 
     private function fetchRekapSeluruhRegionalPegawaiDetailFromAbsensi(string $periodeHris, string $pegawai_id): array
     {
+        $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris);
+
         $sql = "
             SELECT
                 jam,
@@ -3698,15 +3817,17 @@ class PageController extends Controller
 
     private function fetchRegionalSummaryFromImport(string $periodeHris): ?object
     {
+        $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris);
+
         $regional = self::HRIS_REGIONAL_FILTER;
 
         $rows = DB::connection('hris')->select("
             SELECT
                 COUNT(DISTINCT p.pegawai_id) AS jumlah_pegawai,
-                ROUND(AVG(b.hari_kerja), 0) AS hari_kerja,
+                ROUND(AVG(" . $dynamicHariKerja . "), 0) AS hari_kerja,
                 ROUND(AVG(
-                    CASE WHEN COALESCE(b.hari_kerja, 0) > 0
-                    THEN COALESCE(att.check_in, 0) / b.hari_kerja * 100
+                    CASE WHEN COALESCE(" . $dynamicHariKerja . ", 0) > 0
+                    THEN COALESCE(att.check_in, 0) / " . $dynamicHariKerja . " * 100
                     ELSE 0 END
                 ), 1) AS persentase_kehadiran
             FROM pegawai p
@@ -3734,20 +3855,22 @@ class PageController extends Controller
 
     private function fetchRegionalSummaryFromAbsensi(string $periodeHris): ?object
     {
+        $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris);
+
         $regional = self::HRIS_REGIONAL_FILTER;
 
         $rows = DB::connection('hris')->select("
             SELECT
                 COUNT(DISTINCT p.pegawai_id) AS jumlah_pegawai,
-                ROUND(AVG(b.hari_kerja), 0) AS hari_kerja,
+                ROUND(AVG(" . $dynamicHariKerja . "), 0) AS hari_kerja,
                 ROUND(AVG(
-                    CASE WHEN COALESCE(b.hari_kerja, 0) > 0
-                    THEN COALESCE(att.check_in, 0) / b.hari_kerja * 100
+                    CASE WHEN COALESCE(" . $dynamicHariKerja . ", 0) > 0
+                    THEN COALESCE(att.check_in, 0) / " . $dynamicHariKerja . " * 100
                     ELSE 0 END
                 ), 1) AS persentase_kehadiran
             FROM pegawai p
             LEFT JOIN (
-                SELECT pegawai_id, COUNT(DISTINCT DATE(jam)) AS check_in
+                SELECT pegawai_id, COUNT(DISTINCT CASE WHEN UPPER(TRIM(jenis_absen)) IN ('WFO', 'WFH', 'IZIN', 'IJIN', 'DINAS') THEN DATE(jam) END) AS check_in
                 FROM absensi
                 WHERE DATE_FORMAT(jam, '%m%Y') = ?
                 GROUP BY pegawai_id
@@ -3805,16 +3928,18 @@ class PageController extends Controller
 
     private function fetchRekapAbsenFromImport(string $periodeHris): array
     {
+        $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris);
+
         $regional = self::HRIS_REGIONAL_FILTER;
 
         $sql = "
             SELECT
                 TRIM(p.divisi) AS divisi,
-                MAX(b.hari_kerja) AS hari_kerja,
+                MAX(" . $dynamicHariKerja . ") AS hari_kerja,
                 COUNT(DISTINCT p.pegawai_id) AS jumlah_pegawai,
                 ROUND(AVG(
-                    CASE WHEN COALESCE(b.hari_kerja, 0) > 0
-                    THEN COALESCE(att.check_in, 0) / b.hari_kerja * 100
+                    CASE WHEN COALESCE(" . $dynamicHariKerja . ", 0) > 0
+                    THEN COALESCE(att.check_in, 0) / " . $dynamicHariKerja . " * 100
                     ELSE 0 END
                 ), 1) AS persentase_kehadiran
             FROM pegawai p
@@ -3844,21 +3969,23 @@ class PageController extends Controller
 
     private function fetchRekapAbsenFromAbsensi(string $periodeHris): array
     {
+        $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris);
+
         $regional = self::HRIS_REGIONAL_FILTER;
 
         $sql = "
             SELECT
                 TRIM(p.divisi) AS divisi,
-                MAX(b.hari_kerja) AS hari_kerja,
+                MAX(" . $dynamicHariKerja . ") AS hari_kerja,
                 COUNT(DISTINCT p.pegawai_id) AS jumlah_pegawai,
                 ROUND(AVG(
-                    CASE WHEN COALESCE(b.hari_kerja, 0) > 0
-                    THEN COALESCE(att.check_in, 0) / b.hari_kerja * 100
+                    CASE WHEN COALESCE(" . $dynamicHariKerja . ", 0) > 0
+                    THEN COALESCE(att.check_in, 0) / " . $dynamicHariKerja . " * 100
                     ELSE 0 END
                 ), 1) AS persentase_kehadiran
             FROM pegawai p
             LEFT JOIN (
-                SELECT pegawai_id, COUNT(DISTINCT DATE(jam)) AS check_in
+                SELECT pegawai_id, COUNT(DISTINCT CASE WHEN UPPER(TRIM(jenis_absen)) IN ('WFO', 'WFH', 'IZIN', 'IJIN', 'DINAS') THEN DATE(jam) END) AS check_in
                 FROM absensi
                 WHERE DATE_FORMAT(jam, '%m%Y') = ?
                 GROUP BY pegawai_id
@@ -3881,6 +4008,8 @@ class PageController extends Controller
 
     private function fetchDetailAbsenFromImport(string $periodeHris, string $divisi): array
     {
+        $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris);
+
         $regional = self::HRIS_REGIONAL_FILTER;
 
         $sql = "
@@ -3889,15 +4018,15 @@ class PageController extends Controller
                 COALESCE(NULLIF(TRIM(p.nik), ''), '-') AS pegawai_nik,
                 p.nama,
                 p.jabatan,
-                b.hari_kerja,
+                " . $dynamicHariKerja . " AS hari_kerja,
                 COALESCE(att.absensi, 0) AS absensi,
                 COALESCE(att.cnt_wfo, 0) AS cnt_wfo,
                 COALESCE(att.cnt_wfh, 0) AS cnt_wfh,
                 COALESCE(att.cnt_izin, 0) AS cnt_izin,
                 COALESCE(att.cnt_dinas, 0) AS cnt_dinas,
                 ROUND(
-                    CASE WHEN COALESCE(b.hari_kerja, 0) > 0
-                    THEN COALESCE(att.absensi, 0) / b.hari_kerja * 100
+                    CASE WHEN COALESCE(" . $dynamicHariKerja . ", 0) > 0
+                    THEN COALESCE(att.absensi, 0) / " . $dynamicHariKerja . " * 100
                     ELSE 0 END, 1
                 ) AS persentase_kehadiran,
                 CASE WHEN COALESCE(att.absensi, 0) = 0 THEN 1 ELSE 0 END AS belum_absen
@@ -3905,7 +4034,7 @@ class PageController extends Controller
             LEFT JOIN (
                 SELECT
                     pegawai_id,
-                    SUM(CASE WHEN UPPER(TRIM(jenis_absen)) IN ('WFO', 'WFH', 'IZIN', 'DINAS') THEN 1 ELSE 0 END) AS absensi,
+                    SUM(CASE WHEN UPPER(TRIM(jenis_absen)) IN ('WFO', 'WFH', 'IZIN', 'IJIN', 'DINAS') THEN 1 ELSE 0 END) AS absensi,
                     SUM(CASE WHEN UPPER(TRIM(jenis_absen)) = 'WFO' THEN 1 ELSE 0 END) AS cnt_wfo,
                     SUM(CASE WHEN UPPER(TRIM(jenis_absen)) = 'WFH' THEN 1 ELSE 0 END) AS cnt_wfh,
                     SUM(CASE WHEN UPPER(TRIM(jenis_absen)) IN ('IZIN', 'IJIN') THEN 1 ELSE 0 END) AS cnt_izin,
@@ -3931,6 +4060,8 @@ class PageController extends Controller
 
     private function fetchDetailAbsenFromAbsensi(string $periodeHris, string $divisi): array
     {
+        $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris);
+
         $regional = self::HRIS_REGIONAL_FILTER;
 
         $sql = "
@@ -3939,15 +4070,15 @@ class PageController extends Controller
                 COALESCE(NULLIF(TRIM(p.nik), ''), '-') AS pegawai_nik,
                 p.nama,
                 p.jabatan,
-                b.hari_kerja,
+                " . $dynamicHariKerja . " AS hari_kerja,
                 COALESCE(att.absensi, 0) AS absensi,
                 COALESCE(att.cnt_wfo, 0) AS cnt_wfo,
                 COALESCE(att.cnt_wfh, 0) AS cnt_wfh,
                 COALESCE(att.cnt_izin, 0) AS cnt_izin,
                 COALESCE(att.cnt_dinas, 0) AS cnt_dinas,
                 ROUND(
-                    CASE WHEN COALESCE(b.hari_kerja, 0) > 0
-                    THEN COALESCE(att.absensi, 0) / b.hari_kerja * 100
+                    CASE WHEN COALESCE(" . $dynamicHariKerja . ", 0) > 0
+                    THEN COALESCE(att.absensi, 0) / " . $dynamicHariKerja . " * 100
                     ELSE 0 END, 1
                 ) AS persentase_kehadiran,
                 CASE WHEN COALESCE(att.absensi, 0) = 0 THEN 1 ELSE 0 END AS belum_absen
@@ -3955,7 +4086,7 @@ class PageController extends Controller
             LEFT JOIN (
                 SELECT
                     pegawai_id,
-                    COUNT(DISTINCT CASE WHEN UPPER(TRIM(jenis_absen)) IN ('WFO', 'WFH', 'IZIN', 'DINAS') THEN DATE(jam) END) AS absensi,
+                    COUNT(DISTINCT CASE WHEN UPPER(TRIM(jenis_absen)) IN ('WFO', 'WFH', 'IZIN', 'IJIN', 'DINAS') THEN DATE(jam) END) AS absensi,
                     COUNT(DISTINCT CASE WHEN UPPER(TRIM(jenis_absen)) = 'WFO' THEN DATE(jam) END) AS cnt_wfo,
                     COUNT(DISTINCT CASE WHEN UPPER(TRIM(jenis_absen)) = 'WFH' THEN DATE(jam) END) AS cnt_wfh,
                     COUNT(DISTINCT CASE WHEN UPPER(TRIM(jenis_absen)) IN ('IZIN', 'IJIN') THEN DATE(jam) END) AS cnt_izin,
@@ -3981,6 +4112,9 @@ class PageController extends Controller
 
     private function fetchHarianFromImport(string $divisi, string $tanggal): array
     {
+        $periodeHris = date('mY', strtotime($tanggal));
+        $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris);
+
         $regional = self::HRIS_REGIONAL_FILTER;
 
         $divisiCondition = $divisi !== '' ? 'AND TRIM(p.divisi) = ?' : '';
@@ -3992,7 +4126,7 @@ class PageController extends Controller
                 TRIM(p.divisi) AS divisi,
                 p.jabatan,
                 ? AS tanggal,
-                COALESCE(NULLIF(TRIM(ai.hari_kerja), ''), CAST(b.hari_kerja AS CHAR), '-') AS hari_kerja,
+                COALESCE(NULLIF(TRIM(ai.hari_kerja), ''), CAST(" . $dynamicHariKerja . " AS CHAR), '-') AS hari_kerja,
                 COALESCE(NULLIF(TRIM(ai.checkin_time), ''), '-') AS checkin_time,
                 COALESCE(NULLIF(TRIM(ai.checkout_time), ''), '-') AS checkout_time,
                 COALESCE(ai.checkin_lat, '') AS latitude,
@@ -4028,6 +4162,9 @@ class PageController extends Controller
 
     private function fetchHarianFromAbsensi(string $divisi, string $tanggal): array
     {
+        $periodeHris = date('mY', strtotime($tanggal));
+        $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris);
+
         $regional = self::HRIS_REGIONAL_FILTER;
 
         $divisiCondition = $divisi !== '' ? 'AND TRIM(p.divisi) = ?' : '';
@@ -4039,7 +4176,7 @@ class PageController extends Controller
                 TRIM(p.divisi) AS divisi,
                 p.jabatan,
                 ? AS tanggal,
-                CAST(COALESCE(b.hari_kerja, 0) AS CHAR) AS hari_kerja,
+                CAST(COALESCE(" . $dynamicHariKerja . ", 0) AS CHAR) AS hari_kerja,
                 COALESCE(DATE_FORMAT(MIN(a.jam), '%H:%i:%s'), '-') AS checkin_time,
                 COALESCE(
                     CASE WHEN COUNT(a.jam) > 1 THEN DATE_FORMAT(MAX(a.jam), '%H:%i:%s') ELSE '-' END,
@@ -4069,7 +4206,7 @@ class PageController extends Controller
               AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
               AND LOWER(p.status_pegawai) IN ('aktif', 'active')
               {$divisiCondition}
-            GROUP BY p.pegawai_id, p.nama, p.nik, p.jabatan, b.hari_kerja, p.divisi, pp.mood_masuk, pp.mood_pulang
+            GROUP BY p.pegawai_id, p.nama, p.nik, p.jabatan, " . $dynamicHariKerja . ", p.divisi, pp.mood_masuk, pp.mood_pulang
             ORDER BY p.divisi ASC, p.nama ASC
         ";
 
@@ -4182,13 +4319,16 @@ class PageController extends Controller
 
     private function fetchPerKaryawanFromAbsensi(string $pegawai_id, string $tanggal_awal, string $tanggal_akhir, string $regional): array
     {
+        $periodeHris = date('mY', strtotime($tanggal_awal));
+        $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris);
+
         $sql = "
             SELECT
                 p.nama,
                 COALESCE(NULLIF(TRIM(p.nik), ''), '-') AS pegawai_nik,
                 p.jabatan,
                 DATE(a.jam) AS tanggal,
-                CAST(COALESCE(b.hari_kerja, 0) AS CHAR) AS hari_kerja,
+                CAST(COALESCE(" . $dynamicHariKerja . ", 0) AS CHAR) AS hari_kerja,
                 COALESCE(DATE_FORMAT(MIN(a.jam), '%H:%i:%s'), '-') AS checkin_time,
                 COALESCE(
                     CASE WHEN COUNT(a.jam) > 1 THEN DATE_FORMAT(MAX(a.jam), '%H:%i:%s') ELSE '-' END,
@@ -4217,7 +4357,7 @@ class PageController extends Controller
               AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
               AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
               AND LOWER(p.status_pegawai) IN ('aktif', 'active')
-            GROUP BY p.pegawai_id, p.nama, p.nik, p.jabatan, DATE(a.jam), b.hari_kerja, pp.mood_masuk, pp.mood_pulang
+            GROUP BY p.pegawai_id, p.nama, p.nik, p.jabatan, DATE(a.jam), " . $dynamicHariKerja . ", pp.mood_masuk, pp.mood_pulang
             ORDER BY DATE(a.jam) DESC
         ";
 
@@ -4237,7 +4377,7 @@ class PageController extends Controller
                 COALESCE(NULLIF(TRIM(p.nik), ''), '-') AS pegawai_nik,
                 p.jabatan,
                 ai.tanggal_date AS tanggal,
-                COALESCE(NULLIF(TRIM(ai.hari_kerja), ''), CAST(b.hari_kerja AS CHAR), '-') AS hari_kerja,
+                COALESCE(NULLIF(TRIM(ai.hari_kerja), ''), CAST(" . $dynamicHariKerja . " AS CHAR), '-') AS hari_kerja,
                 COALESCE(NULLIF(TRIM(ai.checkin_time), ''), '-') AS checkin_time,
                 COALESCE(NULLIF(TRIM(ai.checkout_time), ''), '-') AS checkout_time,
                 COALESCE(ai.checkin_lat, '') AS latitude,
