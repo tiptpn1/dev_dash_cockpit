@@ -2479,7 +2479,7 @@ class PageController extends Controller
         $tahunSekarang = (int) date('Y');
         $tahunList = range($tahunSekarang, $tahunSekarang + 9); // [2026, 2027, ..., 2035]
 
-        return view('pages/lm14', compact('plantList', 'regionalList', 'tahunList', 'tahunSekarang'));
+        return view('pages/lm14_rev', compact('plantList', 'regionalList', 'tahunList', 'tahunSekarang'));
     }
 
     public function lm14_rev()
@@ -2511,7 +2511,7 @@ class PageController extends Controller
         $tahunSekarang = (int) date('Y');
         $tahunList = range($tahunSekarang, $tahunSekarang + 9); // [2026, 2027, ..., 2035]
 
-        return view('pages/lm16', compact('plantList', 'regionalList', 'tahunList', 'tahunSekarang'));
+        return view('pages/lm16_rev', compact('plantList', 'regionalList', 'tahunList', 'tahunSekarang'));
     }
 
     public function lm34()
