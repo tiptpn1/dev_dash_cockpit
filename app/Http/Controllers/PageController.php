@@ -10,7 +10,9 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 use App\Models\Plant;
+use App\Models\Employee;
 use BigQuery;
 
 class PageController extends Controller
@@ -3251,7 +3253,7 @@ class PageController extends Controller
         return str_pad((string) $bulan, 2, '0', STR_PAD_LEFT) . $tahun;
     }
 
-    
+
     private function buildDynamicHariKerjaSql(string $periodeHris, string $areaKodeField = 'p.area_kode', string $fallbackField = 'b.hari_kerja'): string
     {
         if (strlen($periodeHris) === 6 && is_numeric($periodeHris)) {
@@ -3266,7 +3268,7 @@ class PageController extends Controller
         $today = \Carbon\Carbon::now()->startOfDay();
 
         $isCurrentMonth = $startDate->isSameMonth($today) && $startDate->isSameYear($today);
-        
+
         if ($isCurrentMonth) {
             $endDate = $today;
         }
@@ -3320,7 +3322,7 @@ class PageController extends Controller
 
         try {
             $workDays = \Illuminate\Support\Facades\DB::connection('hris')->select($sql, [$startStr, $endStr]);
-            
+
             $defaultHariKerja = 0;
             if (!empty($workDays)) {
                 $defaultHariKerja = (int) $workDays[0]->default_hari_kerja;
@@ -3341,13 +3343,13 @@ class PageController extends Controller
                     $hasCases = true;
                 }
             }
-            
+
             if (!$hasCases && !$isCurrentMonth) {
-                 return $fallbackField; // Nothing custom, past month, just use table
+                return $fallbackField; // Nothing custom, past month, just use table
             }
-            
+
             $caseSql .= "ELSE {$elseValue} END";
-            
+
             return $caseSql;
         } catch (\Throwable $e) {
             return $fallbackField;
@@ -4410,5 +4412,205 @@ class PageController extends Controller
             $regional,
         ]);
     }
+
+    public function evaluasi_aghris()
+    {
+        return view('pages/evaluasi_aghris');
+    }
+
+    public function aghris_dashboard(Request $request)
+    {
+        try {
+            $request->validate([
+                'month' => 'required|integer|between:1,12',
+                'year' => 'required|integer'
+            ]);
+
+
+
+            $month = str_pad($request->input('month'), 2, '0', STR_PAD_LEFT);
+            $year = $request->input('year');
+
+            // Karena saat ini hanya mengambil data dari DB lokal, caching opsional,
+            // tetapi tetap kita gunakan untuk performa maksimal.
+            $cacheKey = "monitoring_data_karyawan_aktif_{$year}_{$month}";
+
+            $cacheDuration = 60 * 60; // 1 Jam
+
+            $chartData = \Illuminate\Support\Facades\Cache::remember($cacheKey, $cacheDuration, function () use ($year, $month) {
+
+                // 0. Ambil Hari Kerja dari tabel absensi_periode di database HRIS
+                $periode = str_pad($month, 2, '0', STR_PAD_LEFT) . $year;
+                $hariKerjaData = \Illuminate\Support\Facades\DB::connection('hris')
+                    ->table('absensi_periode')
+                    ->where('periode', $periode)
+                    ->pluck('hari_kerja', 'regional_grup')
+                    ->toArray();
+
+                // 1. Fetch API Data
+                $apiUrl = "https://amanah.ptpn1.co.id/api/data_presensi_aghris?bulan={$year}-{$month}&psa=";
+                $apiResponse = \Illuminate\Support\Facades\Http::timeout(60)->get($apiUrl);
+                $apiData = [];
+                if ($apiResponse->successful()) {
+                    $result = $apiResponse->json();
+                    $records = $result['data'] ?? $result;
+                    if (is_array($records)) {
+                        $apiData = $records;
+                    }
+                }
+
+                // Ekstrak NIK yang ada presensi (minimal 1 kali hadir)
+                $attendedNiksCount = [];
+                foreach ($apiData as $row) {
+                    if (!empty($row['NIK_SAP'])) {
+                        $nikStr = (string) $row['NIK_SAP'];
+                        $nikKey = strlen($nikStr) === 7 ? ('0' . $nikStr) : $nikStr;
+                        if (!isset($attendedNiksCount[$nikKey])) {
+                            $attendedNiksCount[$nikKey] = 0;
+                        }
+                        $attendedNiksCount[$nikKey]++;
+                    }
+                }
+
+                // Get active employees
+                $activeEmployees = Employee::select(['nik', 'nama', 'jabatan', 'regional_grup', 'cost_center', 'area', 'area_kode'])
+                    ->where('status_pegawai', 'aktif')
+                    ->whereNot('fungsi_jabatan', 'PRODUCTION PROCESS DIRECT ON FARM')
+                    ->whereNot('fungsi_jabatan', 'PRODUCTION PROCESS DIRECT OFF FARM')
+                    ->get();
+
+                $regionalData = [];
+
+                foreach ($activeEmployees as $emp) {
+                    $reg = $emp->regional_grup ?? 'UNKNOWN';
+
+                    // Jika Head Office (HO SUPPCO), breakdown per Divisi (cost_center). Jika Regional, per Plant (area_kode - area).
+                    if (strtoupper($reg) === 'HO SUPPCO' || strtoupper($reg) === 'SUPPCO HO' || strtoupper($reg) === 'HEAD_OFFICE') {
+                        $breakdownKey = $emp->cost_center ?? 'UNKNOWN';
+                    } else {
+                        $kode = $emp->area_kode;
+                        $nama = $emp->area;
+
+                        if (empty($kode) && empty($nama)) {
+                            $breakdownKey = 'UNKNOWN';
+                        } elseif (empty($kode)) {
+                            $breakdownKey = $nama;
+                        } elseif (empty($nama)) {
+                            $breakdownKey = $kode;
+                        } else {
+                            $breakdownKey = $kode . ' - ' . $nama;
+                        }
+                    }
+
+                    if (!isset($regionalData[$reg])) {
+                        $regionalData[$reg] = [
+                            'total_active' => 0,
+                            'total_attended' => 0,
+                            'divisi' => []
+                        ];
+                    }
+
+                    if (!isset($regionalData[$reg]['divisi'][$breakdownKey])) {
+                        $regionalData[$reg]['divisi'][$breakdownKey] = [
+                            'total_active' => 0,
+                            'total_attended' => 0,
+                            'employees' => []
+                        ];
+                    }
+
+                    // Increment active count
+                    $regionalData[$reg]['total_active']++;
+                    $regionalData[$reg]['divisi'][$breakdownKey]['total_active']++;
+
+                    $hadir = $attendedNiksCount[$emp->nik] ?? 0;
+                    $hariKerja = $hariKerjaData[$reg] ?? 20; // Default 20 jika tidak ditemukan
+
+                    // Increment attended count if employee has attendance records
+                    if ($hadir > 0) {
+                        $regionalData[$reg]['total_attended']++;
+                        $regionalData[$reg]['divisi'][$breakdownKey]['total_attended']++;
+                    }
+
+                    // Tambahkan detail karyawan
+                    $persentase = $hariKerja > 0 ? round(($hadir / $hariKerja) * 100, 1) : 0;
+                    $regionalData[$reg]['divisi'][$breakdownKey]['employees'][] = [
+                        'nik' => $emp->nik,
+                        'nama' => $emp->nama,
+                        'jabatan' => $emp->jabatan,
+                        'h_kerja' => $hariKerja,
+                        'hadir' => $hadir,
+                        'persentase' => $persentase
+                    ];
+                }
+
+                // Format data for response
+                $formattedChartData = [];
+                foreach ($regionalData as $reg => $data) {
+
+                    $divisiArr = [];
+                    foreach ($data['divisi'] as $div => $divData) {
+                        $pct = $divData['total_active'] > 0 ? round(($divData['total_attended'] / $divData['total_active']) * 100, 1) : 0;
+                        // Urutkan employees berdasarkan nama
+                        usort($divData['employees'], function ($a, $b) {
+                            return strcmp($a['nama'], $b['nama']);
+                        });
+
+                        $divisiArr[] = [
+                            'name' => $div,
+                            'active' => $divData['total_active'],
+                            'attended' => $divData['total_attended'],
+                            'percentage' => $pct,
+                            'employees' => $divData['employees']
+                        ];
+                    }
+
+                    // Sort divisi: HO (berdasarkan active count descending), Regional (berdasarkan nama ascending)
+                    usort($divisiArr, function ($a, $b) use ($reg) {
+                        if (strtoupper($reg) === 'HO SUPPCO' || strtoupper($reg) === 'SUPPCO HO' || strtoupper($reg) === 'HEAD_OFFICE') {
+                            return $b['active'] <=> $a['active'];
+                        }
+                        return strcmp($a['name'], $b['name']);
+                    });
+
+                    $pctReg = $data['total_active'] > 0 ? round(($data['total_attended'] / $data['total_active']) * 100, 1) : 0;
+                    $formattedChartData[] = [
+                        'regional' => $reg,
+                        'active' => $data['total_active'],
+                        'attended' => $data['total_attended'],
+                        'percentage' => $pctReg,
+                        'breakdown' => $divisiArr
+                    ];
+                }
+
+                // Sort main chart: SuppCo HO first, then alphabetical
+                usort($formattedChartData, function ($a, $b) {
+                    if ($a['regional'] === 'SuppCo HO')
+                        return -1;
+                    if ($b['regional'] === 'SuppCo HO')
+                        return 1;
+                    return strcmp($a['regional'], $b['regional']);
+                });
+
+                return $formattedChartData;
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $chartData
+            ]);
+
+        } catch (Exception $e) {
+            \Log::error('MonitoringController getChartData Error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
 
 }

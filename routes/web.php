@@ -181,6 +181,8 @@ Route::middleware(['check.token.or.session'])->group(function () {
     Route::get('/evaluasi-aplikasi/maia', [PageController::class, 'evaluasi_maia'])->name('evaluasi_maia');
     Route::get('/api/monika/dashboard', [PageController::class, 'monika_dashboard'])->name('monika_dashboard');
     Route::get('/api/maia/dashboard', [PageController::class, 'maia_dashboard'])->name('maia_dashboard');
+    Route::get('/evaluasi-aghris', [PageController::class, 'evaluasi_aghris'])->name('evaluasi_aghris');
+    Route::post('/api/aghris/dashboard', [PageController::class, 'aghris_dashboard'])->name('aghris_dashboard');
     Route::get('/evaluasi-aplikasi/hris-data', [PageController::class, 'evaluasi_hris_data'])->name('evaluasi_hris_data');
     Route::get('/evaluasi-aplikasi/hris-detail', [PageController::class, 'evaluasi_hris_detail'])->name('evaluasi_hris_detail');
     Route::get('/evaluasi-aplikasi/hris-divisi', [PageController::class, 'evaluasi_hris_divisi'])->name('evaluasi_hris_divisi');
