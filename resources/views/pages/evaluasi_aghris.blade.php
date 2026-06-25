@@ -691,6 +691,7 @@
         function showBreakdown(regionalData) {
             document.getElementById('breakdownSection').style.display = 'block';
             document.getElementById('employeeDetailSection').style.display = 'none';
+            document.querySelector('.breakdown-chart-wrapper').style.display = 'block'; // Pastikan wrapper chart kembali tampil
             document.getElementById('breakdownTitle').innerText = `Detail Karyawan Aktif: ${regionalData.regional}`;
 
             const ctx = document.getElementById('breakdownChart').getContext('2d');
