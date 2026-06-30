@@ -446,8 +446,18 @@
                     </div>
 
                     <div id="breakdownSection" class="breakdown-container">
-                        <div class="filter-title" style="margin-bottom: 15px;">
-                            <i class="fas fa-chart-pie"></i> <span id="breakdownTitle">Detail Karyawan Aktif</span>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <div class="filter-title" style="margin-bottom: 0;">
+                                <i class="fas fa-chart-pie"></i> <span id="breakdownTitle">Detail Karyawan Aktif</span>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button onclick="exportBreakdownExcel()" class="btn-filter" style="background-color: #10b981; border-color: #059669; font-size: 11px; height: 30px; padding: 0 10px;">
+                                    <i class="fas fa-file-excel"></i> Excel
+                                </button>
+                                <button onclick="exportBreakdownPDF()" class="btn-filter" style="background-color: #ef4444; border-color: #dc2626; font-size: 11px; height: 30px; padding: 0 10px;">
+                                    <i class="fas fa-file-pdf"></i> PDF
+                                </button>
+                            </div>
                         </div>
                         <div class="breakdown-chart-wrapper">
                             <canvas id="breakdownChart"></canvas>
@@ -455,11 +465,19 @@
                     </div>
 
                     <div id="employeeDetailSection" class="employee-detail-container">
-                        <div style="margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                             <button id="btnBackToBreakdown" class="btn-filter"
                                 style="background-color: #64748b; border-color: #475569;">
                                 <i class="fas fa-arrow-left"></i> Kembali ke Grafik
                             </button>
+                            <div style="display: flex; gap: 8px;">
+                                <button onclick="exportEmployeeExcel()" class="btn-filter" style="background-color: #10b981; border-color: #059669; font-size: 11px; height: 30px; padding: 0 10px;">
+                                    <i class="fas fa-file-excel"></i> Excel
+                                </button>
+                                <button onclick="exportEmployeePDF()" class="btn-filter" style="background-color: #ef4444; border-color: #dc2626; font-size: 11px; height: 30px; padding: 0 10px;">
+                                    <i class="fas fa-file-pdf"></i> PDF
+                                </button>
+                            </div>
                         </div>
 
                         <div class="detail-header-bar">
@@ -506,12 +524,18 @@
 @section('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <!-- Tambahan library untuk export Excel & PDF -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script>
         Chart.register(ChartDataLabels);
 
         let mainChartInstance = null;
         let breakdownChartInstance = null;
         let rawChartData = [];
+        let currentRegionalData = null; // untuk simpan data regional saat export
+        let currentDivisiData = null;   // untuk simpan data divisi saat export
 
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
@@ -689,6 +713,7 @@
         }
 
         function showBreakdown(regionalData) {
+            currentRegionalData = regionalData;
             document.getElementById('breakdownSection').style.display = 'block';
             document.getElementById('employeeDetailSection').style.display = 'none';
             document.querySelector('.breakdown-chart-wrapper').style.display = 'block'; // Pastikan wrapper chart kembali tampil
@@ -827,6 +852,8 @@
         const rowsPerPage = 10;
 
         function showEmployeeDetails(divisiData, regionalName) {
+            currentDivisiData = divisiData;
+            currentDivisiData.regionalName = regionalName;
             // Hide breakdown chart, show employee details
             document.querySelector('.breakdown-chart-wrapper').style.display = 'none';
             document.getElementById('employeeDetailSection').style.display = 'block';
@@ -910,6 +937,135 @@
             document.getElementById('employeeDetailSection').style.display = 'none';
             document.querySelector('.breakdown-chart-wrapper').style.display = 'block';
         });
+
+        // === Fungsi Export ===
+        function exportBreakdownExcel() {
+            if (!currentRegionalData) return;
+            const data = currentRegionalData.breakdown.map((item, idx) => ({
+                "NO": idx + 1,
+                "NAMA DIVISI": item.name,
+                "KARYAWAN AKTIF": item.active,
+                "KARYAWAN HADIR": item.attended,
+                "PERSENTASE (%)": item.percentage + "%"
+            }));
+            const ws = XLSX.utils.json_to_sheet(data);
+
+            const headerStyle = {
+                font: { bold: true, color: { rgb: "FF166534" } },
+                fill: { fgColor: { rgb: "FFF0FDF4" } },
+                border: { bottom: { style: "thin", color: { rgb: "FFBBF7D0" } } },
+                alignment: { horizontal: "center", vertical: "center" }
+            };
+
+            const rowStyle = {
+                font: { color: { rgb: "FF475569" } },
+                border: { bottom: { style: "thin", color: { rgb: "FFF1F5F9" } } }
+            };
+
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            for (let C = range.s.c; C <= range.e.c; ++C) {
+                const headAddr = XLSX.utils.encode_cell({c: C, r: 0});
+                if(ws[headAddr]) ws[headAddr].s = headerStyle;
+                for(let R = 1; R <= range.e.r; ++R) {
+                    const cellAddr = XLSX.utils.encode_cell({c: C, r: R});
+                    if(ws[cellAddr]) {
+                        ws[cellAddr].s = rowStyle;
+                        if(C === 0 || C >= 2) {
+                            ws[cellAddr].s = { ...rowStyle, alignment: { horizontal: "center" } };
+                        }
+                    }
+                }
+            }
+
+            ws['!cols'] = [ {wch:5}, {wch:30}, {wch:18}, {wch:18}, {wch:15} ];
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Breakdown");
+            XLSX.writeFile(wb, `Breakdown_Kehadiran_${currentRegionalData.regional}.xlsx`);
+        }
+
+        function exportBreakdownPDF() {
+            if (!currentRegionalData) return;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text(`Detail Kehadiran - ${currentRegionalData.regional}`, 14, 15);
+            const bodyData = currentRegionalData.breakdown.map((item, idx) => [
+                idx + 1, item.name, item.active, item.attended, item.percentage + '%'
+            ]);
+            doc.autoTable({
+                startY: 25,
+                head: [['No', 'Nama Divisi', 'Karyawan Aktif', 'Karyawan Hadir', 'Persentase']],
+                body: bodyData,
+                theme: 'grid',
+                headStyles: { fillColor: [22, 101, 52] }
+            });
+            doc.save(`Breakdown_Kehadiran_${currentRegionalData.regional}.pdf`);
+        }
+
+        function exportEmployeeExcel() {
+            if (!currentDivisiData || !currentEmployeesData) return;
+            const data = currentEmployeesData.map((emp, idx) => ({
+                "NO": idx + 1,
+                "NAMA KARYAWAN": emp.nama || '-',
+                "NIK": emp.nik,
+                "JABATAN": emp.jabatan || '-',
+                "ABSENSI": `${emp.hadir} / ${emp.h_kerja} hari`,
+                "PERSENTASE (%)": emp.persentase.toFixed(1) + "%"
+            }));
+            const ws = XLSX.utils.json_to_sheet(data);
+
+            const headerStyle = {
+                font: { bold: true, color: { rgb: "FF166534" } },
+                fill: { fgColor: { rgb: "FFF0FDF4" } },
+                border: { bottom: { style: "thin", color: { rgb: "FFBBF7D0" } } },
+                alignment: { horizontal: "center", vertical: "center" }
+            };
+
+            const rowStyle = {
+                font: { color: { rgb: "FF475569" } },
+                border: { bottom: { style: "thin", color: { rgb: "FFF1F5F9" } } }
+            };
+
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            for (let C = range.s.c; C <= range.e.c; ++C) {
+                const headAddr = XLSX.utils.encode_cell({c: C, r: 0});
+                if(ws[headAddr]) ws[headAddr].s = headerStyle;
+                for(let R = 1; R <= range.e.r; ++R) {
+                    const cellAddr = XLSX.utils.encode_cell({c: C, r: R});
+                    if(ws[cellAddr]) {
+                        ws[cellAddr].s = rowStyle;
+                        if(C === 0 || C >= 4) { // NO, ABSENSI, PERSENTASE rata tengah
+                            ws[cellAddr].s = { ...rowStyle, alignment: { horizontal: "center" } };
+                        }
+                    }
+                }
+            }
+
+            ws['!cols'] = [ {wch:5}, {wch:35}, {wch:15}, {wch:25}, {wch:18}, {wch:15} ];
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Karyawan");
+            XLSX.writeFile(wb, `Detail_Karyawan_${currentDivisiData.name}.xlsx`);
+        }
+
+        function exportEmployeePDF() {
+            if (!currentDivisiData || !currentEmployeesData) return;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text(`Detail Karyawan - ${currentDivisiData.regionalName} - ${currentDivisiData.name}`, 14, 15);
+            const bodyData = currentEmployeesData.map((emp, idx) => [
+                idx + 1, emp.nama || '-', emp.nik, emp.jabatan || '-',
+                `${emp.hadir} / ${emp.h_kerja}`, emp.persentase.toFixed(1) + '%'
+            ]);
+            doc.autoTable({
+                startY: 25,
+                head: [['No', 'Nama Karyawan', 'NIK', 'Jabatan', 'Absensi', 'Persentase']],
+                body: bodyData,
+                theme: 'grid',
+                headStyles: { fillColor: [22, 101, 52] }
+            });
+            doc.save(`Detail_Karyawan_${currentDivisiData.name}.pdf`);
+        }
 
         // Auto load
         window.onload = () => {

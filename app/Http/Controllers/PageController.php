@@ -117,6 +117,12 @@ class PageController extends Controller
         return view('pages/overview_page', compact('linkiframe'));
     }
 
+    public function pemasaran_karet()
+    {
+        $linkiframe = 'https://ego-blues-53338462.figma.site/';
+        return view('pages/overview_page', compact('linkiframe'));
+    }
+
     public function agraria_tax()
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/5fed7d89-b764-4a87-b5da-6fada9560516/page/joCQE';

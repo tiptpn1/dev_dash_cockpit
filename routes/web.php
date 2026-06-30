@@ -94,6 +94,7 @@ Route::middleware('auth:custom')->group(function () {
     Route::get('/sales_comodities', [PageController::class, 'sales_comodities'])->name('sales_comodities');
     Route::get('/overview_sales', [PageController::class, 'overview_sales'])->name('overview_sales');
     Route::get('/penjualan_karet', [PageController::class, 'penjualan_karet'])->name('penjualan_karet');
+    Route::get('/pemasaran_karet', [PageController::class, 'pemasaran_karet'])->name('pemasaran_karet');
 
     Route::get('/asset_peta', [PageController::class, 'asset_peta'])->name('asset_peta');
     Route::get('/asset_recovery', [PageController::class, 'asset_recovery'])->name('asset_recovery');

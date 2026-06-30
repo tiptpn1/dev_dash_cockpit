@@ -48,9 +48,10 @@ if (isset($user)) {
             <div class="submenu" id="salesSubmenu">
                 <a href="{{url('')}}/overview_sales"><i class="fa-solid fa-chart-bar menu-icon"></i>Overview Sales</a>
                 <!-- <a href="{{url('')}}/sales_comodities"><i class="fa-solid fa-boxes-stacked menu-icon"></i>Comodities
-                    Sales</a> -->
+                            Sales</a> -->
                 <a href="{{url('')}}/soptea"><i class="fa-solid fa-mug-hot menu-icon"></i>Tea Inventory</a>
                 <a href="{{url('')}}/penjualan_karet"><i class="fa-solid fa-tree menu-icon"></i>Rubber Delivery</a>
+
             </div>
         @endif
         @if($user && $user->hasFeature('aset'))
@@ -176,13 +177,21 @@ if (isset($user)) {
                 <a href="{{ route('management.features.index') }}"><i class="fa-solid fa-cube menu-icon"></i>Fitur</a>
             @endif
             @if($user->hasFeature('management_access'))
-                <a href="{{ route('management.access.index') }}"><i class="fa-solid fa-shield-halved menu-icon"></i>Hak Akses</a>
-                <a href="{{ route('management.lastlogin.index') }}"><i class="fa-solid fa-clock-rotate-left menu-icon"></i>Last Login</a>
+                <a href="{{ route('management.access.index') }}"><i class="fa-solid fa-shield-halved menu-icon"></i>Hak
+                    Akses</a>
+                <a href="{{ route('management.lastlogin.index') }}"><i class="fa-solid fa-clock-rotate-left menu-icon"></i>Last
+                    Login</a>
             @endif
         </div>
     @endif
 
-    <a href="{{ route('password.change') }}" class="menu-item" id="change-password"><i class="fa-solid fa-key menu-icon"></i>Ubah Password</a>
+    @if($user && $user->hasFeature('pemasaran_karet'))
+        <a href="{{url('')}}/pemasaran_karet" class="menu-item" id="pemasaran_karet"><i
+                class="fa-solid fa-tree menu-icon"></i>Pemasaran Karet</a>
+    @endif
+
+    <a href="{{ route('password.change') }}" class="menu-item" id="change-password"><i
+            class="fa-solid fa-key menu-icon"></i>Ubah Password</a>
     <a href="{{url('')}}/logout" class="menu-item" id="logout"><i
             class="fa-solid fa-right-from-bracket menu-icon"></i>Logout</a>
 </div>
