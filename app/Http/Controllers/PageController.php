@@ -3378,7 +3378,7 @@ class PageController extends Controller
             WHERE TRIM(regional) = ?
               AND NULLIF(TRIM(divisi), '') IS NOT NULL
               AND (penugasan_mutasi_ke IS NULL OR TRIM(penugasan_mutasi_ke) = '')
-              AND (status_ckp IS NULL OR status_ckp != 'Ya')
+              /* AND (status_ckp IS NULL OR status_ckp != 'Ya') */
               AND LOWER(status_pegawai) IN ('aktif', 'active')
             ORDER BY divisi ASC
         ", [$regional]);
@@ -3446,7 +3446,7 @@ class PageController extends Controller
                 AND b.periode = ?
             WHERE NULLIF(TRIM(p.regional), '') IS NOT NULL
               AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
-              AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
+              /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
               AND LOWER(p.status_pegawai) IN ('aktif', 'active')
             GROUP BY 
                 CASE 
@@ -3504,7 +3504,7 @@ class PageController extends Controller
                 AND b.periode = ?
             WHERE NULLIF(TRIM(p.regional), '') IS NOT NULL
               AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
-              AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
+              /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
               AND LOWER(p.status_pegawai) IN ('aktif', 'active')
             GROUP BY 
                 CASE 
@@ -3564,7 +3564,7 @@ class PageController extends Controller
             LEFT JOIN divisi d ON p.cost_center_kode = d.kode
             WHERE NULLIF(TRIM(p.regional), '') IS NOT NULL
               AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
-              AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
+              /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
               AND LOWER(p.status_pegawai) IN ('aktif', 'active')
               AND (
                   CASE 
@@ -3615,7 +3615,7 @@ class PageController extends Controller
             LEFT JOIN divisi d ON p.cost_center_kode = d.kode
             WHERE NULLIF(TRIM(p.regional), '') IS NOT NULL
               AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
-              AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
+              /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
               AND LOWER(p.status_pegawai) IN ('aktif', 'active')
               AND (
                   CASE 
@@ -3685,7 +3685,7 @@ class PageController extends Controller
             LEFT JOIN divisi d ON p.cost_center_kode = d.kode
             WHERE NULLIF(TRIM(p.regional), '') IS NOT NULL
               AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
-              AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
+              /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
               AND LOWER(p.status_pegawai) IN ('aktif', 'active')
               AND p.area = ?
               $unitCondition
@@ -3732,7 +3732,7 @@ class PageController extends Controller
             LEFT JOIN divisi d ON p.cost_center_kode = d.kode
             WHERE NULLIF(TRIM(p.regional), '') IS NOT NULL
               AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
-              AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
+              /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
               AND LOWER(p.status_pegawai) IN ('aktif', 'active')
               AND p.area = ?
               $unitCondition
@@ -3854,7 +3854,7 @@ class PageController extends Controller
             WHERE TRIM(p.regional) = ?
               AND NULLIF(TRIM(p.divisi), '') IS NOT NULL
               AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
-              AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
+              /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
               AND LOWER(p.status_pegawai) IN ('aktif', 'active')
         ", [$periodeHris, $periodeHris, $regional]);
 
@@ -3890,7 +3890,7 @@ class PageController extends Controller
             WHERE TRIM(p.regional) = ?
               AND NULLIF(TRIM(p.divisi), '') IS NOT NULL
               AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
-              AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
+              /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
               AND LOWER(p.status_pegawai) IN ('aktif', 'active')
         ", [$periodeHris, $periodeHris, $regional]);
 
@@ -3966,7 +3966,7 @@ class PageController extends Controller
             WHERE TRIM(p.regional) = ?
               AND NULLIF(TRIM(p.divisi), '') IS NOT NULL
               AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
-              AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
+              /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
               AND LOWER(p.status_pegawai) IN ('aktif', 'active')
             GROUP BY TRIM(p.divisi)
             ORDER BY divisi ASC
@@ -4005,7 +4005,7 @@ class PageController extends Controller
             WHERE TRIM(p.regional) = ?
               AND NULLIF(TRIM(p.divisi), '') IS NOT NULL
               AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
-              AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
+              /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
               AND LOWER(p.status_pegawai) IN ('aktif', 'active')
             GROUP BY TRIM(p.divisi)
             ORDER BY divisi ASC
@@ -4058,7 +4058,7 @@ class PageController extends Controller
             WHERE TRIM(p.regional) = ?
               AND TRIM(p.divisi) = ?
               AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
-              AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
+              /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
               AND LOWER(p.status_pegawai) IN ('aktif', 'active')
             ORDER BY belum_absen DESC, persentase_kehadiran ASC, p.nama ASC
         ";
@@ -4110,7 +4110,7 @@ class PageController extends Controller
             WHERE TRIM(p.regional) = ?
               AND TRIM(p.divisi) = ?
               AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
-              AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
+              /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
               AND LOWER(p.status_pegawai) IN ('aktif', 'active')
             ORDER BY belum_absen DESC, persentase_kehadiran ASC, p.nama ASC
         ";
@@ -4155,7 +4155,7 @@ class PageController extends Controller
             WHERE TRIM(p.regional) = ?
               AND NULLIF(TRIM(p.divisi), '') IS NOT NULL
               AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
-              AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
+              /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
               AND LOWER(p.status_pegawai) IN ('aktif', 'active')
               {$divisiCondition}
             ORDER BY p.divisi ASC, p.nama ASC
@@ -4211,10 +4211,10 @@ class PageController extends Controller
             WHERE TRIM(p.regional) = ?
               AND NULLIF(TRIM(p.divisi), '') IS NOT NULL
               AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
-              AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
+              /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
               AND LOWER(p.status_pegawai) IN ('aktif', 'active')
               {$divisiCondition}
-            GROUP BY p.pegawai_id, p.nama, p.nik, p.jabatan, " . $dynamicHariKerja . ", p.divisi, pp.mood_masuk, pp.mood_pulang
+            GROUP BY p.pegawai_id, p.nama, p.nik, p.jabatan, p.divisi, pp.mood_masuk, pp.mood_pulang, p.area_kode, b.hari_kerja
             ORDER BY p.divisi ASC, p.nama ASC
         ";
 
@@ -4257,7 +4257,7 @@ class PageController extends Controller
                 WHERE TRIM(p.regional) = ?
                   AND (p.nama LIKE ? OR p.nik LIKE ?)
                   AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
-                  AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
+                  /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
                   AND LOWER(p.status_pegawai) IN ('aktif', 'active')
                 ORDER BY p.nama ASC
                 LIMIT 20
@@ -4363,9 +4363,9 @@ class PageController extends Controller
             WHERE p.pegawai_id = ?
               AND TRIM(p.regional) = ?
               AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
-              AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
+              /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
               AND LOWER(p.status_pegawai) IN ('aktif', 'active')
-            GROUP BY p.pegawai_id, p.nama, p.nik, p.jabatan, DATE(a.jam), " . $dynamicHariKerja . ", pp.mood_masuk, pp.mood_pulang
+            GROUP BY p.pegawai_id, p.nama, p.nik, p.jabatan, DATE(a.jam), pp.mood_masuk, pp.mood_pulang, p.area_kode, b.hari_kerja
             ORDER BY DATE(a.jam) DESC
         ";
 
@@ -4406,7 +4406,7 @@ class PageController extends Controller
             WHERE p.pegawai_id = ?
               AND TRIM(p.regional) = ?
               AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
-              AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya')
+              /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
               AND LOWER(p.status_pegawai) IN ('aktif', 'active')
             ORDER BY ai.tanggal_date DESC
         ";
