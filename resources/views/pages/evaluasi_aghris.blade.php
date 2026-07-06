@@ -403,7 +403,7 @@
                     <div class="form-group" style="max-width: 300px;">
                         <label class="form-label" style="text-transform: uppercase;">Nama Aplikasi</label>
                         <select class="form-select" id="app_select" onchange="updateDashboard()">
-                            <option value="HRIS">HRIS</option>
+                            <!-- <option value="HRIS">HRIS</option> -->
                             <option value="AGHRIS" selected>AGHRIS</option>
 
                         </select>
@@ -446,15 +446,18 @@
                     </div>
 
                     <div id="breakdownSection" class="breakdown-container">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                             <div class="filter-title" style="margin-bottom: 0;">
                                 <i class="fas fa-chart-pie"></i> <span id="breakdownTitle">Detail Karyawan Aktif</span>
                             </div>
                             <div style="display: flex; gap: 8px;">
-                                <button onclick="exportBreakdownExcel()" class="btn-filter" style="background-color: #10b981; border-color: #059669; font-size: 11px; height: 30px; padding: 0 10px;">
+                                <button onclick="exportBreakdownExcel()" class="btn-filter"
+                                    style="background-color: #10b981; border-color: #059669; font-size: 11px; height: 30px; padding: 0 10px;">
                                     <i class="fas fa-file-excel"></i> Excel
                                 </button>
-                                <button onclick="exportBreakdownPDF()" class="btn-filter" style="background-color: #ef4444; border-color: #dc2626; font-size: 11px; height: 30px; padding: 0 10px;">
+                                <button onclick="exportBreakdownPDF()" class="btn-filter"
+                                    style="background-color: #ef4444; border-color: #dc2626; font-size: 11px; height: 30px; padding: 0 10px;">
                                     <i class="fas fa-file-pdf"></i> PDF
                                 </button>
                             </div>
@@ -465,16 +468,19 @@
                     </div>
 
                     <div id="employeeDetailSection" class="employee-detail-container">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                             <button id="btnBackToBreakdown" class="btn-filter"
                                 style="background-color: #64748b; border-color: #475569;">
                                 <i class="fas fa-arrow-left"></i> Kembali ke Grafik
                             </button>
                             <div style="display: flex; gap: 8px;">
-                                <button onclick="exportEmployeeExcel()" class="btn-filter" style="background-color: #10b981; border-color: #059669; font-size: 11px; height: 30px; padding: 0 10px;">
+                                <button onclick="exportEmployeeExcel()" class="btn-filter"
+                                    style="background-color: #10b981; border-color: #059669; font-size: 11px; height: 30px; padding: 0 10px;">
                                     <i class="fas fa-file-excel"></i> Excel
                                 </button>
-                                <button onclick="exportEmployeePDF()" class="btn-filter" style="background-color: #ef4444; border-color: #dc2626; font-size: 11px; height: 30px; padding: 0 10px;">
+                                <button onclick="exportEmployeePDF()" class="btn-filter"
+                                    style="background-color: #ef4444; border-color: #dc2626; font-size: 11px; height: 30px; padding: 0 10px;">
                                     <i class="fas fa-file-pdf"></i> PDF
                                 </button>
                             </div>
@@ -557,7 +563,7 @@
             const month = parseInt(monthStr, 10);
 
             showLoading();
-            
+
             // Menutup detail (kembali ke chart utama) saat bulan dirubah
             document.getElementById('breakdownSection').style.display = 'none';
             document.getElementById('employeeDetailSection').style.display = 'none';
@@ -896,18 +902,18 @@
                 const boxClass = 'pct-box-yellow';
 
                 const row = `
-                                <tr>
-                                    <td style="text-align: center;">${no}</td>
-                                    <td style="font-weight: 500; color: #1e293b;">${emp.nama || '-'}${belumAbsenHtml}</td>
-                                    <td>${emp.nik}</td>
-                                    <td>${emp.jabatan || '-'}</td>
-                                    <td style="text-align: center;">${emp.hadir} / ${emp.h_kerja} hari</td>
-                                    <td style="text-align: right;">
-                                        <div class="progress-bar-container"><div class="progress-bar-fill" style="width: ${emp.persentase}%"></div></div>
-                                        <span class="${boxClass}">${pctFormatted}</span>
-                                    </td>
-                                </tr>
-                            `;
+                                    <tr>
+                                        <td style="text-align: center;">${no}</td>
+                                        <td style="font-weight: 500; color: #1e293b;">${emp.nama || '-'}${belumAbsenHtml}</td>
+                                        <td>${emp.nik}</td>
+                                        <td>${emp.jabatan || '-'}</td>
+                                        <td style="text-align: center;">${emp.hadir} / ${emp.h_kerja} hari</td>
+                                        <td style="text-align: right;">
+                                            <div class="progress-bar-container"><div class="progress-bar-fill" style="width: ${emp.persentase}%"></div></div>
+                                            <span class="${boxClass}">${pctFormatted}</span>
+                                        </td>
+                                    </tr>
+                                `;
                 tbody.innerHTML += row;
             });
 
@@ -964,20 +970,20 @@
 
             const range = XLSX.utils.decode_range(ws['!ref']);
             for (let C = range.s.c; C <= range.e.c; ++C) {
-                const headAddr = XLSX.utils.encode_cell({c: C, r: 0});
-                if(ws[headAddr]) ws[headAddr].s = headerStyle;
-                for(let R = 1; R <= range.e.r; ++R) {
-                    const cellAddr = XLSX.utils.encode_cell({c: C, r: R});
-                    if(ws[cellAddr]) {
+                const headAddr = XLSX.utils.encode_cell({ c: C, r: 0 });
+                if (ws[headAddr]) ws[headAddr].s = headerStyle;
+                for (let R = 1; R <= range.e.r; ++R) {
+                    const cellAddr = XLSX.utils.encode_cell({ c: C, r: R });
+                    if (ws[cellAddr]) {
                         ws[cellAddr].s = rowStyle;
-                        if(C === 0 || C >= 2) {
+                        if (C === 0 || C >= 2) {
                             ws[cellAddr].s = { ...rowStyle, alignment: { horizontal: "center" } };
                         }
                     }
                 }
             }
 
-            ws['!cols'] = [ {wch:5}, {wch:30}, {wch:18}, {wch:18}, {wch:15} ];
+            ws['!cols'] = [{ wch: 5 }, { wch: 30 }, { wch: 18 }, { wch: 18 }, { wch: 15 }];
 
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Breakdown");
@@ -1028,20 +1034,20 @@
 
             const range = XLSX.utils.decode_range(ws['!ref']);
             for (let C = range.s.c; C <= range.e.c; ++C) {
-                const headAddr = XLSX.utils.encode_cell({c: C, r: 0});
-                if(ws[headAddr]) ws[headAddr].s = headerStyle;
-                for(let R = 1; R <= range.e.r; ++R) {
-                    const cellAddr = XLSX.utils.encode_cell({c: C, r: R});
-                    if(ws[cellAddr]) {
+                const headAddr = XLSX.utils.encode_cell({ c: C, r: 0 });
+                if (ws[headAddr]) ws[headAddr].s = headerStyle;
+                for (let R = 1; R <= range.e.r; ++R) {
+                    const cellAddr = XLSX.utils.encode_cell({ c: C, r: R });
+                    if (ws[cellAddr]) {
                         ws[cellAddr].s = rowStyle;
-                        if(C === 0 || C >= 4) { // NO, ABSENSI, PERSENTASE rata tengah
+                        if (C === 0 || C >= 4) { // NO, ABSENSI, PERSENTASE rata tengah
                             ws[cellAddr].s = { ...rowStyle, alignment: { horizontal: "center" } };
                         }
                     }
                 }
             }
 
-            ws['!cols'] = [ {wch:5}, {wch:35}, {wch:15}, {wch:25}, {wch:18}, {wch:15} ];
+            ws['!cols'] = [{ wch: 5 }, { wch: 35 }, { wch: 15 }, { wch: 25 }, { wch: 18 }, { wch: 15 }];
 
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Karyawan");
