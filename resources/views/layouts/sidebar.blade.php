@@ -30,13 +30,13 @@ if (isset($user)) {
         @endif
         @if($user && $user->hasFeature('pica'))
             <!-- <a href="#pica" id="pica" class="parent"><i class="fa-solid fa-clipboard-list menu-icon"></i>PICA
-                        <span class="toggle-icon">&#9654;</span></a>
-                    <div class="submenu" id="picaSubmenu">
-                        <a href="{{ route('pica.kuadran_problem_identifications') }}"><i
-                                class="fa-solid fa-table-cells-large menu-icon"></i>Kuadran Problem Identifications</a>
-                        <a href="{{ route('pica.list_corrective_actions') }}"><i class="fa-solid fa-list-check menu-icon"></i>List
-                            Corrective Actions</a>
-                    </div> -->
+                                        <span class="toggle-icon">&#9654;</span></a>
+                                    <div class="submenu" id="picaSubmenu">
+                                        <a href="{{ route('pica.kuadran_problem_identifications') }}"><i
+                                                class="fa-solid fa-table-cells-large menu-icon"></i>Kuadran Problem Identifications</a>
+                                        <a href="{{ route('pica.list_corrective_actions') }}"><i class="fa-solid fa-list-check menu-icon"></i>List
+                                            Corrective Actions</a>
+                                    </div> -->
         @endif
         @if($user && $user->hasFeature('warehouse'))
             <a href="{{url('')}}/gudangutilisasi" class="menu-item" id='warehouse'><i
@@ -48,7 +48,7 @@ if (isset($user)) {
             <div class="submenu" id="salesSubmenu">
                 <a href="{{url('')}}/overview_sales"><i class="fa-solid fa-chart-bar menu-icon"></i>Overview Sales</a>
                 <!-- <a href="{{url('')}}/sales_comodities"><i class="fa-solid fa-boxes-stacked menu-icon"></i>Comodities
-                                    Sales</a> -->
+                                                    Sales</a> -->
                 <a href="{{url('')}}/soptea"><i class="fa-solid fa-mug-hot menu-icon"></i>Tea Inventory</a>
                 <a href="{{url('')}}/penjualan_karet"><i class="fa-solid fa-tree menu-icon"></i>Rubber Delivery</a>
 
@@ -75,14 +75,14 @@ if (isset($user)) {
         @endif
         @if($user && $user->hasFeature('hr'))
             <!-- <a href="#hrsdm" id="hrsdm" class="parent"><i class="fa-solid fa-users menu-icon"></i>Human Resource<span
-                            class="toggle-icon">&#9654;</span></a>
-                    <div class="submenu" id="hrSubmenu">
-                        <a href="{{url('')}}/hr_demographics"><i class="fa-solid fa-user-group menu-icon"></i>HR Demographics</a>
-                        <a href="{{url('')}}/hr_dev"><i class="fa-solid fa-graduation-cap menu-icon"></i>HR Learning &
-                            Development</a>
-                        <a href="{{url('')}}/hr_revenue"><i class="fa-solid fa-money-bill-trend-up menu-icon"></i>HR Revenue &
-                            Cost</a>
-                    </div> -->
+                                            class="toggle-icon">&#9654;</span></a>
+                                    <div class="submenu" id="hrSubmenu">
+                                        <a href="{{url('')}}/hr_demographics"><i class="fa-solid fa-user-group menu-icon"></i>HR Demographics</a>
+                                        <a href="{{url('')}}/hr_dev"><i class="fa-solid fa-graduation-cap menu-icon"></i>HR Learning &
+                                            Development</a>
+                                        <a href="{{url('')}}/hr_revenue"><i class="fa-solid fa-money-bill-trend-up menu-icon"></i>HR Revenue &
+                                            Cost</a>
+                                    </div> -->
         @endif
         @if($user && $user->hasFeature('legal'))
             <a href="#agraria" id="legal" class="parent"><i class="fa-solid fa-scale-balanced menu-icon"></i>Legal & Agraria
@@ -94,10 +94,10 @@ if (isset($user)) {
         @endif
         @if($user && $user->hasFeature('progress'))
             <!-- <a href="#capaian" id="capaian" class="parent"><i class="fa-solid fa-chart-line menu-icon"></i>Capaian Progres
-                        <span class="toggle-icon">&#9654;</span></a>
-                    <div class="submenu" id="capaianSubmenu">
-                        <a href="{{url('')}}/sla"><i class="fa-solid fa-clock menu-icon"></i>SLA</a>
-                    </div> -->
+                                        <span class="toggle-icon">&#9654;</span></a>
+                                    <div class="submenu" id="capaianSubmenu">
+                                        <a href="{{url('')}}/sla"><i class="fa-solid fa-clock menu-icon"></i>SLA</a>
+                                    </div> -->
         @endif
         @if($user && $user->hasFeature('pengadaan'))
             <a href="#pengadaan" id="pengadaan" class="parent"><i
@@ -186,8 +186,13 @@ if (isset($user)) {
     @endif
 
     @if($user && $user->hasFeature('pemasaran_karet'))
-        <a href="{{url('')}}/pemasaran_karet" class="menu-item" id="pemasaran_karet"><i
-                class="fa-solid fa-tree menu-icon"></i>Pemasaran Karet</a>
+        <a href="#pmskaret" id="lm" class="parent"><i class="fa-solid fa-book menu-icon"></i>Sales & Operation <span
+                class="toggle-icon">&#9654;</span></a>
+        <div class="submenu" id="lmSubmenu">
+            <a href="{{url('')}}/sales_operational_karet"><i class="fa-solid fa-book-open menu-icon"></i>Sales & Operation
+                Karet</a>
+            <a href="{{url('')}}/pemasaran_karet"><i class="fa-solid fa-book-open menu-icon"></i>Dummy</a>
+        </div>
     @endif
 
     <a href="{{ route('password.change') }}" class="menu-item" id="change-password"><i

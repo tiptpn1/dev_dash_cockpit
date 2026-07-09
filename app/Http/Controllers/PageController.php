@@ -123,6 +123,12 @@ class PageController extends Controller
         return view('pages/overview_page', compact('linkiframe'));
     }
 
+    public function sales_operational_karet()
+    {
+        $linkiframe = 'https://datastudio.google.com/embed/u/0/reporting/7b9a5694-6587-4c59-b5d4-58a4cfe16162/page/p_ue56ja524d';
+        return view('pages/overview_page', compact('linkiframe'));
+    }
+
     public function agraria_tax()
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/5fed7d89-b764-4a87-b5da-6fada9560516/page/joCQE';
