@@ -4433,12 +4433,13 @@ class PageController extends Controller
     public function aghris_dashboard(Request $request)
     {
         try {
+            set_time_limit(0);
+            ini_set('memory_limit', '2048M');
+
             $request->validate([
                 'month' => 'required|integer|between:1,12',
                 'year' => 'required|integer'
             ]);
-
-
 
             $month = str_pad($request->input('month'), 2, '0', STR_PAD_LEFT);
             $year = $request->input('year');
@@ -4452,16 +4453,18 @@ class PageController extends Controller
             $chartData = \Illuminate\Support\Facades\Cache::remember($cacheKey, $cacheDuration, function () use ($year, $month) {
 
                 // 0. Ambil Hari Kerja dari tabel absensi_periode di database HRIS
-                $periode = str_pad($month, 2, '0', STR_PAD_LEFT) . $year;
+                $monthStr = str_pad($month, 2, '0', STR_PAD_LEFT);
+                $periode = $monthStr . $year;
                 $hariKerjaData = \Illuminate\Support\Facades\DB::connection('hris')
                     ->table('absensi_periode')
                     ->where('periode', $periode)
                     ->pluck('hari_kerja', 'regional_grup')
                     ->toArray();
 
-                // 1. Fetch API Data
-                $apiUrl = "https://amanah.ptpn1.co.id/api/data_presensi_aghris?bulan={$year}-{$month}&psa=";
+                // 1. Fetch API Data (Single Request karena API provider sudah mengoptimasi)
+                $apiUrl = "https://amanah.ptpn1.co.id/api/data_presensi_aghris?bulan={$year}-{$monthStr}";
                 $apiResponse = \Illuminate\Support\Facades\Http::timeout(60)->get($apiUrl);
+                
                 $apiData = [];
                 if ($apiResponse->successful()) {
                     $result = $apiResponse->json();
@@ -4470,7 +4473,7 @@ class PageController extends Controller
                         $apiData = $records;
                     }
                 }
-
+                
                 // Ekstrak NIK yang ada presensi (minimal 1 kali hadir)
                 $attendedNiksCount = [];
                 foreach ($apiData as $row) {
@@ -4518,6 +4521,8 @@ class PageController extends Controller
                         $regionalData[$reg] = [
                             'total_active' => 0,
                             'total_attended' => 0,
+                            'total_hari_kerja' => 0,
+                            'total_hari_hadir' => 0,
                             'divisi' => []
                         ];
                     }
@@ -4526,6 +4531,8 @@ class PageController extends Controller
                         $regionalData[$reg]['divisi'][$breakdownKey] = [
                             'total_active' => 0,
                             'total_attended' => 0,
+                            'total_hari_kerja' => 0,
+                            'total_hari_hadir' => 0,
                             'employees' => []
                         ];
                     }
@@ -4536,6 +4543,11 @@ class PageController extends Controller
 
                     $hadir = $attendedNiksCount[$emp->nik] ?? 0;
                     $hariKerja = $hariKerjaData[$reg] ?? 20; // Default 20 jika tidak ditemukan
+
+                    $regionalData[$reg]['total_hari_kerja'] += $hariKerja;
+                    $regionalData[$reg]['total_hari_hadir'] += $hadir;
+                    $regionalData[$reg]['divisi'][$breakdownKey]['total_hari_kerja'] += $hariKerja;
+                    $regionalData[$reg]['divisi'][$breakdownKey]['total_hari_hadir'] += $hadir;
 
                     // Increment attended count if employee has attendance records
                     if ($hadir > 0) {
@@ -4562,6 +4574,7 @@ class PageController extends Controller
                     $divisiArr = [];
                     foreach ($data['divisi'] as $div => $divData) {
                         $pct = $divData['total_active'] > 0 ? round(($divData['total_attended'] / $divData['total_active']) * 100, 1) : 0;
+                        $pctHari = $divData['total_hari_kerja'] > 0 ? round(($divData['total_hari_hadir'] / $divData['total_hari_kerja']) * 100, 1) : 0;
                         // Urutkan employees berdasarkan nama
                         usort($divData['employees'], function ($a, $b) {
                             return strcmp($a['nama'], $b['nama']);
@@ -4572,6 +4585,9 @@ class PageController extends Controller
                             'active' => $divData['total_active'],
                             'attended' => $divData['total_attended'],
                             'percentage' => $pct,
+                            'total_hari_kerja' => $divData['total_hari_kerja'],
+                            'total_hari_hadir' => $divData['total_hari_hadir'],
+                            'percentage_hari' => $pctHari,
                             'employees' => $divData['employees']
                         ];
                     }
@@ -4585,11 +4601,15 @@ class PageController extends Controller
                     });
 
                     $pctReg = $data['total_active'] > 0 ? round(($data['total_attended'] / $data['total_active']) * 100, 1) : 0;
+                    $pctHariReg = $data['total_hari_kerja'] > 0 ? round(($data['total_hari_hadir'] / $data['total_hari_kerja']) * 100, 1) : 0;
                     $formattedChartData[] = [
                         'regional' => $reg,
                         'active' => $data['total_active'],
                         'attended' => $data['total_attended'],
                         'percentage' => $pctReg,
+                        'total_hari_kerja' => $data['total_hari_kerja'],
+                        'total_hari_hadir' => $data['total_hari_hadir'],
+                        'percentage_hari' => $pctHariReg,
                         'breakdown' => $divisiArr
                     ];
                 }

@@ -420,7 +420,7 @@
                 </div>
 
                 <div style="padding: 20px;">
-                    <div style="margin-bottom: 25px;">
+                    <div style="margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
                         <div
                             style="display: inline-flex; align-items: center; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 12px; background: #fff;">
                             <i class="fas fa-calendar" style="color: #16a34a; margin-right: 8px;"></i>
@@ -429,6 +429,10 @@
                             <input type="month" id="periodeFilter"
                                 style="border: none; outline: none; font-size: 13px; color: #334155; font-family: inherit; cursor: pointer;"
                                 value="{{ date('Y-m') }}">
+                        </div>
+                        <div style="display: inline-flex; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; background: #fff;">
+                            <button id="btnMetricKaryawan" onclick="switchMetric('karyawan')" style="padding: 6px 15px; font-size: 12px; font-weight: bold; cursor: pointer; border: none; background: #16a34a; color: white;">Berdasarkan Jumlah Karyawan</button>
+                            <button id="btnMetricHariKerja" onclick="switchMetric('hari_kerja')" style="padding: 6px 15px; font-size: 12px; font-weight: bold; cursor: pointer; border: none; background: #fff; color: #475569;">Berdasarkan Hari Kerja</button>
                         </div>
                     </div>
 
@@ -542,6 +546,31 @@
         let rawChartData = [];
         let currentRegionalData = null; // untuk simpan data regional saat export
         let currentDivisiData = null;   // untuk simpan data divisi saat export
+        let currentMetric = 'karyawan'; // 'karyawan' or 'hari_kerja'
+
+        function switchMetric(metric) {
+            if (currentMetric === metric) return;
+            currentMetric = metric;
+            
+            if (metric === 'karyawan') {
+                document.getElementById('btnMetricKaryawan').style.background = '#16a34a';
+                document.getElementById('btnMetricKaryawan').style.color = 'white';
+                document.getElementById('btnMetricHariKerja').style.background = '#fff';
+                document.getElementById('btnMetricHariKerja').style.color = '#475569';
+            } else {
+                document.getElementById('btnMetricHariKerja').style.background = '#16a34a';
+                document.getElementById('btnMetricHariKerja').style.color = 'white';
+                document.getElementById('btnMetricKaryawan').style.background = '#fff';
+                document.getElementById('btnMetricKaryawan').style.color = '#475569';
+            }
+            
+            if (rawChartData && rawChartData.length > 0) {
+                renderMainChart(rawChartData);
+                if (document.getElementById('breakdownSection').style.display === 'block' && currentRegionalData) {
+                    showBreakdown(currentRegionalData);
+                }
+            }
+        }
 
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
@@ -603,9 +632,13 @@
                 mainChartInstance.destroy();
             }
 
+            const isHariKerja = currentMetric === 'hari_kerja';
             const labels = data.map(d => d.regional);
-            const activeCounts = data.map(d => d.active);
-            const attendedCounts = data.map(d => d.attended);
+            const activeCounts = data.map(d => isHariKerja ? d.total_hari_kerja : d.active);
+            const attendedCounts = data.map(d => isHariKerja ? d.total_hari_hadir : d.attended);
+            const activeLabel = isHariKerja ? 'Total Hari Kerja' : 'Karyawan Aktif';
+            const attendedLabel = isHariKerja ? 'Total Hari Hadir' : 'Karyawan Hadir';
+            const suffix = isHariKerja ? ' Hari' : ' Pegawai';
 
             mainChartInstance = new Chart(ctx, {
                 type: 'bar',
@@ -613,7 +646,7 @@
                     labels: labels,
                     datasets: [
                         {
-                            label: 'Karyawan Aktif',
+                            label: activeLabel,
                             data: activeCounts,
                             backgroundColor: '#166534',
                             hoverBackgroundColor: '#14532d',
@@ -622,7 +655,7 @@
                             categoryPercentage: 0.7,
                         },
                         {
-                            label: 'Karyawan Hadir',
+                            label: attendedLabel,
                             data: attendedCounts,
                             backgroundColor: '#3b82f6',
                             hoverBackgroundColor: '#2563eb',
@@ -659,10 +692,11 @@
                                     const idx = context.dataIndex;
                                     const item = data[idx];
                                     const datasetLabel = context.dataset.label || '';
-                                    if (datasetLabel === 'Karyawan Hadir' && item.percentage !== undefined) {
-                                        return ` ${datasetLabel}: ${context.raw} Pegawai (${item.percentage}%)`;
+                                    const pct = currentMetric === 'hari_kerja' ? item.percentage_hari : item.percentage;
+                                    if (datasetLabel === attendedLabel && pct !== undefined) {
+                                        return ` ${datasetLabel}: ${context.raw}${suffix} (${pct}%)`;
                                     }
-                                    return ` ${datasetLabel}: ${context.raw} Pegawai`;
+                                    return ` ${datasetLabel}: ${context.raw}${suffix}`;
                                 }
                             }
                         },
@@ -690,11 +724,13 @@
                                     display: function (context) {
                                         const datasetLabel = context.dataset.label || '';
                                         const item = data[context.dataIndex];
-                                        return datasetLabel === 'Karyawan Hadir' && item.percentage > 0;
+                                        const pct = currentMetric === 'hari_kerja' ? item.percentage_hari : item.percentage;
+                                        return datasetLabel === attendedLabel && pct > 0;
                                     },
                                     formatter: function (value, context) {
                                         const item = data[context.dataIndex];
-                                        return item.percentage + '%';
+                                        const pct = currentMetric === 'hari_kerja' ? item.percentage_hari : item.percentage;
+                                        return pct + '%';
                                     }
                                 }
                             }
@@ -717,7 +753,6 @@
                 }
             });
         }
-
         function showBreakdown(regionalData) {
             currentRegionalData = regionalData;
             document.getElementById('breakdownSection').style.display = 'block';
@@ -732,9 +767,13 @@
             }
 
             const breakdown = regionalData.breakdown;
+            const isHariKerja = currentMetric === 'hari_kerja';
             const labels = breakdown.map(d => d.name);
-            const activeCounts = breakdown.map(d => d.active);
-            const attendedCounts = breakdown.map(d => d.attended);
+            const activeCounts = breakdown.map(d => isHariKerja ? d.total_hari_kerja : d.active);
+            const attendedCounts = breakdown.map(d => isHariKerja ? d.total_hari_hadir : d.attended);
+            const activeLabel = isHariKerja ? 'Total Hari Kerja' : 'Karyawan Aktif';
+            const attendedLabel = isHariKerja ? 'Total Hari Hadir' : 'Karyawan Hadir';
+            const suffix = isHariKerja ? ' Hari' : ' Pgw';
 
             const newHeight = Math.max(300, breakdown.length * 60);
             document.querySelector('.breakdown-chart-wrapper').style.height = newHeight + 'px';
@@ -745,7 +784,7 @@
                     labels: labels,
                     datasets: [
                         {
-                            label: 'Karyawan Aktif',
+                            label: activeLabel,
                             data: activeCounts,
                             backgroundColor: '#16a34a', // Slightly lighter green for breakdown
                             borderRadius: 4,
@@ -753,7 +792,7 @@
                             categoryPercentage: 0.8,
                         },
                         {
-                            label: 'Karyawan Hadir',
+                            label: attendedLabel,
                             data: attendedCounts,
                             backgroundColor: '#60a5fa', // Lighter blue for breakdown
                             borderRadius: 4,
@@ -788,10 +827,11 @@
                                     const idx = context.dataIndex;
                                     const item = breakdown[idx];
                                     const datasetLabel = context.dataset.label || '';
-                                    if (datasetLabel === 'Karyawan Hadir' && item.percentage !== undefined) {
-                                        return ` ${datasetLabel}: ${context.raw} Pegawai (${item.percentage}%)`;
+                                    const pct = currentMetric === 'hari_kerja' ? item.percentage_hari : item.percentage;
+                                    if (datasetLabel === attendedLabel && pct !== undefined) {
+                                        return ` ${datasetLabel}: ${context.raw}${suffix} (${pct}%)`;
                                     }
-                                    return ` ${datasetLabel}: ${context.raw} Pegawai`;
+                                    return ` ${datasetLabel}: ${context.raw}${suffix}`;
                                 }
                             }
                         },
@@ -804,7 +844,7 @@
                                     color: '#4b5563', // Text gelap
                                     font: { weight: 'bold', size: 12 },
                                     formatter: function (value) {
-                                        return value > 0 ? value.toLocaleString('id-ID') + ' Pgw' : '';
+                                        return value > 0 ? value.toLocaleString('id-ID') + suffix : '';
                                     }
                                 },
                                 percentage: {
@@ -814,16 +854,18 @@
                                     backgroundColor: '#2563eb',
                                     color: 'white',
                                     borderRadius: 4,
-                                    padding: { top: 3, bottom: 3, left: 5, right: 5 },
-                                    font: { weight: 'bold', size: 11 },
+                                    padding: { top: 2, bottom: 2, left: 4, right: 4 },
+                                    font: { weight: 'bold', size: 10 },
                                     display: function (context) {
                                         const datasetLabel = context.dataset.label || '';
                                         const item = breakdown[context.dataIndex];
-                                        return datasetLabel === 'Karyawan Hadir' && item.percentage > 0;
+                                        const pct = currentMetric === 'hari_kerja' ? item.percentage_hari : item.percentage;
+                                        return datasetLabel === attendedLabel && pct > 0;
                                     },
                                     formatter: function (value, context) {
                                         const item = breakdown[context.dataIndex];
-                                        return item.percentage + '%';
+                                        const pct = currentMetric === 'hari_kerja' ? item.percentage_hari : item.percentage;
+                                        return pct + '%';
                                     }
                                 }
                             }
@@ -950,9 +992,12 @@
             const data = currentRegionalData.breakdown.map((item, idx) => ({
                 "NO": idx + 1,
                 "NAMA DIVISI": item.name,
-                "KARYAWAN AKTIF": item.active,
+                "TOTAL KARYAWAN": item.active,
                 "KARYAWAN HADIR": item.attended,
-                "PERSENTASE (%)": item.percentage + "%"
+                "PERSENTASE KARYAWAN (%)": item.percentage + "%",
+                "TOTAL HARI KERJA": item.total_hari_kerja,
+                "TOTAL HARI HADIR": item.total_hari_hadir,
+                "PERSENTASE HARI (%)": item.percentage_hari + "%"
             }));
             const ws = XLSX.utils.json_to_sheet(data);
 
@@ -983,7 +1028,7 @@
                 }
             }
 
-            ws['!cols'] = [{ wch: 5 }, { wch: 30 }, { wch: 18 }, { wch: 18 }, { wch: 15 }];
+            ws['!cols'] = [{ wch: 5 }, { wch: 35 }, { wch: 18 }, { wch: 18 }, { wch: 22 }, { wch: 18 }, { wch: 18 }, { wch: 22 }];
 
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Breakdown");
@@ -993,14 +1038,14 @@
         function exportBreakdownPDF() {
             if (!currentRegionalData) return;
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
+            const doc = new jsPDF('landscape');
             doc.text(`Detail Kehadiran - ${currentRegionalData.regional}`, 14, 15);
             const bodyData = currentRegionalData.breakdown.map((item, idx) => [
-                idx + 1, item.name, item.active, item.attended, item.percentage + '%'
+                idx + 1, item.name, item.active, item.attended, item.percentage + '%', item.total_hari_kerja, item.total_hari_hadir, item.percentage_hari + '%'
             ]);
             doc.autoTable({
                 startY: 25,
-                head: [['No', 'Nama Divisi', 'Karyawan Aktif', 'Karyawan Hadir', 'Persentase']],
+                head: [['No', 'Nama Divisi', 'Tot. Karyawan', 'Kar. Hadir', '% Karyawan', 'Tot. Hari Kerja', 'Tot. Hari Hadir', '% Hari']],
                 body: bodyData,
                 theme: 'grid',
                 headStyles: { fillColor: [22, 101, 52] }
