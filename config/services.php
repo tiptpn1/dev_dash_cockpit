@@ -31,4 +31,18 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | SONIA (Sistem Online Niaga) — SSO via static token
+    |--------------------------------------------------------------------------
+    |
+    | Menu SONIA membuka tab baru ke endpoint SSO SONIA.
+    | Token harus identik dengan AGRINAV_SSO_TOKEN di aplikasi SONIA.
+    |
+    */
+    'sonia' => [
+        'url' => rtrim(env('SONIA_URL', 'http://127.0.0.1:8010'), '/'),
+        'sso_token' => env('SONIA_SSO_TOKEN', ''),
+    ],
+
 ];

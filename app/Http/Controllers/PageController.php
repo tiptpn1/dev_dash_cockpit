@@ -4644,5 +4644,91 @@ class PageController extends Controller
         }
     }
 
+    public function crm_dashboard()
+    {
+        return view('pages.crm_dashboard');
+    }
 
+    public function crm_approved_prices(Request $request)
+    {
+        $startDate = $request->input('start_date', '2026-06-01');
+        $endDate = $request->input('end_date', '2026-06-30');
+        $commodity = $request->input('commodity', 'semua');
+        $incoterm = $request->input('incoterm', 'semua');
+        $incoLoc = $request->input('inco_loc', 'semua');
+        
+        $allData = [];
+        $apiKey = 'c34ad1cf6f6282c153ecf9bb7c9da40bac27fb92d11de5f8';
+        
+        try {
+            $page = 1;
+            $lastPage = 1;
+            $allItems = [];
+            
+            do {
+                $response = \Illuminate\Support\Facades\Http::withoutVerifying()
+                    ->timeout(20) // increased timeout for safety
+                    ->withHeaders(['x-api-key' => $apiKey])
+                    ->get('https://crm2025.holding-perkebunan.com/api/allocation/approved-prices', [
+                        'date_from' => $startDate,
+                        'date_to' => $endDate,
+                        'per_page' => 100,
+                        'page' => $page
+                    ]);
+                
+                if ($response->successful()) {
+                    $resData = $response->json();
+                    
+                    if (isset($resData['data']['data'])) {
+                        $items = $resData['data']['data'];
+                    } elseif (isset($resData['data'])) {
+                        $items = $resData['data'];
+                    } else {
+                        $items = [];
+                    }
+                    
+                    $allItems = array_merge($allItems, $items);
+                    
+                    if (isset($resData['meta']['last_page'])) {
+                        $lastPage = $resData['meta']['last_page'];
+                    } else {
+                        $lastPage = 1; // force stop if no pagination
+                    }
+                } else {
+                    break;
+                }
+                
+                $page++;
+            } while ($page <= $lastPage);
+            
+            foreach ($allItems as $item) {
+                if ($commodity != 'semua') {
+                    $itemCom = $item['commodity_name'] ?? '';
+                    if (strtoupper($itemCom) != strtoupper($commodity)) {
+                        continue;
+                    }
+                }
+                if ($incoterm != 'semua') {
+                    $itemInco = $item['incoterm_description'] ?? '';
+                    if (strtoupper($itemInco) != strtoupper($incoterm)) {
+                        continue;
+                    }
+                }
+                if ($incoLoc != 'semua') {
+                    $itemLoc = $item['inco_loc'] ?? '';
+                    if (strtoupper($itemLoc) != strtoupper($incoLoc)) {
+                        continue;
+                    }
+                }
+                $allData[] = $item;
+            }
+        } catch (\Exception $e) {
+            \Log::error('CRM API Fetch Error: ' . $e->getMessage());
+        }
+        
+        return response()->json([
+            'success' => true,
+            'data' => $allData
+        ]);
+    }
 }

@@ -52,7 +52,10 @@ if (isset($user)) {
                 <a href="{{url('')}}/soptea"><i class="fa-solid fa-mug-hot menu-icon"></i>Tea Inventory</a>
                 <a href="{{url('')}}/penjualan_karet"><i class="fa-solid fa-tree menu-icon"></i>Rubber Delivery</a>
                 <a href="{{url('')}}/crm"><i class="fa-solid fa-tree menu-icon"></i>CRM</a>
-
+                <a href="{{ rtrim(config('services.sonia.url'), '/') }}/auth/agrinav?token={{ urlencode(config('services.sonia.sso_token')) }}"
+                    target="_blank" rel="noopener noreferrer" id="sonia">
+                    <i class="fa-solid fa-store menu-icon"></i>SONIA
+                </a>
             </div>
         @endif
         @if($user && $user->hasFeature('aset'))

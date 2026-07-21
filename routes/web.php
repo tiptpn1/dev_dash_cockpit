@@ -96,6 +96,8 @@ Route::middleware('auth:custom')->group(function () {
     Route::get('/penjualan_karet', [PageController::class, 'penjualan_karet'])->name('penjualan_karet');
     Route::get('/pemasaran_karet', [PageController::class, 'pemasaran_karet'])->name('pemasaran_karet');
     Route::get('/sales_operational_karet', [PageController::class, 'sales_operational_karet'])->name('sales_operational_karet');
+    Route::get('/crm', [PageController::class, 'crm_dashboard'])->name('crm_dashboard');
+    Route::get('/api/crm/approved-prices', [PageController::class, 'crm_approved_prices'])->name('crm.approved_prices');
 
     Route::get('/asset_peta', [PageController::class, 'asset_peta'])->name('asset_peta');
     Route::get('/asset_recovery', [PageController::class, 'asset_recovery'])->name('asset_recovery');

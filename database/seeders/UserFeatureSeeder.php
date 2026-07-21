@@ -32,6 +32,7 @@ class UserFeatureSeeder extends Seeder
             ['slug' => 'pengadaan',  'name' => 'Pengadaan'],
             ['slug' => 'carbon',     'name' => 'Carbon'],
             ['slug' => 'warehouse',  'name' => 'Warehouse'],
+            ['slug' => 'sonia',      'name' => 'SONIA'],
         ];
 
         foreach ($featureDefs as $feat) {
