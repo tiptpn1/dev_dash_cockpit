@@ -41,7 +41,7 @@ return [
     |
     */
     'sonia' => [
-        'url' => rtrim(env('SONIA_URL', 'http://127.0.0.1:8010'), '/'),
+        'url' => rtrim(env('SONIA_URL', 'https://sonia.ptpn1.co.id'), '/'),
         'sso_token' => env('SONIA_SSO_TOKEN', ''),
     ],
 
