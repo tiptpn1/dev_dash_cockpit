@@ -2937,8 +2937,132 @@ class PageController extends Controller
 
     private const HRIS_REGIONAL_FILTER = 'SuppCo HO';
 
+    /** Label divisi virtual untuk Calon Karyawan Pimpinan (dipisah dari divisi HRIS aslinya) */
+    private const HRIS_CKP_DIVISI_LABEL = 'CALON KARYAWAN PIMPINAN';
+
     /** Jenis absen yang dihitung sebagai absensi */
     private const HRIS_JENIS_ABSENSI = ['WFO', 'WFH', 'IZIN', 'DINAS'];
+
+    /**
+     * Divisi efektif untuk grouping HRIS:
+     * - CKP → divisi virtual sendiri
+     * - Ada penugasan KE aktif → bagian_penugasan_kode
+     * - Selain itu → divisi home
+     */
+    private function hrisEffectiveDivisiExpr(string $pegawaiAlias = 'p', string $penugasanAlias = 'pen'): string
+    {
+        $p = $pegawaiAlias === '' ? '' : $pegawaiAlias . '.';
+
+        return "CASE
+            WHEN UPPER(TRIM({$p}jabatan)) = 'CALON KARYAWAN PIMPINAN'
+            THEN '" . self::HRIS_CKP_DIVISI_LABEL . "'
+            WHEN NULLIF(TRIM({$penugasanAlias}.bagian_penugasan_kode), '') IS NOT NULL
+            THEN TRIM({$penugasanAlias}.bagian_penugasan_kode)
+            ELSE TRIM({$p}divisi)
+        END";
+    }
+
+    /** Jabatan efektif: utamakan jabatan penugasan jika ada */
+    private function hrisEffectiveJabatanExpr(string $pegawaiAlias = 'p', string $penugasanAlias = 'pen'): string
+    {
+        return "COALESCE(NULLIF(TRIM({$penugasanAlias}.jabatan), ''), {$pegawaiAlias}.jabatan)";
+    }
+
+    /**
+     * Join penugasan KE aktif ke regional filter (satu baris per pegawai).
+     * @param string $asOfStart tanggal mulai overlap (Y-m-d)
+     * @param string $asOfEnd tanggal akhir overlap (Y-m-d)
+     */
+    private function hrisActivePenugasanJoinSql(string $asOfStart, string $asOfEnd, string $alias = 'pen'): string
+    {
+        $regional = str_replace("'", "''", self::HRIS_REGIONAL_FILTER);
+        $start = str_replace("'", "''", $asOfStart);
+        $end = str_replace("'", "''", $asOfEnd);
+
+        return "
+            LEFT JOIN (
+                SELECT pp.*
+                FROM pegawai_penugasan pp
+                INNER JOIN (
+                    SELECT pegawai_id, MAX(pegawai_penugasan_id) AS max_id
+                    FROM pegawai_penugasan
+                    WHERE UPPER(TRIM(jenis_penugasan)) = 'KE'
+                      AND TRIM(regional) = '{$regional}'
+                      AND (tmt_jabatan IS NULL OR tmt_jabatan <= '{$end}')
+                      AND (tmt_berakhir IS NULL OR tmt_berakhir >= '{$start}')
+                      AND NULLIF(TRIM(bagian_penugasan_kode), '') IS NOT NULL
+                    GROUP BY pegawai_id
+                ) latest ON latest.max_id = pp.pegawai_penugasan_id
+            ) {$alias} ON {$alias}.pegawai_id = p.pegawai_id
+        ";
+    }
+
+    /** Rentang tanggal overlap penugasan untuk periode HRIS (mmYYYY) */
+    private function hrisPenugasanPeriodRange(string $periodeHris): array
+    {
+        $bulan = (int) substr($periodeHris, 0, 2);
+        $tahun = (int) substr($periodeHris, 2, 4);
+        $start = \Carbon\Carbon::createFromDate($tahun, $bulan, 1)->startOfDay();
+        $end = $start->copy()->endOfMonth();
+        $today = \Carbon\Carbon::now()->startOfDay();
+
+        if ($end->gt($today)) {
+            $end = $today;
+        }
+
+        return [$start->format('Y-m-d'), $end->format('Y-m-d')];
+    }
+
+    /**
+     * Eligible SuppCo HO: pegawai home HO (bukan mutasi keluar) ATAU ada penugasan KE aktif ke HO.
+     * Parameter binding: satu placeholder regional untuk TRIM(p.regional) = ?
+     */
+    private function hrisHoEligibilitySql(string $pegawaiAlias = 'p', string $penugasanAlias = 'pen'): string
+    {
+        return "(
+                (
+                    TRIM({$pegawaiAlias}.regional) = ?
+                    AND ({$pegawaiAlias}.penugasan_mutasi_ke IS NULL OR TRIM({$pegawaiAlias}.penugasan_mutasi_ke) = '')
+                )
+                OR {$penugasanAlias}.pegawai_id IS NOT NULL
+            )
+              AND LOWER({$pegawaiAlias}.status_pegawai) IN ('aktif', 'active')";
+    }
+
+    /** Area kode efektif (penugasan lebih diutamakan) untuk hari kerja / absensi_periode */
+    private function hrisEffectiveAreaKodeExpr(string $pegawaiAlias = 'p', string $penugasanAlias = 'pen'): string
+    {
+        return "COALESCE(NULLIF(TRIM({$penugasanAlias}.area_kode), ''), {$pegawaiAlias}.area_kode)";
+    }
+
+    private function hrisEffectiveRegionalKodeExpr(string $pegawaiAlias = 'p', string $penugasanAlias = 'pen'): string
+    {
+        return "COALESCE(NULLIF(TRIM({$penugasanAlias}.regional_kode), ''), {$pegawaiAlias}.regional_kode)";
+    }
+
+    /** Urutan divisi: alfabetis, dengan CALON KARYAWAN PIMPINAN di paling bawah (pasca-query, aman untuk only_full_group_by) */
+    private function sortHrisByDivisi(array $rows, string $divisiKey = 'divisi'): array
+    {
+        usort($rows, function ($a, $b) use ($divisiKey) {
+            $da = (string) (is_object($a) ? ($a->{$divisiKey} ?? '') : ($a[$divisiKey] ?? ''));
+            $db = (string) (is_object($b) ? ($b->{$divisiKey} ?? '') : ($b[$divisiKey] ?? ''));
+            $rankA = $da === self::HRIS_CKP_DIVISI_LABEL ? 1 : 0;
+            $rankB = $db === self::HRIS_CKP_DIVISI_LABEL ? 1 : 0;
+            if ($rankA !== $rankB) {
+                return $rankA <=> $rankB;
+            }
+            $cmp = strcasecmp($da, $db);
+            if ($cmp !== 0) {
+                return $cmp;
+            }
+            $na = (string) (is_object($a) ? ($a->nama ?? '') : ($a['nama'] ?? ''));
+            $nb = (string) (is_object($b) ? ($b->nama ?? '') : ($b['nama'] ?? ''));
+
+            return strcasecmp($na, $nb);
+        });
+
+        return $rows;
+    }
 
     public function evaluasi_hris_data(Request $request)
     {
@@ -3378,16 +3502,21 @@ class PageController extends Controller
 
     private function fetchDivisiList(string $regional): array
     {
-        return DB::connection('hris')->select("
-            SELECT DISTINCT TRIM(divisi) AS divisi
-            FROM pegawai
-            WHERE TRIM(regional) = ?
-              AND NULLIF(TRIM(divisi), '') IS NOT NULL
-              AND (penugasan_mutasi_ke IS NULL OR TRIM(penugasan_mutasi_ke) = '')
-              /* AND (status_ckp IS NULL OR status_ckp != 'Ya') */
-              AND LOWER(status_pegawai) IN ('aktif', 'active')
-            ORDER BY divisi ASC
+        [$asOfStart, $asOfEnd] = $this->hrisPenugasanPeriodRange(date('mY'));
+        $penugasanJoin = $this->hrisActivePenugasanJoinSql($asOfStart, $asOfEnd);
+        $effectiveDivisi = $this->hrisEffectiveDivisiExpr('p');
+        $eligibility = $this->hrisHoEligibilitySql('p', 'pen');
+
+        $rows = DB::connection('hris')->select("
+            SELECT DISTINCT {$effectiveDivisi} AS divisi
+            FROM pegawai p
+            {$penugasanJoin}
+            WHERE {$eligibility}
+              AND NULLIF({$effectiveDivisi}, '') IS NOT NULL
+              /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
         ", [$regional]);
+
+        return $this->sortHrisByDivisi($rows);
     }
 
     private function fetchRekapAbsenHrisByDivisi(int $tahun, int $bulan): array
@@ -3942,13 +4071,19 @@ class PageController extends Controller
 
     private function fetchRekapAbsenFromImport(string $periodeHris): array
     {
-        $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris);
+        [$asOfStart, $asOfEnd] = $this->hrisPenugasanPeriodRange($periodeHris);
+        $penugasanJoin = $this->hrisActivePenugasanJoinSql($asOfStart, $asOfEnd);
+        $effectiveDivisi = $this->hrisEffectiveDivisiExpr('p');
+        $effectiveArea = $this->hrisEffectiveAreaKodeExpr('p', 'pen');
+        $effectiveRegionalKode = $this->hrisEffectiveRegionalKodeExpr('p', 'pen');
+        $eligibility = $this->hrisHoEligibilitySql('p', 'pen');
+        $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris, $effectiveArea);
 
         $regional = self::HRIS_REGIONAL_FILTER;
 
         $sql = "
             SELECT
-                TRIM(p.divisi) AS divisi,
+                {$effectiveDivisi} AS divisi,
                 MAX(" . $dynamicHariKerja . ") AS hari_kerja,
                 COUNT(DISTINCT p.pegawai_id) AS jumlah_pegawai,
                 ROUND(AVG(
@@ -3957,6 +4092,7 @@ class PageController extends Controller
                     ELSE 0 END
                 ), 1) AS persentase_kehadiran
             FROM pegawai p
+            {$penugasanJoin}
             LEFT JOIN (
                 SELECT
                     pegawai_id,
@@ -3966,30 +4102,35 @@ class PageController extends Controller
                 GROUP BY pegawai_id
             ) att ON p.pegawai_id = att.pegawai_id
             LEFT JOIN absensi_periode b
-                ON p.regional_kode = b.regional_kode
-                AND p.area_kode = b.area_kode
+                ON {$effectiveRegionalKode} = b.regional_kode
+                AND {$effectiveArea} = b.area_kode
                 AND b.periode = ?
-            WHERE TRIM(p.regional) = ?
-              AND NULLIF(TRIM(p.divisi), '') IS NOT NULL
-              AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
+            WHERE {$eligibility}
+              AND NULLIF({$effectiveDivisi}, '') IS NOT NULL
               /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
-              AND LOWER(p.status_pegawai) IN ('aktif', 'active')
-            GROUP BY TRIM(p.divisi)
-            ORDER BY divisi ASC
+            GROUP BY {$effectiveDivisi}
         ";
 
-        return DB::connection('hris')->select($sql, [$periodeHris, $periodeHris, $regional]);
+        return $this->sortHrisByDivisi(
+            DB::connection('hris')->select($sql, [$periodeHris, $periodeHris, $regional])
+        );
     }
 
     private function fetchRekapAbsenFromAbsensi(string $periodeHris): array
     {
-        $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris);
+        [$asOfStart, $asOfEnd] = $this->hrisPenugasanPeriodRange($periodeHris);
+        $penugasanJoin = $this->hrisActivePenugasanJoinSql($asOfStart, $asOfEnd);
+        $effectiveDivisi = $this->hrisEffectiveDivisiExpr('p');
+        $effectiveArea = $this->hrisEffectiveAreaKodeExpr('p', 'pen');
+        $effectiveRegionalKode = $this->hrisEffectiveRegionalKodeExpr('p', 'pen');
+        $eligibility = $this->hrisHoEligibilitySql('p', 'pen');
+        $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris, $effectiveArea);
 
         $regional = self::HRIS_REGIONAL_FILTER;
 
         $sql = "
             SELECT
-                TRIM(p.divisi) AS divisi,
+                {$effectiveDivisi} AS divisi,
                 MAX(" . $dynamicHariKerja . ") AS hari_kerja,
                 COUNT(DISTINCT p.pegawai_id) AS jumlah_pegawai,
                 ROUND(AVG(
@@ -3998,6 +4139,7 @@ class PageController extends Controller
                     ELSE 0 END
                 ), 1) AS persentase_kehadiran
             FROM pegawai p
+            {$penugasanJoin}
             LEFT JOIN (
                 SELECT pegawai_id, COUNT(DISTINCT CASE WHEN UPPER(TRIM(jenis_absen)) IN ('WFO', 'WFH', 'IZIN', 'IJIN', 'DINAS') THEN DATE(jam) END) AS check_in
                 FROM absensi
@@ -4005,24 +4147,30 @@ class PageController extends Controller
                 GROUP BY pegawai_id
             ) att ON p.pegawai_id = att.pegawai_id
             LEFT JOIN absensi_periode b
-                ON p.regional_kode = b.regional_kode
-                AND p.area_kode = b.area_kode
+                ON {$effectiveRegionalKode} = b.regional_kode
+                AND {$effectiveArea} = b.area_kode
                 AND b.periode = ?
-            WHERE TRIM(p.regional) = ?
-              AND NULLIF(TRIM(p.divisi), '') IS NOT NULL
-              AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
+            WHERE {$eligibility}
+              AND NULLIF({$effectiveDivisi}, '') IS NOT NULL
               /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
-              AND LOWER(p.status_pegawai) IN ('aktif', 'active')
-            GROUP BY TRIM(p.divisi)
-            ORDER BY divisi ASC
+            GROUP BY {$effectiveDivisi}
         ";
 
-        return DB::connection('hris')->select($sql, [$periodeHris, $periodeHris, $regional]);
+        return $this->sortHrisByDivisi(
+            DB::connection('hris')->select($sql, [$periodeHris, $periodeHris, $regional])
+        );
     }
 
     private function fetchDetailAbsenFromImport(string $periodeHris, string $divisi): array
     {
-        $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris);
+        [$asOfStart, $asOfEnd] = $this->hrisPenugasanPeriodRange($periodeHris);
+        $penugasanJoin = $this->hrisActivePenugasanJoinSql($asOfStart, $asOfEnd);
+        $effectiveDivisi = $this->hrisEffectiveDivisiExpr('p');
+        $effectiveJabatan = $this->hrisEffectiveJabatanExpr('p', 'pen');
+        $effectiveArea = $this->hrisEffectiveAreaKodeExpr('p', 'pen');
+        $effectiveRegionalKode = $this->hrisEffectiveRegionalKodeExpr('p', 'pen');
+        $eligibility = $this->hrisHoEligibilitySql('p', 'pen');
+        $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris, $effectiveArea);
 
         $regional = self::HRIS_REGIONAL_FILTER;
 
@@ -4031,7 +4179,7 @@ class PageController extends Controller
                 p.pegawai_id,
                 COALESCE(NULLIF(TRIM(p.nik), ''), '-') AS pegawai_nik,
                 p.nama,
-                p.jabatan,
+                {$effectiveJabatan} AS jabatan,
                 " . $dynamicHariKerja . " AS hari_kerja,
                 COALESCE(att.absensi, 0) AS absensi,
                 COALESCE(att.cnt_wfo, 0) AS cnt_wfo,
@@ -4045,6 +4193,7 @@ class PageController extends Controller
                 ) AS persentase_kehadiran,
                 CASE WHEN COALESCE(att.absensi, 0) = 0 THEN 1 ELSE 0 END AS belum_absen
             FROM pegawai p
+            {$penugasanJoin}
             LEFT JOIN (
                 SELECT
                     pegawai_id,
@@ -4058,14 +4207,12 @@ class PageController extends Controller
                 GROUP BY pegawai_id
             ) att ON p.pegawai_id = att.pegawai_id
             LEFT JOIN absensi_periode b
-                ON p.regional_kode = b.regional_kode
-                AND p.area_kode = b.area_kode
+                ON {$effectiveRegionalKode} = b.regional_kode
+                AND {$effectiveArea} = b.area_kode
                 AND b.periode = ?
-            WHERE TRIM(p.regional) = ?
-              AND TRIM(p.divisi) = ?
-              AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
+            WHERE {$eligibility}
+              AND {$effectiveDivisi} = ?
               /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
-              AND LOWER(p.status_pegawai) IN ('aktif', 'active')
             ORDER BY belum_absen DESC, persentase_kehadiran ASC, p.nama ASC
         ";
 
@@ -4074,7 +4221,14 @@ class PageController extends Controller
 
     private function fetchDetailAbsenFromAbsensi(string $periodeHris, string $divisi): array
     {
-        $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris);
+        [$asOfStart, $asOfEnd] = $this->hrisPenugasanPeriodRange($periodeHris);
+        $penugasanJoin = $this->hrisActivePenugasanJoinSql($asOfStart, $asOfEnd);
+        $effectiveDivisi = $this->hrisEffectiveDivisiExpr('p');
+        $effectiveJabatan = $this->hrisEffectiveJabatanExpr('p', 'pen');
+        $effectiveArea = $this->hrisEffectiveAreaKodeExpr('p', 'pen');
+        $effectiveRegionalKode = $this->hrisEffectiveRegionalKodeExpr('p', 'pen');
+        $eligibility = $this->hrisHoEligibilitySql('p', 'pen');
+        $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris, $effectiveArea);
 
         $regional = self::HRIS_REGIONAL_FILTER;
 
@@ -4083,7 +4237,7 @@ class PageController extends Controller
                 p.pegawai_id,
                 COALESCE(NULLIF(TRIM(p.nik), ''), '-') AS pegawai_nik,
                 p.nama,
-                p.jabatan,
+                {$effectiveJabatan} AS jabatan,
                 " . $dynamicHariKerja . " AS hari_kerja,
                 COALESCE(att.absensi, 0) AS absensi,
                 COALESCE(att.cnt_wfo, 0) AS cnt_wfo,
@@ -4097,6 +4251,7 @@ class PageController extends Controller
                 ) AS persentase_kehadiran,
                 CASE WHEN COALESCE(att.absensi, 0) = 0 THEN 1 ELSE 0 END AS belum_absen
             FROM pegawai p
+            {$penugasanJoin}
             LEFT JOIN (
                 SELECT
                     pegawai_id,
@@ -4110,14 +4265,12 @@ class PageController extends Controller
                 GROUP BY pegawai_id
             ) att ON p.pegawai_id = att.pegawai_id
             LEFT JOIN absensi_periode b
-                ON p.regional_kode = b.regional_kode
-                AND p.area_kode = b.area_kode
+                ON {$effectiveRegionalKode} = b.regional_kode
+                AND {$effectiveArea} = b.area_kode
                 AND b.periode = ?
-            WHERE TRIM(p.regional) = ?
-              AND TRIM(p.divisi) = ?
-              AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
+            WHERE {$eligibility}
+              AND {$effectiveDivisi} = ?
               /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
-              AND LOWER(p.status_pegawai) IN ('aktif', 'active')
             ORDER BY belum_absen DESC, persentase_kehadiran ASC, p.nama ASC
         ";
 
@@ -4127,18 +4280,24 @@ class PageController extends Controller
     private function fetchHarianFromImport(string $divisi, string $tanggal): array
     {
         $periodeHris = date('mY', strtotime($tanggal));
-        $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris);
+        $penugasanJoin = $this->hrisActivePenugasanJoinSql($tanggal, $tanggal);
+        $effectiveDivisi = $this->hrisEffectiveDivisiExpr('p');
+        $effectiveJabatan = $this->hrisEffectiveJabatanExpr('p', 'pen');
+        $effectiveArea = $this->hrisEffectiveAreaKodeExpr('p', 'pen');
+        $effectiveRegionalKode = $this->hrisEffectiveRegionalKodeExpr('p', 'pen');
+        $eligibility = $this->hrisHoEligibilitySql('p', 'pen');
+        $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris, $effectiveArea);
 
         $regional = self::HRIS_REGIONAL_FILTER;
 
-        $divisiCondition = $divisi !== '' ? 'AND TRIM(p.divisi) = ?' : '';
+        $divisiCondition = $divisi !== '' ? "AND {$effectiveDivisi} = ?" : '';
 
         $sql = "
             SELECT
                 p.nama,
                 COALESCE(NULLIF(TRIM(p.nik), ''), '-') AS pegawai_nik,
-                TRIM(p.divisi) AS divisi,
-                p.jabatan,
+                {$effectiveDivisi} AS divisi,
+                {$effectiveJabatan} AS jabatan,
                 ? AS tanggal,
                 COALESCE(NULLIF(TRIM(ai.hari_kerja), ''), CAST(" . $dynamicHariKerja . " AS CHAR), '-') AS hari_kerja,
                 COALESCE(NULLIF(TRIM(ai.checkin_time), ''), '-') AS checkin_time,
@@ -4150,45 +4309,49 @@ class PageController extends Controller
                 COALESCE(NULLIF(TRIM(ai.mood_in), ''), '-') AS mood_masuk,
                 COALESCE(NULLIF(TRIM(ai.mood_out), ''), '-') AS mood_pulang
             FROM pegawai p
+            {$penugasanJoin}
             LEFT JOIN absensi_import ai
                 ON ai.pegawai_id = p.pegawai_id
                 AND ai.tanggal_date = ?
                 AND ai.periode = DATE_FORMAT(?, '%m%Y')
             LEFT JOIN absensi_periode b
-                ON p.regional_kode = b.regional_kode
-                AND p.area_kode = b.area_kode
+                ON {$effectiveRegionalKode} = b.regional_kode
+                AND {$effectiveArea} = b.area_kode
                 AND b.periode = DATE_FORMAT(?, '%m%Y')
-            WHERE TRIM(p.regional) = ?
-              AND NULLIF(TRIM(p.divisi), '') IS NOT NULL
-              AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
+            WHERE {$eligibility}
+              AND NULLIF({$effectiveDivisi}, '') IS NOT NULL
               /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
-              AND LOWER(p.status_pegawai) IN ('aktif', 'active')
               {$divisiCondition}
-            ORDER BY p.divisi ASC, p.nama ASC
         ";
 
         $params = [$tanggal, $tanggal, $tanggal, $tanggal, $regional];
         if ($divisi !== '')
             $params[] = $divisi;
 
-        return DB::connection('hris')->select($sql, $params);
+        return $this->sortHrisByDivisi(DB::connection('hris')->select($sql, $params));
     }
 
     private function fetchHarianFromAbsensi(string $divisi, string $tanggal): array
     {
         $periodeHris = date('mY', strtotime($tanggal));
-        $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris);
+        $penugasanJoin = $this->hrisActivePenugasanJoinSql($tanggal, $tanggal);
+        $effectiveDivisi = $this->hrisEffectiveDivisiExpr('p');
+        $effectiveJabatan = $this->hrisEffectiveJabatanExpr('p', 'pen');
+        $effectiveArea = $this->hrisEffectiveAreaKodeExpr('p', 'pen');
+        $effectiveRegionalKode = $this->hrisEffectiveRegionalKodeExpr('p', 'pen');
+        $eligibility = $this->hrisHoEligibilitySql('p', 'pen');
+        $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris, $effectiveArea);
 
         $regional = self::HRIS_REGIONAL_FILTER;
 
-        $divisiCondition = $divisi !== '' ? 'AND TRIM(p.divisi) = ?' : '';
+        $divisiCondition = $divisi !== '' ? "AND {$effectiveDivisi} = ?" : '';
 
         $sql = "
             SELECT
                 p.nama,
                 COALESCE(NULLIF(TRIM(p.nik), ''), '-') AS pegawai_nik,
-                TRIM(p.divisi) AS divisi,
-                p.jabatan,
+                {$effectiveDivisi} AS divisi,
+                {$effectiveJabatan} AS jabatan,
                 ? AS tanggal,
                 CAST(COALESCE(" . $dynamicHariKerja . ", 0) AS CHAR) AS hari_kerja,
                 COALESCE(DATE_FORMAT(MIN(a.jam), '%H:%i:%s'), '-') AS checkin_time,
@@ -4200,35 +4363,33 @@ class PageController extends Controller
                 COALESCE(MAX(a.longitude), '') AS longitude,
                 COALESCE(MAX(NULLIF(TRIM(a.alamat), '')), '-') AS lokasi,
                 COALESCE(NULLIF(GROUP_CONCAT(DISTINCT a.jenis_absen ORDER BY a.jenis_absen SEPARATOR ', '), ''), '-') AS jenis_absen,
-                COALESCE(NULLIF(TRIM(pp.mood_masuk), ''), '-') AS mood_masuk,
-                COALESCE(NULLIF(TRIM(pp.mood_pulang), ''), '-') AS mood_pulang
+                COALESCE(NULLIF(TRIM(pres.mood_masuk), ''), '-') AS mood_masuk,
+                COALESCE(NULLIF(TRIM(pres.mood_pulang), ''), '-') AS mood_pulang
             FROM pegawai p
+            {$penugasanJoin}
             LEFT JOIN absensi a
                 ON a.pegawai_id = p.pegawai_id
                 AND DATE(a.jam) = ?
-            LEFT JOIN presensi_pegawai pp
-                ON pp.id_pegawai = p.pegawai_id
-                AND pp.tanggal = ?
-                AND pp.periode = DATE_FORMAT(?, '%m%Y')
+            LEFT JOIN presensi_pegawai pres
+                ON pres.id_pegawai = p.pegawai_id
+                AND pres.tanggal = ?
+                AND pres.periode = DATE_FORMAT(?, '%m%Y')
             LEFT JOIN absensi_periode b
-                ON p.regional_kode = b.regional_kode
-                AND p.area_kode = b.area_kode
+                ON {$effectiveRegionalKode} = b.regional_kode
+                AND {$effectiveArea} = b.area_kode
                 AND b.periode = DATE_FORMAT(?, '%m%Y')
-            WHERE TRIM(p.regional) = ?
-              AND NULLIF(TRIM(p.divisi), '') IS NOT NULL
-              AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
+            WHERE {$eligibility}
+              AND NULLIF({$effectiveDivisi}, '') IS NOT NULL
               /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
-              AND LOWER(p.status_pegawai) IN ('aktif', 'active')
               {$divisiCondition}
-            GROUP BY p.pegawai_id, p.nama, p.nik, p.jabatan, p.divisi, pp.mood_masuk, pp.mood_pulang, p.area_kode, b.hari_kerja
-            ORDER BY p.divisi ASC, p.nama ASC
+            GROUP BY p.pegawai_id, p.nama, p.nik, p.jabatan, p.divisi, pen.jabatan, pen.bagian_penugasan_kode, pen.area_kode, pen.regional_kode, pres.mood_masuk, pres.mood_pulang, p.area_kode, b.hari_kerja
         ";
 
         $params = [$tanggal, $tanggal, $tanggal, $tanggal, $tanggal, $regional];
         if ($divisi !== '')
             $params[] = $divisi;
 
-        return DB::connection('hris')->select($sql, $params);
+        return $this->sortHrisByDivisi(DB::connection('hris')->select($sql, $params));
     }
 
     public function evaluasi_hris_regional_list()
@@ -4252,19 +4413,24 @@ class PageController extends Controller
         }
 
         try {
+            [$asOfStart, $asOfEnd] = $this->hrisPenugasanPeriodRange(date('mY'));
+            $penugasanJoin = $this->hrisActivePenugasanJoinSql($asOfStart, $asOfEnd);
+            $effectiveDivisi = $this->hrisEffectiveDivisiExpr('p');
+            $effectiveJabatan = $this->hrisEffectiveJabatanExpr('p', 'pen');
+            $eligibility = $this->hrisHoEligibilitySql('p', 'pen');
+
             $sql = "
                 SELECT
                     p.pegawai_id,
                     p.nama,
                     p.nik,
-                    p.divisi,
-                    p.jabatan
+                    {$effectiveDivisi} AS divisi,
+                    {$effectiveJabatan} AS jabatan
                 FROM pegawai p
-                WHERE TRIM(p.regional) = ?
+                {$penugasanJoin}
+                WHERE {$eligibility}
                   AND (p.nama LIKE ? OR p.nik LIKE ?)
-                  AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
                   /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
-                  AND LOWER(p.status_pegawai) IN ('aktif', 'active')
                 ORDER BY p.nama ASC
                 LIMIT 20
             ";
