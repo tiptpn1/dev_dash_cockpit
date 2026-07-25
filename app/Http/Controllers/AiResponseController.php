@@ -4,115 +4,276 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 error_reporting(0);
 
 class AiResponseController extends Controller
 {
-    public function aiResponse_old(Request $request)
+    /**
+     * Ambil webChatToken dari AI Backend via login.
+     * Token di-cache karena webChatToken tidak expire (static token).
+     *
+     * @param bool $forceRefresh Paksa login ulang (misal token ditolak)
+     * @return string|null
+     */
+    private function getWebChatToken($forceRefresh = false)
     {
-        $message = $request->input('message');
-        try {
-            $url = "https://aset-dives-dev.ptpn1.co.id/map_ai/ai_response";
-            if ($request->input('thread_id')) {
-                $thread_id = $request->input('thread_id');
-            } else {
-                $thread_id = "";
-            }
-            
-            $response = Http::asForm()->post($url, [
-                'tanya' => $message,
-                'thread_id' => $thread_id
-            ]);
+        $cacheKey = 'ai_backend_webchat_token';
 
-            $data = $response->object();
-
-            if ($response->successful() && isset($data->status) && $data->status == "success") {
-                return response()->json([
-                    'status' => 'success',
-                    'data' => $data,
-                    'thread_id' => $thread_id
-                ]);
-            } else {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Gagal mendapatkan respons dari API eksternal.',
-                    'status_code' => $response->status(),
-                    'response' => $data
-                ]);
+        if (!$forceRefresh) {
+            $cached = Cache::get($cacheKey);
+            if ($cached) {
+                return $cached;
             }
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
-            ], 500);
         }
+
+        $baseUrl = env('AI_BACKEND_BASE_URL', 'https://be.ptpn1.co.id');
+        $username = env('AI_BACKEND_USERNAME', 'agent_test');
+        $password = env('AI_BACKEND_PASSWORD', 'agent123');
+
+        try {
+            $response = Http::withoutVerifying()
+                ->timeout(20)
+                ->withHeaders(['Content-Type' => 'application/json'])
+                ->post($baseUrl . '/api/auth/login', [
+                    'username' => $username,
+                    'password' => $password,
+                ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                $webChatToken = $data['data']['webChatToken'] ?? null;
+
+                if ($webChatToken) {
+                    // Cache 12 jam (webChatToken tidak expire, tapi refresh berkala aman)
+                    Cache::put($cacheKey, $webChatToken, now()->addHours(12));
+                    return $webChatToken;
+                }
+            }
+
+            Log::warning('AI Backend login gagal mendapatkan webChatToken', [
+                'status' => $response->status(),
+                'body' => substr($response->body(), 0, 300),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('AI Backend login error: ' . $e->getMessage());
+        }
+
+        return null;
     }
 
     public function aiResponse(Request $request)
     {
         $message = $request->input('message');
+        $stream = $request->input('stream', false);
+
+        // sessionId adalah kunci percakapan berkelanjutan (bukan thread_id).
+        // Terima sessionId, fallback ke thread_id untuk kompatibilitas mundur.
+        $sessionId = $request->input('sessionId', $request->input('thread_id', ''));
+
+        // Nama agent yang benar: agrinav_agent
+        $agent = $request->input('agent');
+        if (empty($agent) || empty($agent['name'])) {
+            $agent = ['name' => env('AI_BACKEND_AGENT', 'agrinav_agent')];
+        }
+
+        // source platform (web) sesuai panduan.
+        $source = $request->input('source', 'web');
+
+        // CATATAN (Panduan 4A): JANGAN kirim userId manual — diabaikan backend.
+        // Identitas user diturunkan otomatis oleh backend dari token (webChatToken).
+
+        // Ambil webChatToken (metode auth yang valid)
+        $token = $this->getWebChatToken();
+
         try {
-            //$url = "https://ai.ptpn1.co.id/api/chat/response";
-            
-            // Get thread_id if exists
-            if ($request->input('thread_id')) {
-                $thread_id = $request->input('thread_id');
-            } else {
-                $thread_id = "";
+            // ============ STREAMING ============
+            if ($stream) {
+                return response()->stream(function () use ($message, $sessionId, $agent, $token, $source) {
+                    header('Content-Type: text/event-stream');
+                    header('Cache-Control: no-cache');
+                    header('Connection: keep-alive');
+                    header('X-Accel-Buffering: no');
+
+                    ob_implicit_flush(true);
+
+                    // Kalau token gagal didapat, kirim error langsung
+                    if (empty($token)) {
+                        $this->sendSSE([
+                            'type' => 'error',
+                            'error' => 'Gagal autentikasi ke AI Backend. Periksa kredensial AI_BACKEND_USERNAME/PASSWORD.'
+                        ]);
+                        return;
+                    }
+
+                    $url = env('AI_BACKEND_URL', 'https://be.ptpn1.co.id/api/ai/chat');
+
+                    $requestData = [
+                        'message' => $message,
+                        'stream'  => true,
+                        'agent'   => $agent,
+                        'token'   => $token,        // webChatToken (identitas diturunkan dari sini)
+                        'source'  => $source,       // platform: web
+                    ];
+
+                    // Kirim sessionId hanya jika ada (biar backend generate baru saat kosong)
+                    if (!empty($sessionId)) {
+                        $requestData['sessionId'] = $sessionId;
+                    }
+
+                    Log::info('AI Streaming Request', [
+                        'url'       => $url,
+                        'agent'     => $agent['name'] ?? 'n/a',
+                        'sessionId' => $sessionId ?: '(new)',
+                        'token'     => 'PRESENT',
+                    ]);
+
+                    $ch = curl_init($url);
+                    curl_setopt($ch, CURLOPT_POST, true);
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($requestData));
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, false);
+                    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                        'Content-Type: application/json',
+                        'Accept: text/event-stream',
+                        'Authorization: Bearer ' . $token,   // webChatToken sebagai Bearer
+                    ]);
+                    curl_setopt($ch, CURLOPT_TIMEOUT, env('AI_BACKEND_TIMEOUT', 120));
+
+                    // Forward stream ke client apa adanya
+                    curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($curl, $data) {
+                        echo $data;
+                        if (ob_get_level() > 0) {
+                            @ob_flush();
+                        }
+                        flush();
+                        return strlen($data);
+                    });
+
+                    curl_exec($ch);
+                    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                    $error = curl_error($ch);
+                    curl_close($ch);
+
+                    if ($error) {
+                        $this->sendSSE([
+                            'type' => 'error',
+                            'error' => "cURL Error: {$error}"
+                        ]);
+                    } elseif ($httpCode !== 200) {
+                        $this->sendSSE([
+                            'type' => 'error',
+                            'error' => 'Backend error',
+                            'status_code' => $httpCode,
+                        ]);
+                    }
+                }, 200, [
+                    'Content-Type'      => 'text/event-stream',
+                    'Cache-Control'     => 'no-cache',
+                    'Connection'        => 'keep-alive',
+                    'X-Accel-Buffering' => 'no',
+                ]);
             }
 
-            // $response = Http::timeout(60)->asForm()->post($url, [
-            //     'message' => $message,
-            //     "id_user_chat" => "04071993"
-            // ]);
+            // ============ NON-STREAMING ============
+            if (empty($token)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Gagal autentikasi ke AI Backend.',
+                ], 500);
+            }
 
-            $url = "https://workflow.ptpn1.co.id/webhook/77f88cbe-c38e-4ca4-8ad2-fe069dd76252";
-            
-            $httpResponse = Http::timeout(60)->asForm()->post($url, [
-                'query' => $message,
-                "id_user_chat" => "04071993"
-            ]);
+            $url = env('AI_BACKEND_URL', 'https://be.ptpn1.co.id/api/ai/chat');
 
-            // Check if HTTP request was successful
+            $payload = [
+                'message' => $message,
+                'stream'  => false,
+                'agent'   => $agent,
+                'token'   => $token,
+                'source'  => $source,
+            ];
+            if (!empty($sessionId)) {
+                $payload['sessionId'] = $sessionId;
+            }
+
+            $httpResponse = Http::withoutVerifying()
+                ->timeout(env('AI_BACKEND_TIMEOUT', 60))
+                ->withHeaders([
+                    'Content-Type'  => 'application/json',
+                    'Authorization' => 'Bearer ' . $token,
+                ])
+                ->post($url, $payload);
+
             if (!$httpResponse->successful()) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Gagal mendapatkan respons dari API eksternal.',
                     'status_code' => $httpResponse->status(),
-                    'response' => $httpResponse->body()
+                    'response' => $httpResponse->body(),
                 ], 500);
             }
 
-            $responseData = $httpResponse->object();
-            
-            // Check if response has expected structure (output or data)
-            if (isset($responseData->output)) {
-                $responseText = $responseData->output;
-            } elseif (isset($responseData->data)) {
-                $responseText = $responseData->data;
-            } else {
+            $responseData = $httpResponse->json();
+
+            // Jika auth ditolak, coba refresh token sekali
+            $content = $responseData['message']['content'] ?? '';
+            $success = $responseData['success'] ?? false;
+            if (!$success && str_contains($content, 'autentikasi')) {
+                $token = $this->getWebChatToken(true); // force refresh
+                if ($token) {
+                    $payload['token'] = $token;
+                    $httpResponse = Http::withoutVerifying()
+                        ->timeout(env('AI_BACKEND_TIMEOUT', 60))
+                        ->withHeaders([
+                            'Content-Type'  => 'application/json',
+                            'Authorization' => 'Bearer ' . $token,
+                        ])
+                        ->post($url, $payload);
+                    $responseData = $httpResponse->json();
+                }
+            }
+
+            $responseText = $responseData['message']['content']
+                ?? ($responseData['response'] ?? null);
+
+            $responseSessionId = $responseData['sessionId'] ?? $sessionId;
+
+            if ($responseText === null) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Format respons tidak valid dari API eksternal.',
-                    'response' => $responseData
+                    'response' => $responseData,
                 ], 500);
             }
 
             return response()->json([
                 'status' => 'success',
                 'data' => [
-                    'response' => $responseText,
-                    'thread_id' => $thread_id
+                    'response'  => $responseText,
+                    'sessionId' => $responseSessionId,
                 ],
-                'thread_id' => $thread_id
+                'sessionId' => $responseSessionId,
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Helper untuk mengirim Server-Sent Event.
+     */
+    private function sendSSE($data)
+    {
+        echo "data: " . json_encode($data) . "\n\n";
+        if (ob_get_level() > 0) {
+            @ob_flush();
+        }
+        flush();
     }
 }

@@ -17,3 +17,12 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+
+# Dokumentasi & panduan proyek di root (tidak perlu di-push)
+# Anchored ke root agar README vendor di public/assets tetap ter-track.
+/*.md
+!/README.md
+
+# Skrip test/debug ad-hoc di root (bukan folder tests/ resmi)
+/test_*.php
+/*_test.php

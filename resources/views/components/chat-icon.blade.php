@@ -6,12 +6,12 @@
     <div class="chat-header">
         <div class="chat-title">AIGR1 Assistant</div>
         <div class="chat-controls">
-            <button class="expand-btn" id="expandChat">
+            <button class="expand-btn" id="expandChat" title="Expand/Collapse">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
                 </svg>
             </button>
-            <button class="close-btn" id="closeChat">&times;</button>
+            <button class="close-btn" id="closeChat" title="Close">&times;</button>
         </div>
     </div>
     <div class="chat-messages" id="chatMessages">
@@ -23,7 +23,7 @@
     </div>
     <div class="chat-input-container">
         <textarea class="chat-input" id="chatInput" placeholder="Type your message..." rows="1"></textarea>
-        <button class="mic-button" id="micButton">
+        <button class="mic-button" id="micButton" title="Voice Input">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
                 <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
@@ -31,7 +31,7 @@
                 <line x1="8" y1="23" x2="16" y2="23"/>
             </svg>
         </button>
-        <button class="send-button" id="sendMessage">
+        <button class="send-button" id="sendMessage" title="Send Message">
             <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
                 <line x1="22" y1="2" x2="11" y2="13"></line>
                 <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
@@ -39,6 +39,14 @@
         </button>
     </div>
 </div>
+
+<!-- Load external libraries for rich content -->
+<link rel="stylesheet" href="{{ asset('css/chat-rich-content.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{{ asset('js/chat-content-renderer.js') }}"></script>
 
 <style>
 .chat-icon-container {
@@ -214,6 +222,33 @@
     text-align: right;
     display: none;
 }
+
+.message-content.streaming::after {
+    content: '▋';
+    animation: chatCursorBlink 1s infinite;
+    margin-left: 2px;
+}
+
+@keyframes chatCursorBlink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0; }
+}
+
+.message-content code {
+    background: #1e1e1e;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+}
+
+.message-content pre {
+    background: #1e1e1e;
+    padding: 10px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 10px 0;
+}
+
 </style>
 
 <script>
@@ -227,7 +262,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const micButton = document.getElementById('micButton');
     const expandChat = document.getElementById('expandChat');
     let recognition = null;
-    let currentThreadId = ''; // Variabel global untuk menyimpan thread_id
+    let currentSessionId = ''; // sessionId untuk percakapan berkelanjutan (follow-up)
+    
+    // Initialize ChatContentRenderer
+    const contentRenderer = new ChatContentRenderer();
 
     // Initially hide the chat container
     chatContainer.style.display = 'none';
@@ -396,104 +434,186 @@ document.addEventListener('DOMContentLoaded', function() {
             chatInput.value = '';
             chatMessages.scrollTop = chatMessages.scrollHeight;
 
-            try {
-                // Show loading message
-                const loadingDiv = document.createElement('div');
-                loadingDiv.className = 'message assistant';
-                loadingDiv.innerHTML = `
-                    <div class="message-content">Thinking...</div>
-                `;
-                chatMessages.appendChild(loadingDiv);
+            // Create assistant message container for streaming
+            const assistantMessageDiv = document.createElement('div');
+            assistantMessageDiv.className = 'message assistant';
+            assistantMessageDiv.innerHTML = `
+                <div class="message-content">🧠 Thinking...</div>
+            `;
+            chatMessages.appendChild(assistantMessageDiv);
 
+            const messageContent = assistantMessageDiv.querySelector('.message-content');
+            let fullResponse = '';
+            let isThinking = true;
+
+            try {
                 const response = await fetch('/ai/response', {
                     method: 'POST', 
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': csrfToken,
-                        'Accept': 'application/json',
+                        'Accept': 'text/event-stream',
                     },
                     body: JSON.stringify({ 
                         message: message,
-                        thread_id: currentThreadId // Mengirim thread_id yang tersimpan
+                        stream: true,
+                        sessionId: currentSessionId, // kunci follow-up (kosong = sesi baru)
+                        agent: { name: 'agrinav_agent' } // Auth & userId ditangani backend
                     })
                 });
 
-                const response_data = await response.json();
-
-                // Remove loading message
-                chatMessages.removeChild(loadingDiv);
-
-                // Check if response status is error
-                if (response_data.status === 'error' || !response.ok) {
-                    const errorMessage = response_data.message || 'Terjadi kesalahan saat memproses permintaan Anda.';
-                    const errorMessageDiv = document.createElement('div');
-                    errorMessageDiv.className = 'message assistant';
-                    errorMessageDiv.innerHTML = `
-                        <div class="message-content">${errorMessage}</div>
-                    `;
-                    chatMessages.appendChild(errorMessageDiv);
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
-                    return;
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
-                const data = response_data.data;
+                // Stream response using ReadableStream
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                let currentEvent = null;
 
-                // Update thread_id jika ada di response
-                if (data.thread_id) {
-                    currentThreadId = data.thread_id;
+                while (true) {
+                    const { done, value } = await reader.read();
+                    
+                    if (done) break;
+                    
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop() || '';
+                    
+                    for (const line of lines) {
+                        // Handle SSE event type
+                        if (line.startsWith('event:')) {
+                            currentEvent = line.substring(6).trim();
+                            continue;
+                        }
+                        
+                        if (line.startsWith('data:')) {
+                            try {
+                                const jsonStr = line.substring(5).trim();
+                                if (!jsonStr) continue;
+                                
+                                const data = JSON.parse(jsonStr);
+                                
+                                // Use event type from SSE or from data.type
+                                const eventType = currentEvent || data.type;
+                                
+                                switch (eventType) {
+                                    case 'thinking':
+                                        messageContent.textContent = `🧠 ${data.message}`;
+                                        break;
+                                        
+                                    case 'token':
+                                        // Remove thinking indicator on first token
+                                        if (isThinking) {
+                                            isThinking = false;
+                                            messageContent.textContent = '';
+                                            fullResponse = '';
+                                        }
+                                        
+                                        // Add streaming class for cursor effect
+                                        messageContent.classList.add('streaming');
+                                        
+                                        // Append token to response
+                                        fullResponse += data.token;
+                                        
+                                        // Render with ChatContentRenderer (async)
+                                        contentRenderer.renderContent(fullResponse).then(rendered => {
+                                            // Clean up unwanted markers
+                                            const cleaned = rendered.replace(/【\d+:\d+†source】/g, '');
+                                            messageContent.innerHTML = cleaned;
+                                            
+                                            // Auto-scroll to bottom
+                                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                                        });
+                                        
+                                        break;
+                                        
+                                    case 'done':
+                                        console.log('✅ Response completed');
+                                        
+                                        // Remove streaming cursor
+                                        messageContent.classList.remove('streaming');
+                                        
+                                        // Extract response from backend format
+                                        let finalResponse = '';
+                                        if (data.response && data.response.message) {
+                                            finalResponse = data.response.message.content;
+                                        } else if (data.response) {
+                                            finalResponse = data.response;
+                                        }
+                                        
+                                        // Simpan sessionId untuk follow-up (percakapan berkelanjutan)
+                                        const sessionId = data.sessionId || (data.response && data.response.sessionId);
+                                        if (sessionId) {
+                                            currentSessionId = sessionId;
+                                            
+                                            // Tampilkan Session ID di bawah pesan user
+                                            const existingSessionId = userMessageDiv.querySelector('.thread-id');
+                                            if (!existingSessionId) {
+                                                const sessionIdDiv = document.createElement('div');
+                                                sessionIdDiv.className = 'thread-id';
+                                                sessionIdDiv.textContent = `Session ID: ${sessionId}`;
+                                                userMessageDiv.appendChild(sessionIdDiv);
+                                            }
+                                        }
+                                        
+                                        // Display final response if not already streamed
+                                        if (finalResponse && !fullResponse) {
+                                            contentRenderer.renderContent(finalResponse).then(rendered => {
+                                                const cleaned = rendered.replace(/【\d+:\d+†source】/g, '');
+                                                messageContent.innerHTML = cleaned;
+                                            });
+                                            fullResponse = finalResponse;
+                                        }
+                                        
+                                        // Automatically speak the complete response using speakable text extraction
+                                        if (fullResponse) {
+                                            speakText(fullResponse);
+                                        }
+                                        break;
+                                        
+                                    case 'error':
+                                        console.error('❌ Error:', data.error);
+                                        messageContent.innerHTML = `<span style="color: #ff6b6b;">Error: ${data.error}</span>`;
+                                        break;
+                                }
+                                
+                                // Reset current event after processing
+                                currentEvent = null;
+                                
+                            } catch (parseError) {
+                                console.error('Failed to parse SSE data:', parseError, 'Line:', line);
+                            }
+                        }
+                    }
                 }
-
-                // Tambahkan thread_id di bawah pesan user
-                if (data.thread_id) {
-                    const threadIdDiv = document.createElement('div');
-                    threadIdDiv.className = 'thread-id';
-                    threadIdDiv.textContent = `Thread ID: ${data.thread_id}`;
-                    userMessageDiv.appendChild(threadIdDiv);
-                }
-
-                // Add AI response
-                const assistantMessageDiv = document.createElement('div');
-                assistantMessageDiv.className = 'message assistant';
-                const cleanResponse = data.response
-                    .replace(/【\d+:\d+†source】/g, '')
-                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                    .replace(/\n/g, '<br>');
-                assistantMessageDiv.innerHTML = `
-                    <div class="message-content">${cleanResponse}</div>
-                `;
-                chatMessages.appendChild(assistantMessageDiv);
-
-                // Automatically speak the response
-                speakText(cleanResponse);
-            } catch (error) {
-                console.error('Error:', error);
                 
-                // Remove loading message if it exists
-                if (loadingDiv && loadingDiv.parentNode) {
-                    chatMessages.removeChild(loadingDiv);
-                }
+            } catch (error) {
+                console.error('Streaming Error:', error);
                 
                 // Show error message
-                const errorMessageDiv = document.createElement('div');
-                errorMessageDiv.className = 'message assistant';
-                errorMessageDiv.innerHTML = `
-                    <div class="message-content">Maaf, terjadi kesalahan saat memproses permintaan Anda. Silakan coba lagi.</div>
-                `;
-                chatMessages.appendChild(errorMessageDiv);
+                messageContent.innerHTML = `<span style="color: #ff6b6b;">Maaf, terjadi kesalahan saat memproses permintaan Anda. Silakan coba lagi.</span>`;
             }
 
-            // Scroll to bottom after adding new message
+            // Scroll to bottom after completion
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
     }
 
-    // Modified speak text function
+    // Modified speak text function - uses ChatContentRenderer to extract speakable text
     function speakText(text) {
         // Cancel any ongoing speech
         window.speechSynthesis.cancel();
         
-        // Clean the text from HTML tags
-        const cleanText = text.replace(/<[^>]*>/g, '');
+        // Extract speakable text using ChatContentRenderer (removes code, charts, maps, etc.)
+        const cleanText = contentRenderer.extractSpeakableText(text);
+        
+        // Skip if nothing to speak
+        if (!cleanText.trim()) {
+            console.log('No speakable text found');
+            return;
+        }
         
         const utterance = new SpeechSynthesisUtterance(cleanText);
         utterance.lang = 'id-ID'; // Set to Indonesian language

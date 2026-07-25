@@ -161,7 +161,7 @@ Route::middleware('auth:custom')->group(function () {
         Route::get('lastlogin', [UserManagementController::class, 'lastLogin'])->name('lastlogin.index');
     });
 
-    // AI Response Route
+    // AI Response Routes
     Route::post('/ai/response', [AiResponseController::class, 'aiResponse']);
 });
 
