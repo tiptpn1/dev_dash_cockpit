@@ -234,6 +234,13 @@
     50%, 100% { opacity: 0; }
 }
 
+.chart-generating-hint {
+    font-size: 12px;
+    color: #90caf9;
+    margin-top: 6px;
+    opacity: 0.85;
+}
+
 .message-content code {
     background: #1e1e1e;
     padding: 2px 6px;
@@ -445,6 +452,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const messageContent = assistantMessageDiv.querySelector('.message-content');
             let fullResponse = '';
             let isThinking = true;
+            let lastRenderPromise = Promise.resolve(); // lacak render async terakhir agar tidak race dengan gambar/chart
 
             try {
                 const response = await fetch('/ai/response', {
@@ -500,8 +508,76 @@ document.addEventListener('DOMContentLoaded', function() {
                                 
                                 switch (eventType) {
                                     case 'thinking':
-                                        messageContent.textContent = `🧠 ${data.message}`;
+                                        // Hanya timpa bubble dengan indikator "berpikir" SEBELUM ada teks jawaban.
+                                        // Setelah token/partial_response tampil, event thinking lanjutan (mis. saat
+                                        // proses pembuatan chart) TIDAK BOLEH menimpa jawaban yang sudah ditampilkan.
+                                        if (isThinking) {
+                                            messageContent.textContent = `🧠 ${data.message}`;
+                                        }
                                         break;
+                                        
+                                    case 'skill_called': {
+                                        // Backend sekarang mengirim field 'label' yang sudah user-friendly
+                                        // (mis. "mengambil data", "membuat visualisasi"). JANGAN tampilkan
+                                        // data.skill mentah (nama teknis seperti "trigger_n8n") ke user.
+                                        // Fallback ke mapping manual hanya untuk kompatibilitas mundur jika
+                                        // backend lama belum mengirim field 'label'.
+                                        const skillLabelFallback = {
+                                            generate_chart_image: 'membuat visualisasi',
+                                            trigger_n8n: 'mengambil data',
+                                        };
+                                        const friendlyLabel = data.label || skillLabelFallback[data.skill] || 'memproses permintaan';
+                                        const isChartSkill = data.skill === 'generate_chart_image';
+                                        
+                                        if (isThinking) {
+                                            messageContent.textContent = `${isChartSkill ? '📊' : '⚙️'} ${friendlyLabel}...`;
+                                        } else if (isChartSkill) {
+                                            // Teks jawaban sudah tampil (dari partial_response) — tampilkan
+                                            // indikator kecil terpisah tanpa mengganggu teks yang sudah ada.
+                                            if (!assistantMessageDiv.querySelector('.chart-generating-hint')) {
+                                                const hint = document.createElement('div');
+                                                hint.className = 'chart-generating-hint';
+                                                hint.textContent = `📊 ${friendlyLabel}...`;
+                                                assistantMessageDiv.appendChild(hint);
+                                            }
+                                        }
+                                        break;
+                                    }
+                                        
+                                    case 'skill_result': {
+                                        // Sama seperti skill_called: gunakan label user-friendly, bukan
+                                        // data.skill mentah. Event ini opsional untuk UI (progress "selesai").
+                                        const resultLabel = data.label || data.skill || 'proses';
+                                        console.log(`✔️ Skill selesai: ${resultLabel}`);
+                                        break;
+                                    }
+                                        
+                                    case 'partial_response': {
+                                        // Backend: teks jawaban sudah final (chart, jika ada, masih diproses
+                                        // dan menyusul di event 'done'). Tampilkan teks SEKARANG, jangan tunggu done.
+                                        // Strategi B (sesuai panduan): render dari partial_response, idempotent
+                                        // terhadap isi 'token' yang identik (set, bukan append, ke fullResponse).
+                                        const partialContent = data.response && data.response.message && data.response.message.content;
+                                        if (partialContent) {
+                                            isThinking = false;
+                                            messageContent.classList.remove('streaming');
+                                            fullResponse = partialContent;
+                                            lastRenderPromise = contentRenderer.renderContent(fullResponse).then(rendered => {
+                                                const cleaned = rendered.replace(/【\d+:\d+†source】/g, '');
+                                                messageContent.innerHTML = cleaned;
+                                                chatMessages.scrollTop = chatMessages.scrollHeight;
+                                            });
+                                        }
+                                        
+                                        const partialSessionId = data.sessionId || (data.response && data.response.sessionId);
+                                        if (partialSessionId) {
+                                            currentSessionId = partialSessionId;
+                                        }
+                                        
+                                        // PENTING: jangan tutup/cancel stream di sini — tunggu event 'done' (bisa
+                                        // membawa chart) atau 'error'. Loop pembaca di bawah tetap berjalan normal.
+                                        break;
+                                    }
                                         
                                     case 'token':
                                         // Remove thinking indicator on first token
@@ -518,7 +594,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                         fullResponse += data.token;
                                         
                                         // Render with ChatContentRenderer (async)
-                                        contentRenderer.renderContent(fullResponse).then(rendered => {
+                                        lastRenderPromise = contentRenderer.renderContent(fullResponse).then(rendered => {
                                             // Clean up unwanted markers
                                             const cleaned = rendered.replace(/【\d+:\d+†source】/g, '');
                                             messageContent.innerHTML = cleaned;
@@ -529,19 +605,15 @@ document.addEventListener('DOMContentLoaded', function() {
                                         
                                         break;
                                         
-                                    case 'done':
+                                    case 'done': {
                                         console.log('✅ Response completed');
                                         
                                         // Remove streaming cursor
                                         messageContent.classList.remove('streaming');
                                         
-                                        // Extract response from backend format
-                                        let finalResponse = '';
-                                        if (data.response && data.response.message) {
-                                            finalResponse = data.response.message.content;
-                                        } else if (data.response) {
-                                            finalResponse = data.response;
-                                        }
+                                        // Bersihkan hint "Membuat grafik..." (chart final akan tampil sebagai gambar)
+                                        const chartHint = assistantMessageDiv.querySelector('.chart-generating-hint');
+                                        if (chartHint) chartHint.remove();
                                         
                                         // Simpan sessionId untuk follow-up (percakapan berkelanjutan)
                                         const sessionId = data.sessionId || (data.response && data.response.sessionId);
@@ -558,20 +630,65 @@ document.addEventListener('DOMContentLoaded', function() {
                                             }
                                         }
                                         
-                                        // Display final response if not already streamed
-                                        if (finalResponse && !fullResponse) {
-                                            contentRenderer.renderContent(finalResponse).then(rendered => {
-                                                const cleaned = rendered.replace(/【\d+:\d+†source】/g, '');
-                                                messageContent.innerHTML = cleaned;
-                                            });
-                                            fullResponse = finalResponse;
-                                        }
+                                        const contentBlocks = data.response && data.response.contentBlocks;
                                         
-                                        // Automatically speak the complete response using speakable text extraction
-                                        if (fullResponse) {
-                                            speakText(fullResponse);
+                                        if (Array.isArray(contentBlocks) && contentBlocks.length > 0) {
+                                            // Kontrak A (disarankan): render urutan teks+chart apa adanya dari backend,
+                                            // mendukung BANYAK chart tersisip di posisi yang tepat (bukan hanya yang terakhir).
+                                            lastRenderPromise.then(() => {
+                                                return contentRenderer.renderContentBlocks(contentBlocks);
+                                            }).then(html => {
+                                                messageContent.innerHTML = html;
+                                                chatMessages.scrollTop = chatMessages.scrollHeight;
+                                            });
+                                            
+                                            // Untuk TTS, tetap pakai teks lengkap dari message.content (bukan gabungan
+                                            // per-block) supaya narasi tidak terpotong-potong.
+                                            const blocksSpeechText = (data.response && data.response.message && data.response.message.content) || '';
+                                            if (blocksSpeechText) {
+                                                speakText(blocksSpeechText);
+                                            }
+                                        } else {
+                                            // Kontrak B (fallback lama, backward compatible)
+                                            let finalResponse = '';
+                                            if (data.response && data.response.message) {
+                                                finalResponse = data.response.message.content;
+                                            } else if (data.response) {
+                                                finalResponse = data.response;
+                                            }
+                                            
+                                            // Display final response if not already streamed
+                                            if (finalResponse && !fullResponse) {
+                                                lastRenderPromise = contentRenderer.renderContent(finalResponse).then(rendered => {
+                                                    const cleaned = rendered.replace(/【\d+:\d+†source】/g, '');
+                                                    messageContent.innerHTML = cleaned;
+                                                });
+                                                fullResponse = finalResponse;
+                                            }
+                                            
+                                            // Render gambar/chart hasil skill backend (chart PNG dari generate_chart_image,
+                                            // atau hasil vision). Format: response.images = { output: url, input: url }.
+                                            // Catatan: images.output hanya berisi chart TERAKHIR jika ada lebih dari satu.
+                                            // Tunggu render teks selesai dulu (lastRenderPromise) agar <img> tidak
+                                            // ketimpa innerHTML dari renderContent() yang masih berjalan (race condition).
+                                            const images = data.response && data.response.images;
+                                            if (images && images.output) {
+                                                lastRenderPromise.then(() => {
+                                                    const imgWrap = document.createElement('div');
+                                                    imgWrap.className = 'ai-generated-image';
+                                                    imgWrap.innerHTML = `<img src="${images.output}" alt="Chart/Visualisasi dari AI" loading="lazy">`;
+                                                    messageContent.appendChild(imgWrap);
+                                                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                                                });
+                                            }
+                                            
+                                            // Automatically speak the complete response using speakable text extraction
+                                            if (fullResponse) {
+                                                speakText(fullResponse);
+                                            }
                                         }
                                         break;
+                                    }
                                         
                                     case 'error':
                                         console.error('❌ Error:', data.error);

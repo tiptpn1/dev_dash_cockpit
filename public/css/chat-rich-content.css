@@ -227,6 +227,34 @@
     border-color: #0084ff;
 }
 
+/* Gambar/chart PNG hasil skill AI Backend (field response.images.output) */
+.ai-generated-image {
+    margin-top: 10px;
+}
+
+.ai-generated-image img {
+    max-width: 100%;
+    border-radius: 8px;
+    border: 1px solid #2e2e2e;
+    background: #1e1e1e;
+    display: block;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.ai-generated-image img:hover {
+    transform: scale(1.01);
+    border-color: #0084ff;
+}
+
+.chart-caption {
+    font-size: 12px;
+    color: #b0bec5;
+    text-align: center;
+    margin-top: 6px;
+    font-style: italic;
+}
+
 /* Video/iframe embed */
 .message-content iframe {
     max-width: 100%;

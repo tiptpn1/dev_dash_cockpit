@@ -29,6 +29,48 @@ class ChatContentRenderer {
     }
 
     /**
+     * Render array `contentBlocks` dari backend (Kontrak A, lihat FRONTEND_AGRINAV_CHAT_GUIDE.md Bagian 5A).
+     * Berbeda dari renderContent(): di sini blok sudah terstruktur (type: 'text' | 'chart'),
+     * bukan hasil parsing regex dari teks mentah. Mendukung BANYAK chart yang disisipkan
+     * tepat di posisi teks yang relevan (bukan hanya chart terakhir seperti images.output).
+     *
+     * @param {Array<{type: 'text'|'chart', text?: string, imageUrl?: string, caption?: string}>} blocks
+     * @returns {Promise<string>} HTML siap pakai untuk innerHTML
+     */
+    async renderContentBlocks(blocks) {
+        if (!Array.isArray(blocks) || blocks.length === 0) return '';
+
+        const htmlParts = [];
+        for (const block of blocks) {
+            if (block.type === 'text') {
+                if (block.text && block.text.trim()) {
+                    // Teks tetap diproses markdown agar konsisten dengan renderContent()
+                    htmlParts.push(this.processMarkdown(block.text));
+                }
+            } else if (block.type === 'chart' && block.imageUrl) {
+                const caption = block.caption ? this._escapeHtml(block.caption) : '';
+                htmlParts.push(`
+                    <div class="ai-generated-image">
+                        <img src="${block.imageUrl}" alt="${caption || 'Chart/Visualisasi dari AI'}" loading="lazy">
+                        ${caption ? `<div class="chart-caption">${caption}</div>` : ''}
+                    </div>
+                `);
+            }
+        }
+        return htmlParts.join('\n');
+    }
+
+    /**
+     * Escape HTML dasar untuk teks yang disisipkan sebagai attribute/text node
+     * (mis. caption chart) agar tidak membuka celah XSS dari data eksternal.
+     */
+    _escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    /**
      * Process Markdown to HTML
      */
     processMarkdown(content) {
