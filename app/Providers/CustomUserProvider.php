@@ -37,9 +37,14 @@ class CustomUserProvider implements UserProvider
     public function validateCredentials(UserContract $user, array $credentials)
     {
         // Support both bcrypt (new) and plain-text (legacy fallback during transition)
-        if (Hash::check($credentials['password'], $user->getAuthPassword())) {
-            return true;
+        try {
+            if (Hash::check($credentials['password'], $user->getAuthPassword())) {
+                return true;
+            }
+        } catch (\Throwable $exception) {
+            // If the stored password is not a bcrypt hash, fall back to plain-text comparison.
         }
+
         // Legacy plain-text fallback — remove once all passwords are hashed
         return $user->getAuthPassword() === $credentials['password'];
     }
