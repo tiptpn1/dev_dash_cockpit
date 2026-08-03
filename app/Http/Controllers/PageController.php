@@ -99,6 +99,1019 @@ class PageController extends Controller
         return view('pages/overview_page', compact('linkiframe'));
     }
 
+    public function hr_demographic()
+    {
+        return view('pages/hr_demographic');
+    }
+
+    public function getHrDemographicData(Request $request)
+    {
+        $db = DB::connection('hris');
+
+        // Ambil list kode regional_grup yang bertindak sebagai Head Office dari tabel regional_grup
+        $hoKodes = $db->table('regional_grup')
+            ->where(function($s) {
+                $s->where('kode', 'LIKE', '%HO%')
+                  ->orWhere('nama', 'LIKE', '%HO%')
+                  ->orWhere('nama', 'LIKE', '%Head Office%')
+                  ->orWhere('keterangan', 'LIKE', '%HO%')
+                  ->orWhere('keterangan', 'LIKE', '%Head Office%');
+            })
+            ->pluck('kode')
+            ->toArray();
+
+        $query = $db->table('pegawai')
+            ->whereIn('regional_grup_kode', function($sub) {
+                $sub->select('kode')->from('regional_grup');
+            })
+            ->where(function($q) {
+                $q->whereNull('penugasan_mutasi_ke')
+                  ->orWhere('penugasan_mutasi_ke', '');
+            });
+
+        // Filter default: Hanya karyawan aktif dan MBT per hari ini
+        if ($request->filled('status_pegawai') && $request->status_pegawai !== 'ALL') {
+            $query->where('status_pegawai', $request->status_pegawai);
+        } else {
+            $query->whereRaw("LOWER(status_pegawai) IN ('aktif', 'mbt')");
+        }
+
+        if ($request->filled('regional') && $request->regional !== 'ALL') {
+            $query->where('regional', $request->regional);
+        }
+        if ($request->filled('unit_kerja') && $request->unit_kerja !== 'ALL') {
+            $query->where('divisi', $request->unit_kerja);
+        }
+        if ($request->filled('tahun') && $request->tahun !== 'ALL') {
+            $tahun = (int)$request->tahun;
+            $query->where(function($q) use ($tahun) {
+                $q->whereYear('tanggal_masuk', '<=', $tahun)
+                  ->orWhereYear('created_date', '<=', $tahun);
+            });
+        }
+
+        // Helper callback for Head Office matching strictly by regional_grup_kode
+        $isHO = function($q) {
+            $q->where('regional_grup_kode', 'HO');
+        };
+
+        $isNotHO = function($q) {
+            $q->where('regional_grup_kode', '!=', 'HO');
+        };
+
+        // Summary Cards
+        $totalKaryawan = (clone $query)->count();
+        $headOffice = (clone $query)->where($isHO)->count();
+        $regionalCount = $totalKaryawan - $headOffice;
+        $karyawanTetap = (clone $query)->where('kelompok_pegawai', 'LIKE', '%Tetap%')->count();
+        $karyawanTidakTetap = $totalKaryawan - $karyawanTetap;
+        $pimpinan = (clone $query)->where(function($q){
+            $q->where('kelompok_pegawai', 'LIKE', '%Karpim%')
+              ->orWhere('kelompok_pegawai', 'LIKE', '%SEVP%')
+              ->orWhere('kelompok_pegawai', 'LIKE', '%Direksi%');
+        })->count();
+        $persenPimpinan = $totalKaryawan > 0 ? round(($pimpinan / $totalKaryawan) * 100, 1) : 0;
+
+        $maxUpdatedDate = (clone $query)->max('updated_date');
+        $lastUpdateFormatted = $maxUpdatedDate ? date('d M Y, H:i', strtotime($maxUpdatedDate)) : date('d M Y, H:i');
+
+        // Units definition for Chart 1 & Chart 2 (HO, Regional 1 s/d 8)
+        $unitsDef = [
+            ['code' => 'HO', 'label' => 'Head Office'],
+            ['code' => 'REG1', 'label' => 'Regional 1'],
+            ['code' => 'REG2', 'label' => 'Regional 2'],
+            ['code' => 'REG3', 'label' => 'Regional 3'],
+            ['code' => 'REG4', 'label' => 'Regional 4'],
+            ['code' => 'REG5', 'label' => 'Regional 5'],
+            ['code' => 'REG6', 'label' => 'Regional 6'],
+            ['code' => 'REG7', 'label' => 'Regional 7'],
+            ['code' => 'REG8', 'label' => 'Regional 8'],
+        ];
+
+        $unitCategories = [];
+        $tetapData = [];
+        $tidakTetapData = [];
+        $karpimData = [];
+        $karpelData = [];
+
+        foreach ($unitsDef as $u) {
+            $unitCategories[] = $u['label'];
+            $qUnit = (clone $query)->where('regional_grup_kode', $u['code']);
+
+            $tetapCount = (clone $qUnit)->where('kelompok_pegawai', 'LIKE', '%Tetap%')->count();
+            $totalCount = (clone $qUnit)->count();
+            $tidakTetapCount = $totalCount - $tetapCount;
+
+            $karpimCount = (clone $qUnit)->where(function($q){
+                $q->where('kelompok_pegawai', 'LIKE', '%Karpim%')
+                  ->orWhere('kelompok_pegawai', 'LIKE', '%SEVP%')
+                  ->orWhere('kelompok_pegawai', 'LIKE', '%Direksi%');
+            })->count();
+            $karpelCount = $totalCount - $karpimCount;
+
+            $tetapData[] = $tetapCount;
+            $tidakTetapData[] = $tidakTetapCount;
+            $karpimData[] = $karpimCount;
+            $karpelData[] = $karpelCount;
+        }
+
+        // 1. Dashboard 1: Komposisi Status Karyawan per Regional (Stacked Bar) - Tetap vs Tidak Tetap
+        $chart1 = [
+            'categories' => $unitCategories,
+            'series' => [
+                ['name' => 'Karyawan Tetap', 'data' => $tetapData],
+                ['name' => 'Karyawan Tidak Tetap', 'data' => $tidakTetapData]
+            ],
+            'total_tetap' => array_sum($tetapData),
+            'total_tidak_tetap' => array_sum($tidakTetapData)
+        ];
+
+        // 2. Dashboard 2: Komposisi Jabatan Karyawan per Regional (Stacked Bar) - Karpim vs Karpel
+        $chart2 = [
+            'categories' => $unitCategories,
+            'series' => [
+                ['name' => 'Karpim (Pimpinan)', 'data' => $karpimData],
+                ['name' => 'Karpel (Pelaksana)', 'data' => $karpelData]
+            ],
+            'total_karpim' => array_sum($karpimData),
+            'total_karpel' => array_sum($karpelData)
+        ];
+
+        // 3. Dashboard 3: Status Pegawai (Donut Chart)
+        $statusRaw = (clone $query)->select('kelompok_pegawai', DB::raw('count(*) as total'))
+            ->groupBy('kelompok_pegawai')->orderBy('total', 'desc')->get();
+        
+        $statusLabels = [];
+        $statusSeries = [];
+        foreach ($statusRaw as $st) {
+            $lbl = $st->kelompok_pegawai ?: 'Lainnya';
+            $statusLabels[] = $lbl;
+            $statusSeries[] = (int)$st->total;
+        }
+        $chart3 = ['labels' => $statusLabels, 'series' => $statusSeries];
+
+        // 4. Dashboard 4: Tingkat Pendidikan per Regional (Stacked Bar) - SD s/d S3
+        $eduLevels = ['SD', 'SMP', 'SMA', 'D3', 'D4', 'S1', 'S2', 'S3'];
+        $eduData = array_fill_keys($eduLevels, []);
+
+        foreach ($unitsDef as $u) {
+            $qUnit = (clone $query)->where('regional_grup_kode', $u['code']);
+            $unitEduRaw = (clone $qUnit)->select('pendidikan_terakhir', DB::raw('count(*) as total'))
+                ->groupBy('pendidikan_terakhir')->get();
+
+            $uMap = array_fill_keys($eduLevels, 0);
+            foreach ($unitEduRaw as $row) {
+                $val = trim($row->pendidikan_terakhir);
+                if ($val === 'SLTP') $val = 'SMP';
+                if ($val === 'SLTA') $val = 'SMA';
+                if (isset($uMap[$val])) {
+                    $uMap[$val] += $row->total;
+                }
+            }
+
+            foreach ($eduLevels as $lvl) {
+                $eduData[$lvl][] = $uMap[$lvl];
+            }
+        }
+
+        $chart4Series = [];
+        foreach ($eduLevels as $lvl) {
+            $chart4Series[] = [
+                'name' => $lvl,
+                'data' => $eduData[$lvl]
+            ];
+        }
+
+        $eduTotals = [];
+        foreach ($eduLevels as $lvl) {
+            $eduTotals[$lvl] = array_sum($eduData[$lvl]);
+        }
+
+        $chart4 = [
+            'categories' => $unitCategories,
+            'series' => $chart4Series,
+            'totals' => $eduTotals
+        ];
+
+        // 5. Dashboard 5: Jenis Kelamin (Stacked Bar Chart per Regional) - Laki-laki vs Perempuan
+        $genderLakiData = [];
+        $genderPerempuanData = [];
+
+        foreach ($unitsDef as $u) {
+            $qUnit = (clone $query)->where('regional_grup_kode', $u['code']);
+            $lCount = (clone $qUnit)->where(function($q) {
+                $q->where('jenis_kelamin', 'L')->orWhere('jenis_kelamin', 'Laki-laki');
+            })->count();
+            $totCount = (clone $qUnit)->count();
+            $pCount = $totCount - $lCount;
+
+            $genderLakiData[] = $lCount;
+            $genderPerempuanData[] = $pCount;
+        }
+
+        $chart5 = [
+            'categories' => $unitCategories,
+            'series' => [
+                ['name' => 'Laki-laki', 'data' => $genderLakiData],
+                ['name' => 'Perempuan', 'data' => $genderPerempuanData]
+            ],
+            'total_laki' => array_sum($genderLakiData),
+            'total_perempuan' => array_sum($genderPerempuanData)
+        ];
+
+        // 6. Dashboard 6: Agama per Regional (Stacked Bar Chart) - Islam, Kristen, Katolik, Hindu, Buddha, Konghucu, Lainnya
+        $agamaList = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu', 'Lainnya'];
+        $agamaData = array_fill_keys($agamaList, []);
+
+        foreach ($unitsDef as $u) {
+            $qUnit = (clone $query)->where('regional_grup_kode', $u['code']);
+            $unitAgamaRaw = (clone $qUnit)->select('agama', DB::raw('count(*) as total'))
+                ->groupBy('agama')->get();
+
+            $uAgMap = array_fill_keys($agamaList, 0);
+            foreach ($unitAgamaRaw as $ag) {
+                $lbl = trim($ag->agama);
+                if (strcasecmp($lbl, 'Islam') === 0) $uAgMap['Islam'] += $ag->total;
+                elseif (strcasecmp($lbl, 'Kristen') === 0 || strcasecmp($lbl, 'Protestan') === 0) $uAgMap['Kristen'] += $ag->total;
+                elseif (strcasecmp($lbl, 'Katolik') === 0 || strcasecmp($lbl, 'Katholik') === 0) $uAgMap['Katolik'] += $ag->total;
+                elseif (strcasecmp($lbl, 'Hindu') === 0) $uAgMap['Hindu'] += $ag->total;
+                elseif (strcasecmp($lbl, 'Buddha') === 0 || strcasecmp($lbl, 'Budha') === 0) $uAgMap['Buddha'] += $ag->total;
+                elseif (strcasecmp($lbl, 'Konghucu') === 0 || strcasecmp($lbl, 'Khonghucu') === 0) $uAgMap['Konghucu'] += $ag->total;
+                else $uAgMap['Lainnya'] += $ag->total;
+            }
+
+            foreach ($agamaList as $agName) {
+                $agamaData[$agName][] = $uAgMap[$agName];
+            }
+        }
+
+        $chart6Series = [];
+        foreach ($agamaList as $agName) {
+            $chart6Series[] = [
+                'name' => $agName,
+                'data' => $agamaData[$agName]
+            ];
+        }
+
+        $chart6Totals = [];
+        foreach ($agamaList as $agName) {
+            $chart6Totals[$agName] = array_sum($agamaData[$agName]);
+        }
+
+        $chart6 = [
+            'categories' => $unitCategories,
+            'series' => $chart6Series,
+            'totals' => $chart6Totals
+        ];
+
+        // 7. Dashboard 7: Suku (Treemap Chart)
+        $sukuRaw = (clone $query)->select('suku', DB::raw('count(*) as total'))
+            ->whereNotNull('suku')->where('suku', '!=', '-')->where('suku', '!=', '')
+            ->groupBy('suku')->orderBy('total', 'desc')->limit(12)->get();
+        $sukuSeries = [];
+        foreach ($sukuRaw as $sk) {
+            $sukuSeries[] = ['x' => ucwords(strtolower($sk->suku)), 'y' => (int)$sk->total];
+        }
+        $chart7 = ['series' => $sukuSeries];
+
+        // 8. Dashboard 8: Level Organisasi per Regional (Stacked Bar Chart) - BOD, BOD-1, BOD-2, BOD-3, BOD-4, BOD-5, BOD-6, Lainnya
+        $bodList = ['BOD', 'BOD-1', 'BOD-2', 'BOD-3', 'BOD-4', 'BOD-5', 'BOD-6', 'Lainnya'];
+        $bodData = array_fill_keys($bodList, []);
+
+        foreach ($unitsDef as $u) {
+            $qUnit = (clone $query)->where('regional_grup_kode', $u['code']);
+
+            $katRaw = (clone $qUnit)->select('kategori_jabatan_kode', DB::raw('count(*) as total'))
+                ->groupBy('kategori_jabatan_kode')->get();
+
+            $uMap = array_fill_keys($bodList, 0);
+            foreach ($katRaw as $r) {
+                $code = strtoupper(trim($r->kategori_jabatan_kode));
+                $cnt = (int)$r->total;
+
+                if ($code === 'BOD-1') $uMap['BOD-1'] += $cnt;
+                elseif ($code === 'BOD-2') $uMap['BOD-2'] += $cnt;
+                elseif ($code === 'BOD-3') $uMap['BOD-3'] += $cnt;
+                elseif ($code === 'BOD-4') $uMap['BOD-4'] += $cnt;
+                elseif ($code === 'BOD-5') $uMap['BOD-5'] += $cnt;
+                elseif ($code === 'BOD-6') $uMap['BOD-6'] += $cnt;
+                elseif (in_array($code, ['BOD', 'BOM', 'BOC'])) $uMap['BOD'] += $cnt;
+                else $uMap['Lainnya'] += $cnt;
+            }
+
+            foreach ($bodList as $bLabel) {
+                $bodData[$bLabel][] = $uMap[$bLabel];
+            }
+        }
+
+        $chart8Series = [];
+        foreach ($bodList as $bLabel) {
+            $chart8Series[] = [
+                'name' => $bLabel,
+                'data' => $bodData[$bLabel]
+            ];
+        }
+
+        $chart8Totals = [];
+        foreach ($bodList as $bLabel) {
+            $chart8Totals[$bLabel] = array_sum($bodData[$bLabel]);
+        }
+
+        $chart8 = [
+            'categories' => $unitCategories,
+            'series' => $chart8Series,
+            'totals' => $chart8Totals
+        ];
+
+        // 9. Dashboard 9: Person Grade per Regional (Stacked Bar Chart)
+        $pgList = ['PG-06', 'PG-07', 'PG-08', 'PG-09', 'PG-10', 'PG-11', 'PG-12', 'PG-13', 'PG-14', 'PG-15', 'PG-16', 'PG-17', 'PG-18', 'PG-19', 'Non-Grade'];
+        $pgData = array_fill_keys($pgList, []);
+
+        foreach ($unitsDef as $u) {
+            $qUnit = (clone $query)->where('regional_grup_kode', $u['code']);
+
+            $raw = (clone $qUnit)->select('kelompok_grade', DB::raw('count(*) as total'))
+                ->groupBy('kelompok_grade')->get();
+
+            $uMap = array_fill_keys($pgList, 0);
+            foreach ($raw as $r) {
+                $g = trim($r->kelompok_grade);
+                $cnt = (int)$r->total;
+                if ($g === '06' || $g === '6') $uMap['PG-06'] += $cnt;
+                elseif ($g === '07' || $g === '7') $uMap['PG-07'] += $cnt;
+                elseif ($g === '08' || $g === '8') $uMap['PG-08'] += $cnt;
+                elseif ($g === '09' || $g === '9') $uMap['PG-09'] += $cnt;
+                elseif ($g === '10') $uMap['PG-10'] += $cnt;
+                elseif ($g === '11') $uMap['PG-11'] += $cnt;
+                elseif ($g === '12') $uMap['PG-12'] += $cnt;
+                elseif ($g === '13') $uMap['PG-13'] += $cnt;
+                elseif ($g === '14') $uMap['PG-14'] += $cnt;
+                elseif ($g === '15') $uMap['PG-15'] += $cnt;
+                elseif ($g === '16') $uMap['PG-16'] += $cnt;
+                elseif ($g === '17') $uMap['PG-17'] += $cnt;
+                elseif ($g === '18') $uMap['PG-18'] += $cnt;
+                elseif ($g === '19') $uMap['PG-19'] += $cnt;
+                else $uMap['Non-Grade'] += $cnt;
+            }
+
+            foreach ($pgList as $pg) {
+                $pgData[$pg][] = $uMap[$pg];
+            }
+        }
+
+        $chart9Series = [];
+        foreach ($pgList as $pg) {
+            $chart9Series[] = [
+                'name' => $pg,
+                'data' => $pgData[$pg]
+            ];
+        }
+
+        $chart9Totals = [];
+        foreach ($pgList as $pg) {
+            $chart9Totals[$pg] = array_sum($pgData[$pg]);
+        }
+
+        $chart9 = [
+            'categories' => $unitCategories,
+            'series' => $chart9Series,
+            'totals' => $chart9Totals
+        ];
+
+        // 10. Dashboard 10: Job Position (Bar Chart)
+        $jobRaw = (clone $query)->select('jabatan', DB::raw('count(*) as total'))
+            ->whereNotNull('jabatan')->where('jabatan', '!=', '-')->where('jabatan', '!=', '')
+            ->groupBy('jabatan')->orderBy('total', 'desc')->limit(12)->get();
+        $jobCat = [];
+        $jobSeries = [];
+        foreach ($jobRaw as $jb) {
+            $jobCat[] = ucwords(strtolower($jb->jabatan));
+            $jobSeries[] = (int)$jb->total;
+        }
+        $chart10 = ['categories' => $jobCat, 'series' => $jobSeries];
+
+        // 11. Dashboard 11: Sebaran Karyawan per Regional (Vertical Bar Chart)
+        $regRaw = (clone $query)->select('regional', DB::raw('count(*) as total'))
+            ->whereNotNull('regional')->where('regional', '!=', '')
+            ->groupBy('regional')->orderBy('regional', 'asc')->get();
+        $regCat = [];
+        $regSeries = [];
+        foreach ($regRaw as $rg) {
+            $regCat[] = str_replace('SuppCo ', '', $rg->regional);
+            $regSeries[] = (int)$rg->total;
+        }
+        $chart11 = ['categories' => $regCat, 'series' => $regSeries];
+
+        // 12. Dashboard 12: Top 10 Unit Kerja dengan Karyawan Terbanyak (Horizontal Bar)
+        $unitRaw = (clone $query)->select('divisi', DB::raw('count(*) as total'))
+            ->whereNotNull('divisi')->where('divisi', '!=', '-')->where('divisi', '!=', '')
+            ->groupBy('divisi')->orderBy('total', 'desc')->limit(10)->get();
+        $unitCat = [];
+        $unitSeries = [];
+        foreach ($unitRaw as $u) {
+            $unitCat[] = ucwords(strtolower($u->divisi));
+            $unitSeries[] = (int)$u->total;
+        }
+        $chart12 = ['categories' => $unitCat, 'series' => $unitSeries];
+
+        // 13. Dashboard 13: Distribusi Umur (Histogram)
+        $todayStr = date('Y-m-d');
+        $ageRaw = (clone $query)->whereNotNull('tanggal_lahir')
+            ->select(DB::raw("TIMESTAMPDIFF(YEAR, tanggal_lahir, '$todayStr') as age"))->get();
+        $ageBuckets = ['<25' => 0, '25-30' => 0, '31-35' => 0, '36-40' => 0, '41-45' => 0, '46-50' => 0, '51-55' => 0, '>55' => 0];
+        foreach ($ageRaw as $row) {
+            $a = $row->age;
+            if ($a < 25) $ageBuckets['<25']++;
+            elseif ($a <= 30) $ageBuckets['25-30']++;
+            elseif ($a <= 35) $ageBuckets['31-35']++;
+            elseif ($a <= 40) $ageBuckets['36-40']++;
+            elseif ($a <= 45) $ageBuckets['41-45']++;
+            elseif ($a <= 50) $ageBuckets['46-50']++;
+            elseif ($a <= 55) $ageBuckets['51-55']++;
+            else $ageBuckets['>55']++;
+        }
+        $chart13 = ['categories' => array_keys($ageBuckets), 'series' => array_values($ageBuckets)];
+
+        // 14. Dashboard 14: Masa Kerja (Bar Chart)
+        $serviceRaw = (clone $query)->whereNotNull('tanggal_masuk')
+            ->select(DB::raw("TIMESTAMPDIFF(YEAR, tanggal_masuk, '$todayStr') as yrs"))->get();
+        $serviceBuckets = ['<1 Tahun' => 0, '1-5 Tahun' => 0, '6-10 Tahun' => 0, '11-15 Tahun' => 0, '16-20 Tahun' => 0, '>20 Tahun' => 0];
+        foreach ($serviceRaw as $row) {
+            $y = $row->yrs;
+            if ($y < 1) $serviceBuckets['<1 Tahun']++;
+            elseif ($y <= 5) $serviceBuckets['1-5 Tahun']++;
+            elseif ($y <= 10) $serviceBuckets['6-10 Tahun']++;
+            elseif ($y <= 15) $serviceBuckets['11-15 Tahun']++;
+            elseif ($y <= 20) $serviceBuckets['16-20 Tahun']++;
+            else $serviceBuckets['>20 Tahun']++;
+        }
+        $chart14 = ['categories' => array_keys($serviceBuckets), 'series' => array_values($serviceBuckets)];
+
+        // 15. Dashboard 15: Status Pernikahan (Stacked Bar Chart per Regional) - Menikah, Belum Menikah, Cerai/Lainnya
+        $nikahMenikahData = [];
+        $nikahBelumData = [];
+        $nikahCeraiData = [];
+
+        foreach ($unitsDef as $u) {
+            $qUnit = (clone $query)->where('regional_grup_kode', $u['code']);
+
+            $mCount = (clone $qUnit)->where(function($q) {
+                $q->whereIn('status_nikah', ['Nikah', 'Menikah', 'K']);
+            })->count();
+
+            $bCount = (clone $qUnit)->where(function($q) {
+                $q->whereIn('status_nikah', ['Lajang', 'Belum Menikah', 'TK']);
+            })->count();
+
+            $totCount = (clone $qUnit)->count();
+            $cCount = max(0, $totCount - ($mCount + $bCount));
+
+            $nikahMenikahData[] = $mCount;
+            $nikahBelumData[] = $bCount;
+            $nikahCeraiData[] = $cCount;
+        }
+
+        $chart15 = [
+            'categories' => $unitCategories,
+            'series' => [
+                ['name' => 'Menikah', 'data' => $nikahMenikahData],
+                ['name' => 'Belum Menikah', 'data' => $nikahBelumData],
+                ['name' => 'Cerai / Lainnya', 'data' => $nikahCeraiData]
+            ],
+            'total_menikah' => array_sum($nikahMenikahData),
+            'total_belum_menikah' => array_sum($nikahBelumData),
+            'total_cerai' => array_sum($nikahCeraiData)
+        ];
+
+        // 16. Dashboard 16: Dashboard Mutasi
+        $mutasiTotal = (clone $query)->whereIn('aksi', ['Mutasi', 'Promosi dan Mutasi', 'Demosi dan Mutasi', 'Mutasi (migrasi)'])->count();
+        $promosiTotal = (clone $query)->whereIn('aksi', ['Promosi', 'Promosi dan Mutasi'])->count();
+        $rotasiTotal = (clone $query)->where('aksi', 'Mutasi')->count();
+        $demosiTotal = (clone $query)->whereIn('aksi', ['Demosi/Degradasi', 'Demosi dan Mutasi'])->count();
+        $chart16 = [
+            'total' => $mutasiTotal,
+            'promosi' => $promosiTotal,
+            'rotasi' => $rotasiTotal,
+            'demosi' => $demosiTotal
+        ];
+
+        // 17. Dashboard 17: Dashboard Pensiun
+        $pensiun30 = (clone $query)->whereBetween('tanggal_pensiun', [$todayStr, date('Y-m-d', strtotime('+30 days'))])->count();
+        $pensiun6m = (clone $query)->whereBetween('tanggal_pensiun', [$todayStr, date('Y-m-d', strtotime('+6 months'))])->count();
+        $pensiun1y = (clone $query)->whereBetween('tanggal_pensiun', [$todayStr, date('Y-m-d', strtotime('+1 year'))])->count();
+        $pensiun3y = (clone $query)->whereBetween('tanggal_pensiun', [$todayStr, date('Y-m-d', strtotime('+3 years'))])->count();
+        $chart17 = [
+            'pensiun_30d' => $pensiun30,
+            'pensiun_6m' => $pensiun6m,
+            'pensiun_1y' => $pensiun1y,
+            'pensiun_3y' => $pensiun3y
+        ];
+
+        // Map Pins Data for Peta Sebaran Karyawan Aktif
+        $pinDefs = [
+            ['key' => 'HO', 'title' => 'Head Office', 'city' => 'Jakarta', 'lat' => -6.2088, 'lng' => 106.8456, 'rg_kode' => 'HO'],
+            ['key' => 'REG1', 'title' => 'Regional 1', 'city' => 'Kota Medan', 'lat' => 3.5952, 'lng' => 98.6722, 'rg_kode' => 'REG1'],
+            ['key' => 'REG2', 'title' => 'Regional 2', 'city' => 'Kota Bandung', 'lat' => -6.9175, 'lng' => 107.6191, 'rg_kode' => 'REG2'],
+            ['key' => 'REG3', 'title' => 'Regional 3', 'city' => 'Kota Semarang', 'lat' => -6.9667, 'lng' => 110.4167, 'rg_kode' => 'REG3'],
+            ['key' => 'REG4', 'title' => 'Regional 4', 'city' => 'Kota Surabaya', 'lat' => -7.2575, 'lng' => 112.7521, 'rg_kode' => 'REG4'],
+            ['key' => 'REG5', 'title' => 'Regional 5', 'city' => 'Kota Surabaya', 'lat' => -7.2800, 'lng' => 112.7200, 'rg_kode' => 'REG5'],
+            ['key' => 'REG7', 'title' => 'Regional 7', 'city' => 'Kota Bandar Lampung', 'lat' => -5.4500, 'lng' => 105.2667, 'rg_kode' => 'REG7'],
+            ['key' => 'REG8', 'title' => 'Regional 8', 'city' => 'Kota Makassar', 'lat' => -5.1477, 'lng' => 119.4327, 'rg_kode' => 'REG8'],
+        ];
+
+        $mapPins = [];
+        foreach ($pinDefs as $p) {
+            $qPin = (clone $query)->where('regional_grup_kode', $p['rg_kode']);
+            $pCount = (clone $qPin)->count();
+            $pTetap = (clone $qPin)->where('kelompok_pegawai', 'LIKE', '%Tetap%')->count();
+            $pTidakTetap = (clone $qPin)->where('kelompok_pegawai', 'NOT LIKE', '%Tetap%')->count();
+            $mapPins[] = [
+                'key' => $p['key'],
+                'title' => $p['title'],
+                'city' => $p['city'],
+                'lat' => $p['lat'],
+                'lng' => $p['lng'],
+                'total' => $pCount,
+                'tetap' => $pTetap,
+                'tidak_tetap' => $pTidakTetap
+            ];
+        }
+
+        // Filter Options
+        $baseFilterQuery = $db->table('pegawai')
+            ->whereIn('regional_grup_kode', function($sub) {
+                $sub->select('kode')->from('regional_grup');
+            })
+            ->where(function($q) {
+                $q->whereNull('penugasan_mutasi_ke')
+                  ->orWhere('penugasan_mutasi_ke', '');
+            });
+
+        $regionalList = (clone $baseFilterQuery)->whereNotNull('regional')->where('regional', '!=', '')->distinct()->pluck('regional')->sort()->values();
+        $unitKerjaList = (clone $baseFilterQuery)->whereNotNull('divisi')->where('divisi', '!=', '-')->where('divisi', '!=', '')->distinct()->pluck('divisi')->sort()->values();
+        $statusPegawaiList = (clone $baseFilterQuery)->whereNotNull('status_pegawai')->where('status_pegawai', '!=', '')->distinct()->pluck('status_pegawai')->sort()->values();
+
+        return response()->json([
+            'summary' => [
+                'total' => $totalKaryawan,
+                'head_office' => $headOffice,
+                'regional' => $regionalCount,
+                'tetap' => $karyawanTetap,
+                'tidak_tetap' => $karyawanTidakTetap,
+                'pimpinan_pct' => $persenPimpinan,
+                'last_update' => $lastUpdateFormatted
+            ],
+            'map_pins' => $mapPins,
+            'chart1' => $chart1,
+            'chart2' => $chart2,
+            'chart3' => $chart3,
+            'chart4' => $chart4,
+            'chart5' => $chart5,
+            'chart6' => $chart6,
+            'chart7' => $chart7,
+            'chart8' => $chart8,
+            'chart9' => $chart9,
+            'chart10' => $chart10,
+            'chart11' => $chart11,
+            'chart12' => $chart12,
+            'chart13' => $chart13,
+            'chart14' => $chart14,
+            'chart15' => $chart15,
+            'chart16' => $chart16,
+            'chart17' => $chart17,
+            'filter_options' => [
+                'tahun_list' => [2026, 2025, 2024, 2023, 2022],
+                'regional_list' => $regionalList,
+                'unit_kerja_list' => $unitKerjaList,
+                'status_pegawai_list' => $statusPegawaiList
+            ]
+        ]);
+    }
+
+    public function getHrDemographicDetail(Request $request)
+    {
+        $db = DB::connection('hris');
+        $query = $db->table('pegawai')
+            ->whereIn('regional_grup_kode', function($sub) {
+                $sub->select('kode')->from('regional_grup');
+            })
+            ->where(function($q) {
+                $q->whereNull('penugasan_mutasi_ke')
+                  ->orWhere('penugasan_mutasi_ke', '');
+            });
+
+        // Global Page Filters
+        if ($request->filled('status_pegawai') && $request->status_pegawai !== 'ALL') {
+            $query->where('status_pegawai', $request->status_pegawai);
+        } else {
+            $query->whereRaw("LOWER(status_pegawai) IN ('aktif', 'mbt')");
+        }
+
+        if ($request->filled('regional') && $request->regional !== 'ALL') {
+            $query->where('regional', $request->regional);
+        }
+        if ($request->filled('unit_kerja') && $request->unit_kerja !== 'ALL') {
+            $query->where('divisi', $request->unit_kerja);
+        }
+        if ($request->filled('tahun') && $request->tahun !== 'ALL') {
+            $tahun = (int)$request->tahun;
+            $query->where(function($q) use ($tahun) {
+                $q->whereYear('tanggal_masuk', '<=', $tahun)
+                  ->orWhereYear('created_date', '<=', $tahun);
+            });
+        }
+
+        // Specific Metric Type and Filter Value
+        $type = $request->input('type', 'total');
+        $value = trim($request->input('value', ''));
+        $title = 'Rincian Karyawan';
+
+        $isHO = function($q) {
+            $q->where('regional_grup_kode', 'HO');
+        };
+        $isNotHO = function($q) {
+            $q->where('regional_grup_kode', '!=', 'HO');
+        };
+        $isPimpinan = function($q) {
+            $q->where('kelompok_pegawai', 'LIKE', '%Karpim%')
+              ->orWhere('kelompok_pegawai', 'LIKE', '%SEVP%')
+              ->orWhere('kelompok_pegawai', 'LIKE', '%Direksi%');
+        };
+        $isPelaksana = function($q) {
+            $q->where('kelompok_pegawai', 'NOT LIKE', '%Karpim%')
+              ->where('kelompok_pegawai', 'NOT LIKE', '%SEVP%')
+              ->where('kelompok_pegawai', 'NOT LIKE', '%Direksi%');
+        };
+
+        switch ($type) {
+            case 'chart1_stack':
+            case 'chart2_stack':
+            case 'chart4_stack':
+            case 'chart5_stack':
+            case 'chart6_stack':
+            case 'chart8_stack':
+            case 'chart9_stack':
+            case 'chart15_stack':
+                $parts = explode('|', $value);
+                $rgLabel = $parts[0] ?? '';
+                $stackLabel = $parts[1] ?? '';
+
+                $rgMap = [
+                    'Head Office' => 'HO',
+                    'Regional 1' => 'REG1',
+                    'Regional 2' => 'REG2',
+                    'Regional 3' => 'REG3',
+                    'Regional 4' => 'REG4',
+                    'Regional 5' => 'REG5',
+                    'Regional 6' => 'REG6',
+                    'Regional 7' => 'REG7',
+                    'Regional 8' => 'REG8',
+                ];
+
+                if (isset($rgMap[$rgLabel])) {
+                    $query->where('regional_grup_kode', $rgMap[$rgLabel]);
+                }
+
+                if ($type === 'chart1_stack') {
+                    $title = "$rgLabel - $stackLabel";
+                    if (strpos($stackLabel, 'Tetap') !== false && strpos($stackLabel, 'Tidak') === false) {
+                        $query->where('kelompok_pegawai', 'LIKE', '%Tetap%');
+                    } else {
+                        $query->where('kelompok_pegawai', 'NOT LIKE', '%Tetap%');
+                    }
+                } elseif ($type === 'chart4_stack') {
+                    $title = "$rgLabel - Pendidikan $stackLabel";
+                    if ($stackLabel === 'SMP') {
+                        $query->whereIn('pendidikan_terakhir', ['SMP', 'SLTP']);
+                    } elseif ($stackLabel === 'SMA') {
+                        $query->whereIn('pendidikan_terakhir', ['SMA', 'SLTA']);
+                    } else {
+                        $query->where('pendidikan_terakhir', $stackLabel);
+                    }
+                } elseif ($type === 'chart5_stack') {
+                    $title = "$rgLabel - $stackLabel";
+                    if (strcasecmp($stackLabel, 'Laki-laki') === 0 || strcasecmp($stackLabel, 'L') === 0) {
+                        $query->whereIn('jenis_kelamin', ['L', 'Laki-laki']);
+                    } else {
+                        $query->whereIn('jenis_kelamin', ['P', 'Perempuan']);
+                    }
+                } elseif ($type === 'chart6_stack') {
+                    $title = "$rgLabel - Agama $stackLabel";
+                    if (strcasecmp($stackLabel, 'Kristen') === 0) {
+                        $query->whereIn('agama', ['Kristen', 'Protestan']);
+                    } elseif (strcasecmp($stackLabel, 'Katolik') === 0) {
+                        $query->whereIn('agama', ['Katolik', 'Katholik']);
+                    } elseif (strcasecmp($stackLabel, 'Buddha') === 0) {
+                        $query->whereIn('agama', ['Buddha', 'Budha']);
+                    } elseif (strcasecmp($stackLabel, 'Konghucu') === 0) {
+                        $query->whereIn('agama', ['Konghucu', 'Khonghucu']);
+                    } elseif (strcasecmp($stackLabel, 'Islam') === 0 || strcasecmp($stackLabel, 'Hindu') === 0) {
+                        $query->where('agama', $stackLabel);
+                    } else {
+                        $query->whereNotIn('agama', ['Islam', 'Kristen', 'Protestan', 'Katolik', 'Katholik', 'Hindu', 'Buddha', 'Budha', 'Konghucu', 'Khonghucu']);
+                    }
+                } elseif ($type === 'chart8_stack') {
+                    $title = "$rgLabel - Level $stackLabel";
+                    if (in_array($stackLabel, ['BOD-1', 'BOD-2', 'BOD-3', 'BOD-4', 'BOD-5', 'BOD-6'])) {
+                        $query->where('kategori_jabatan_kode', $stackLabel);
+                    } elseif ($stackLabel === 'BOD') {
+                        $query->whereIn('kategori_jabatan_kode', ['BOD', 'BOM', 'BOC']);
+                    } else { // Staff
+                        $query->where(function($sub) {
+                            $sub->whereNull('kategori_jabatan_kode')
+                                ->orWhere('kategori_jabatan_kode', '')
+                                ->orWhereNotIn('kategori_jabatan_kode', ['BOD', 'BOM', 'BOC', 'BOD-1', 'BOD-2', 'BOD-3', 'BOD-4', 'BOD-5', 'BOD-6']);
+                        });
+                    }
+                } elseif ($type === 'chart9_stack') {
+                    $title = "$rgLabel - Person Grade $stackLabel";
+                    $pgGradeMap = [
+                        'PG-06' => ['06', '6'], 'PG-07' => ['07', '7'], 'PG-08' => ['08', '8'],
+                        'PG-09' => ['09', '9'], 'PG-10' => ['10'], 'PG-11' => ['11'],
+                        'PG-12' => ['12'], 'PG-13' => ['13'], 'PG-14' => ['14'],
+                        'PG-15' => ['15'], 'PG-16' => ['16'], 'PG-17' => ['17'],
+                        'PG-18' => ['18'], 'PG-19' => ['19'],
+                    ];
+                    if (isset($pgGradeMap[$stackLabel])) {
+                        $query->whereIn('kelompok_grade', $pgGradeMap[$stackLabel]);
+                    } else { // Non-Grade
+                        $query->where(function($sub) {
+                            $sub->whereNull('kelompok_grade')
+                                ->orWhere('kelompok_grade', '')
+                                ->orWhere('kelompok_grade', '-')
+                                ->orWhere('kelompok_grade', 'NG')
+                                ->orWhereNotIn('kelompok_grade', ['06', '6', '07', '7', '08', '8', '09', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19']);
+                        });
+                    }
+                } elseif ($type === 'chart15_stack') {
+                    $title = "$rgLabel - $stackLabel";
+                    if (strcasecmp($stackLabel, 'Belum Menikah') === 0) {
+                        $query->whereIn('status_nikah', ['Lajang', 'Belum Menikah', 'TK']);
+                    } elseif (strcasecmp($stackLabel, 'Menikah') === 0) {
+                        $query->whereIn('status_nikah', ['Nikah', 'Menikah', 'K']);
+                    } else {
+                        $query->whereNotIn('status_nikah', ['Lajang', 'Belum Menikah', 'TK', 'Nikah', 'Menikah', 'K']);
+                    }
+                } else {
+                    $title = "$rgLabel - $stackLabel";
+                    if (strpos($stackLabel, 'Karpim') !== false || strpos($stackLabel, 'Pimpinan') !== false) {
+                        $query->where($isPimpinan);
+                    } else {
+                        $query->where($isPelaksana);
+                    }
+                }
+                break;
+            case 'total':
+                $title = 'Total Karyawan';
+                break;
+            case 'head_office':
+                $title = 'Karyawan Head Office';
+                $query->where($isHO);
+                break;
+            case 'regional':
+                $title = 'Karyawan Regional';
+                $query->where($isNotHO);
+                break;
+            case 'tetap':
+                $title = 'Karyawan Tetap';
+                $query->where('kelompok_pegawai', 'LIKE', '%Tetap%');
+                break;
+            case 'tidak_tetap':
+                $title = 'Karyawan Tidak Tetap';
+                $query->where('kelompok_pegawai', 'NOT LIKE', '%Tetap%');
+                break;
+            case 'pimpinan':
+                $title = 'Karyawan Pimpinan';
+                $query->where($isPimpinan);
+                break;
+            case 'pelaksana':
+                $title = 'Karyawan Pelaksana';
+                $query->where($isPelaksana);
+                break;
+            case 'ho_pimpinan':
+                $title = 'Head Office - Pimpinan';
+                $query->where($isHO)->where($isPimpinan);
+                break;
+            case 'ho_pelaksana':
+                $title = 'Head Office - Pelaksana';
+                $query->where($isHO)->where($isPelaksana);
+                break;
+            case 'reg_pimpinan':
+                $title = 'Regional - Pimpinan';
+                $query->where($isNotHO)->where($isPimpinan);
+                break;
+            case 'reg_pelaksana':
+                $title = 'Regional - Pelaksana';
+                $query->where($isNotHO)->where($isPelaksana);
+                break;
+            case 'kelompok_pegawai':
+                $title = 'Kelompok Pegawai: ' . ($value ?: 'Lainnya');
+                if ($value === 'Lainnya' || $value === '') {
+                    $query->where(function($q) {
+                        $q->whereNull('kelompok_pegawai')->orWhere('kelompok_pegawai', '');
+                    });
+                } else {
+                    $query->where('kelompok_pegawai', $value);
+                }
+                break;
+            case 'pendidikan':
+                $title = 'Pendidikan: ' . $value;
+                if ($value === 'SMP') {
+                    $query->whereIn('pendidikan_terakhir', ['SMP', 'SLTP']);
+                } elseif ($value === 'SMA') {
+                    $query->whereIn('pendidikan_terakhir', ['SMA', 'SLTA']);
+                } else {
+                    $query->where('pendidikan_terakhir', $value);
+                }
+                break;
+            case 'gender':
+                $title = 'Jenis Kelamin: ' . $value;
+                if ($value === 'Laki-laki') {
+                    $query->whereIn('jenis_kelamin', ['L', 'Laki-laki']);
+                } elseif ($value === 'Perempuan') {
+                    $query->whereIn('jenis_kelamin', ['P', 'Perempuan']);
+                } else {
+                    $query->where('jenis_kelamin', $value);
+                }
+                break;
+            case 'agama':
+                $title = 'Agama: ' . $value;
+                if (strcasecmp($value, 'Kristen') === 0) {
+                    $query->whereIn('agama', ['Kristen', 'Protestan']);
+                } elseif (strcasecmp($value, 'Hindu') === 0) {
+                    $query->whereIn('agama', ['Hindu', 'Hindhu']);
+                } elseif (strcasecmp($value, 'Buddha') === 0) {
+                    $query->whereIn('agama', ['Buddha', 'Budha']);
+                } elseif (strcasecmp($value, 'Lainnya') === 0) {
+                    $query->whereNotIn('agama', ['Islam', 'Kristen', 'Protestan', 'Katolik', 'Hindu', 'Hindhu', 'Buddha', 'Budha', 'Konghucu']);
+                } else {
+                    $query->where('agama', $value);
+                }
+                break;
+            case 'suku':
+                $title = 'Suku: ' . $value;
+                $query->whereRaw('LOWER(suku) = ?', [strtolower($value)]);
+                break;
+            case 'bod_level':
+                $title = "Level Organisasi: $value";
+                if (in_array($value, ['BOD-1', 'BOD-2', 'BOD-3', 'BOD-4', 'BOD-5', 'BOD-6'])) {
+                    $query->where('kategori_jabatan_kode', $value);
+                } elseif ($value === 'BOD') {
+                    $query->whereIn('kategori_jabatan_kode', ['BOD', 'BOM', 'BOC']);
+                } else { // Staff
+                    $query->where(function($sub) {
+                        $sub->whereNull('kategori_jabatan_kode')
+                            ->orWhere('kategori_jabatan_kode', '')
+                            ->orWhereNotIn('kategori_jabatan_kode', ['BOD', 'BOM', 'BOC', 'BOD-1', 'BOD-2', 'BOD-3', 'BOD-4', 'BOD-5', 'BOD-6']);
+                    });
+                }
+                break;
+            case 'kelompok_jabatan':
+                $title = 'Level Organisasi: ' . $value;
+                $query->where('kelompok_jabatan', $value);
+                break;
+            case 'person_grade':
+            case 'grade':
+                $title = "Person Grade: $value";
+                $pgGradeMap = [
+                    'PG-06' => ['06', '6'], 'PG-07' => ['07', '7'], 'PG-08' => ['08', '8'],
+                    'PG-09' => ['09', '9'], 'PG-10' => ['10'], 'PG-11' => ['11'],
+                    'PG-12' => ['12'], 'PG-13' => ['13'], 'PG-14' => ['14'],
+                    'PG-15' => ['15'], 'PG-16' => ['16'], 'PG-17' => ['17'],
+                    'PG-18' => ['18'], 'PG-19' => ['19'],
+                ];
+                if (isset($pgGradeMap[$value])) {
+                    $query->whereIn('kelompok_grade', $pgGradeMap[$value]);
+                } elseif ($value === 'Non-Grade') {
+                    $query->where(function($sub) {
+                        $sub->whereNull('kelompok_grade')
+                            ->orWhere('kelompok_grade', '')
+                            ->orWhere('kelompok_grade', '-')
+                            ->orWhere('kelompok_grade', 'NG')
+                            ->orWhereNotIn('kelompok_grade', ['06', '6', '07', '7', '08', '8', '09', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19']);
+                    });
+                } else {
+                    $cleanGrade = preg_replace('/[^0-9]/', '', $value);
+                    if ($cleanGrade !== '') {
+                        $query->where(function($q) use ($cleanGrade) {
+                            $q->where('kelompok_grade', $cleanGrade)
+                              ->orWhere('kelompok_grade', (int)$cleanGrade);
+                        });
+                    }
+                }
+                break;
+            case 'jabatan':
+                $title = 'Jabatan: ' . $value;
+                $query->where('jabatan', $value);
+                break;
+            case 'sebaran_regional':
+                $title = 'Regional: ' . $value;
+                $query->where(function($q) use ($value) {
+                    $q->where('regional', 'LIKE', "%{$value}%")
+                      ->orWhere('regional_grup', 'LIKE', "%{$value}%");
+                });
+                break;
+            case 'unit_kerja':
+                $title = 'Unit Kerja: ' . $value;
+                $query->where('divisi', $value);
+                break;
+            case 'umur':
+                $title = 'Rentang Umur: ' . $value;
+                $todayStr = date('Y-m-d');
+                $query->whereNotNull('tanggal_lahir');
+                if ($value === '<25') {
+                    $query->whereRaw("TIMESTAMPDIFF(YEAR, tanggal_lahir, '$todayStr') < 25");
+                } elseif ($value === '25-30') {
+                    $query->whereRaw("TIMESTAMPDIFF(YEAR, tanggal_lahir, '$todayStr') BETWEEN 25 AND 30");
+                } elseif ($value === '31-35') {
+                    $query->whereRaw("TIMESTAMPDIFF(YEAR, tanggal_lahir, '$todayStr') BETWEEN 31 AND 35");
+                } elseif ($value === '36-40') {
+                    $query->whereRaw("TIMESTAMPDIFF(YEAR, tanggal_lahir, '$todayStr') BETWEEN 36 AND 40");
+                } elseif ($value === '41-45') {
+                    $query->whereRaw("TIMESTAMPDIFF(YEAR, tanggal_lahir, '$todayStr') BETWEEN 41 AND 45");
+                } elseif ($value === '46-50') {
+                    $query->whereRaw("TIMESTAMPDIFF(YEAR, tanggal_lahir, '$todayStr') BETWEEN 46 AND 50");
+                } elseif ($value === '51-55') {
+                    $query->whereRaw("TIMESTAMPDIFF(YEAR, tanggal_lahir, '$todayStr') BETWEEN 51 AND 55");
+                } elseif ($value === '>55') {
+                    $query->whereRaw("TIMESTAMPDIFF(YEAR, tanggal_lahir, '$todayStr') > 55");
+                }
+                break;
+            case 'masa_kerja':
+                $title = 'Masa Kerja: ' . $value;
+                $todayStr = date('Y-m-d');
+                $query->whereNotNull('tanggal_masuk');
+                if ($value === '<1 Tahun') {
+                    $query->whereRaw("TIMESTAMPDIFF(YEAR, tanggal_masuk, '$todayStr') < 1");
+                } elseif ($value === '1-5 Tahun') {
+                    $query->whereRaw("TIMESTAMPDIFF(YEAR, tanggal_masuk, '$todayStr') BETWEEN 1 AND 5");
+                } elseif ($value === '6-10 Tahun') {
+                    $query->whereRaw("TIMESTAMPDIFF(YEAR, tanggal_masuk, '$todayStr') BETWEEN 6 AND 10");
+                } elseif ($value === '11-15 Tahun') {
+                    $query->whereRaw("TIMESTAMPDIFF(YEAR, tanggal_masuk, '$todayStr') BETWEEN 11 AND 15");
+                } elseif ($value === '16-20 Tahun') {
+                    $query->whereRaw("TIMESTAMPDIFF(YEAR, tanggal_masuk, '$todayStr') BETWEEN 16 AND 20");
+                } elseif ($value === '>20 Tahun') {
+                    $query->whereRaw("TIMESTAMPDIFF(YEAR, tanggal_masuk, '$todayStr') > 20");
+                }
+                break;
+            case 'nikah':
+                $title = 'Status Pernikahan: ' . $value;
+                if ($value === 'Belum Menikah') {
+                    $query->whereIn('status_nikah', ['Lajang', 'Belum Menikah', 'TK']);
+                } elseif ($value === 'Menikah') {
+                    $query->whereIn('status_nikah', ['Nikah', 'Menikah', 'K']);
+                } else {
+                    $query->whereNotIn('status_nikah', ['Lajang', 'Belum Menikah', 'TK', 'Nikah', 'Menikah', 'K']);
+                }
+                break;
+            case 'mutasi':
+                $title = 'Mutasi: ' . $value;
+                if ($value === 'Promosi') {
+                    $query->whereIn('aksi', ['Promosi', 'Promosi dan Mutasi']);
+                } elseif ($value === 'Rotasi') {
+                    $query->where('aksi', 'Mutasi');
+                } elseif ($value === 'Demosi') {
+                    $query->whereIn('aksi', ['Demosi/Degradasi', 'Demosi dan Mutasi']);
+                } else {
+                    $query->whereIn('aksi', ['Mutasi', 'Promosi dan Mutasi', 'Demosi dan Mutasi', 'Mutasi (migrasi)']);
+                }
+                break;
+            case 'pensiun':
+                $title = 'Proyeksi Pensiun: ' . $value;
+                $todayStr = date('Y-m-d');
+                if ($value === '30d') {
+                    $query->whereBetween('tanggal_pensiun', [$todayStr, date('Y-m-d', strtotime('+30 days'))]);
+                } elseif ($value === '6m') {
+                    $query->whereBetween('tanggal_pensiun', [$todayStr, date('Y-m-d', strtotime('+6 months'))]);
+                } elseif ($value === '1y') {
+                    $query->whereBetween('tanggal_pensiun', [$todayStr, date('Y-m-d', strtotime('+1 year'))]);
+                } elseif ($value === '3y') {
+                    $query->whereBetween('tanggal_pensiun', [$todayStr, date('Y-m-d', strtotime('+3 years'))]);
+                }
+                break;
+            case 'map_pin':
+                $title = 'Peta Regional: ' . $value;
+                $query->where('regional_grup_kode', $value);
+                break;
+        }
+
+        $employees = $query->select([
+            DB::raw("COALESCE(NULLIF(TRIM(nik), ''), '-') as nik"),
+            DB::raw("COALESCE(NULLIF(TRIM(nama), ''), '-') as nama"),
+            DB::raw("COALESCE(NULLIF(TRIM(jabatan), ''), '-') as jabatan"),
+            DB::raw("COALESCE(NULLIF(TRIM(kelompok_jabatan), ''), NULLIF(TRIM(kategori_jabatan), ''), '-') as level_jabatan"),
+            DB::raw("COALESCE(NULLIF(TRIM(regional), ''), NULLIF(TRIM(regional_grup), ''), '-') as personnel_area"),
+            DB::raw("COALESCE(NULLIF(TRIM(divisi), ''), NULLIF(TRIM(area), ''), '-') as personnel_subarea")
+        ])->orderBy('nama', 'asc')->get();
+
+        return response()->json([
+            'title' => $title,
+            'total' => count($employees),
+            'employees' => $employees
+        ]);
+    }
+
     public function sales_comodities()
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/8cd897b7-1bfc-4a2a-a6ae-19c1cd2d0cb2/page/06RUE';
@@ -3026,7 +4039,8 @@ class PageController extends Controller
                 )
                 OR {$penugasanAlias}.pegawai_id IS NOT NULL
             )
-              AND LOWER({$pegawaiAlias}.status_pegawai) IN ('aktif', 'active')";
+              AND NOT COALESCE(NULLIF({$pegawaiAlias}.regional_grup_kode, ''), 'x') = 'x'
+              AND LOWER({$pegawaiAlias}.status_pegawai) IN ('aktif', 'mbt')";
     }
 
     /** Area kode efektif (penugasan lebih diutamakan) untuk hari kerja / absensi_periode */
@@ -4655,7 +5669,11 @@ class PageController extends Controller
 
                 // Get active employees
                 $activeEmployees = Employee::select(['nik', 'nama', 'jabatan', 'regional_grup', 'cost_center', 'area', 'area_kode'])
-                    ->where('status_pegawai', 'aktif')
+                    ->whereRaw("NOT COALESCE(NULLIF(regional_grup_kode, ''), 'x') = 'x'")
+                    ->whereRaw("LOWER(status_pegawai) IN ('aktif', 'mbt')")
+                    ->where(function($q) {
+                        $q->whereNull('penugasan_mutasi_ke')->orWhere('penugasan_mutasi_ke', '');
+                    })
                     ->whereNot('fungsi_jabatan', 'PRODUCTION PROCESS DIRECT ON FARM')
                     ->whereNot('fungsi_jabatan', 'PRODUCTION PROCESS DIRECT OFF FARM')
                     ->get();

@@ -78,15 +78,16 @@ if (isset($user)) {
             </div>
         @endif
         @if($user && $user->hasFeature('hr'))
-            <!-- <a href="#hrsdm" id="hrsdm" class="parent"><i class="fa-solid fa-users menu-icon"></i>Human Resource<span
-                                                class="toggle-icon">&#9654;</span></a>
-                                        <div class="submenu" id="hrSubmenu">
-                                            <a href="{{url('')}}/hr_demographics"><i class="fa-solid fa-user-group menu-icon"></i>HR Demographics</a>
-                                            <a href="{{url('')}}/hr_dev"><i class="fa-solid fa-graduation-cap menu-icon"></i>HR Learning &
-                                                Development</a>
-                                            <a href="{{url('')}}/hr_revenue"><i class="fa-solid fa-money-bill-trend-up menu-icon"></i>HR Revenue &
-                                                Cost</a>
-                                        </div> -->
+            <a href="#hrsdm" id="hrsdm" class="parent"><i class="fa-solid fa-users menu-icon"></i>Human Resource <span
+                    class="toggle-icon">&#9654;</span></a>
+            <div class="submenu" id="hrSubmenu">
+                <!-- <a href="{{url('')}}/hr_demographics"><i class="fa-solid fa-user-group menu-icon"></i>HR Demographics</a>
+                <a href="{{url('')}}/hr_dev"><i class="fa-solid fa-graduation-cap menu-icon"></i>HR Learning &
+                    Development</a>
+                <a href="{{url('')}}/hr_revenue"><i class="fa-solid fa-money-bill-trend-up menu-icon"></i>HR Revenue &
+                    Cost</a> -->
+                <a href="{{url('')}}/hr_demographic"><i class="fa-solid fa-user-group menu-icon"></i>HR Demographic</a>
+            </div>
         @endif
         @if($user && $user->hasFeature('legal'))
             <a href="#agraria" id="legal" class="parent"><i class="fa-solid fa-scale-balanced menu-icon"></i>Legal & Agraria
