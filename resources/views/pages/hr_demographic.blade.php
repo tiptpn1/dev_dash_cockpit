@@ -164,6 +164,35 @@
         gap: 16px;
     }
 
+    .btn-proses-filter {
+        background: linear-gradient(135deg, #166534, #15803d);
+        color: #ffffff;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.85rem;
+        font-weight: 800;
+        padding: 9px 22px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 14px rgba(22, 101, 52, 0.25);
+        transition: all 0.25s ease;
+        height: 38px;
+        white-space: nowrap;
+    }
+
+    .btn-proses-filter:hover {
+        background: linear-gradient(135deg, #15803d, #22c55e);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(22, 101, 52, 0.35);
+    }
+
+    .btn-proses-filter:active {
+        transform: translateY(0);
+    }
+
     .form-group {
         display: flex;
         flex-direction: column;
@@ -915,8 +944,8 @@
             <div class="filter-title">
                 <i class="fa-solid fa-sliders"></i> Filter Parameters &amp; Analytics Controls
             </div>
-            <div class="filter-grid">
-                <div class="form-group">
+            <div class="filter-grid" style="display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap;">
+                <div class="form-group" style="flex: 1; min-width: 130px;">
                     <label class="form-label" for="filterTahun">Tahun</label>
                     <select id="filterTahun" class="form-select">
                         <option value="ALL">Semua Tahun</option>
@@ -927,25 +956,49 @@
                     </select>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group" style="flex: 1; min-width: 150px;">
                     <label class="form-label" for="filterRegional">Regional</label>
                     <select id="filterRegional" class="form-select">
                         <option value="ALL">Semua Regional</option>
+                        <option value="HO">Head Office</option>
+                        <option value="REG1">Regional 1</option>
+                        <option value="REG2">Regional 2</option>
+                        <option value="REG3">Regional 3</option>
+                        <option value="REG4">Regional 4</option>
+                        <option value="REG5">Regional 5</option>
+                        <option value="REG6">Regional 6</option>
+                        <option value="REG7">Regional 7</option>
+                        <option value="REG8">Regional 8</option>
                     </select>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label" for="filterUnitKerja">Unit Kerja</label>
-                    <select id="filterUnitKerja" class="form-select">
-                        <option value="ALL">Semua Unit Kerja</option>
+                <div class="form-group" style="flex: 1.2; min-width: 180px;">
+                    <label class="form-label" for="filterPersonnelArea">Personel Area</label>
+                    <select id="filterPersonnelArea" class="form-select">
+                        <option value="ALL">Semua Personel Area</option>
                     </select>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group" style="flex: 1.2; min-width: 180px;">
+                    <label class="form-label" for="filterPersonnelSubArea">Personel Sub Area</label>
+                    <select id="filterPersonnelSubArea" class="form-select">
+                        <option value="ALL">Semua Personel Sub Area</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="flex: 1; min-width: 150px;">
                     <label class="form-label" for="filterStatusPegawai">Status Pegawai</label>
                     <select id="filterStatusPegawai" class="form-select">
                         <option value="ALL">Semua Status Pegawai</option>
+                        <option value="Aktif">Aktif</option>
+                        <option value="MBT">Masa Bebas Tugas (MBT)</option>
                     </select>
+                </div>
+
+                <div class="form-group" style="justify-content: flex-end;">
+                    <button type="button" id="btnProsesFilter" onclick="loadDashboardData()" class="btn-proses-filter">
+                        <i class="fa-solid fa-circle-play"></i> Proses
+                    </button>
                 </div>
             </div>
         </div>
@@ -1376,6 +1429,25 @@
                         Distribusi Umur Karyawan
                     </span>
                 </div>
+                <!-- 4 Small Umur Cards Strip -->
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px;">
+                    <div class="submetric-card" onclick="openEmpDetailModal('umur', '< 30')" style="cursor:pointer; background:#ecfdf5; border:1px solid #a7f3d0; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan Umur < 30">
+                        <div style="font-size:0.68rem; font-weight:700; color:#059669; text-transform:uppercase;">&lt; 30 Thn</div>
+                        <div class="submetric-val" id="valUmurU30" style="color:#059669; font-size:1.15rem; font-weight:800;">-</div>
+                    </div>
+                    <div class="submetric-card" onclick="openEmpDetailModal('umur', '31-40')" style="cursor:pointer; background:#eff6ff; border:1px solid #bfdbfe; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan Umur 31-40">
+                        <div style="font-size:0.68rem; font-weight:700; color:#2563eb; text-transform:uppercase;">31 - 40 Thn</div>
+                        <div class="submetric-val" id="valUmurU40" style="color:#1d4ed8; font-size:1.15rem; font-weight:800;">-</div>
+                    </div>
+                    <div class="submetric-card" onclick="openEmpDetailModal('umur', '41-50')" style="cursor:pointer; background:#fffbeb; border:1px solid #fde68a; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan Umur 41-50">
+                        <div style="font-size:0.68rem; font-weight:700; color:#d97706; text-transform:uppercase;">41 - 50 Thn</div>
+                        <div class="submetric-val" id="valUmurU50" style="color:#b45309; font-size:1.15rem; font-weight:800;">-</div>
+                    </div>
+                    <div class="submetric-card" onclick="openEmpDetailModal('umur', '> 50')" style="cursor:pointer; background:#fef2f2; border:1px solid #fecaca; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan Umur > 50">
+                        <div style="font-size:0.68rem; font-weight:700; color:#dc2626; text-transform:uppercase;">&gt; 50 Thn</div>
+                        <div class="submetric-val" id="valUmurU50Plus" style="color:#b91c1c; font-size:1.15rem; font-weight:800;">-</div>
+                    </div>
+                </div>
                 <div class="chart-body" id="chart13"></div>
             </div>
 
@@ -1386,36 +1458,53 @@
                         Masa Kerja Karyawan
                     </span>
                 </div>
+                <!-- 5 Small Masa Kerja Cards Strip -->
+                <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 14px;">
+                    <div class="submetric-card" onclick="openEmpDetailModal('masa_kerja', '< 10')" style="cursor:pointer; background:#ecfdf5; border:1px solid #a7f3d0; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan Masa Kerja < 10 Thn">
+                        <div style="font-size:0.65rem; font-weight:700; color:#059669; text-transform:uppercase;">&lt; 10 Thn</div>
+                        <div class="submetric-val" id="valServiceS10" style="color:#059669; font-size:1.1rem; font-weight:800;">-</div>
+                    </div>
+                    <div class="submetric-card" onclick="openEmpDetailModal('masa_kerja', '10-15')" style="cursor:pointer; background:#f0f9ff; border:1px solid #bae6fd; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan Masa Kerja 10-15 Thn">
+                        <div style="font-size:0.65rem; font-weight:700; color:#0284c7; text-transform:uppercase;">10 - 15 Thn</div>
+                        <div class="submetric-val" id="valServiceS15" style="color:#0369a1; font-size:1.1rem; font-weight:800;">-</div>
+                    </div>
+                    <div class="submetric-card" onclick="openEmpDetailModal('masa_kerja', '16-20')" style="cursor:pointer; background:#eef2ff; border:1px solid #c7d2fe; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan Masa Kerja 16-20 Thn">
+                        <div style="font-size:0.65rem; font-weight:700; color:#4f46e5; text-transform:uppercase;">16 - 20 Thn</div>
+                        <div class="submetric-val" id="valServiceS20" style="color:#4338ca; font-size:1.1rem; font-weight:800;">-</div>
+                    </div>
+                    <div class="submetric-card" onclick="openEmpDetailModal('masa_kerja', '21-30')" style="cursor:pointer; background:#f5f3ff; border:1px solid #ddd6fe; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan Masa Kerja 21-30 Thn">
+                        <div style="font-size:0.65rem; font-weight:700; color:#7c3aed; text-transform:uppercase;">21 - 30 Thn</div>
+                        <div class="submetric-val" id="valServiceS30" style="color:#6d28d9; font-size:1.1rem; font-weight:800;">-</div>
+                    </div>
+                    <div class="submetric-card" onclick="openEmpDetailModal('masa_kerja', '> 30')" style="cursor:pointer; background:#fffbeb; border:1px solid #fde68a; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan Masa Kerja > 30 Thn">
+                        <div style="font-size:0.65rem; font-weight:700; color:#d97706; text-transform:uppercase;">&gt; 30 Thn</div>
+                        <div class="submetric-val" id="valServiceS30Plus" style="color:#b45309; font-size:1.1rem; font-weight:800;">-</div>
+                    </div>
+                </div>
                 <div class="chart-body" id="chart14"></div>
             </div>
         </div>
 
-        <!-- Row 9: Mutasi & Pensiun -->
-        <div class="grid-2">
+        <!-- Row 9: Job Group & Pensiun -->
+        <div class="grid-2" style="align-items: start;">
             <div class="chart-card">
                 <div class="chart-header">
                     <span class="chart-title">
-                        <div class="chart-title-icon"><i class="fa-solid fa-right-left"></i></div>
-                        Mutasi &amp; Pergerakan Pegawai
+                        <div class="chart-title-icon"><i class="fa-solid fa-layer-group"></i></div>
+                        Sebaran Karyawan Berdasarkan Job Group
                     </span>
                 </div>
-                <div class="submetric-grid">
-                    <div class="submetric-card" onclick="openEmpDetailModal('mutasi', 'Total')" title="Klik rincian mutasi">
-                        <div class="submetric-val" id="mutasiTotal">-</div>
-                        <div class="submetric-lbl">Total Mutasi</div>
-                    </div>
-                    <div class="submetric-card" onclick="openEmpDetailModal('mutasi', 'Promosi')" title="Klik rincian promosi">
-                        <div class="submetric-val" id="mutasiPromosi" style="color:#166534;">-</div>
-                        <div class="submetric-lbl">Promosi</div>
-                    </div>
-                    <div class="submetric-card" onclick="openEmpDetailModal('mutasi', 'Rotasi')" title="Klik rincian rotasi">
-                        <div class="submetric-val" id="mutasiRotasi" style="color:#2563eb;">-</div>
-                        <div class="submetric-lbl">Rotasi</div>
-                    </div>
-                    <div class="submetric-card" onclick="openEmpDetailModal('mutasi', 'Demosi')" title="Klik rincian demosi">
-                        <div class="submetric-val" id="mutasiDemosi" style="color:#dc2626;">-</div>
-                        <div class="submetric-lbl">Demosi</div>
-                    </div>
+                <!-- BOD Level Color Legend Strip -->
+                <div style="display: flex; flex-wrap: wrap; gap: 8px 14px; margin-bottom: 16px; padding: 10px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; align-items: center;">
+                    <span style="font-size: 0.72rem; font-weight: 800; color: #475569; text-transform: uppercase;">Keterangan BOD Level:</span>
+                    <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.75rem; font-weight: 700; color: #065f46;"><span style="width: 10px; height: 10px; border-radius: 3px; background: #065f46;"></span> BOC</span>
+                    <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.75rem; font-weight: 700; color: #166534;"><span style="width: 10px; height: 10px; border-radius: 3px; background: #166534;"></span> BOD</span>
+                    <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.75rem; font-weight: 700; color: #2563eb;"><span style="width: 10px; height: 10px; border-radius: 3px; background: #2563eb;"></span> BOD-1</span>
+                    <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.75rem; font-weight: 700; color: #ea580c;"><span style="width: 10px; height: 10px; border-radius: 3px; background: #ea580c;"></span> BOD-2</span>
+                    <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.75rem; font-weight: 700; color: #7c3aed;"><span style="width: 10px; height: 10px; border-radius: 3px; background: #7c3aed;"></span> BOD-3</span>
+                    <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.75rem; font-weight: 700; color: #10b981;"><span style="width: 10px; height: 10px; border-radius: 3px; background: #10b981;"></span> BOD-4</span>
+                    <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.75rem; font-weight: 700; color: #0284c7;"><span style="width: 10px; height: 10px; border-radius: 3px; background: #0284c7;"></span> BOD-5</span>
+                    <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.75rem; font-weight: 700; color: #15803d;"><span style="width: 10px; height: 10px; border-radius: 3px; background: #15803d;"></span> BOD-6</span>
                 </div>
                 <div class="chart-body" id="chart16"></div>
             </div>
@@ -1427,22 +1516,23 @@
                         Estimasi Pensiun Pegawai
                     </span>
                 </div>
-                <div class="submetric-grid">
-                    <div class="submetric-card" onclick="openEmpDetailModal('pensiun', '30d')" title="Klik rincian pensiun 30 hari">
-                        <div class="submetric-val" id="pensiun30d" style="color:#e11d48;">-</div>
-                        <div class="submetric-lbl">30 Hari</div>
+                <!-- 4 Small Pensiun Cards Strip -->
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px;">
+                    <div class="submetric-card" onclick="openEmpDetailModal('pensiun', '30d')" style="cursor:pointer; background:#fef2f2; border:1px solid #fecaca; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian pensiun 30 hari">
+                        <div style="font-size:0.68rem; font-weight:700; color:#dc2626; text-transform:uppercase;">30 Hari</div>
+                        <div class="submetric-val" id="pensiun30d" style="color:#e11d48; font-size:1.15rem; font-weight:800;">-</div>
                     </div>
-                    <div class="submetric-card" onclick="openEmpDetailModal('pensiun', '6m')" title="Klik rincian pensiun 6 bulan">
-                        <div class="submetric-val" id="pensiun6m" style="color:#d97706;">-</div>
-                        <div class="submetric-lbl">6 Bulan</div>
+                    <div class="submetric-card" onclick="openEmpDetailModal('pensiun', '6m')" style="cursor:pointer; background:#fffbeb; border:1px solid #fde68a; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian pensiun 6 bulan">
+                        <div style="font-size:0.68rem; font-weight:700; color:#d97706; text-transform:uppercase;">6 Bulan</div>
+                        <div class="submetric-val" id="pensiun6m" style="color:#d97706; font-size:1.15rem; font-weight:800;">-</div>
                     </div>
-                    <div class="submetric-card" onclick="openEmpDetailModal('pensiun', '1y')" title="Klik rincian pensiun 1 tahun">
-                        <div class="submetric-val" id="pensiun1y" style="color:#2563eb;">-</div>
-                        <div class="submetric-lbl">1 Tahun</div>
+                    <div class="submetric-card" onclick="openEmpDetailModal('pensiun', '1y')" style="cursor:pointer; background:#eff6ff; border:1px solid #bfdbfe; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian pensiun 1 tahun">
+                        <div style="font-size:0.68rem; font-weight:700; color:#2563eb; text-transform:uppercase;">1 Tahun</div>
+                        <div class="submetric-val" id="pensiun1y" style="color:#2563eb; font-size:1.15rem; font-weight:800;">-</div>
                     </div>
-                    <div class="submetric-card" onclick="openEmpDetailModal('pensiun', '3y')" title="Klik rincian pensiun 3 tahun">
-                        <div class="submetric-val" id="pensiun3y" style="color:#166534;">-</div>
-                        <div class="submetric-lbl">3 Tahun</div>
+                    <div class="submetric-card" onclick="openEmpDetailModal('pensiun', '3y')" style="cursor:pointer; background:#ecfdf5; border:1px solid #a7f3d0; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian pensiun 3 tahun">
+                        <div style="font-size:0.68rem; font-weight:700; color:#059669; text-transform:uppercase;">3 Tahun</div>
+                        <div class="submetric-val" id="pensiun3y" style="color:#166534; font-size:1.15rem; font-weight:800;">-</div>
                     </div>
                 </div>
                 <div class="chart-body" id="chart17"></div>
@@ -1462,11 +1552,34 @@
     document.addEventListener('DOMContentLoaded', function() {
         loadDashboardData();
 
-        document.getElementById('filterTahun').addEventListener('change', loadDashboardData);
-        document.getElementById('filterRegional').addEventListener('change', loadDashboardData);
-        document.getElementById('filterUnitKerja').addEventListener('change', loadDashboardData);
-        document.getElementById('filterStatusPegawai').addEventListener('change', loadDashboardData);
+        document.getElementById('filterRegional').addEventListener('change', function() {
+            document.getElementById('filterPersonnelArea').value = 'ALL';
+            document.getElementById('filterPersonnelSubArea').value = 'ALL';
+            fetchFilterCascades();
+        });
+
+        document.getElementById('filterPersonnelArea').addEventListener('change', function() {
+            document.getElementById('filterPersonnelSubArea').value = 'ALL';
+            fetchFilterCascades();
+        });
     });
+
+    function fetchFilterCascades() {
+        const regional = document.getElementById('filterRegional').value;
+        const personnel_area = document.getElementById('filterPersonnelArea').value;
+        const status_pegawai = document.getElementById('filterStatusPegawai').value;
+
+        const params = new URLSearchParams({ regional, personnel_area, status_pegawai, only_filters: 1 });
+
+        fetch("{{ route('api.hr_demographic_data') }}?" + params.toString())
+            .then(res => res.json())
+            .then(data => {
+                if (data.filter_options) {
+                    populateFilters(data.filter_options);
+                }
+            })
+            .catch(err => console.error("Error loading filter cascades:", err));
+    }
 
     function showPageLoading() {
         const overlay = document.getElementById('pageLoadingOverlay');
@@ -1486,10 +1599,11 @@
         showPageLoading();
         const tahun = document.getElementById('filterTahun').value;
         const regional = document.getElementById('filterRegional').value;
-        const unit_kerja = document.getElementById('filterUnitKerja').value;
+        const personnel_area = document.getElementById('filterPersonnelArea').value;
+        const personnel_sub_area = document.getElementById('filterPersonnelSubArea').value;
         const status_pegawai = document.getElementById('filterStatusPegawai').value;
 
-        const params = new URLSearchParams({ tahun, regional, unit_kerja, status_pegawai });
+        const params = new URLSearchParams({ tahun, regional, personnel_area, personnel_sub_area, status_pegawai });
 
         fetch("{{ route('api.hr_demographic_data') }}?" + params.toString())
             .then(res => res.json())
@@ -1509,34 +1623,34 @@
     function populateFilters(opts) {
         if (!opts) return;
 
-        const regSelect = document.getElementById('filterRegional');
-        if (regSelect.options.length <= 1 && opts.regional_list) {
-            opts.regional_list.forEach(r => {
-                const opt = document.createElement('option');
-                opt.value = r;
-                opt.textContent = r;
-                regSelect.appendChild(opt);
-            });
+        const pAreaSelect = document.getElementById('filterPersonnelArea');
+        if (pAreaSelect) {
+            const currentArea = pAreaSelect.value;
+            pAreaSelect.innerHTML = '<option value="ALL">Semua Personel Area</option>';
+            if (opts.personnel_area_list) {
+                opts.personnel_area_list.forEach(a => {
+                    const opt = document.createElement('option');
+                    opt.value = a;
+                    opt.textContent = a;
+                    if (a === currentArea) opt.selected = true;
+                    pAreaSelect.appendChild(opt);
+                });
+            }
         }
 
-        const unitSelect = document.getElementById('filterUnitKerja');
-        if (unitSelect.options.length <= 1 && opts.unit_kerja_list) {
-            opts.unit_kerja_list.forEach(u => {
-                const opt = document.createElement('option');
-                opt.value = u;
-                opt.textContent = u;
-                unitSelect.appendChild(opt);
-            });
-        }
-
-        const stSelect = document.getElementById('filterStatusPegawai');
-        if (stSelect.options.length <= 1 && opts.status_pegawai_list) {
-            opts.status_pegawai_list.forEach(s => {
-                const opt = document.createElement('option');
-                opt.value = s;
-                opt.textContent = s;
-                stSelect.appendChild(opt);
-            });
+        const pSubAreaSelect = document.getElementById('filterPersonnelSubArea');
+        if (pSubAreaSelect) {
+            const currentSubArea = pSubAreaSelect.value;
+            pSubAreaSelect.innerHTML = '<option value="ALL">Semua Personel Sub Area</option>';
+            if (opts.personnel_sub_area_list) {
+                opts.personnel_sub_area_list.forEach(sa => {
+                    const opt = document.createElement('option');
+                    opt.value = sa;
+                    opt.textContent = sa;
+                    if (sa === currentSubArea) opt.selected = true;
+                    pSubAreaSelect.appendChild(opt);
+                });
+            }
         }
     }
 
@@ -2014,37 +2128,128 @@
         });
         chartInstances['c9'].render();
 
-        // 13. Distribusi Umur (Histogram)
+        // 13. Distribusi Umur per Regional (Stacked Bar)
+        if (d.chart13 && d.chart13.totals) {
+            const ageCardMap = {
+                '< 30': 'valUmurU30',
+                '31-40': 'valUmurU40',
+                '41-50': 'valUmurU50',
+                '> 50': 'valUmurU50Plus'
+            };
+            Object.keys(ageCardMap).forEach(key => {
+                const el = document.getElementById(ageCardMap[key]);
+                if (el) el.textContent = (d.chart13.totals[key] || 0).toLocaleString();
+            });
+        }
+
+        const agePalette = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'];
         chartInstances['c13'] = new ApexCharts(document.querySelector("#chart13"), {
             ...lightChartBase,
             chart: { 
                 ...lightChartBase.chart, 
                 type: 'bar', 
-                height: 290, 
+                height: 310, 
+                stacked: true, 
                 toolbar: { show: false },
-                ...bindClick('umur', (cfg) => d.chart13.categories[cfg.dataPointIndex]).events
+                events: {
+                    dataPointSelection: (evt, ctx, config) => {
+                        const sIdx = config.seriesIndex;
+                        const dIdx = config.dataPointIndex;
+                        const category = d.chart13.categories[dIdx];
+                        const stackName = d.chart13.series[sIdx].name;
+                        openEmpDetailModal('chart13_stack', `${category}|${stackName}`);
+                    }
+                }
             },
-            plotOptions: { bar: { borderRadius: 6, columnWidth: '55%' } },
-            xaxis: { categories: d.chart13.categories },
-            series: [{ name: 'Jumlah Karyawan', data: d.chart13.series }],
-            colors: ['#166534']
+            plotOptions: { 
+                bar: { 
+                    horizontal: false, 
+                    columnWidth: '50%', 
+                    borderRadius: 4
+                } 
+            },
+            dataLabels: {
+                enabled: true,
+                style: {
+                    fontSize: '10px',
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 700,
+                    colors: ['#ffffff']
+                },
+                formatter: function (val) {
+                    return val > 0 ? val.toLocaleString() : '';
+                }
+            },
+            xaxis: { 
+                categories: d.chart13.categories, 
+                labels: { rotate: -25, style: { fontSize: '11px', fontWeight: 600 } } 
+            },
+            series: d.chart13.series,
+            colors: agePalette,
+            legend: { position: 'top' }
         });
         chartInstances['c13'].render();
 
-        // 14. Masa Kerja (Bar)
+        // 14. Masa Kerja per Regional (Stacked Bar)
+        if (d.chart14 && d.chart14.totals) {
+            const serviceCardMap = {
+                '< 10': 'valServiceS10',
+                '10-15': 'valServiceS15',
+                '16-20': 'valServiceS20',
+                '21-30': 'valServiceS30',
+                '> 30': 'valServiceS30Plus'
+            };
+            Object.keys(serviceCardMap).forEach(key => {
+                const el = document.getElementById(serviceCardMap[key]);
+                if (el) el.textContent = (d.chart14.totals[key] || 0).toLocaleString();
+            });
+        }
+
+        const servicePalette = ['#059669', '#0284c7', '#6366f1', '#8b5cf6', '#d97706'];
         chartInstances['c14'] = new ApexCharts(document.querySelector("#chart14"), {
             ...lightChartBase,
             chart: { 
                 ...lightChartBase.chart, 
                 type: 'bar', 
-                height: 290, 
+                height: 310, 
+                stacked: true, 
                 toolbar: { show: false },
-                ...bindClick('masa_kerja', (cfg) => d.chart14.categories[cfg.dataPointIndex]).events
+                events: {
+                    dataPointSelection: (evt, ctx, config) => {
+                        const sIdx = config.seriesIndex;
+                        const dIdx = config.dataPointIndex;
+                        const category = d.chart14.categories[dIdx];
+                        const stackName = d.chart14.series[sIdx].name;
+                        openEmpDetailModal('chart14_stack', `${category}|${stackName}`);
+                    }
+                }
             },
-            plotOptions: { bar: { borderRadius: 6, columnWidth: '55%' } },
-            xaxis: { categories: d.chart14.categories },
-            series: [{ name: 'Karyawan', data: d.chart14.series }],
-            colors: ['#15803d']
+            plotOptions: { 
+                bar: { 
+                    horizontal: false, 
+                    columnWidth: '50%', 
+                    borderRadius: 4
+                } 
+            },
+            dataLabels: {
+                enabled: true,
+                style: {
+                    fontSize: '10px',
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 700,
+                    colors: ['#ffffff']
+                },
+                formatter: function (val) {
+                    return val > 0 ? val.toLocaleString() : '';
+                }
+            },
+            xaxis: { 
+                categories: d.chart14.categories, 
+                labels: { rotate: -25, style: { fontSize: '11px', fontWeight: 600 } } 
+            },
+            series: d.chart14.series,
+            colors: servicePalette,
+            legend: { position: 'top' }
         });
         chartInstances['c14'].render();
 
@@ -2104,47 +2309,134 @@
         });
         chartInstances['c15'].render();
 
-        // 16. Mutasi Dashboard Sub-metrics & Bar Chart
-        document.getElementById('mutasiTotal').textContent = d.chart16.total.toLocaleString();
-        document.getElementById('mutasiPromosi').textContent = d.chart16.promosi.toLocaleString();
-        document.getElementById('mutasiRotasi').textContent = d.chart16.rotasi.toLocaleString();
-        document.getElementById('mutasiDemosi').textContent = d.chart16.demosi.toLocaleString();
+        // 16. Sebaran Karyawan per Job Group (Horizontal Bar Chart dengan Warna BOD Level)
+        const jgCount = (d.chart16 && d.chart16.categories) ? d.chart16.categories.length : 15;
+        const jgHeight = Math.max(500, jgCount * 28);
+        const maxVal = (d.chart16 && d.chart16.series && d.chart16.series[0] && d.chart16.series[0].data)
+            ? Math.max(...d.chart16.series[0].data, 100)
+            : 100;
+
+        const bodColorMap = {
+            'BOC': '#065f46',     // Dark Teal/Emerald
+            'BOD': '#166534',     // Deep Green
+            'BOD-1': '#2563eb',   // Biru (Royal Blue)
+            'BOD-2': '#ea580c',   // Jingga (Orange)
+            'BOD-3': '#7c3aed',   // Ungu (Purple)
+            'BOD-4': '#10b981',   // Emerald Green
+            'BOD-5': '#0284c7',   // Sky Blue
+            'BOD-6': '#15803d',   // Forest Green
+            'Lainnya': '#64748b'  // Slate Gray
+        };
+
+        const jgBarColors = (d.chart16 && d.chart16.bod_levels)
+            ? d.chart16.bod_levels.map(lvl => bodColorMap[lvl] || '#15803d')
+            : ['#166534'];
 
         chartInstances['c16'] = new ApexCharts(document.querySelector("#chart16"), {
             ...lightChartBase,
             chart: { 
                 ...lightChartBase.chart, 
                 type: 'bar', 
-                height: 200, 
+                height: jgHeight, 
                 toolbar: { show: false },
-                ...bindClick('mutasi', (cfg) => ['Promosi', 'Rotasi', 'Demosi'][cfg.dataPointIndex]).events
+                events: {
+                    dataPointSelection: (evt, ctx, config) => {
+                        const dIdx = config.dataPointIndex;
+                        const rawCat = d.chart16.raw_categories ? d.chart16.raw_categories[dIdx] : d.chart16.categories[dIdx];
+                        if (rawCat) openEmpDetailModal('job_group', rawCat);
+                    }
+                }
             },
-            plotOptions: { bar: { borderRadius: 6, columnWidth: '40%' } },
-            xaxis: { categories: ['Promosi', 'Rotasi', 'Demosi'] },
-            series: [{ name: 'Pergerakan', data: [d.chart16.promosi, d.chart16.rotasi, d.chart16.demosi] }],
-            colors: ['#166534', '#2563eb', '#dc2626']
+            plotOptions: { 
+                bar: { 
+                    horizontal: true, 
+                    borderRadius: 5, 
+                    barHeight: '70%',
+                    distributed: true,
+                    dataLabels: {
+                        position: 'top'
+                    }
+                } 
+            },
+            legend: { show: false },
+            dataLabels: {
+                enabled: true,
+                textAnchor: 'start',
+                offsetX: 6,
+                style: {
+                    fontSize: '11px',
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 700,
+                    colors: ['#1e293b']
+                },
+                formatter: function (val) {
+                    return val > 0 ? val.toLocaleString() : '';
+                }
+            },
+            xaxis: { 
+                categories: d.chart16.categories,
+                max: Math.ceil(maxVal * 1.12),
+                labels: { style: { fontSize: '11px', fontWeight: 600 } }
+            },
+            yaxis: {
+                labels: { style: { fontSize: '11px', fontWeight: 600 } }
+            },
+            series: [{ name: 'Jumlah Karyawan', data: d.chart16.series }],
+            colors: jgBarColors
         });
         chartInstances['c16'].render();
 
-        // 17. Pensiun Dashboard Sub-metrics & Bar Chart
-        document.getElementById('pensiun30d').textContent = d.chart17.pensiun_30d.toLocaleString();
-        document.getElementById('pensiun6m').textContent = d.chart17.pensiun_6m.toLocaleString();
-        document.getElementById('pensiun1y').textContent = d.chart17.pensiun_1y.toLocaleString();
-        document.getElementById('pensiun3y').textContent = d.chart17.pensiun_3y.toLocaleString();
+        // 17. Pensiun Dashboard Sub-metrics & Stacked Bar Chart per Regional
+        document.getElementById('pensiun30d').textContent = (d.chart17.pensiun_30d || 0).toLocaleString();
+        document.getElementById('pensiun6m').textContent = (d.chart17.pensiun_6m || 0).toLocaleString();
+        document.getElementById('pensiun1y').textContent = (d.chart17.pensiun_1y || 0).toLocaleString();
+        document.getElementById('pensiun3y').textContent = (d.chart17.pensiun_3y || 0).toLocaleString();
 
+        const pensiunPalette = ['#e11d48', '#d97706', '#2563eb', '#166534'];
         chartInstances['c17'] = new ApexCharts(document.querySelector("#chart17"), {
             ...lightChartBase,
             chart: { 
                 ...lightChartBase.chart, 
                 type: 'bar', 
-                height: 200, 
+                height: 310, 
+                stacked: true, 
                 toolbar: { show: false },
-                ...bindClick('pensiun', (cfg) => ['30d', '6m', '1y', '3y'][cfg.dataPointIndex]).events
+                events: {
+                    dataPointSelection: (evt, ctx, config) => {
+                        const sIdx = config.seriesIndex;
+                        const dIdx = config.dataPointIndex;
+                        const category = d.chart17.categories[dIdx];
+                        const stackName = d.chart17.series[sIdx].name;
+                        openEmpDetailModal('chart17_stack', `${category}|${stackName}`);
+                    }
+                }
             },
-            plotOptions: { bar: { borderRadius: 6, columnWidth: '45%' } },
-            xaxis: { categories: ['30 Hari', '6 Bulan', '1 Tahun', '3 Tahun'] },
-            series: [{ name: 'Jumlah Pensiun', data: [d.chart17.pensiun_30d, d.chart17.pensiun_6m, d.chart17.pensiun_1y, d.chart17.pensiun_3y] }],
-            colors: ['#e11d48', '#d97706', '#2563eb', '#166534']
+            plotOptions: { 
+                bar: { 
+                    horizontal: false, 
+                    columnWidth: '50%', 
+                    borderRadius: 4
+                } 
+            },
+            dataLabels: {
+                enabled: true,
+                style: {
+                    fontSize: '10px',
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 700,
+                    colors: ['#ffffff']
+                },
+                formatter: function (val) {
+                    return val > 0 ? val.toLocaleString() : '';
+                }
+            },
+            xaxis: { 
+                categories: d.chart17.categories, 
+                labels: { rotate: -25, style: { fontSize: '11px', fontWeight: 600 } } 
+            },
+            series: d.chart17.series,
+            colors: pensiunPalette,
+            legend: { position: 'top' }
         });
         chartInstances['c17'].render();
     }
@@ -2171,10 +2463,11 @@
 
         const tahun = document.getElementById('filterTahun').value;
         const regional = document.getElementById('filterRegional').value;
-        const unit_kerja = document.getElementById('filterUnitKerja').value;
+        const personnel_area = document.getElementById('filterPersonnelArea').value;
+        const personnel_sub_area = document.getElementById('filterPersonnelSubArea').value;
         const status_pegawai = document.getElementById('filterStatusPegawai').value;
 
-        const params = new URLSearchParams({ type, value, tahun, regional, unit_kerja, status_pegawai });
+        const params = new URLSearchParams({ type, value, tahun, regional, personnel_area, personnel_sub_area, status_pegawai });
 
         fetch("{{ route('api.hr_demographic_detail') }}?" + params.toString())
             .then(res => res.json())
