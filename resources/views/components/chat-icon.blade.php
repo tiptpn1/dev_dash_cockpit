@@ -47,6 +47,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="{{ asset('js/chat-content-renderer.js') }}"></script>
+<script src="{{ asset('js/chat-page-context.js') }}"></script>
 
 <style>
 .chat-icon-container {
@@ -273,6 +274,20 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize ChatContentRenderer
     const contentRenderer = new ChatContentRenderer();
+    
+    // Initialize Page Context Manager
+    const pageContext = new ChatPageContext();
+    
+    // Collect context on page load
+    setTimeout(() => {
+        pageContext.collectAll();
+        console.log('📋 Initial page context collected:', pageContext.getContextSummary());
+    }, 1000);
+    
+    // Listen to context updates
+    pageContext.onContextUpdate((context) => {
+        console.log('🔄 Page context updated:', pageContext.getContextSummary());
+    });
 
     // Initially hide the chat container
     chatContainer.style.display = 'none';
@@ -428,6 +443,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert('CSRF token not found. Please refresh the page.');
                 return;
             }
+            
+            // Collect latest page context
+            pageContext.collectAll();
+            const contextSummary = pageContext.getContextSummary();
+            const fullContext = pageContext.getFullContext();
 
             // Add user message to chat
             const userMessageDiv = document.createElement('div');
@@ -466,7 +486,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         message: message,
                         stream: true,
                         sessionId: currentSessionId, // kunci follow-up (kosong = sesi baru)
-                        agent: { name: 'agrinav_agent' } // Auth & userId ditangani backend
+                        agent: { name: 'agrinav_agent' }, // Auth & userId ditangani backend
+                        
+                        // Page context untuk AI reference
+                        pageContext: {
+                            summary: contextSummary,  // Format ringkas
+                            full: fullContext         // Data lengkap
+                        }
                     })
                 });
 

@@ -12,6 +12,86 @@ error_reporting(0);
 class AiResponseController extends Controller
 {
     /**
+     * Format page context menjadi system message untuk AI.
+     * Context akan diinjeksi sebagai system prompt atau metadata.
+     *
+     * @param array $pageContext
+     * @param string $userMessage
+     * @return string
+     */
+    private function formatContextForAI($pageContext, $userMessage)
+    {
+        if (empty($pageContext)) {
+            return $userMessage;
+        }
+
+        $contextParts = [];
+        
+        // Informasi halaman
+        if (!empty($pageContext['summary']['page'])) {
+            $contextParts[] = "📍 Halaman: {$pageContext['summary']['page']}";
+        }
+        
+        // User info
+        if (!empty($pageContext['summary']['user'])) {
+            $contextParts[] = "👤 User: {$pageContext['summary']['user']}";
+        }
+
+        // Data yang tersedia
+        if (!empty($pageContext['summary']['dataAvailable'])) {
+            $contextParts[] = "📊 Data tersedia: " . implode(', ', $pageContext['summary']['dataAvailable']);
+        }
+
+        // Tabel data (summary)
+        if (!empty($pageContext['summary']['tables'])) {
+            $contextParts[] = "\n📋 Detail Tabel:";
+            foreach ($pageContext['summary']['tables'] as $index => $tableDesc) {
+                $contextParts[] = "  - " . $tableDesc;
+            }
+            
+            // Include sample data dari tabel pertama (jika ada)
+            if (!empty($pageContext['full']['data']['tables'][0]['visibleRows'])) {
+                $firstTable = $pageContext['full']['data']['tables'][0];
+                $sampleRows = array_slice($firstTable['visibleRows'], 0, 5);
+                $contextParts[] = "\n📄 Sample data (5 baris pertama):";
+                $contextParts[] = json_encode($sampleRows, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+            }
+        }
+
+        // Chart data
+        if (!empty($pageContext['summary']['charts'])) {
+            $contextParts[] = "\n📈 Chart/Grafik:";
+            foreach ($pageContext['summary']['charts'] as $chartDesc) {
+                $contextParts[] = "  - " . $chartDesc;
+            }
+        }
+
+        // Statistics
+        if (!empty($pageContext['summary']['statistics'])) {
+            $contextParts[] = "\n📊 Statistik/Metrik:";
+            foreach ($pageContext['summary']['statistics'] as $stat) {
+                $contextParts[] = "  - {$stat['label']}: {$stat['value']}";
+            }
+        }
+
+        // Active filters
+        if (!empty($pageContext['summary']['filters'])) {
+            $contextParts[] = "\n🔍 Filter Aktif:";
+            foreach ($pageContext['summary']['filters'] as $filter) {
+                $contextParts[] = "  - " . $filter;
+            }
+        }
+
+        // Gabungkan context + user message
+        $fullMessage = implode("\n", $contextParts);
+        $fullMessage .= "\n\n---\n\n";
+        $fullMessage .= "Pertanyaan User: " . $userMessage;
+        $fullMessage .= "\n\n[INSTRUKSI UNTUK AI: Gunakan data context di atas sebagai referensi untuk menjawab pertanyaan user. Jika user bertanya tentang data, chart, atau informasi di halaman ini, gunakan informasi yang tersedia di context. Jawab dalam Bahasa Indonesia.]";
+
+        return $fullMessage;
+    }
+
+    /**
      * Ambil webChatToken dari AI Backend via login.
      * Token di-cache karena webChatToken tidak expire (static token).
      *
@@ -81,6 +161,12 @@ class AiResponseController extends Controller
 
         // source platform (web) sesuai panduan.
         $source = $request->input('source', 'web');
+        
+        // Page Context dari frontend (NEW!)
+        $pageContext = $request->input('pageContext', []);
+        
+        // Format context untuk AI
+        $contextMessage = $this->formatContextForAI($pageContext, $message);
 
         // CATATAN (Panduan 4A): JANGAN kirim userId manual — diabaikan backend.
         // Identitas user diturunkan otomatis oleh backend dari token (webChatToken).
@@ -111,7 +197,7 @@ class AiResponseController extends Controller
                     $url = env('AI_BACKEND_URL', 'https://be.ptpn1.co.id/api/ai/chat');
 
                     $requestData = [
-                        'message' => $message,
+                        'message' => $contextMessage,  // Message dengan context
                         'stream'  => true,
                         'agent'   => $agent,
                         'token'   => $token,        // webChatToken (identitas diturunkan dari sini)
@@ -188,7 +274,7 @@ class AiResponseController extends Controller
             $url = env('AI_BACKEND_URL', 'https://be.ptpn1.co.id/api/ai/chat');
 
             $payload = [
-                'message' => $message,
+                'message' => $contextMessage,  // Message dengan context
                 'stream'  => false,
                 'agent'   => $agent,
                 'token'   => $token,
