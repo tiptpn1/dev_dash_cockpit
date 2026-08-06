@@ -209,7 +209,9 @@ class PageController extends Controller
         $totalKaryawan = (clone $query)->count();
         $headOffice = (clone $query)->where($isHO)->count();
         $regionalCount = $totalKaryawan - $headOffice;
-        $karyawanTetap = (clone $query)->where('kelompok_pegawai', 'LIKE', '%Tetap%')->count();
+        $karyawanTetap = (clone $query)->where('kelompok_pegawai', 'LIKE', '%Tetap%')
+            ->where('kelompok_pegawai', 'NOT LIKE', '%Tidak%')
+            ->count();
         $karyawanTidakTetap = $totalKaryawan - $karyawanTetap;
         $pimpinan = (clone $query)->where(function($q){
             $q->where('kelompok_pegawai', 'LIKE', '%Karpim%')
@@ -244,7 +246,9 @@ class PageController extends Controller
             $unitCategories[] = $u['label'];
             $qUnit = (clone $query)->where('regional_grup_kode', $u['code']);
 
-            $tetapCount = (clone $qUnit)->where('kelompok_pegawai', 'LIKE', '%Tetap%')->count();
+            $tetapCount = (clone $qUnit)->where('kelompok_pegawai', 'LIKE', '%Tetap%')
+                ->where('kelompok_pegawai', 'NOT LIKE', '%Tidak%')
+                ->count();
             $totalCount = (clone $qUnit)->count();
             $tidakTetapCount = $totalCount - $tetapCount;
 
@@ -819,8 +823,10 @@ class PageController extends Controller
         foreach ($pinDefs as $p) {
             $qPin = (clone $query)->where('regional_grup_kode', $p['rg_kode']);
             $pCount = (clone $qPin)->count();
-            $pTetap = (clone $qPin)->where('kelompok_pegawai', 'LIKE', '%Tetap%')->count();
-            $pTidakTetap = (clone $qPin)->where('kelompok_pegawai', 'NOT LIKE', '%Tetap%')->count();
+            $pTetap = (clone $qPin)->where('kelompok_pegawai', 'LIKE', '%Tetap%')
+                ->where('kelompok_pegawai', 'NOT LIKE', '%Tidak%')
+                ->count();
+            $pTidakTetap = $pCount - $pTetap;
             $mapPins[] = [
                 'key' => $p['key'],
                 'title' => $p['title'],
@@ -998,9 +1004,13 @@ class PageController extends Controller
                 if ($type === 'chart1_stack') {
                     $title = "$rgLabel - $stackLabel";
                     if (strpos($stackLabel, 'Tetap') !== false && strpos($stackLabel, 'Tidak') === false) {
-                        $query->where('kelompok_pegawai', 'LIKE', '%Tetap%');
+                        $query->where('kelompok_pegawai', 'LIKE', '%Tetap%')
+                              ->where('kelompok_pegawai', 'NOT LIKE', '%Tidak%');
                     } else {
-                        $query->where('kelompok_pegawai', 'NOT LIKE', '%Tetap%');
+                        $query->where(function($q) {
+                            $q->where('kelompok_pegawai', 'LIKE', '%Tidak%')
+                              ->orWhere('kelompok_pegawai', 'NOT LIKE', '%Tetap%');
+                        });
                     }
                 } elseif ($type === 'chart4_stack') {
                     $title = "$rgLabel - Pendidikan $stackLabel";
@@ -1143,11 +1153,15 @@ class PageController extends Controller
                 break;
             case 'tetap':
                 $title = 'Karyawan Tetap';
-                $query->where('kelompok_pegawai', 'LIKE', '%Tetap%');
+                $query->where('kelompok_pegawai', 'LIKE', '%Tetap%')
+                      ->where('kelompok_pegawai', 'NOT LIKE', '%Tidak%');
                 break;
             case 'tidak_tetap':
                 $title = 'Karyawan Tidak Tetap';
-                $query->where('kelompok_pegawai', 'NOT LIKE', '%Tetap%');
+                $query->where(function($q) {
+                    $q->where('kelompok_pegawai', 'LIKE', '%Tidak%')
+                      ->orWhere('kelompok_pegawai', 'NOT LIKE', '%Tetap%');
+                });
                 break;
             case 'pimpinan':
                 $title = 'Karyawan Pimpinan';
