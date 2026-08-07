@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\SSOController;
+use App\Http\Controllers\Auth\PuppeteerAuthController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\AiResponseController;
 use App\Http\Controllers\ApiController;
@@ -33,6 +34,12 @@ Route::get('/login', function () {
 Route::post('/login', [LoginController::class, 'login'])->name('login');
 Route::get('/svg-captcha', [LoginController::class, 'svgCaptcha'])->name('svg.captcha');
 Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
+
+// Puppeteer Authentication Routes
+Route::get('/puppet-auth', [PuppeteerAuthController::class, 'authenticate'])->name('puppet.auth');
+Route::get('/puppet-verify', [PuppeteerAuthController::class, 'verify'])->name('puppet.verify');
+Route::post('/puppet-logout', [PuppeteerAuthController::class, 'logout'])->name('puppet.logout');
+Route::get('/puppet-health', [PuppeteerAuthController::class, 'health'])->name('puppet.health');
 
 Route::get('/portalaplikasi', [PageController::class, 'portalaplikasi'])->name('portalaplikasi');
 Route::get('/portallm', [PageController::class, 'portallm'])->name('portallm');
