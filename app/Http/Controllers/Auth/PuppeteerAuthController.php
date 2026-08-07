@@ -41,6 +41,8 @@ class PuppeteerAuthController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => 'Token is required',
+                'your_ip' => $request->ip(),
+                'example' => url('/puppet-auth') . '?token=YOUR_TOKEN&redirect=/overview',
             ], 400);
         }
         
@@ -66,6 +68,8 @@ class PuppeteerAuthController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => 'Invalid authentication token',
+                'your_ip' => $request->ip(),
+                'hint' => 'Check PUPPETEER_AUTH_TOKEN in .env file',
             ], 401);
         }
         
@@ -75,11 +79,18 @@ class PuppeteerAuthController extends Controller
             Log::warning('Puppeteer auth: IP not whitelisted', [
                 'ip' => $request->ip(),
                 'allowed_ips' => $allowedIps,
+                'user_agent' => $request->userAgent(),
             ]);
             
             return response()->json([
                 'status' => 'error',
                 'message' => 'Access denied: IP not whitelisted',
+                'details' => [
+                    'your_ip' => $request->ip(),
+                    'allowed_ips' => $allowedIps,
+                ],
+                'solution' => "Add '{$request->ip()}' to PUPPETEER_ALLOWED_IPS in .env file",
+                'example' => 'PUPPETEER_ALLOWED_IPS=' . $request->ip() . ',' . implode(',', array_slice($allowedIps, 0, 2)),
             ], 403);
         }
         
@@ -94,6 +105,8 @@ class PuppeteerAuthController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => 'User not found: ' . $username,
+                'your_ip' => $request->ip(),
+                'hint' => 'Check if user exists in custom_users table',
             ], 404);
         }
         
@@ -146,11 +159,16 @@ class PuppeteerAuthController extends Controller
     {
         $user = Auth::guard('custom')->user();
         $isPuppeteerSession = session('puppeteer_auth', false);
+        $allowedIps = $this->getAllowedIps();
+        $requestIp = $request->ip();
+        $isIpAllowed = empty($allowedIps) || $this->isIpAllowed($requestIp, $allowedIps);
         
         return response()->json([
             'status' => 'ok',
             'authenticated' => Auth::guard('custom')->check(),
             'puppeteer_session' => $isPuppeteerSession,
+            'your_ip' => $requestIp,
+            'ip_allowed' => $isIpAllowed,
             'user' => $user ? [
                 'id' => $user->id,
                 'username' => $user->username,
@@ -200,13 +218,22 @@ class PuppeteerAuthController extends Controller
     public function health()
     {
         $tokenConfigured = !empty(config('puppeteer.auth_token', env('PUPPETEER_AUTH_TOKEN')));
+        $allowedIps = $this->getAllowedIps();
+        $requestIp = request()->ip();
+        $isIpAllowed = empty($allowedIps) || $this->isIpAllowed($requestIp, $allowedIps);
         
         return response()->json([
             'status' => 'ok',
             'service' => 'Puppeteer Authentication',
             'timestamp' => now()->toIso8601String(),
             'configured' => $tokenConfigured,
-            'allowed_ips' => $this->getAllowedIps(),
+            'your_ip' => $requestIp,
+            'ip_check' => [
+                'allowed' => $isIpAllowed,
+                'whitelist_enabled' => !empty($allowedIps),
+                'allowed_ips' => $allowedIps,
+                'hint' => $isIpAllowed ? 'Your IP is allowed' : 'Your IP is NOT in whitelist'
+            ],
             'endpoints' => [
                 'auth' => url('/puppet-auth?token=TOKEN&redirect=/overview'),
                 'verify' => url('/puppet-verify'),
