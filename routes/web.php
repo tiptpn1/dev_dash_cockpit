@@ -173,6 +173,17 @@ Route::middleware('auth:custom')->group(function () {
 
     // AI Response Routes
     Route::post('/ai/response', [AiResponseController::class, 'aiResponse']);
+    
+    // Log Viewer Routes (Admin only)
+    Route::prefix('admin/logs')->name('admin.logs.')->group(function () {
+        Route::get('/', [App\Http\Controllers\LogViewerController::class, 'index'])->name('index');
+        Route::post('/get', [App\Http\Controllers\LogViewerController::class, 'getLog'])->name('get');
+        Route::post('/clear', [App\Http\Controllers\LogViewerController::class, 'clearLog'])->name('clear');
+        Route::get('/download', [App\Http\Controllers\LogViewerController::class, 'downloadLog'])->name('download');
+        Route::post('/test-api', [App\Http\Controllers\LogViewerController::class, 'testApi'])->name('test-api');
+        Route::post('/test-chatbot', [App\Http\Controllers\LogViewerController::class, 'testChatbot'])->name('test-chatbot');
+        Route::get('/system-info', [App\Http\Controllers\LogViewerController::class, 'getSystemInfo'])->name('system-info');
+    });
 });
 
 Route::get('/evaluasi-bypass', function (\Illuminate\Http\Request $request) {

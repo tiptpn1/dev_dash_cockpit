@@ -287,12 +287,12 @@ document.addEventListener('DOMContentLoaded', function() {
             // Collect context on page load
             setTimeout(() => {
                 pageContext.collectAll();
-                console.log('📋 Initial page context collected:', pageContext.getContextSummary());
+                console.debug('📋 Initial page context collected:', pageContext.getContextSummary());
             }, 1000);
             
             // Listen to context updates
             pageContext.onContextUpdate((context) => {
-                console.log('🔄 Page context updated:', pageContext.getContextSummary());
+                console.debug('🔄 Page context updated:', pageContext.getContextSummary());
             });
         } else {
             console.warn('⚠️ ChatPageContext not loaded, context features disabled');
@@ -392,11 +392,9 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('❌ Chat closed');
     });
     
-    // Expand/collapse functionality
-    expandChat.addEventListener('click', function() {
-        chatContainer.classList.toggle('fullscreen');
-        console.log('🔄 Chat toggled fullscreen');
-    });
+    // Catatan: handler expand/collapse didefinisikan sekali di bawah (yang juga
+    // memperbarui ikon). Jangan menambah listener kedua di sini karena dua listener
+    // sama-sama toggle .fullscreen → efeknya saling membatalkan (toggle 2x = tetap).
 
     // Check if browser supports speech recognition
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -449,6 +447,75 @@ document.addEventListener('DOMContentLoaded', function() {
             return null;
         }
         return metaTag.getAttribute('content');
+    }
+
+    /**
+     * Ekstraksi teks jawaban final dari event 'done' secara ROBUST.
+     * Backend bisa mengirim struktur berbeda-beda, jadi coba semua kemungkinan:
+     *   - data.response.message.content   (format utama)
+     *   - data.response.content
+     *   - data.response.message           (jika message langsung berupa string)
+     *   - data.response                   (jika response langsung berupa string)
+     *   - data.message.content / data.content / data.message / data.text
+     * Mengembalikan string kosong jika benar-benar tidak ditemukan.
+     */
+    function extractResponseText(data) {
+        if (!data) return '';
+        const r = data.response;
+        let text = '';
+
+        // 1) Struktur berbasis response object
+        if (r && typeof r === 'object') {
+            if (r.message && typeof r.message === 'object' && typeof r.message.content === 'string') {
+                text = r.message.content;
+            } else if (typeof r.content === 'string') {
+                text = r.content;
+            } else if (typeof r.message === 'string') {
+                text = r.message;
+            } else if (typeof r.text === 'string') {
+                text = r.text;
+            }
+        }
+        // 2) response langsung berupa string
+        if (!text && typeof r === 'string') text = r;
+
+        // 3) Struktur di level atas (tanpa wrapper response)
+        if (!text && data.message && typeof data.message === 'object' && typeof data.message.content === 'string') {
+            text = data.message.content;
+        }
+        if (!text && typeof data.content === 'string') text = data.content;
+        if (!text && typeof data.message === 'string') text = data.message;
+        if (!text && typeof data.text === 'string') text = data.text;
+
+        // Bersihkan: kadang model mengembalikan JSON "planning" mentah sebagai content
+        // (mis. {"dataSourcesToFetch":...,"answer":null}). Ambil field answer bila ada.
+        return unwrapPlanningJson(text);
+    }
+
+    /**
+     * Jika content ternyata JSON planning internal model (punya field "answer"),
+     * ambil isi "answer". Kalau answer null/kosong → kembalikan '' agar UI tidak
+     * menampilkan JSON mentah (biar safety-net memberi pesan yang ramah).
+     */
+    function unwrapPlanningJson(text) {
+        if (typeof text !== 'string') return '';
+        const trimmed = text.trim();
+        if (!trimmed.startsWith('{') || !trimmed.includes('"answer"')) {
+            return text;
+        }
+        try {
+            const obj = JSON.parse(trimmed);
+            if (obj && Object.prototype.hasOwnProperty.call(obj, 'answer')) {
+                if (typeof obj.answer === 'string' && obj.answer.trim()) {
+                    return obj.answer;
+                }
+                // answer null/kosong → dianggap belum ada jawaban final
+                return '';
+            }
+        } catch (_) {
+            // bukan JSON valid → biarkan apa adanya
+        }
+        return text;
     }
 
     async function sendUserMessage() {
@@ -535,32 +602,74 @@ document.addEventListener('DOMContentLoaded', function() {
                 const decoder = new TextDecoder();
                 let buffer = '';
                 let currentEvent = null;
+                let rawAll = '';          // simpan raw untuk fallback bila tidak ada konten
+                let anyContentRendered = false; // apakah ada konten final yang tampil
 
                 while (true) {
                     const { done, value } = await reader.read();
                     
-                    if (done) break;
+                    // Decode chunk (jika ada). Saat done, flush decoder juga.
+                    if (value) {
+                        const decoded = decoder.decode(value, { stream: !done });
+                        buffer += decoded;
+                        rawAll += decoded;
+                    }
                     
-                    buffer += decoder.decode(value, { stream: true });
-                    const lines = buffer.split('\n');
-                    buffer = lines.pop() || '';
+                    // PENTING: saat stream selesai (done), JANGAN langsung break sebelum
+                    // memproses sisa buffer. Backend kadang menutup koneksi tepat setelah
+                    // event 'done' tanpa newline penutup, sehingga baris "data: {...}"
+                    // terakhir tersangkut di buffer dan tidak pernah diproses → UI stuck
+                    // di "🧠 Thinking...". Di sini kita proses seluruh isi buffer saat done.
+                    let lines;
+                    if (done) {
+                        lines = buffer.split('\n');
+                        buffer = '';
+                    } else {
+                        lines = buffer.split('\n');
+                        buffer = lines.pop() || '';
+                    }
                     
                     for (const line of lines) {
+                        // Normalisasi carriage return (backend bisa pakai \r\n)
+                        const cleanLine = line.replace(/\r$/, '');
+                        
                         // Handle SSE event type
-                        if (line.startsWith('event:')) {
-                            currentEvent = line.substring(6).trim();
+                        if (cleanLine.startsWith('event:')) {
+                            currentEvent = cleanLine.substring(6).trim();
+                            console.log('🎯 Event type:', currentEvent);
                             continue;
                         }
                         
-                        if (line.startsWith('data:')) {
+                        if (cleanLine.startsWith('data:')) {
                             try {
-                                const jsonStr = line.substring(5).trim();
-                                if (!jsonStr) continue;
+                                const jsonStr = cleanLine.substring(5).trim();
+                                if (!jsonStr || jsonStr === '[DONE]') continue;
                                 
                                 const data = JSON.parse(jsonStr);
                                 
-                                // Use event type from SSE or from data.type
-                                const eventType = currentEvent || data.type;
+                                // Tentukan tipe event secara ROBUST:
+                                // 1) dari baris SSE "event:" (currentEvent)
+                                // 2) dari field data.type / data.event
+                                // 3) INFER dari struktur data (fallback penting!) — karena event 'done'
+                                //    dari backend TIDAK punya field type, hanya baris "event: done".
+                                //    Kalau baris event: terpisah dari data: (beda chunk), currentEvent
+                                //    bisa null → tanpa fallback ini, done akan hilang & UI stuck.
+                                let eventType = currentEvent || data.type || data.event;
+                                if (!eventType) {
+                                    if (data.response && (data.response.message || data.response.success || data.response.contentBlocks)) {
+                                        eventType = 'done';
+                                    } else if (typeof data.token === 'string') {
+                                        eventType = 'token';
+                                    } else if (data.skill) {
+                                        eventType = 'skill_called';
+                                    } else if (data.error) {
+                                        eventType = 'error';
+                                    } else if (typeof data.message === 'string') {
+                                        eventType = 'thinking';
+                                    }
+                                }
+                                
+                                console.log('📦 Processing event:', eventType, data);
                                 
                                 switch (eventType) {
                                     case 'thinking':
@@ -662,9 +771,10 @@ document.addEventListener('DOMContentLoaded', function() {
                                         break;
                                         
                                     case 'done': {
-                                        console.log('✅ Response completed');
+                                        console.log('✅ Response completed', data);
                                         
-                                        // Remove streaming cursor
+                                        // Remove streaming cursor AND thinking flag (agar tidak stuck "Thinking...")
+                                        isThinking = false;
                                         messageContent.classList.remove('streaming');
                                         
                                         // Bersihkan hint "Membuat grafik..." (chart final akan tampil sebagai gambar)
@@ -700,33 +810,44 @@ document.addEventListener('DOMContentLoaded', function() {
                                             
                                             // Untuk TTS, tetap pakai teks lengkap dari message.content (bukan gabungan
                                             // per-block) supaya narasi tidak terpotong-potong.
-                                            const blocksSpeechText = (data.response && data.response.message && data.response.message.content) || '';
+                                            const blocksSpeechText = extractResponseText(data) || '';
                                             if (blocksSpeechText) {
                                                 speakText(blocksSpeechText);
                                             }
                                         } else {
                                             // Kontrak B (fallback lama, backward compatible)
-                                            let finalResponse = '';
-                                            if (data.response && data.response.message) {
-                                                finalResponse = data.response.message.content;
-                                            } else if (data.response) {
-                                                finalResponse = data.response;
-                                            }
+                                            // Ekstraksi konten robust: coba SEMUA kemungkinan struktur backend.
+                                            const finalResponse = extractResponseText(data);
+                                            console.log('[done] extracted finalResponse:', finalResponse ? finalResponse.substring(0, 120) : '(none)');
                                             
-                                            // Display final response if not already streamed
-                                            if (finalResponse && !fullResponse) {
+                                            if (finalResponse) {
+                                                fullResponse = finalResponse;
+                                                anyContentRendered = true;
+                                                
+                                                // LANGKAH 1 (SINKRON): tampilkan teks jawaban SEGERA sebagai teks polos.
+                                                // Ini menjamin bubble tidak pernah stuck di "🧠 Thinking..." walau
+                                                // renderer async (markdown/chart) lambat, hang, atau error.
+                                                messageContent.textContent = finalResponse;
+                                                chatMessages.scrollTop = chatMessages.scrollHeight;
+                                                
+                                                // LANGKAH 2 (ASINKRON): tingkatkan tampilan dengan markdown/chart.
+                                                // Kalau gagal, teks polos dari langkah 1 tetap tampil.
                                                 lastRenderPromise = contentRenderer.renderContent(finalResponse).then(rendered => {
                                                     const cleaned = rendered.replace(/【\d+:\d+†source】/g, '');
                                                     messageContent.innerHTML = cleaned;
+                                                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                                                }).catch(err => {
+                                                    console.error('[done] renderContent gagal, tetap pakai teks polos:', err);
                                                 });
-                                                fullResponse = finalResponse;
+                                            } else if (!fullResponse) {
+                                                // Tidak ada konten sama sekali & belum ada teks streamed → jangan
+                                                // biarkan stuck "Thinking...". Tampilkan pesan netral.
+                                                console.warn('[done] No content found in done event. data=', data);
+                                                messageContent.textContent = 'Maaf, respons kosong diterima dari server.';
                                             }
                                             
                                             // Render gambar/chart hasil skill backend (chart PNG dari generate_chart_image,
                                             // atau hasil vision). Format: response.images = { output: url, input: url }.
-                                            // Catatan: images.output hanya berisi chart TERAKHIR jika ada lebih dari satu.
-                                            // Tunggu render teks selesai dulu (lastRenderPromise) agar <img> tidak
-                                            // ketimpa innerHTML dari renderContent() yang masih berjalan (race condition).
                                             const images = data.response && data.response.images;
                                             if (images && images.output) {
                                                 lastRenderPromise.then(() => {
@@ -756,9 +877,53 @@ document.addEventListener('DOMContentLoaded', function() {
                                 currentEvent = null;
                                 
                             } catch (parseError) {
-                                console.error('Failed to parse SSE data:', parseError, 'Line:', line);
+                                console.error('Failed to parse SSE data:', parseError, 'Line:', cleanLine);
                             }
                         }
+                    }
+                    
+                    // Setelah memproses sisa buffer pada akhir stream, barulah keluar loop.
+                    if (done) break;
+                }
+                
+                // Safety net: kalau stream selesai tapi tidak ada konten final yang tampil
+                // (mis. backend mengirim error), jangan biarkan bubble stuck di "Thinking...".
+                if (!anyContentRendered && isThinking) {
+                    isThinking = false;
+                    messageContent.classList.remove('streaming');
+                    
+                    // Coba pulihkan konten / pesan error dari data mentah sebagai upaya terakhir.
+                    let recovered = '';
+                    let backendError = '';
+                    rawAll.split('\n').forEach(l => {
+                        const cl = l.replace(/\r$/, '');
+                        if (!cl.startsWith('data:')) return;
+                        try {
+                            const obj = JSON.parse(cl.substring(5).trim());
+                            const t = extractResponseText(obj);
+                            if (t) recovered = t;
+                            if (obj.error) backendError = obj.error;
+                            if (obj.success === false && obj.message) backendError = obj.message;
+                        } catch (_) {}
+                    });
+                    
+                    // Deteksi kasus khusus: model mengembalikan JSON planning dengan answer:null
+                    // (butuh ambil data tapi belum menghasilkan jawaban final).
+                    const looksLikePlanningJson = rawAll.includes('"answer"') && rawAll.includes('"dataSourcesToFetch"');
+                    
+                    if (recovered) {
+                        messageContent.textContent = recovered;
+                    } else if (looksLikePlanningJson) {
+                        console.warn('[chatbot] Model mengembalikan planning JSON tanpa answer. Raw:', rawAll);
+                        messageContent.innerHTML = '<span style="color:#ffb74d;">Maaf, aku belum berhasil mengambil datanya untuk pertanyaan itu. Coba ulangi atau perjelas pertanyaannya ya. 🙏</span>';
+                    } else if (backendError) {
+                        console.error('[chatbot] Backend error:', backendError, '\nRaw:', rawAll);
+                        messageContent.innerHTML = `<span style="color:#ff6b6b;">Maaf, terjadi kesalahan: ${backendError}</span>`;
+                    } else if (rawAll.trim().length === 0) {
+                        messageContent.innerHTML = '<span style="color:#ff6b6b;">Stream kosong dari server. Coba lagi.</span>';
+                    } else {
+                        console.warn('[chatbot] Tidak ada konten. Raw:', rawAll);
+                        messageContent.innerHTML = '<span style="color:#ff6b6b;">Maaf, respons tidak dapat diproses.</span>';
                     }
                 }
                 

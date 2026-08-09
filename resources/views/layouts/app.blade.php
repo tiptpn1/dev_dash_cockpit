@@ -245,6 +245,7 @@
         });
     </script>
     @include('components.chat-icon')
+    @include('components.log-viewer-button')
     @yield('scripts')
 </body>
 </html>

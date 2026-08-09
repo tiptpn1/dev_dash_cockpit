@@ -177,7 +177,7 @@ class AiResponseController extends Controller
         try {
             // ============ STREAMING ============
             if ($stream) {
-                return response()->stream(function () use ($message, $sessionId, $agent, $token, $source) {
+                return response()->stream(function () use ($contextMessage, $sessionId, $agent, $token, $source) {
                     header('Content-Type: text/event-stream');
                     header('Cache-Control: no-cache');
                     header('Connection: keep-alive');
@@ -228,8 +228,11 @@ class AiResponseController extends Controller
                     ]);
                     curl_setopt($ch, CURLOPT_TIMEOUT, env('AI_BACKEND_TIMEOUT', 120));
 
-                    // Forward stream ke client apa adanya
-                    curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($curl, $data) {
+                    // Forward stream ke client apa adanya, SEKALIGUS tangkap isinya
+                    // untuk keperluan logging (raw stream dari AI Backend).
+                    $rawStream = '';
+                    curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($curl, $data) use (&$rawStream) {
+                        $rawStream .= $data;
                         echo $data;
                         if (ob_get_level() > 0) {
                             @ob_flush();
@@ -242,6 +245,19 @@ class AiResponseController extends Controller
                     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                     $error = curl_error($ch);
                     curl_close($ch);
+
+                    // Catat respons AI Backend ke log Laravel (channel default).
+                    // Ekstrak jawaban final dari event SSE 'done' bila ada, plus simpan
+                    // potongan raw untuk debugging (dibatasi agar log tidak membengkak).
+                    $finalAnswer = $this->extractFinalAnswerFromStream($rawStream);
+                    Log::info('AI Streaming Response', [
+                        'sessionId'    => $sessionId ?: '(new)',
+                        'http_code'    => $httpCode,
+                        'curl_error'   => $error ?: null,
+                        'answer'       => $finalAnswer !== null ? mb_substr($finalAnswer, 0, 2000) : null,
+                        'raw_length'   => strlen($rawStream),
+                        'raw_preview'  => mb_substr($rawStream, 0, 2000),
+                    ]);
 
                     if ($error) {
                         $this->sendSSE([
@@ -361,5 +377,51 @@ class AiResponseController extends Controller
             @ob_flush();
         }
         flush();
+    }
+
+    /**
+     * Ekstrak jawaban final (message.content) dari raw stream SSE AI Backend.
+     * Mencari event 'done' / baris data terakhir yang mengandung message.content.
+     *
+     * @param string $rawStream
+     * @return string|null
+     */
+    private function extractFinalAnswerFromStream($rawStream)
+    {
+        if (empty($rawStream)) {
+            return null;
+        }
+
+        $finalAnswer = null;
+        $lines = preg_split('/\r\n|\r|\n/', $rawStream);
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (strpos($line, 'data:') !== 0) {
+                continue;
+            }
+
+            $json = trim(substr($line, 5));
+            if ($json === '' || $json === '[DONE]') {
+                continue;
+            }
+
+            $obj = json_decode($json, true);
+            if (!is_array($obj)) {
+                continue;
+            }
+
+            // Struktur umum: {"response":{"message":{"content":"..."}}}
+            $content = $obj['response']['message']['content']
+                ?? $obj['message']['content']
+                ?? $obj['content']
+                ?? null;
+
+            if (is_string($content) && $content !== '') {
+                $finalAnswer = $content;
+            }
+        }
+
+        return $finalAnswer;
     }
 }
