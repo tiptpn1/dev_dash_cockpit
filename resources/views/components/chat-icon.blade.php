@@ -71,7 +71,7 @@
 }
 
 .chat-container {
-    display: none;
+    display: none; /* Hidden by default */
     position: fixed;
     bottom: 100px;
     right: 20px;
@@ -81,8 +81,11 @@
     border-radius: 15px;
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
     z-index: 1000;
-    display: flex;
     flex-direction: column;
+}
+
+.chat-container.show {
+    display: flex; /* Show when active */
 }
 
 .chat-header {
@@ -275,110 +278,124 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize ChatContentRenderer
     const contentRenderer = new ChatContentRenderer();
     
-    // Initialize Page Context Manager
-    const pageContext = new ChatPageContext();
-    
-    // Collect context on page load
-    setTimeout(() => {
-        pageContext.collectAll();
-        console.log('📋 Initial page context collected:', pageContext.getContextSummary());
-    }, 1000);
-    
-    // Listen to context updates
-    pageContext.onContextUpdate((context) => {
-        console.log('🔄 Page context updated:', pageContext.getContextSummary());
-    });
+    // Initialize Page Context Manager (with error handling)
+    let pageContext = null;
+    try {
+        if (typeof ChatPageContext !== 'undefined') {
+            pageContext = new ChatPageContext();
+            
+            // Collect context on page load
+            setTimeout(() => {
+                pageContext.collectAll();
+                console.log('📋 Initial page context collected:', pageContext.getContextSummary());
+            }, 1000);
+            
+            // Listen to context updates
+            pageContext.onContextUpdate((context) => {
+                console.log('🔄 Page context updated:', pageContext.getContextSummary());
+            });
+        } else {
+            console.warn('⚠️ ChatPageContext not loaded, context features disabled');
+        }
+    } catch (error) {
+        console.error('❌ Error initializing ChatPageContext:', error);
+        pageContext = null;
+    }
 
     // Initially hide the chat container
-    chatContainer.style.display = 'none';
+    chatContainer.classList.remove('show');
 
     // --- Drag and Drop for Chat Icon ---
     const chatIconContainer = document.querySelector('.chat-icon-container');
-    let isDragging = false;
-    let isMoved = false;
-    let shiftX, shiftY;
+    let dragStartX, dragStartY;
+    let hasDragged = false;
+    let dragThreshold = 5; // pixels movement to consider as drag
 
-    function startDrag(e) {
-        if (e.button !== 0 && e.type !== 'touchstart') return; // only left click
+    chatIconContainer.addEventListener('mousedown', function(e) {
+        if (e.button !== 0) return; // only left click
         
-        isDragging = true;
-        isMoved = false;
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+        hasDragged = false;
 
+        const startLeft = chatIconContainer.offsetLeft;
+        const startTop = chatIconContainer.offsetTop;
+        
+        // Get initial position
         const rect = chatIconContainer.getBoundingClientRect();
-        
-        let clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
-        let clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+        const shiftX = e.clientX - rect.left;
+        const shiftY = e.clientY - rect.top;
 
-        shiftX = clientX - rect.left;
-        shiftY = clientY - rect.top;
+        function onMouseMove(moveEvent) {
+            const deltaX = Math.abs(moveEvent.clientX - dragStartX);
+            const deltaY = Math.abs(moveEvent.clientY - dragStartY);
+            
+            // Check if moved beyond threshold
+            if (deltaX > dragThreshold || deltaY > dragThreshold) {
+                hasDragged = true;
+                
+                // Switch to absolute positioning on first drag
+                if (chatIconContainer.style.position !== 'absolute') {
+                    chatIconContainer.style.position = 'fixed';
+                    chatIconContainer.style.bottom = 'auto';
+                    chatIconContainer.style.right = 'auto';
+                }
+                
+                // Calculate new position
+                let newLeft = moveEvent.clientX - shiftX;
+                let newTop = moveEvent.clientY - shiftY;
 
-        // Switch to absolute positioning based on fixed viewport
-        chatIconContainer.style.bottom = 'auto';
-        chatIconContainer.style.right = 'auto';
+                // Constrain within window bounds
+                const maxLeft = window.innerWidth - chatIconContainer.offsetWidth;
+                const maxTop = window.innerHeight - chatIconContainer.offsetHeight;
 
-        function moveAt(cX, cY) {
-            // Constrain within window bounds
-            let newLeft = cX - shiftX;
-            let newTop = cY - shiftY;
+                newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+                newTop = Math.max(0, Math.min(newTop, maxTop));
 
-            const maxLeft = window.innerWidth - chatIconContainer.offsetWidth;
-            const maxTop = window.innerHeight - chatIconContainer.offsetHeight;
-
-            newLeft = Math.max(0, Math.min(newLeft, maxLeft));
-            newTop = Math.max(0, Math.min(newTop, maxTop));
-
-            chatIconContainer.style.left = newLeft + 'px';
-            chatIconContainer.style.top = newTop + 'px';
+                chatIconContainer.style.left = newLeft + 'px';
+                chatIconContainer.style.top = newTop + 'px';
+            }
         }
 
-        function onMouseMove(event) {
-            if (!isDragging) return;
-            isMoved = true;
+        function onMouseUp() {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
             
-            if (event.type === 'touchmove') {
-                event.preventDefault(); // Prevent scrolling while dragging
+            // If didn't drag, trigger click (open chat)
+            if (!hasDragged) {
+                chatContainer.classList.add('show');
+                console.log('📖 Chat opened');
+            } else {
+                console.log('🔄 Icon dragged to new position');
             }
             
-            let currentClientX = event.type === 'touchmove' ? event.touches[0].clientX : event.clientX;
-            let currentClientY = event.type === 'touchmove' ? event.touches[0].clientY : event.clientY;
-            
-            moveAt(currentClientX, currentClientY);
+            // Reset for next interaction
+            setTimeout(() => {
+                hasDragged = false;
+            }, 100);
         }
 
         document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('touchmove', onMouseMove, { passive: false });
-
-        function onMouseUp() {
-            isDragging = false;
-            document.removeEventListener('mousemove', onMouseMove);
-            document.removeEventListener('touchmove', onMouseMove);
-            document.removeEventListener('mouseup', onMouseUp);
-            document.removeEventListener('touchend', onMouseUp);
-        }
-
         document.addEventListener('mouseup', onMouseUp);
-        document.addEventListener('touchend', onMouseUp);
-    }
+        
+        e.preventDefault();
+    });
 
-    chatIconContainer.addEventListener('mousedown', startDrag);
-    chatIconContainer.addEventListener('touchstart', startDrag, { passive: false });
-
+    // Prevent default drag behavior
     chatIconContainer.ondragstart = function() {
         return false;
     };
 
-    // Toggle chat container when clicking the icon
-    chatIcon.addEventListener('click', function(e) {
-        if (isMoved) {
-            e.preventDefault();
-            return;
-        }
-        chatContainer.style.display = 'flex';
-    });
-
     // Close chat when clicking the close button
     closeChat.addEventListener('click', function() {
-        chatContainer.style.display = 'none';
+        chatContainer.classList.remove('show');
+        console.log('❌ Chat closed');
+    });
+    
+    // Expand/collapse functionality
+    expandChat.addEventListener('click', function() {
+        chatContainer.classList.toggle('fullscreen');
+        console.log('🔄 Chat toggled fullscreen');
     });
 
     // Check if browser supports speech recognition
@@ -444,10 +461,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // Collect latest page context
-            pageContext.collectAll();
-            const contextSummary = pageContext.getContextSummary();
-            const fullContext = pageContext.getFullContext();
+            // Collect latest page context (if available)
+            let contextSummary = null;
+            let fullContext = null;
+            
+            if (pageContext) {
+                try {
+                    pageContext.collectAll();
+                    contextSummary = pageContext.getContextSummary();
+                    fullContext = pageContext.getFullContext();
+                } catch (error) {
+                    console.warn('⚠️ Error collecting context:', error);
+                }
+            }
 
             // Add user message to chat
             const userMessageDiv = document.createElement('div');
@@ -475,6 +501,21 @@ document.addEventListener('DOMContentLoaded', function() {
             let lastRenderPromise = Promise.resolve(); // lacak render async terakhir agar tidak race dengan gambar/chart
 
             try {
+                const requestBody = { 
+                    message: message,
+                    stream: true,
+                    sessionId: currentSessionId,
+                    agent: { name: 'agrinav_agent' }
+                };
+                
+                // Add page context if available
+                if (contextSummary && fullContext) {
+                    requestBody.pageContext = {
+                        summary: contextSummary,
+                        full: fullContext
+                    };
+                }
+                
                 const response = await fetch('/ai/response', {
                     method: 'POST', 
                     headers: {
@@ -482,18 +523,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         'X-CSRF-TOKEN': csrfToken,
                         'Accept': 'text/event-stream',
                     },
-                    body: JSON.stringify({ 
-                        message: message,
-                        stream: true,
-                        sessionId: currentSessionId, // kunci follow-up (kosong = sesi baru)
-                        agent: { name: 'agrinav_agent' }, // Auth & userId ditangani backend
-                        
-                        // Page context untuk AI reference
-                        pageContext: {
-                            summary: contextSummary,  // Format ringkas
-                            full: fullContext         // Data lengkap
-                        }
-                    })
+                    body: JSON.stringify(requestBody)
                 });
 
                 if (!response.ok) {

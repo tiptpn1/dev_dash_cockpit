@@ -1,0 +1,32 @@
+{
+  "name": "agrinav-puppeteer-automation",
+  "version": "1.0.0",
+  "description": "Puppeteer automation scripts for AGRINAV dashboard screenshots",
+  "main": "basic-capture.js",
+  "scripts": {
+    "test": "node test-auth.js",
+    "capture": "node basic-capture.js",
+    "capture-multi": "node multi-page-capture.js",
+    "capture-advanced": "node advanced-capture.js",
+    "capture-now": "node scheduled-capture.js --now",
+    "schedule": "node scheduled-capture.js",
+    "help": "node advanced-capture.js --help"
+  },
+  "keywords": [
+    "puppeteer",
+    "automation",
+    "screenshot",
+    "agrinav"
+  ],
+  "author": "PTPN 1",
+  "license": "MIT",
+  "dependencies": {
+    "puppeteer": "^21.0.0",
+    "node-cron": "^3.0.0",
+    "dotenv": "^16.0.0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
