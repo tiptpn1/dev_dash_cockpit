@@ -66,5 +66,6 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'sso.verify' => \App\Http\Middleware\SSO\VerifySSOToken::class,
         'check.token.or.session' => \App\Http\Middleware\CheckTokenOrSession::class,
+        'restrict.ip' => \App\Http\Middleware\RestrictIpAccess::class,
     ];
 }

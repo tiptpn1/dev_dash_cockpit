@@ -204,8 +204,12 @@ Route::get('/evaluasi-bypass', function (\Illuminate\Http\Request $request) {
 // Akses via session: login biasa kemudian kunjungi /evaluasi-aplikasi
 Route::middleware(['check.token.or.session'])->group(function () {
     // HR Demographic Summary (JSON) - akses mesin (n8n) via token ATAU session login.
+    // Ditambah proteksi IP whitelist (restrict.ip): selain token valid, IP pemanggil
+    // juga harus terdaftar di API_ALLOWED_IPS (.env).
     // Contoh: /api/hr_demographic_summary?token=agrinav-cockpit-token-LzW3nYvB&tahun=2026&regional=ALL&status_pegawai=ALL
-    Route::get('/api/hr_demographic_summary', [PageController::class, 'getHrDemographicSummary'])->name('api.hr_demographic_summary');
+    Route::get('/api/hr_demographic_summary', [PageController::class, 'getHrDemographicSummary'])
+        ->middleware('restrict.ip')
+        ->name('api.hr_demographic_summary');
 
     Route::get('/evaluasi-aplikasi', [PageController::class, 'evaluasi_aplikasi'])->name('evaluasi_aplikasi');
     Route::get('/evaluasi-aplikasi/monika', [PageController::class, 'evaluasi_monika'])->name('evaluasi_monika');
