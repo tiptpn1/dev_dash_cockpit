@@ -375,6 +375,41 @@ class AiResponseController extends Controller
     }
 
     /**
+     * ENDPOINT UJI SEMENTARA — HAPUS setelah diagnosis selesai.
+     *
+     * Mengirim 10 event SSE, satu per detik. Tidak menyentuh AI backend sama sekali.
+     * Tujuan: mengisolasi sumber 504.
+     *   - Jika `curl -N https://.../sse-test` memunculkan angka SATU PER SATU tiap detik
+     *     -> jalur nginx->PHP SSE sudah OK; berarti 504 di /ai/response berasal dari
+     *        AI backend (be.ptpn1.co.id) yang lambat/hang.
+     *   - Jika angka muncul MENUMPUK di akhir / malah 504 -> masih ada buffering/timeout
+     *        di nginx (proxy_buffering / proxy_read_timeout).
+     */
+    public function sseTest()
+    {
+        return response()->stream(function () {
+            @ini_set('zlib.output_compression', '0');
+            while (ob_get_level() > 0) { @ob_end_flush(); }
+            ob_implicit_flush(true);
+
+            for ($i = 1; $i <= 10; $i++) {
+                echo "data: " . json_encode(['n' => $i, 'time' => date('H:i:s')]) . "\n\n";
+                if (ob_get_level() > 0) { @ob_flush(); }
+                flush();
+                sleep(1);
+            }
+            echo "data: [DONE]\n\n";
+            if (ob_get_level() > 0) { @ob_flush(); }
+            flush();
+        }, 200, [
+            'Content-Type'      => 'text/event-stream',
+            'Cache-Control'     => 'no-cache',
+            'Connection'        => 'keep-alive',
+            'X-Accel-Buffering' => 'no',
+        ]);
+    }
+
+    /**
      * Helper untuk mengirim Server-Sent Event.
      */
     private function sendSSE($data)

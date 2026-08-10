@@ -46,6 +46,9 @@ Route::get('/session-health', [PuppeteerAuthController::class, 'health'])->name(
 Route::get('/portalaplikasi', [PageController::class, 'portalaplikasi'])->name('portalaplikasi');
 Route::get('/portallm', [PageController::class, 'portallm'])->name('portallm');
 
+// [SEMENTARA] Endpoint uji SSE untuk diagnosis 504 — HAPUS setelah selesai.
+Route::get('/sse-test', [AiResponseController::class, 'sseTest']);
+
 Route::middleware('auth:custom')->group(function () {
     Route::get('/', [PageController::class, 'overview'])->name('overview');
 
