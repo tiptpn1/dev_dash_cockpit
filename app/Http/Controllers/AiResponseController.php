@@ -52,9 +52,11 @@ class AiResponseController extends Controller
             // Include sample data dari tabel pertama (jika ada)
             if (!empty($pageContext['full']['data']['tables'][0]['visibleRows'])) {
                 $firstTable = $pageContext['full']['data']['tables'][0];
-                $sampleRows = array_slice($firstTable['visibleRows'], 0, 5);
-                $contextParts[] = "\n📄 Sample data (5 baris pertama):";
-                $contextParts[] = json_encode($sampleRows, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+                $sampleRows = array_slice($firstTable['visibleRows'], 0, 3);
+                $contextParts[] = "\n📄 Sample data (3 baris pertama):";
+                // Tanpa JSON_PRETTY_PRINT: hemat token (whitespace) yang dikirim ke LLM,
+                // sehingga time-to-first-token lebih cepat & meminimalkan data yang keluar.
+                $contextParts[] = json_encode($sampleRows, JSON_UNESCAPED_UNICODE);
             }
         }
 
@@ -182,6 +184,11 @@ class AiResponseController extends Controller
                     header('Cache-Control: no-cache');
                     header('Connection: keep-alive');
                     header('X-Accel-Buffering: no');
+
+                    // Pastikan streaming benar-benar real-time: matikan kompresi output
+                    // yang dapat menahan (buffer) potongan SSE hingga menumpuk lalu dikirim
+                    // sekaligus. Membuat token pertama terasa lebih cepat muncul.
+                    @ini_set('zlib.output_compression', '0');
 
                     ob_implicit_flush(true);
 

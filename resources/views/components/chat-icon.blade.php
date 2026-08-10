@@ -567,6 +567,21 @@ document.addEventListener('DOMContentLoaded', function() {
             let isThinking = true;
             let lastRenderPromise = Promise.resolve(); // lacak render async terakhir agar tidak race dengan gambar/chart
 
+            // OPTIMASI: throttle update teks saat streaming. Token dikumpulkan ke
+            // `fullResponse`, lalu ditampilkan sebagai teks polos maksimal sekali per
+            // frame (requestAnimationFrame). Menghindari re-parse markdown O(n^2) tiap token.
+            let streamRenderScheduled = false;
+            const scheduleStreamingTextUpdate = () => {
+                if (streamRenderScheduled) return;
+                streamRenderScheduled = true;
+                requestAnimationFrame(() => {
+                    streamRenderScheduled = false;
+                    // textContent otomatis meng-escape → aman dari HTML/script parsial dari token AI
+                    messageContent.textContent = fullResponse;
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                });
+            };
+
             try {
                 const requestBody = { 
                     message: message,
@@ -758,15 +773,12 @@ document.addEventListener('DOMContentLoaded', function() {
                                         // Append token to response
                                         fullResponse += data.token;
                                         
-                                        // Render with ChatContentRenderer (async)
-                                        lastRenderPromise = contentRenderer.renderContent(fullResponse).then(rendered => {
-                                            // Clean up unwanted markers
-                                            const cleaned = rendered.replace(/【\d+:\d+†source】/g, '');
-                                            messageContent.innerHTML = cleaned;
-                                            
-                                            // Auto-scroll to bottom
-                                            chatMessages.scrollTop = chatMessages.scrollHeight;
-                                        });
+                                        // OPTIMASI PERFORMA + KEAMANAN:
+                                        // Saat streaming tampilkan sebagai TEKS POLOS (di-throttle per frame).
+                                        // Parsing markdown/chart yang mahal TIDAK lagi dijalankan tiap token
+                                        // (dulu O(n^2) karena seluruh teks di-parse ulang tiap token).
+                                        // Render penuh dilakukan sekali di event 'done'.
+                                        scheduleStreamingTextUpdate();
                                         
                                         break;
                                         
@@ -839,7 +851,21 @@ document.addEventListener('DOMContentLoaded', function() {
                                                 }).catch(err => {
                                                     console.error('[done] renderContent gagal, tetap pakai teks polos:', err);
                                                 });
-                                            } else if (!fullResponse) {
+                                            } else if (fullResponse) {
+                                                // Event 'done' tidak membawa konten, tapi teks sudah terkumpul
+                                                // dari stream token. Karena saat streaming hanya teks polos yang
+                                                // ditampilkan (demi performa & keamanan), lakukan render
+                                                // markdown/chart PENUH sekali di sini agar formatting muncul.
+                                                anyContentRendered = true;
+                                                lastRenderPromise = contentRenderer.renderContent(fullResponse).then(rendered => {
+                                                    const cleaned = rendered.replace(/【\d+:\d+†source】/g, '');
+                                                    messageContent.innerHTML = cleaned;
+                                                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                                                }).catch(err => {
+                                                    console.error('[done] renderContent gagal, tetap pakai teks polos:', err);
+                                                    messageContent.textContent = fullResponse;
+                                                });
+                                            } else {
                                                 // Tidak ada konten sama sekali & belum ada teks streamed → jangan
                                                 // biarkan stuck "Thinking...". Tampilkan pesan netral.
                                                 console.warn('[done] No content found in done event. data=', data);
