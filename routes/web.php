@@ -99,6 +99,7 @@ Route::middleware('auth:custom')->group(function () {
     Route::get('/hr_demographic', [PageController::class, 'hr_demographic'])->name('hr_demographic');
     Route::get('/api/hr_demographic_data', [PageController::class, 'getHrDemographicData'])->name('api.hr_demographic_data');
     Route::get('/api/hr_demographic_detail', [PageController::class, 'getHrDemographicDetail'])->name('api.hr_demographic_detail');
+    Route::get('/api/hr_demographic_summary', [PageController::class, 'getHrDemographicSummary'])->name('api.hr_demographic_summary');
 
     Route::get('/agraria_tax', [PageController::class, 'agraria_tax'])->name('agraria_tax');
     Route::get('/agraria', [PageController::class, 'agraria'])->name('agraria');

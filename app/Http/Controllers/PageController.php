@@ -903,6 +903,97 @@ class PageController extends Controller
         ]);
     }
 
+    /**
+     * Endpoint ringkas & self-describing untuk HR Demographic.
+     *
+     * Mengembalikan data setiap card & chart BESERTA judulnya dalam bentuk JSON
+     * yang mudah dikonsumsi (mis. AI context / integrasi eksternal).
+     *
+     * Bersifat NON-INVASIVE: memakai kembali hasil kalkulasi getHrDemographicData()
+     * tanpa mengubah endpoint maupun query yang sudah ada, sehingga dashboard
+     * eksisting tidak terpengaruh sama sekali.
+     */
+    public function getHrDemographicSummary(Request $request)
+    {
+        // Pakai ulang endpoint data eksisting agar tidak menduplikasi logika query.
+        $baseResponse = $this->getHrDemographicData($request);
+        $payload = json_decode($baseResponse->getContent(), true);
+
+        // Mode only_filters (cascade dropdown) tidak memuat 'summary' -> teruskan apa adanya.
+        if (!is_array($payload) || !isset($payload['summary'])) {
+            return response()->json($payload);
+        }
+
+        $summary = $payload['summary'] ?? [];
+
+        // 5 Summary Card yang tampil di dashboard (judul sesuai label di halaman).
+        $cards = [
+            ['key' => 'total',       'title' => 'Total Karyawan',       'value' => (int)($summary['total'] ?? 0)],
+            ['key' => 'head_office', 'title' => 'Head Office',          'value' => (int)($summary['head_office'] ?? 0)],
+            ['key' => 'regional',    'title' => 'Regional',             'value' => (int)($summary['regional'] ?? 0)],
+            ['key' => 'tetap',       'title' => 'Karyawan Tetap',       'value' => (int)($summary['tetap'] ?? 0)],
+            ['key' => 'tidak_tetap', 'title' => 'Karyawan Tidak Tetap', 'value' => (int)($summary['tidak_tetap'] ?? 0)],
+        ];
+
+        // Definisi chart sesuai urutan tampil pada halaman (key, judul, tipe).
+        $chartDefs = [
+            ['key' => 'chart1',  'title' => 'Komposisi Status Karyawan (Tetap vs Tidak Tetap)',                'type' => 'stacked_bar'],
+            ['key' => 'chart2',  'title' => 'Komposisi Jabatan Karyawan (Karpim vs Karpel)',                   'type' => 'stacked_bar'],
+            ['key' => 'chart8',  'title' => 'Komposisi Level Organisasi per Regional (BOD Level)',             'type' => 'stacked_bar'],
+            ['key' => 'chart9',  'title' => 'Komposisi Person Grade per Regional',                             'type' => 'stacked_bar'],
+            ['key' => 'chart5',  'title' => 'Komposisi Jenis Kelamin per Regional (Laki-laki vs Perempuan)',   'type' => 'stacked_bar'],
+            ['key' => 'chart15', 'title' => 'Komposisi Status Pernikahan per Regional (Menikah vs Belum Menikah)', 'type' => 'stacked_bar'],
+            ['key' => 'chart4',  'title' => 'Komposisi Tingkat Pendidikan per Regional (SD s/d S3)',           'type' => 'stacked_bar'],
+            ['key' => 'chart6',  'title' => 'Komposisi Sebaran Agama per Regional',                            'type' => 'stacked_bar'],
+            ['key' => 'chart7',  'title' => 'Suku & Keberagaman Kultur',                                       'type' => 'treemap'],
+            ['key' => 'chart13', 'title' => 'Distribusi Umur Karyawan',                                        'type' => 'stacked_bar'],
+            ['key' => 'chart14', 'title' => 'Masa Kerja Karyawan',                                             'type' => 'stacked_bar'],
+            ['key' => 'chart16', 'title' => 'Sebaran Karyawan Berdasarkan Job Group',                          'type' => 'bar'],
+            ['key' => 'chart17', 'title' => 'Estimasi Pensiun Pegawai',                                        'type' => 'stacked_bar'],
+        ];
+
+        $charts = [];
+        foreach ($chartDefs as $def) {
+            $data = $payload[$def['key']] ?? null;
+            if ($data === null) {
+                continue;
+            }
+
+            $chart = [
+                'key'   => $def['key'],
+                'title' => $def['title'],
+                'type'  => $def['type'],
+            ];
+
+            if ($def['type'] === 'treemap') {
+                // Treemap hanya punya series [{x, y}, ...]
+                $chart['series'] = $data['series'] ?? [];
+            } else {
+                // stacked_bar & bar: categories + series
+                $chart['categories'] = $data['categories'] ?? [];
+                $chart['series']     = $data['series'] ?? [];
+            }
+
+            $charts[] = $chart;
+        }
+
+        return response()->json([
+            'meta' => [
+                'generated_at' => now()->toIso8601String(),
+                'last_update'  => $summary['last_update'] ?? null,
+                'filters' => [
+                    'tahun'              => $request->input('tahun', 'ALL'),
+                    'regional'           => $request->input('regional', 'ALL'),
+                    'personnel_area'     => $request->input('personnel_area', 'ALL'),
+                    'personnel_sub_area' => $request->input('personnel_sub_area', 'ALL'),
+                    'status_pegawai'     => $request->input('status_pegawai', 'ALL'),
+                ],
+            ],
+            'cards'  => $cards,
+            'charts' => $charts,
+        ]);
+    }
+
     public function getHrDemographicDetail(Request $request)
     {
         $db = DB::connection('hris');
