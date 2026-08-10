@@ -99,7 +99,6 @@ Route::middleware('auth:custom')->group(function () {
     Route::get('/hr_demographic', [PageController::class, 'hr_demographic'])->name('hr_demographic');
     Route::get('/api/hr_demographic_data', [PageController::class, 'getHrDemographicData'])->name('api.hr_demographic_data');
     Route::get('/api/hr_demographic_detail', [PageController::class, 'getHrDemographicDetail'])->name('api.hr_demographic_detail');
-    Route::get('/api/hr_demographic_summary', [PageController::class, 'getHrDemographicSummary'])->name('api.hr_demographic_summary');
 
     Route::get('/agraria_tax', [PageController::class, 'agraria_tax'])->name('agraria_tax');
     Route::get('/agraria', [PageController::class, 'agraria'])->name('agraria');
@@ -204,6 +203,10 @@ Route::get('/evaluasi-bypass', function (\Illuminate\Http\Request $request) {
 // Akses via token  : /evaluasi-aplikasi?token=ptpn1-hris-eval-2024-xK9mPqRs
 // Akses via session: login biasa kemudian kunjungi /evaluasi-aplikasi
 Route::middleware(['check.token.or.session'])->group(function () {
+    // HR Demographic Summary (JSON) - akses mesin (n8n) via token ATAU session login.
+    // Contoh: /api/hr_demographic_summary?token=agrinav-cockpit-token-LzW3nYvB&tahun=2026&regional=ALL&status_pegawai=ALL
+    Route::get('/api/hr_demographic_summary', [PageController::class, 'getHrDemographicSummary'])->name('api.hr_demographic_summary');
+
     Route::get('/evaluasi-aplikasi', [PageController::class, 'evaluasi_aplikasi'])->name('evaluasi_aplikasi');
     Route::get('/evaluasi-aplikasi/monika', [PageController::class, 'evaluasi_monika'])->name('evaluasi_monika');
     Route::get('/evaluasi-aplikasi/maia', [PageController::class, 'evaluasi_maia'])->name('evaluasi_maia');
