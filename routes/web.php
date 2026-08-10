@@ -36,10 +36,12 @@ Route::get('/svg-captcha', [LoginController::class, 'svgCaptcha'])->name('svg.ca
 Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
 
 // Puppeteer Authentication Routes
-Route::get('/puppet-auth', [PuppeteerAuthController::class, 'authenticate'])->name('puppet.auth');
-Route::get('/puppet-verify', [PuppeteerAuthController::class, 'verify'])->name('puppet.verify');
-Route::post('/puppet-logout', [PuppeteerAuthController::class, 'logout'])->name('puppet.logout');
-Route::get('/puppet-health', [PuppeteerAuthController::class, 'health'])->name('puppet.health');
+// Catatan: path sengaja dibuat netral (tanpa kata "auth"/"puppet"/"token") agar
+// tidak diblokir oleh ad blocker / privacy extension (ERR_BLOCKED_BY_CLIENT).
+Route::get('/session-gateway', [PuppeteerAuthController::class, 'authenticate'])->name('puppet.auth');
+Route::get('/session-status', [PuppeteerAuthController::class, 'verify'])->name('puppet.verify');
+Route::post('/session-end', [PuppeteerAuthController::class, 'logout'])->name('puppet.logout');
+Route::get('/session-health', [PuppeteerAuthController::class, 'health'])->name('puppet.health');
 
 Route::get('/portalaplikasi', [PageController::class, 'portalaplikasi'])->name('portalaplikasi');
 Route::get('/portallm', [PageController::class, 'portallm'])->name('portallm');

@@ -19,15 +19,18 @@ class PuppeteerAuthController extends Controller
     /**
      * Authenticate Puppeteer with static token
      * 
-     * GET /puppet-auth?token=TOKEN&redirect=/overview
-     * GET /puppet-auth?token=TOKEN&username=superadmin
-     * 
+     * GET /session-gateway?key=KEY&redirect=/overview
+     * GET /session-gateway?key=KEY&username=superadmin
+     *
+     * Param 'key' adalah nama baru; 'token' tetap didukung untuk kompatibilitas mundur.
+     *
      * @param Request $request
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
     public function authenticate(Request $request)
     {
-        $token = $request->query('token');
+        // Terima 'key' (nama baru) atau 'token' (lama) untuk kompatibilitas mundur.
+        $token = $request->query('key', $request->query('token'));
         $redirect = $request->query('redirect', '/');
         $username = $request->query('username', 'superadmin');
         
@@ -40,9 +43,9 @@ class PuppeteerAuthController extends Controller
             
             return response()->json([
                 'status' => 'error',
-                'message' => 'Token is required',
+                'message' => 'Key is required',
                 'your_ip' => $request->ip(),
-                'example' => url('/puppet-auth') . '?token=YOUR_TOKEN&redirect=/overview',
+                'example' => url('/session-gateway') . '?key=YOUR_KEY&redirect=/overview',
             ], 400);
         }
         
@@ -150,7 +153,7 @@ class PuppeteerAuthController extends Controller
     /**
      * Verify Puppeteer session
      * 
-     * GET /puppet-verify
+     * GET /session-status
      * 
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
@@ -184,7 +187,7 @@ class PuppeteerAuthController extends Controller
     /**
      * Logout Puppeteer session
      * 
-     * POST /puppet-logout
+     * POST /session-end
      * 
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
@@ -211,7 +214,7 @@ class PuppeteerAuthController extends Controller
     /**
      * Health check for Puppeteer automation
      * 
-     * GET /puppet-health
+     * GET /session-health
      * 
      * @return \Illuminate\Http\JsonResponse
      */
@@ -235,10 +238,10 @@ class PuppeteerAuthController extends Controller
                 'hint' => $isIpAllowed ? 'Your IP is allowed' : 'Your IP is NOT in whitelist'
             ],
             'endpoints' => [
-                'auth' => url('/puppet-auth?token=TOKEN&redirect=/overview'),
-                'verify' => url('/puppet-verify'),
-                'logout' => url('/puppet-logout'),
-                'health' => url('/puppet-health'),
+                'auth' => url('/session-gateway?key=KEY&redirect=/overview'),
+                'verify' => url('/session-status'),
+                'logout' => url('/session-end'),
+                'health' => url('/session-health'),
             ],
         ]);
     }
