@@ -95,6 +95,8 @@ Route::middleware('auth:custom')->group(function () {
     Route::get('/fin_console', [PageController::class, 'fin_console'])->name('fin_console');
     Route::get('/fin_parent', [PageController::class, 'fin_parent'])->name('fin_parent');
     Route::get('/fin_sub', [PageController::class, 'fin_sub'])->name('fin_sub');
+    Route::get('/fin_ratio', [PageController::class, 'fin_ratio'])->name('fin_ratio');
+    Route::get('/fin_executive', [PageController::class, 'fin_executive'])->name('fin_executive');
 
     Route::get('/hr_demographics', [PageController::class, 'hr_demographics'])->name('hr_demographics');
     Route::get('/hr_dev', [PageController::class, 'hr_dev'])->name('hr_dev');

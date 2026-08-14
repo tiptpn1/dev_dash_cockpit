@@ -74,7 +74,7 @@ class PageController extends Controller
     }
     public function fin_parent()
     {
-        $linkiframe = 'https://lookerstudio.google.com/embed/reporting/0cbe6f0b-4ccd-4a52-9fef-ca04b1646d76/page/oPLPE';
+        $linkiframe = 'https://datastudio.google.com/embed/reporting/a32cc929-f98c-401f-9d4e-23d32b3730d3/page/p_m7c61vwf6d';
         return view('pages/overview_page', compact('linkiframe'));
     }
     public function fin_sub()
@@ -83,6 +83,16 @@ class PageController extends Controller
         return view('pages/overview_page', compact('linkiframe'));
     }
 
+    public function fin_ratio()
+    {
+        $linkiframe = 'https://datastudio.google.com/embed/reporting/6e655856-3758-47f1-8cf3-f3bfe46cffea/page/p_t4c2i9og6d';
+        return view('pages/overview_page', compact('linkiframe'));
+    }
+    public function fin_executive()
+    {
+        $linkiframe = 'https://datastudio.google.com/embed/reporting/6e655856-3758-47f1-8cf3-f3bfe46cffea/page/1PM6F';
+        return view('pages/overview_page', compact('linkiframe'));
+    }
     public function hr_demographics()
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/e594bb0d-abf4-45a9-9b6c-9158a7758ca4/page/wpSPE';
@@ -110,42 +120,42 @@ class PageController extends Controller
 
         // Ambil list kode regional_grup yang bertindak sebagai Head Office dari tabel regional_grup
         $hoKodes = $db->table('regional_grup')
-            ->where(function($s) {
+            ->where(function ($s) {
                 $s->where('kode', 'LIKE', '%HO%')
-                  ->orWhere('nama', 'LIKE', '%HO%')
-                  ->orWhere('nama', 'LIKE', '%Head Office%')
-                  ->orWhere('keterangan', 'LIKE', '%HO%')
-                  ->orWhere('keterangan', 'LIKE', '%Head Office%');
+                    ->orWhere('nama', 'LIKE', '%HO%')
+                    ->orWhere('nama', 'LIKE', '%Head Office%')
+                    ->orWhere('keterangan', 'LIKE', '%HO%')
+                    ->orWhere('keterangan', 'LIKE', '%Head Office%');
             })
             ->pluck('kode')
             ->toArray();
 
         $query = $db->table('pegawai')
-            ->whereIn('regional_grup_kode', function($sub) {
+            ->whereIn('regional_grup_kode', function ($sub) {
                 $sub->select('kode')->from('regional_grup');
             })
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->whereNull('penugasan_mutasi_ke')
-                  ->orWhere('penugasan_mutasi_ke', '');
+                    ->orWhere('penugasan_mutasi_ke', '');
             });
 
         if ($request->input('only_filters') == 1) {
             $baseFilterQuery = $db->table('pegawai')
-                ->whereIn('regional_grup_kode', function($sub) {
+                ->whereIn('regional_grup_kode', function ($sub) {
                     $sub->select('kode')->from('regional_grup');
                 })
-                ->where(function($q) {
+                ->where(function ($q) {
                     $q->whereNull('penugasan_mutasi_ke')
-                      ->orWhere('penugasan_mutasi_ke', '');
+                        ->orWhere('penugasan_mutasi_ke', '');
                 })
                 ->whereRaw("LOWER(status_pegawai) IN ('aktif', 'mbt')");
 
             $pAreaQuery = clone $baseFilterQuery;
             if ($request->filled('regional') && $request->regional !== 'ALL') {
                 $reg = $request->regional;
-                $pAreaQuery->where(function($q) use ($reg) {
+                $pAreaQuery->where(function ($q) use ($reg) {
                     $q->where('regional_grup_kode', $reg)
-                      ->orWhere('regional_kode', $reg);
+                        ->orWhere('regional_kode', $reg);
                 });
             }
             $personnelAreaList = $pAreaQuery->whereNotNull('regional')->where('regional', '!=', '-')->where('regional', '!=', '')->distinct()->pluck('regional')->sort()->values();
@@ -173,9 +183,9 @@ class PageController extends Controller
 
         if ($request->filled('regional') && $request->regional !== 'ALL') {
             $reg = $request->regional;
-            $query->where(function($q) use ($reg) {
+            $query->where(function ($q) use ($reg) {
                 $q->where('regional_grup_kode', $reg)
-                  ->orWhere('regional_kode', $reg);
+                    ->orWhere('regional_kode', $reg);
             });
         }
         if ($request->filled('personnel_area') && $request->personnel_area !== 'ALL') {
@@ -183,25 +193,25 @@ class PageController extends Controller
         }
         if ($request->filled('personnel_sub_area') && $request->personnel_sub_area !== 'ALL') {
             $psa = $request->personnel_sub_area;
-            $query->where(function($q) use ($psa) {
+            $query->where(function ($q) use ($psa) {
                 $q->where('area', $psa)
-                  ->orWhere('area_hris', $psa);
+                    ->orWhere('area_hris', $psa);
             });
         }
         if ($request->filled('tahun') && $request->tahun !== 'ALL') {
-            $tahun = (int)$request->tahun;
-            $query->where(function($q) use ($tahun) {
+            $tahun = (int) $request->tahun;
+            $query->where(function ($q) use ($tahun) {
                 $q->whereYear('tanggal_masuk', '<=', $tahun)
-                  ->orWhereYear('created_date', '<=', $tahun);
+                    ->orWhereYear('created_date', '<=', $tahun);
             });
         }
 
         // Helper callback for Head Office matching strictly by regional_grup_kode
-        $isHO = function($q) {
+        $isHO = function ($q) {
             $q->where('regional_grup_kode', 'HO');
         };
 
-        $isNotHO = function($q) {
+        $isNotHO = function ($q) {
             $q->where('regional_grup_kode', '!=', 'HO');
         };
 
@@ -213,10 +223,10 @@ class PageController extends Controller
             ->where('kelompok_pegawai', 'NOT LIKE', '%Tidak%')
             ->count();
         $karyawanTidakTetap = $totalKaryawan - $karyawanTetap;
-        $pimpinan = (clone $query)->where(function($q){
+        $pimpinan = (clone $query)->where(function ($q) {
             $q->where('kelompok_pegawai', 'LIKE', '%Karpim%')
-              ->orWhere('kelompok_pegawai', 'LIKE', '%SEVP%')
-              ->orWhere('kelompok_pegawai', 'LIKE', '%Direksi%');
+                ->orWhere('kelompok_pegawai', 'LIKE', '%SEVP%')
+                ->orWhere('kelompok_pegawai', 'LIKE', '%Direksi%');
         })->count();
         $persenPimpinan = $totalKaryawan > 0 ? round(($pimpinan / $totalKaryawan) * 100, 1) : 0;
 
@@ -252,10 +262,10 @@ class PageController extends Controller
             $totalCount = (clone $qUnit)->count();
             $tidakTetapCount = $totalCount - $tetapCount;
 
-            $karpimCount = (clone $qUnit)->where(function($q){
+            $karpimCount = (clone $qUnit)->where(function ($q) {
                 $q->where('kelompok_pegawai', 'LIKE', '%Karpim%')
-                  ->orWhere('kelompok_pegawai', 'LIKE', '%SEVP%')
-                  ->orWhere('kelompok_pegawai', 'LIKE', '%Direksi%');
+                    ->orWhere('kelompok_pegawai', 'LIKE', '%SEVP%')
+                    ->orWhere('kelompok_pegawai', 'LIKE', '%Direksi%');
             })->count();
             $karpelCount = $totalCount - $karpimCount;
 
@@ -290,13 +300,13 @@ class PageController extends Controller
         // 3. Dashboard 3: Status Pegawai (Donut Chart)
         $statusRaw = (clone $query)->select('kelompok_pegawai', DB::raw('count(*) as total'))
             ->groupBy('kelompok_pegawai')->orderBy('total', 'desc')->get();
-        
+
         $statusLabels = [];
         $statusSeries = [];
         foreach ($statusRaw as $st) {
             $lbl = $st->kelompok_pegawai ?: 'Lainnya';
             $statusLabels[] = $lbl;
-            $statusSeries[] = (int)$st->total;
+            $statusSeries[] = (int) $st->total;
         }
         $chart3 = ['labels' => $statusLabels, 'series' => $statusSeries];
 
@@ -312,8 +322,10 @@ class PageController extends Controller
             $uMap = array_fill_keys($eduLevels, 0);
             foreach ($unitEduRaw as $row) {
                 $val = trim($row->pendidikan_terakhir);
-                if ($val === 'SLTP') $val = 'SMP';
-                if ($val === 'SLTA') $val = 'SMA';
+                if ($val === 'SLTP')
+                    $val = 'SMP';
+                if ($val === 'SLTA')
+                    $val = 'SMA';
                 if (isset($uMap[$val])) {
                     $uMap[$val] += $row->total;
                 }
@@ -349,7 +361,7 @@ class PageController extends Controller
 
         foreach ($unitsDef as $u) {
             $qUnit = (clone $query)->where('regional_grup_kode', $u['code']);
-            $lCount = (clone $qUnit)->where(function($q) {
+            $lCount = (clone $qUnit)->where(function ($q) {
                 $q->where('jenis_kelamin', 'L')->orWhere('jenis_kelamin', 'Laki-laki');
             })->count();
             $totCount = (clone $qUnit)->count();
@@ -381,13 +393,20 @@ class PageController extends Controller
             $uAgMap = array_fill_keys($agamaList, 0);
             foreach ($unitAgamaRaw as $ag) {
                 $lbl = trim($ag->agama);
-                if (strcasecmp($lbl, 'Islam') === 0) $uAgMap['Islam'] += $ag->total;
-                elseif (strcasecmp($lbl, 'Kristen') === 0 || strcasecmp($lbl, 'Protestan') === 0) $uAgMap['Kristen'] += $ag->total;
-                elseif (strcasecmp($lbl, 'Katolik') === 0 || strcasecmp($lbl, 'Katholik') === 0) $uAgMap['Katolik'] += $ag->total;
-                elseif (strcasecmp($lbl, 'Hindu') === 0) $uAgMap['Hindu'] += $ag->total;
-                elseif (strcasecmp($lbl, 'Buddha') === 0 || strcasecmp($lbl, 'Budha') === 0) $uAgMap['Buddha'] += $ag->total;
-                elseif (strcasecmp($lbl, 'Konghucu') === 0 || strcasecmp($lbl, 'Khonghucu') === 0) $uAgMap['Konghucu'] += $ag->total;
-                else $uAgMap['Lainnya'] += $ag->total;
+                if (strcasecmp($lbl, 'Islam') === 0)
+                    $uAgMap['Islam'] += $ag->total;
+                elseif (strcasecmp($lbl, 'Kristen') === 0 || strcasecmp($lbl, 'Protestan') === 0)
+                    $uAgMap['Kristen'] += $ag->total;
+                elseif (strcasecmp($lbl, 'Katolik') === 0 || strcasecmp($lbl, 'Katholik') === 0)
+                    $uAgMap['Katolik'] += $ag->total;
+                elseif (strcasecmp($lbl, 'Hindu') === 0)
+                    $uAgMap['Hindu'] += $ag->total;
+                elseif (strcasecmp($lbl, 'Buddha') === 0 || strcasecmp($lbl, 'Budha') === 0)
+                    $uAgMap['Buddha'] += $ag->total;
+                elseif (strcasecmp($lbl, 'Konghucu') === 0 || strcasecmp($lbl, 'Khonghucu') === 0)
+                    $uAgMap['Konghucu'] += $ag->total;
+                else
+                    $uAgMap['Lainnya'] += $ag->total;
             }
 
             foreach ($agamaList as $agName) {
@@ -420,7 +439,7 @@ class PageController extends Controller
             ->groupBy('suku')->orderBy('total', 'desc')->limit(12)->get();
         $sukuSeries = [];
         foreach ($sukuRaw as $sk) {
-            $sukuSeries[] = ['x' => ucwords(strtolower($sk->suku)), 'y' => (int)$sk->total];
+            $sukuSeries[] = ['x' => ucwords(strtolower($sk->suku)), 'y' => (int) $sk->total];
         }
         $chart7 = ['series' => $sukuSeries];
 
@@ -437,16 +456,24 @@ class PageController extends Controller
             $uMap = array_fill_keys($bodList, 0);
             foreach ($katRaw as $r) {
                 $code = strtoupper(trim($r->kategori_jabatan_kode));
-                $cnt = (int)$r->total;
+                $cnt = (int) $r->total;
 
-                if ($code === 'BOD-1') $uMap['BOD-1'] += $cnt;
-                elseif ($code === 'BOD-2') $uMap['BOD-2'] += $cnt;
-                elseif ($code === 'BOD-3') $uMap['BOD-3'] += $cnt;
-                elseif ($code === 'BOD-4') $uMap['BOD-4'] += $cnt;
-                elseif ($code === 'BOD-5') $uMap['BOD-5'] += $cnt;
-                elseif ($code === 'BOD-6') $uMap['BOD-6'] += $cnt;
-                elseif (in_array($code, ['BOD', 'BOM', 'BOC'])) $uMap['BOD'] += $cnt;
-                else $uMap['Lainnya'] += $cnt;
+                if ($code === 'BOD-1')
+                    $uMap['BOD-1'] += $cnt;
+                elseif ($code === 'BOD-2')
+                    $uMap['BOD-2'] += $cnt;
+                elseif ($code === 'BOD-3')
+                    $uMap['BOD-3'] += $cnt;
+                elseif ($code === 'BOD-4')
+                    $uMap['BOD-4'] += $cnt;
+                elseif ($code === 'BOD-5')
+                    $uMap['BOD-5'] += $cnt;
+                elseif ($code === 'BOD-6')
+                    $uMap['BOD-6'] += $cnt;
+                elseif (in_array($code, ['BOD', 'BOM', 'BOC']))
+                    $uMap['BOD'] += $cnt;
+                else
+                    $uMap['Lainnya'] += $cnt;
             }
 
             foreach ($bodList as $bLabel) {
@@ -486,22 +513,37 @@ class PageController extends Controller
             $uMap = array_fill_keys($pgList, 0);
             foreach ($raw as $r) {
                 $g = trim($r->kelompok_grade);
-                $cnt = (int)$r->total;
-                if ($g === '06' || $g === '6') $uMap['PG-06'] += $cnt;
-                elseif ($g === '07' || $g === '7') $uMap['PG-07'] += $cnt;
-                elseif ($g === '08' || $g === '8') $uMap['PG-08'] += $cnt;
-                elseif ($g === '09' || $g === '9') $uMap['PG-09'] += $cnt;
-                elseif ($g === '10') $uMap['PG-10'] += $cnt;
-                elseif ($g === '11') $uMap['PG-11'] += $cnt;
-                elseif ($g === '12') $uMap['PG-12'] += $cnt;
-                elseif ($g === '13') $uMap['PG-13'] += $cnt;
-                elseif ($g === '14') $uMap['PG-14'] += $cnt;
-                elseif ($g === '15') $uMap['PG-15'] += $cnt;
-                elseif ($g === '16') $uMap['PG-16'] += $cnt;
-                elseif ($g === '17') $uMap['PG-17'] += $cnt;
-                elseif ($g === '18') $uMap['PG-18'] += $cnt;
-                elseif ($g === '19') $uMap['PG-19'] += $cnt;
-                else $uMap['Non-Grade'] += $cnt;
+                $cnt = (int) $r->total;
+                if ($g === '06' || $g === '6')
+                    $uMap['PG-06'] += $cnt;
+                elseif ($g === '07' || $g === '7')
+                    $uMap['PG-07'] += $cnt;
+                elseif ($g === '08' || $g === '8')
+                    $uMap['PG-08'] += $cnt;
+                elseif ($g === '09' || $g === '9')
+                    $uMap['PG-09'] += $cnt;
+                elseif ($g === '10')
+                    $uMap['PG-10'] += $cnt;
+                elseif ($g === '11')
+                    $uMap['PG-11'] += $cnt;
+                elseif ($g === '12')
+                    $uMap['PG-12'] += $cnt;
+                elseif ($g === '13')
+                    $uMap['PG-13'] += $cnt;
+                elseif ($g === '14')
+                    $uMap['PG-14'] += $cnt;
+                elseif ($g === '15')
+                    $uMap['PG-15'] += $cnt;
+                elseif ($g === '16')
+                    $uMap['PG-16'] += $cnt;
+                elseif ($g === '17')
+                    $uMap['PG-17'] += $cnt;
+                elseif ($g === '18')
+                    $uMap['PG-18'] += $cnt;
+                elseif ($g === '19')
+                    $uMap['PG-19'] += $cnt;
+                else
+                    $uMap['Non-Grade'] += $cnt;
             }
 
             foreach ($pgList as $pg) {
@@ -536,7 +578,7 @@ class PageController extends Controller
         $jobSeries = [];
         foreach ($jobRaw as $jb) {
             $jobCat[] = ucwords(strtolower($jb->jabatan));
-            $jobSeries[] = (int)$jb->total;
+            $jobSeries[] = (int) $jb->total;
         }
         $chart10 = ['categories' => $jobCat, 'series' => $jobSeries];
 
@@ -548,7 +590,7 @@ class PageController extends Controller
         $regSeries = [];
         foreach ($regRaw as $rg) {
             $regCat[] = str_replace('SuppCo ', '', $rg->regional);
-            $regSeries[] = (int)$rg->total;
+            $regSeries[] = (int) $rg->total;
         }
         $chart11 = ['categories' => $regCat, 'series' => $regSeries];
 
@@ -560,7 +602,7 @@ class PageController extends Controller
         $unitSeries = [];
         foreach ($unitRaw as $u) {
             $unitCat[] = ucwords(strtolower($u->divisi));
-            $unitSeries[] = (int)$u->total;
+            $unitSeries[] = (int) $u->total;
         }
         $chart12 = ['categories' => $unitCat, 'series' => $unitSeries];
 
@@ -579,10 +621,10 @@ class PageController extends Controller
                     DB::raw("SUM(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, '$todayStr') > 50 THEN 1 ELSE 0 END) as u50plus")
                 )->first();
 
-            $ageData['< 30'][] = (int)($raw->u30 ?? 0);
-            $ageData['31-40'][] = (int)($raw->u40 ?? 0);
-            $ageData['41-50'][] = (int)($raw->u50 ?? 0);
-            $ageData['> 50'][] = (int)($raw->u50plus ?? 0);
+            $ageData['< 30'][] = (int) ($raw->u30 ?? 0);
+            $ageData['31-40'][] = (int) ($raw->u40 ?? 0);
+            $ageData['41-50'][] = (int) ($raw->u50 ?? 0);
+            $ageData['> 50'][] = (int) ($raw->u50plus ?? 0);
         }
 
         $chart13Series = [];
@@ -619,11 +661,11 @@ class PageController extends Controller
                     DB::raw("SUM(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_masuk, '$todayStr') > 30 THEN 1 ELSE 0 END) as s30plus")
                 )->first();
 
-            $serviceData['< 10'][] = (int)($raw->s10 ?? 0);
-            $serviceData['10-15'][] = (int)($raw->s15 ?? 0);
-            $serviceData['16-20'][] = (int)($raw->s20 ?? 0);
-            $serviceData['21-30'][] = (int)($raw->s30 ?? 0);
-            $serviceData['> 30'][] = (int)($raw->s30plus ?? 0);
+            $serviceData['< 10'][] = (int) ($raw->s10 ?? 0);
+            $serviceData['10-15'][] = (int) ($raw->s15 ?? 0);
+            $serviceData['16-20'][] = (int) ($raw->s20 ?? 0);
+            $serviceData['21-30'][] = (int) ($raw->s30 ?? 0);
+            $serviceData['> 30'][] = (int) ($raw->s30plus ?? 0);
         }
 
         $chart14Series = [];
@@ -653,11 +695,11 @@ class PageController extends Controller
         foreach ($unitsDef as $u) {
             $qUnit = (clone $query)->where('regional_grup_kode', $u['code']);
 
-            $mCount = (clone $qUnit)->where(function($q) {
+            $mCount = (clone $qUnit)->where(function ($q) {
                 $q->whereIn('status_nikah', ['Nikah', 'Menikah', 'K']);
             })->count();
 
-            $bCount = (clone $qUnit)->where(function($q) {
+            $bCount = (clone $qUnit)->where(function ($q) {
                 $q->whereIn('status_nikah', ['Lajang', 'Belum Menikah', 'TK']);
             })->count();
 
@@ -702,9 +744,12 @@ class PageController extends Controller
             $kj = $bm->kelompok_jabatan;
             if (!isset($jgBodMap[$kj])) {
                 $code = strtoupper(trim($bm->kategori_jabatan_kode ?? ''));
-                if ($code === 'BOC') $code = 'BOC';
-                elseif (in_array($code, ['BOD', 'BOM'])) $code = 'BOD';
-                elseif (!in_array($code, ['BOD-1', 'BOD-2', 'BOD-3', 'BOD-4', 'BOD-5', 'BOD-6'])) $code = 'Lainnya';
+                if ($code === 'BOC')
+                    $code = 'BOC';
+                elseif (in_array($code, ['BOD', 'BOM']))
+                    $code = 'BOD';
+                elseif (!in_array($code, ['BOD-1', 'BOD-2', 'BOD-3', 'BOD-4', 'BOD-5', 'BOD-6']))
+                    $code = 'Lainnya';
                 $jgBodMap[$kj] = $code;
             }
         }
@@ -728,14 +773,14 @@ class PageController extends Controller
             $r = $bodRanks[$bCode] ?? 99;
             $jgItems[] = [
                 'kelompok_jabatan' => $kj,
-                'total' => (int)$jg->total,
+                'total' => (int) $jg->total,
                 'bod_level' => $bCode,
                 'bod_rank' => $r
             ];
         }
 
         // Sort by BOD rank ASC (BOC -> BOD -> BOD-1 -> ... -> BOD-6), then total DESC
-        usort($jgItems, function($a, $b) {
+        usort($jgItems, function ($a, $b) {
             if ($a['bod_rank'] !== $b['bod_rank']) {
                 return $a['bod_rank'] <=> $b['bod_rank'];
             }
@@ -762,9 +807,9 @@ class PageController extends Controller
 
         // 17. Dashboard 17: Estimasi Pensiun per Regional (Stacked Bar Chart - 30 Hari, 6 Bulan, 1 Tahun, 3 Tahun)
         $date30d = date('Y-m-d', strtotime('+30 days'));
-        $date6m  = date('Y-m-d', strtotime('+6 months'));
-        $date1y  = date('Y-m-d', strtotime('+1 year'));
-        $date3y  = date('Y-m-d', strtotime('+3 years'));
+        $date6m = date('Y-m-d', strtotime('+6 months'));
+        $date1y = date('Y-m-d', strtotime('+1 year'));
+        $date3y = date('Y-m-d', strtotime('+3 years'));
 
         $pensiunGroups = ['30 Hari', '6 Bulan', '1 Tahun', '3 Tahun'];
         $pensiunData = array_fill_keys($pensiunGroups, []);
@@ -779,10 +824,10 @@ class PageController extends Controller
                     DB::raw("SUM(CASE WHEN tanggal_pensiun > '$date1y' AND tanggal_pensiun <= '$date3y' THEN 1 ELSE 0 END) as p3y")
                 )->first();
 
-            $pensiunData['30 Hari'][] = (int)($raw->p30d ?? 0);
-            $pensiunData['6 Bulan'][] = (int)($raw->p6m ?? 0);
-            $pensiunData['1 Tahun'][] = (int)($raw->p1y ?? 0);
-            $pensiunData['3 Tahun'][] = (int)($raw->p3y ?? 0);
+            $pensiunData['30 Hari'][] = (int) ($raw->p30d ?? 0);
+            $pensiunData['6 Bulan'][] = (int) ($raw->p6m ?? 0);
+            $pensiunData['1 Tahun'][] = (int) ($raw->p1y ?? 0);
+            $pensiunData['3 Tahun'][] = (int) ($raw->p3y ?? 0);
         }
 
         $chart17Series = [];
@@ -794,9 +839,9 @@ class PageController extends Controller
         }
 
         $total30d = (clone $query)->whereBetween('tanggal_pensiun', [$todayStr, $date30d])->count();
-        $total6m  = (clone $query)->whereBetween('tanggal_pensiun', [$todayStr, $date6m])->count();
-        $total1y  = (clone $query)->whereBetween('tanggal_pensiun', [$todayStr, $date1y])->count();
-        $total3y  = (clone $query)->whereBetween('tanggal_pensiun', [$todayStr, $date3y])->count();
+        $total6m = (clone $query)->whereBetween('tanggal_pensiun', [$todayStr, $date6m])->count();
+        $total1y = (clone $query)->whereBetween('tanggal_pensiun', [$todayStr, $date1y])->count();
+        $total3y = (clone $query)->whereBetween('tanggal_pensiun', [$todayStr, $date3y])->count();
 
         $chart17 = [
             'categories' => $unitCategories,
@@ -841,21 +886,21 @@ class PageController extends Controller
 
         // Filter Options
         $baseFilterQuery = $db->table('pegawai')
-            ->whereIn('regional_grup_kode', function($sub) {
+            ->whereIn('regional_grup_kode', function ($sub) {
                 $sub->select('kode')->from('regional_grup');
             })
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->whereNull('penugasan_mutasi_ke')
-                  ->orWhere('penugasan_mutasi_ke', '');
+                    ->orWhere('penugasan_mutasi_ke', '');
             })
             ->whereRaw("LOWER(status_pegawai) IN ('aktif', 'mbt')");
 
         $pAreaQuery = clone $baseFilterQuery;
         if ($request->filled('regional') && $request->regional !== 'ALL') {
             $reg = $request->regional;
-            $pAreaQuery->where(function($q) use ($reg) {
+            $pAreaQuery->where(function ($q) use ($reg) {
                 $q->where('regional_grup_kode', $reg)
-                  ->orWhere('regional_kode', $reg);
+                    ->orWhere('regional_kode', $reg);
             });
         }
         $personnelAreaList = $pAreaQuery->whereNotNull('regional')->where('regional', '!=', '-')->where('regional', '!=', '')->distinct()->pluck('regional')->sort()->values();
@@ -998,12 +1043,12 @@ class PageController extends Controller
     {
         $db = DB::connection('hris');
         $query = $db->table('pegawai')
-            ->whereIn('regional_grup_kode', function($sub) {
+            ->whereIn('regional_grup_kode', function ($sub) {
                 $sub->select('kode')->from('regional_grup');
             })
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->whereNull('penugasan_mutasi_ke')
-                  ->orWhere('penugasan_mutasi_ke', '');
+                    ->orWhere('penugasan_mutasi_ke', '');
             });
 
         // Global Page Filters
@@ -1015,9 +1060,9 @@ class PageController extends Controller
 
         if ($request->filled('regional') && $request->regional !== 'ALL') {
             $reg = $request->regional;
-            $query->where(function($q) use ($reg) {
+            $query->where(function ($q) use ($reg) {
                 $q->where('regional_grup_kode', $reg)
-                  ->orWhere('regional_kode', $reg);
+                    ->orWhere('regional_kode', $reg);
             });
         }
         if ($request->filled('personnel_area') && $request->personnel_area !== 'ALL') {
@@ -1025,16 +1070,16 @@ class PageController extends Controller
         }
         if ($request->filled('personnel_sub_area') && $request->personnel_sub_area !== 'ALL') {
             $psa = $request->personnel_sub_area;
-            $query->where(function($q) use ($psa) {
+            $query->where(function ($q) use ($psa) {
                 $q->where('area', $psa)
-                  ->orWhere('area_hris', $psa);
+                    ->orWhere('area_hris', $psa);
             });
         }
         if ($request->filled('tahun') && $request->tahun !== 'ALL') {
-            $tahun = (int)$request->tahun;
-            $query->where(function($q) use ($tahun) {
+            $tahun = (int) $request->tahun;
+            $query->where(function ($q) use ($tahun) {
                 $q->whereYear('tanggal_masuk', '<=', $tahun)
-                  ->orWhereYear('created_date', '<=', $tahun);
+                    ->orWhereYear('created_date', '<=', $tahun);
             });
         }
 
@@ -1043,21 +1088,21 @@ class PageController extends Controller
         $value = trim($request->input('value', ''));
         $title = 'Rincian Karyawan';
 
-        $isHO = function($q) {
+        $isHO = function ($q) {
             $q->where('regional_grup_kode', 'HO');
         };
-        $isNotHO = function($q) {
+        $isNotHO = function ($q) {
             $q->where('regional_grup_kode', '!=', 'HO');
         };
-        $isPimpinan = function($q) {
+        $isPimpinan = function ($q) {
             $q->where('kelompok_pegawai', 'LIKE', '%Karpim%')
-              ->orWhere('kelompok_pegawai', 'LIKE', '%SEVP%')
-              ->orWhere('kelompok_pegawai', 'LIKE', '%Direksi%');
+                ->orWhere('kelompok_pegawai', 'LIKE', '%SEVP%')
+                ->orWhere('kelompok_pegawai', 'LIKE', '%Direksi%');
         };
-        $isPelaksana = function($q) {
+        $isPelaksana = function ($q) {
             $q->where('kelompok_pegawai', 'NOT LIKE', '%Karpim%')
-              ->where('kelompok_pegawai', 'NOT LIKE', '%SEVP%')
-              ->where('kelompok_pegawai', 'NOT LIKE', '%Direksi%');
+                ->where('kelompok_pegawai', 'NOT LIKE', '%SEVP%')
+                ->where('kelompok_pegawai', 'NOT LIKE', '%Direksi%');
         };
 
         switch ($type) {
@@ -1096,11 +1141,11 @@ class PageController extends Controller
                     $title = "$rgLabel - $stackLabel";
                     if (strpos($stackLabel, 'Tetap') !== false && strpos($stackLabel, 'Tidak') === false) {
                         $query->where('kelompok_pegawai', 'LIKE', '%Tetap%')
-                              ->where('kelompok_pegawai', 'NOT LIKE', '%Tidak%');
+                            ->where('kelompok_pegawai', 'NOT LIKE', '%Tidak%');
                     } else {
-                        $query->where(function($q) {
+                        $query->where(function ($q) {
                             $q->where('kelompok_pegawai', 'LIKE', '%Tidak%')
-                              ->orWhere('kelompok_pegawai', 'NOT LIKE', '%Tetap%');
+                                ->orWhere('kelompok_pegawai', 'NOT LIKE', '%Tetap%');
                         });
                     }
                 } elseif ($type === 'chart4_stack') {
@@ -1141,7 +1186,7 @@ class PageController extends Controller
                     } elseif ($stackLabel === 'BOD') {
                         $query->whereIn('kategori_jabatan_kode', ['BOD', 'BOM', 'BOC']);
                     } else { // Staff
-                        $query->where(function($sub) {
+                        $query->where(function ($sub) {
                             $sub->whereNull('kategori_jabatan_kode')
                                 ->orWhere('kategori_jabatan_kode', '')
                                 ->orWhereNotIn('kategori_jabatan_kode', ['BOD', 'BOM', 'BOC', 'BOD-1', 'BOD-2', 'BOD-3', 'BOD-4', 'BOD-5', 'BOD-6']);
@@ -1150,16 +1195,25 @@ class PageController extends Controller
                 } elseif ($type === 'chart9_stack') {
                     $title = "$rgLabel - Person Grade $stackLabel";
                     $pgGradeMap = [
-                        'PG-06' => ['06', '6'], 'PG-07' => ['07', '7'], 'PG-08' => ['08', '8'],
-                        'PG-09' => ['09', '9'], 'PG-10' => ['10'], 'PG-11' => ['11'],
-                        'PG-12' => ['12'], 'PG-13' => ['13'], 'PG-14' => ['14'],
-                        'PG-15' => ['15'], 'PG-16' => ['16'], 'PG-17' => ['17'],
-                        'PG-18' => ['18'], 'PG-19' => ['19'],
+                        'PG-06' => ['06', '6'],
+                        'PG-07' => ['07', '7'],
+                        'PG-08' => ['08', '8'],
+                        'PG-09' => ['09', '9'],
+                        'PG-10' => ['10'],
+                        'PG-11' => ['11'],
+                        'PG-12' => ['12'],
+                        'PG-13' => ['13'],
+                        'PG-14' => ['14'],
+                        'PG-15' => ['15'],
+                        'PG-16' => ['16'],
+                        'PG-17' => ['17'],
+                        'PG-18' => ['18'],
+                        'PG-19' => ['19'],
                     ];
                     if (isset($pgGradeMap[$stackLabel])) {
                         $query->whereIn('kelompok_grade', $pgGradeMap[$stackLabel]);
                     } else { // Non-Grade
-                        $query->where(function($sub) {
+                        $query->where(function ($sub) {
                             $sub->whereNull('kelompok_grade')
                                 ->orWhere('kelompok_grade', '')
                                 ->orWhere('kelompok_grade', '-')
@@ -1208,9 +1262,9 @@ class PageController extends Controller
                     $title = "$rgLabel - Proyeksi Pensiun $stackLabel";
                     $todayStr = date('Y-m-d');
                     $date30d = date('Y-m-d', strtotime('+30 days'));
-                    $date6m  = date('Y-m-d', strtotime('+6 months'));
-                    $date1y  = date('Y-m-d', strtotime('+1 year'));
-                    $date3y  = date('Y-m-d', strtotime('+3 years'));
+                    $date6m = date('Y-m-d', strtotime('+6 months'));
+                    $date1y = date('Y-m-d', strtotime('+1 year'));
+                    $date3y = date('Y-m-d', strtotime('+3 years'));
                     $query->whereNotNull('tanggal_pensiun');
 
                     if (strpos($stackLabel, '30') !== false) {
@@ -1245,13 +1299,13 @@ class PageController extends Controller
             case 'tetap':
                 $title = 'Karyawan Tetap';
                 $query->where('kelompok_pegawai', 'LIKE', '%Tetap%')
-                      ->where('kelompok_pegawai', 'NOT LIKE', '%Tidak%');
+                    ->where('kelompok_pegawai', 'NOT LIKE', '%Tidak%');
                 break;
             case 'tidak_tetap':
                 $title = 'Karyawan Tidak Tetap';
-                $query->where(function($q) {
+                $query->where(function ($q) {
                     $q->where('kelompok_pegawai', 'LIKE', '%Tidak%')
-                      ->orWhere('kelompok_pegawai', 'NOT LIKE', '%Tetap%');
+                        ->orWhere('kelompok_pegawai', 'NOT LIKE', '%Tetap%');
                 });
                 break;
             case 'pimpinan':
@@ -1281,7 +1335,7 @@ class PageController extends Controller
             case 'kelompok_pegawai':
                 $title = 'Kelompok Pegawai: ' . ($value ?: 'Lainnya');
                 if ($value === 'Lainnya' || $value === '') {
-                    $query->where(function($q) {
+                    $query->where(function ($q) {
                         $q->whereNull('kelompok_pegawai')->orWhere('kelompok_pegawai', '');
                     });
                 } else {
@@ -1333,7 +1387,7 @@ class PageController extends Controller
                 } elseif ($value === 'BOD') {
                     $query->whereIn('kategori_jabatan_kode', ['BOD', 'BOM', 'BOC']);
                 } else { // Staff
-                    $query->where(function($sub) {
+                    $query->where(function ($sub) {
                         $sub->whereNull('kategori_jabatan_kode')
                             ->orWhere('kategori_jabatan_kode', '')
                             ->orWhereNotIn('kategori_jabatan_kode', ['BOD', 'BOM', 'BOC', 'BOD-1', 'BOD-2', 'BOD-3', 'BOD-4', 'BOD-5', 'BOD-6']);
@@ -1348,16 +1402,25 @@ class PageController extends Controller
             case 'grade':
                 $title = "Person Grade: $value";
                 $pgGradeMap = [
-                    'PG-06' => ['06', '6'], 'PG-07' => ['07', '7'], 'PG-08' => ['08', '8'],
-                    'PG-09' => ['09', '9'], 'PG-10' => ['10'], 'PG-11' => ['11'],
-                    'PG-12' => ['12'], 'PG-13' => ['13'], 'PG-14' => ['14'],
-                    'PG-15' => ['15'], 'PG-16' => ['16'], 'PG-17' => ['17'],
-                    'PG-18' => ['18'], 'PG-19' => ['19'],
+                    'PG-06' => ['06', '6'],
+                    'PG-07' => ['07', '7'],
+                    'PG-08' => ['08', '8'],
+                    'PG-09' => ['09', '9'],
+                    'PG-10' => ['10'],
+                    'PG-11' => ['11'],
+                    'PG-12' => ['12'],
+                    'PG-13' => ['13'],
+                    'PG-14' => ['14'],
+                    'PG-15' => ['15'],
+                    'PG-16' => ['16'],
+                    'PG-17' => ['17'],
+                    'PG-18' => ['18'],
+                    'PG-19' => ['19'],
                 ];
                 if (isset($pgGradeMap[$value])) {
                     $query->whereIn('kelompok_grade', $pgGradeMap[$value]);
                 } elseif ($value === 'Non-Grade') {
-                    $query->where(function($sub) {
+                    $query->where(function ($sub) {
                         $sub->whereNull('kelompok_grade')
                             ->orWhere('kelompok_grade', '')
                             ->orWhere('kelompok_grade', '-')
@@ -1367,9 +1430,9 @@ class PageController extends Controller
                 } else {
                     $cleanGrade = preg_replace('/[^0-9]/', '', $value);
                     if ($cleanGrade !== '') {
-                        $query->where(function($q) use ($cleanGrade) {
+                        $query->where(function ($q) use ($cleanGrade) {
                             $q->where('kelompok_grade', $cleanGrade)
-                              ->orWhere('kelompok_grade', (int)$cleanGrade);
+                                ->orWhere('kelompok_grade', (int) $cleanGrade);
                         });
                     }
                 }
@@ -1380,9 +1443,9 @@ class PageController extends Controller
                 break;
             case 'sebaran_regional':
                 $title = 'Regional: ' . $value;
-                $query->where(function($q) use ($value) {
+                $query->where(function ($q) use ($value) {
                     $q->where('regional', 'LIKE', "%{$value}%")
-                      ->orWhere('regional_grup', 'LIKE', "%{$value}%");
+                        ->orWhere('regional_grup', 'LIKE', "%{$value}%");
                 });
                 break;
             case 'unit_kerja':
@@ -6012,7 +6075,7 @@ class PageController extends Controller
                 // 1. Fetch API Data (Single Request karena API provider sudah mengoptimasi)
                 $apiUrl = "https://amanah.ptpn1.co.id/api/data_presensi_aghris?bulan={$year}-{$monthStr}";
                 $apiResponse = \Illuminate\Support\Facades\Http::timeout(60)->get($apiUrl);
-                
+
                 $apiData = [];
                 if ($apiResponse->successful()) {
                     $result = $apiResponse->json();
@@ -6021,7 +6084,7 @@ class PageController extends Controller
                         $apiData = $records;
                     }
                 }
-                
+
                 // Ekstrak NIK yang ada presensi (minimal 1 kali hadir)
                 $attendedNiksCount = [];
                 foreach ($apiData as $row) {
@@ -6039,7 +6102,7 @@ class PageController extends Controller
                 $activeEmployees = Employee::select(['nik', 'nama', 'jabatan', 'regional_grup', 'cost_center', 'area', 'area_kode'])
                     ->whereRaw("NOT COALESCE(NULLIF(regional_grup_kode, ''), 'x') = 'x'")
                     ->whereRaw("LOWER(status_pegawai) IN ('aktif', 'mbt')")
-                    ->where(function($q) {
+                    ->where(function ($q) {
                         $q->whereNull('penugasan_mutasi_ke')->orWhere('penugasan_mutasi_ke', '');
                     })
                     ->whereNot('fungsi_jabatan', 'PRODUCTION PROCESS DIRECT ON FARM')
@@ -6208,15 +6271,15 @@ class PageController extends Controller
         $commodity = $request->input('commodity', 'semua');
         $incoterm = $request->input('incoterm', 'semua');
         $incoLoc = $request->input('inco_loc', 'semua');
-        
+
         $allData = [];
         $apiKey = 'c34ad1cf6f6282c153ecf9bb7c9da40bac27fb92d11de5f8';
-        
+
         try {
             $page = 1;
             $lastPage = 1;
             $allItems = [];
-            
+
             do {
                 $response = \Illuminate\Support\Facades\Http::withoutVerifying()
                     ->timeout(20) // increased timeout for safety
@@ -6227,10 +6290,10 @@ class PageController extends Controller
                         'per_page' => 100,
                         'page' => $page
                     ]);
-                
+
                 if ($response->successful()) {
                     $resData = $response->json();
-                    
+
                     if (isset($resData['data']['data'])) {
                         $items = $resData['data']['data'];
                     } elseif (isset($resData['data'])) {
@@ -6238,9 +6301,9 @@ class PageController extends Controller
                     } else {
                         $items = [];
                     }
-                    
+
                     $allItems = array_merge($allItems, $items);
-                    
+
                     if (isset($resData['meta']['last_page'])) {
                         $lastPage = $resData['meta']['last_page'];
                     } else {
@@ -6249,10 +6312,10 @@ class PageController extends Controller
                 } else {
                     break;
                 }
-                
+
                 $page++;
             } while ($page <= $lastPage);
-            
+
             foreach ($allItems as $item) {
                 if ($commodity != 'semua') {
                     $itemCom = $item['commodity_name'] ?? '';
@@ -6277,7 +6340,7 @@ class PageController extends Controller
         } catch (\Exception $e) {
             \Log::error('CRM API Fetch Error: ' . $e->getMessage());
         }
-        
+
         return response()->json([
             'success' => true,
             'data' => $allData
