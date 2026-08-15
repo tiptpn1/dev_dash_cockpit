@@ -305,36 +305,28 @@ class LogViewerController extends Controller
         }
 
         return response()->json([
-            'php' => [
-                'version' => PHP_VERSION,
-                'memory_limit' => ini_get('memory_limit'),
-                'max_execution_time' => ini_get('max_execution_time'),
-                'post_max_size' => ini_get('post_max_size'),
-                'upload_max_filesize' => ini_get('upload_max_filesize'),
-                'extensions' => get_loaded_extensions(),
-            ],
-            'laravel' => [
-                'version' => app()->version(),
-                'environment' => app()->environment(),
-                'debug' => config('app.debug'),
-                'timezone' => config('app.timezone'),
-            ],
-            'server' => [
-                'software' => $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown',
-                'os' => PHP_OS,
-                'hostname' => gethostname(),
-            ],
-            'storage' => [
-                'logs_path' => storage_path('logs'),
-                'logs_writable' => is_writable(storage_path('logs')),
-                'disk_free' => disk_free_space(storage_path()),
-                'disk_total' => disk_total_space(storage_path()),
-            ],
-            'database' => [
-                'connection' => config('database.default'),
-                'host' => config('database.connections.' . config('database.default') . '.host'),
-                'database' => config('database.connections.' . config('database.default') . '.database'),
-            ],
+            'php_version'       => PHP_VERSION,
+            'memory_limit'      => ini_get('memory_limit'),
+            'max_execution_time'=> ini_get('max_execution_time'),
+            'upload_max_filesize'=> ini_get('upload_max_filesize'),
+            'laravel_version'   => app()->version(),
+            'environment'       => app()->environment(),
+            'debug_mode'        => config('app.debug'),
+            'timezone'          => config('app.timezone'),
+            'cache_driver'      => config('cache.default'),
+            'session_driver'    => config('session.driver'),
+            'queue_driver'      => config('queue.default'),
+            'disk_free_space'   => round(disk_free_space(storage_path()) / (1024 ** 3), 2) . ' GB',
+
+            // Provider 1: agrinav_agent (be.ptpn1.co.id - Active)
+            'ai_backend_url'    => env('AI_BACKEND_URL', 'Not configured'),
+            'ai_backend_agent'  => env('AI_BACKEND_AGENT', 'Not configured'),
+            'ai_backend_base'   => env('AI_BACKEND_BASE_URL', 'Not configured'),
+            'ai_backend_user'   => env('AI_BACKEND_USERNAME', 'Not configured'),
+            'ai_timeout'        => env('AI_BACKEND_TIMEOUT', 120),
+
+            // Provider 2: aigr1_assistant (workflow.ptpn1.co.id - Legacy)
+            'ai_workflow_url'   => env('WORKFLOW_WEBHOOK_URL', 'Not configured'),
         ]);
     }
 
@@ -523,7 +515,9 @@ class LogViewerController extends Controller
     }
 
     /**
-     * Test chatbot endpoint
+     * Test chatbot endpoint — support dua provider:
+     *   provider=agrinav  → be.ptpn1.co.id (JSON, webChatToken)
+     *   provider=workflow  → workflow.ptpn1.co.id (form-urlencoded, tanpa token)
      */
     public function testChatbot(Request $request)
     {
@@ -532,38 +526,88 @@ class LogViewerController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        $message = $request->input('message', 'Test message');
-        $stream = $request->input('stream', false);
-        
+        $message  = $request->input('message', 'Test message');
+        $stream   = filter_var($request->input('stream', false), FILTER_VALIDATE_BOOLEAN);
+        $provider = $request->input('provider', 'agrinav'); // 'agrinav' | 'workflow'
+
         try {
             $startTime = microtime(true);
-            
-            // Get token
+
+            // ── PROVIDER: workflow (aigr1_assistant) ──────────────────────────
+            if ($provider === 'workflow') {
+                $url = env('WORKFLOW_WEBHOOK_URL', '');
+                if (empty($url)) {
+                    return response()->json([
+                        'success' => false,
+                        'error'   => 'WORKFLOW_WEBHOOK_URL belum dikonfigurasi di .env',
+                    ], 400);
+                }
+
+                $ch = curl_init($url);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
+                    'query'        => $message,
+                    'id_user_chat' => 'admin-test',
+                    'thread_id'    => '',
+                    'agent'        => json_encode(['name' => 'aigr1_assistant']),
+                ]));
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+                curl_setopt($ch, CURLOPT_HEADER, true);
+
+                $response   = curl_exec($ch);
+                $httpCode   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+                $error      = curl_error($ch);
+                curl_close($ch);
+
+                $executionTime  = round((microtime(true) - $startTime) * 1000, 2);
+                $responseBody   = substr($response, $headerSize);
+
+                return response()->json([
+                    'success'        => empty($error) && $httpCode === 200,
+                    'provider'       => 'workflow',
+                    'agent'          => 'aigr1_assistant',
+                    'status_code'    => $httpCode,
+                    'execution_time' => $executionTime . ' ms',
+                    'request'        => [
+                        'url'     => $url,
+                        'format'  => 'application/x-www-form-urlencoded',
+                        'payload' => ['query' => $message, 'id_user_chat' => 'admin-test'],
+                    ],
+                    'response_body'  => $responseBody,
+                    'error'          => $error ?: null,
+                ]);
+            }
+
+            // ── PROVIDER: agrinav (agrinav_agent via be.ptpn1.co.id) ──────────
             $token = $this->getChatbotToken();
-            
+
             if (!$token) {
                 return response()->json([
                     'success' => false,
-                    'error' => 'Failed to get webChatToken'
+                    'error'   => 'Gagal mendapatkan webChatToken dari be.ptpn1.co.id. ' .
+                                 'Periksa AI_BACKEND_USERNAME/PASSWORD di .env.',
                 ], 500);
             }
-            
-            $url = env('AI_BACKEND_URL', 'https://be.ptpn1.co.id/api/ai/chat');
-            
+
+            $url     = env('AI_BACKEND_URL', 'https://be.ptpn1.co.id/api/ai/chat');
+            $agent   = env('AI_BACKEND_AGENT', 'agrinav_agent');
+
             $payload = [
                 'message' => $message,
-                'stream' => $stream,
-                'agent' => ['name' => env('AI_BACKEND_AGENT', 'agrinav_agent')],
-                'token' => $token,
-                'source' => 'web'
+                'stream'  => $stream,
+                'agent'   => ['name' => $agent],
+                'token'   => $token,
+                'source'  => 'web',
             ];
-            
-            // If streaming, use different approach
+
             if ($stream) {
                 return $this->testChatbotStreaming($url, $payload, $token, $startTime);
             }
-            
-            // Non-streaming (original code)
+
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
@@ -571,45 +615,38 @@ class LogViewerController extends Controller
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
             curl_setopt($ch, CURLOPT_HTTPHEADER, [
                 'Content-Type: application/json',
-                'Authorization: Bearer ' . $token
+                'Authorization: Bearer ' . $token,
             ]);
             curl_setopt($ch, CURLOPT_TIMEOUT, 30);
             curl_setopt($ch, CURLOPT_HEADER, true);
-            
-            $response = curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $error = curl_error($ch);
-            
+
+            $response   = curl_exec($ch);
+            $httpCode   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-            $responseHeaders = substr($response, 0, $headerSize);
-            $responseBody = substr($response, $headerSize);
-            
+            $error      = curl_error($ch);
             curl_close($ch);
-            
-            $endTime = microtime(true);
-            $executionTime = round(($endTime - $startTime) * 1000, 2);
-            
+
+            $executionTime = round((microtime(true) - $startTime) * 1000, 2);
+
             return response()->json([
-                'success' => empty($error) && $httpCode === 200,
-                'status_code' => $httpCode,
+                'success'        => empty($error) && $httpCode === 200,
+                'provider'       => 'agrinav',
+                'agent'          => $agent,
+                'status_code'    => $httpCode,
                 'execution_time' => $executionTime . ' ms',
-                'request' => [
-                    'url' => $url,
-                    'payload' => $payload,
-                    'headers' => [
-                        'Content-Type' => 'application/json',
-                        'Authorization' => 'Bearer ' . substr($token, 0, 20) . '...'
-                    ]
+                'request'        => [
+                    'url'     => $url,
+                    'format'  => 'application/json',
+                    'payload' => array_merge($payload, ['token' => substr($token, 0, 20) . '...']),
                 ],
-                'response_headers' => $responseHeaders,
-                'response_body' => $responseBody,
-                'error' => $error ?: null
+                'response_body'  => substr($response, $headerSize),
+                'error'          => $error ?: null,
             ]);
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'error' => $e->getMessage()
+                'error'   => $e->getMessage(),
             ], 500);
         }
     }

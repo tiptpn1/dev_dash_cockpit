@@ -579,7 +579,7 @@
             // AI Backend Info
             html += `
                 <div class="info-card">
-                    <div class="info-card-title"><i class="fas fa-robot"></i> AI Backend</div>
+                    <div class="info-card-title"><i class="fas fa-robot"></i> LLM Provider 1 — agrinav_agent (Active)</div>
                     <div class="info-item">
                         <span class="info-label">URL</span>
                         <span class="info-value">${data.ai_backend_url}</span>
@@ -587,6 +587,52 @@
                     <div class="info-item">
                         <span class="info-label">Agent</span>
                         <span class="info-value">${data.ai_backend_agent}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Base URL</span>
+                        <span class="info-value">${data.ai_backend_base}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Username</span>
+                        <span class="info-value">${data.ai_backend_user}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Timeout</span>
+                        <span class="info-value">${data.ai_timeout}s</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Auth</span>
+                        <span class="info-value">webChatToken (Bearer)</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Format</span>
+                        <span class="info-value">application/json</span>
+                    </div>
+                </div>
+            `;
+
+            html += `
+                <div class="info-card">
+                    <div class="info-card-title"><i class="fas fa-project-diagram"></i> LLM Provider 2 — aigr1_assistant (Legacy)</div>
+                    <div class="info-item">
+                        <span class="info-label">URL</span>
+                        <span class="info-value" style="word-break:break-all;">${data.ai_workflow_url}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Agent</span>
+                        <span class="info-value">aigr1_assistant</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Auth</span>
+                        <span class="info-value">Tidak diperlukan</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Format</span>
+                        <span class="info-value">application/x-www-form-urlencoded</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Field pesan</span>
+                        <span class="info-value">query (bukan message)</span>
                     </div>
                 </div>
             `;
