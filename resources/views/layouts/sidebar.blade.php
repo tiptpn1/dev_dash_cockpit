@@ -26,17 +26,19 @@ if (isset($user)) {
             <div class="submenu" id="operasionalSubmenu">
                 <a href="{{url('')}}/amanah"><i class="fa-solid fa-building menu-icon"></i>AMANAH</a>
                 <a href="{{url('')}}/dfarmkaret"><i class="fa-solid fa-seedling menu-icon"></i>DFarm PTPN I</a>
+                <a href="https://cctv.ptpn1.co.id/index.php?token=QMekBGJyEv4kFk8tscWzEV2xXFxUWfqvQ2poIDqb1z2LaDJiJzJrGwveJ7DLxz76"
+                    target="_blank" id="cctv"><i class="fa-solid fa-video menu-icon"></i>CCTV</a>
             </div>
         @endif
         @if($user && $user->hasFeature('pica'))
             <!-- <a href="#pica" id="pica" class="parent"><i class="fa-solid fa-clipboard-list menu-icon"></i>PICA
-                                                            <span class="toggle-icon">&#9654;</span></a>
-                                                        <div class="submenu" id="picaSubmenu">
-                                                            <a href="{{ route('pica.kuadran_problem_identifications') }}"><i
-                                                                    class="fa-solid fa-table-cells-large menu-icon"></i>Kuadran Problem Identifications</a>
-                                                            <a href="{{ route('pica.list_corrective_actions') }}"><i class="fa-solid fa-list-check menu-icon"></i>List
-                                                                Corrective Actions</a>
-                                                        </div> -->
+                                                                        <span class="toggle-icon">&#9654;</span></a>
+                                                                    <div class="submenu" id="picaSubmenu">
+                                                                        <a href="{{ route('pica.kuadran_problem_identifications') }}"><i
+                                                                                class="fa-solid fa-table-cells-large menu-icon"></i>Kuadran Problem Identifications</a>
+                                                                        <a href="{{ route('pica.list_corrective_actions') }}"><i class="fa-solid fa-list-check menu-icon"></i>List
+                                                                            Corrective Actions</a>
+                                                                    </div> -->
         @endif
         @if($user && $user->hasFeature('warehouse'))
             <a href="{{url('')}}/gudangutilisasi" class="menu-item" id='warehouse'><i
@@ -48,7 +50,7 @@ if (isset($user)) {
             <div class="submenu" id="salesSubmenu">
                 <a href="{{url('')}}/overview_sales"><i class="fa-solid fa-chart-bar menu-icon"></i>Overview Sales</a>
                 <!-- <a href="{{url('')}}/sales_comodities"><i class="fa-solid fa-boxes-stacked menu-icon"></i>Comodities
-                                                                        Sales</a> -->
+                                                                                    Sales</a> -->
                 <a href="{{url('')}}/soptea"><i class="fa-solid fa-mug-hot menu-icon"></i>Tea Inventory</a>
                 <a href="{{url('')}}/penjualan_karet"><i class="fa-solid fa-tree menu-icon"></i>Rubber Delivery</a>
                 <a href="{{url('')}}/crm"><i class="fa-solid fa-tree menu-icon"></i>CRM</a>
@@ -84,10 +86,10 @@ if (isset($user)) {
                     class="toggle-icon">&#9654;</span></a>
             <div class="submenu" id="hrSubmenu">
                 <!-- <a href="{{url('')}}/hr_demographics"><i class="fa-solid fa-user-group menu-icon"></i>HR Demographics</a>
-                                <a href="{{url('')}}/hr_dev"><i class="fa-solid fa-graduation-cap menu-icon"></i>HR Learning &
-                                    Development</a>
-                                <a href="{{url('')}}/hr_revenue"><i class="fa-solid fa-money-bill-trend-up menu-icon"></i>HR Revenue &
-                                    Cost</a> -->
+                                            <a href="{{url('')}}/hr_dev"><i class="fa-solid fa-graduation-cap menu-icon"></i>HR Learning &
+                                                Development</a>
+                                            <a href="{{url('')}}/hr_revenue"><i class="fa-solid fa-money-bill-trend-up menu-icon"></i>HR Revenue &
+                                                Cost</a> -->
                 <a href="{{url('')}}/hr_demographic"><i class="fa-solid fa-user-group menu-icon"></i>HR Demographic</a>
             </div>
         @endif
@@ -101,10 +103,10 @@ if (isset($user)) {
         @endif
         @if($user && $user->hasFeature('progress'))
             <!-- <a href="#capaian" id="capaian" class="parent"><i class="fa-solid fa-chart-line menu-icon"></i>Capaian Progres
-                                                            <span class="toggle-icon">&#9654;</span></a>
-                                                        <div class="submenu" id="capaianSubmenu">
-                                                            <a href="{{url('')}}/sla"><i class="fa-solid fa-clock menu-icon"></i>SLA</a>
-                                                        </div> -->
+                                                                        <span class="toggle-icon">&#9654;</span></a>
+                                                                    <div class="submenu" id="capaianSubmenu">
+                                                                        <a href="{{url('')}}/sla"><i class="fa-solid fa-clock menu-icon"></i>SLA</a>
+                                                                    </div> -->
         @endif
         @if($user && $user->hasFeature('pengadaan'))
             <a href="#pengadaan" id="pengadaan" class="parent"><i
@@ -166,11 +168,6 @@ if (isset($user)) {
     @if($user && $user->hasFeature('portalaplikasi'))
         <a href="{{url('')}}/portalaplikasi" class="menu-item" id="portalaplikasi"><i
                 class="fa-solid fa-th-large menu-icon"></i>Portal Aplikasi</a>
-    @endif
-
-    @if($user && $user->hasFeature('cctv'))
-        <a href="https://cctv.ptpn1.co.id/index.php?token=QMekBGJyEv4kFk8tscWzEV2xXFxUWfqvQ2poIDqb1z2LaDJiJzJrGwveJ7DLxz76"
-            class="menu-item" target="_blank" id="cctv"><i class="fa-solid fa-clipboard-check menu-icon"></i>CCTV</a>
     @endif
 
     @if($user && $user->hasFeature('evaluasi_aplikasi'))
