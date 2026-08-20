@@ -223,20 +223,24 @@
         </div>
     </div>
 
-    <!-- TAB NAVIGATION SWITCHER -->
+
+    <!-- NAV LINK KE HALAMAN REGIONAL -->
     <div class="flex items-center gap-2 mb-6 border-b border-gray-200 pb-3">
-        <button id="tab-btn-1" onclick="switchTab('tab-1')" class="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all bg-emerald-800 text-white shadow-md border border-emerald-900 cursor-pointer">
-            <i class="fa-solid fa-chart-pie text-lime-400"></i>
-            <span>Hal 1: Resume Eksekutif &amp; Tabel</span>
-        </button>
-        <button id="tab-btn-2" onclick="switchTab('tab-2')" class="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 shadow-sm cursor-pointer">
-            <i class="fa-solid fa-chart-column text-emerald-600"></i>
-            <span>Hal 2: Perbandingan Antar Regional</span>
-        </button>
+        <span class="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs shadow-md"
+              style="background-color: #065f46; color: #ffffff; border: 1px solid #064e3b;">
+            <i class="fa-solid fa-chart-pie" style="color: #a3e635;"></i>
+            <span>Resume Eksekutif &amp; Tabel</span>
+        </span>
+        <a href="{{ route('areal_produksi.regional', ['bulan' => $bulanSelected, 'tahun' => $tahunSelected]) }}"
+           class="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all bg-white text-gray-600 border border-gray-200 hover:bg-emerald-50 hover:text-emerald-700 shadow-sm">
+            <i class="fa-solid fa-chart-column" style="color: #059669;"></i>
+            <span>Perbandingan Antar Regional</span>
+            <i class="fa-solid fa-arrow-right text-xs" style="opacity: 0.5;"></i>
+        </a>
     </div>
 
-    <!-- TAB 1 CONTENT CONTAINER -->
-    <div id="tab-content-1">
+    <!-- KONTEN UTAMA -->
+    <div>
         <!-- SUMMARY KPI CARDS (2 CARDS: PRODUKTIVITAS KARET & PRODUKTIVITAS TEH) -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         
@@ -545,363 +549,47 @@
             </table>
         </div>
     </div>
-    <!-- END TAB 1 CONTENT -->
-
-    <!-- TAB 2 CONTENT CONTAINER (PERBANDINGAN ANTAR REGIONAL) -->
-    <div id="tab-content-2" style="display: none;">
-        <!-- HEADER TAB 2 -->
-        <div class="bg-gradient-to-r from-emerald-800 to-teal-900 rounded-2xl p-6 mb-8 text-white shadow-lg relative overflow-hidden">
-            <div class="absolute -right-6 -bottom-6 opacity-10 text-white">
-                <i class="fa-solid fa-diagram-project text-9xl"></i>
-            </div>
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
-                <div>
-                    <span class="px-3 py-1 bg-emerald-700/60 text-emerald-200 text-xs font-bold rounded-full border border-emerald-500/40">Benchmarking Regional</span>
-                    <h2 class="text-2xl font-extrabold mt-2 tracking-tight">Analisis Perbandingan Antar Regional (Regional 2 - 8)</h2>
-                    <p class="text-xs text-emerald-200/80 mt-1">Perbandingan performa pencapaian areal, produksi, dan produktivitas komoditas Karet dan Teh per Regional</p>
-                </div>
-                <div class="flex items-center gap-2 bg-emerald-950/40 px-4 py-2 rounded-xl border border-emerald-700/50 text-xs font-bold text-emerald-200">
-                    <i class="fa-solid fa-chart-simple text-lime-400"></i>
-                    <span>5 Regional Terdaftar</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- REGIONAL CHARTS GRID: ROW 1 (PRODUKSI KARET & PRODUKSI TEH PER REGIONAL) -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <!-- CHART 1: PRODUKSI KARET PER REGIONAL -->
-            <div class="flux-card p-6 border border-gray-100">
-                <div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-100">
-                    <div>
-                        <h3 class="font-bold text-sm text-gray-900 flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-lime-500"></span>
-                            Produksi Karet per Regional (Ton)
-                        </h3>
-                        <p class="text-xs text-gray-400 mt-0.5">Perbandingan RKAP, Thn Lalu, dan Realisasi</p>
-                    </div>
-                    <span class="px-2.5 py-1 bg-lime-50 text-lime-700 text-xs font-bold rounded-lg border border-lime-200">Komoditi Karet</span>
-                </div>
-                <div id="chart-reg-karet-prod" class="w-full h-64"></div>
-            </div>
-
-            <!-- CHART 2: PRODUKSI TEH PER REGIONAL -->
-            <div class="flux-card p-6 border border-gray-100">
-                <div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-100">
-                    <div>
-                        <h3 class="font-bold text-sm text-gray-900 flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
-                            Produksi Teh per Regional (Ton)
-                        </h3>
-                        <p class="text-xs text-gray-400 mt-0.5">Perbandingan RKAP, Thn Lalu, dan Realisasi</p>
-                    </div>
-                    <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-lg border border-emerald-200">Komoditi Teh</span>
-                </div>
-                <div id="chart-reg-teh-prod" class="w-full h-64"></div>
-            </div>
-        </div>
-
-        <!-- REGIONAL CHARTS GRID: ROW 2 (PRODUKTIVITAS & CAPAIAN % RKAP) -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <!-- CHART 3: PRODUKTIVITAS (PROTAS) PER REGIONAL -->
-            <div class="flux-card p-6 border border-gray-100">
-                <div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-100">
-                    <div>
-                        <h3 class="font-bold text-sm text-gray-900 flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-                            Produktivitas Realisasi per Regional (Kg/Ha)
-                        </h3>
-                        <p class="text-xs text-gray-400 mt-0.5">Perbandingan tingkat hasil panen Karet vs Teh</p>
-                    </div>
-                </div>
-                <div id="chart-reg-protas" class="w-full h-64"></div>
-            </div>
-
-            <!-- CHART 4: PERSENTASE CAPAIAN RKAP PRODUKSI PER REGIONAL -->
-            <div class="flux-card p-6 border border-gray-100">
-                <div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-100">
-                    <div>
-                        <h3 class="font-bold text-sm text-gray-900 flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-                            Pencapaian % RKAP Produksi per Regional
-                        </h3>
-                        <p class="text-xs text-gray-400 mt-0.5">Benchmark terhadap target 100% RKAP</p>
-                    </div>
-                </div>
-                <div id="chart-reg-pct-rkap" class="w-full h-64"></div>
-            </div>
-        </div>
-
-        <!-- TABEL BENCHMARK MATRIKS REGIONAL -->
-        <div class="flux-card p-6 border border-gray-100">
-            <div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-100">
-                <div>
-                    <h3 class="font-bold text-sm text-gray-900 flex items-center gap-2">
-                        <i class="fa-solid fa-table-list text-emerald-600"></i>
-                        Matriks Kinerja Produksi &amp; Produktivitas Antar Regional
-                    </h3>
-                    <p class="text-xs text-gray-400 mt-0.5">Ringkasan performa realisasi dan % capaian RKAP tiap regional</p>
-                </div>
-            </div>
-            <div class="overflow-x-auto custom-scroll">
-                <table class="w-full text-xs text-left border-collapse">
-                    <thead>
-                        <tr class="bg-gray-800 text-white font-bold uppercase tracking-wider text-center">
-                            <th class="p-3 border border-gray-700">Regional</th>
-                            <th class="p-3 border border-gray-700 bg-lime-900/60 text-lime-300" colspan="3">Karet (Produksi &amp; Produktivitas)</th>
-                            <th class="p-3 border border-gray-700 bg-emerald-900/60 text-emerald-300" colspan="3">Teh (Produksi &amp; Produktivitas)</th>
-                        </tr>
-                        <tr class="bg-gray-100 text-gray-700 font-bold text-center border-b border-gray-200">
-                            <th class="p-2 border border-gray-200">Unit</th>
-                            <th class="p-2 border border-gray-200">Prod Real (Kg)</th>
-                            <th class="p-2 border border-gray-200">Protas (Kg/Ha)</th>
-                            <th class="p-2 border border-gray-200">% RKAP</th>
-                            <th class="p-2 border border-gray-200">Prod Real (Kg)</th>
-                            <th class="p-2 border border-gray-200">Protas (Kg/Ha)</th>
-                            <th class="p-2 border border-gray-200">% RKAP</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200 font-medium text-gray-700">
-                        @foreach($regionals as $reg)
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="p-2.5 text-center font-bold text-gray-900 border-r border-gray-200">Regional {{ $reg }}</td>
-                                
-                                <!-- KARET -->
-                                <td class="p-2.5 text-right num-mono border-r border-gray-100">{{ number_format($data['karet'][$reg]['produksi']['real'], 0, ',', '.') }}</td>
-                                <td class="p-2.5 text-right num-mono border-r border-gray-100">{{ number_format($data['karet'][$reg]['produktivitas']['real'], 2, ',', '.') }}</td>
-                                <td class="p-2.5 text-center num-mono font-bold border-r border-gray-200" style="{{ $data['karet'][$reg]['produksi']['pct_rkap'] < 100 ? 'color: #dc2626;' : 'color: #16a34a;' }}">
-                                    {{ number_format($data['karet'][$reg]['produksi']['pct_rkap'], 1, ',', '.') }}%
-                                </td>
-
-                                <!-- TEH -->
-                                <td class="p-2.5 text-right num-mono border-r border-gray-100">{{ number_format($data['teh'][$reg]['produksi']['real'], 0, ',', '.') }}</td>
-                                <td class="p-2.5 text-right num-mono border-r border-gray-100">{{ number_format($data['teh'][$reg]['produktivitas']['real'], 2, ',', '.') }}</td>
-                                <td class="p-2.5 text-center num-mono font-bold" style="{{ $data['teh'][$reg]['produksi']['pct_rkap'] < 100 ? 'color: #dc2626;' : 'color: #16a34a;' }}">
-                                    {{ number_format($data['teh'][$reg]['produksi']['pct_rkap'], 1, ',', '.') }}%
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    <!-- END TAB 2 CONTENT -->
+    <!-- END KONTEN UTAMA -->
 
 </div>
 
 <script>
-    let regionalChartsRendered = false;
+document.addEventListener('DOMContentLoaded', function() {
+    var kategoris = ['Karet', 'Teh'];
+    var font = 'Plus Jakarta Sans, sans-serif';
 
-    window.switchTab = function(tabId) {
-        const tab1 = document.getElementById('tab-content-1');
-        const tab2 = document.getElementById('tab-content-2');
-        const btn1 = document.getElementById('tab-btn-1');
-        const btn2 = document.getElementById('tab-btn-2');
-
-        if (!tab1 || !tab2) return;
-
-        if (tabId === 'tab-1') {
-            tab1.style.display = 'block';
-            tab2.style.display = 'none';
-            btn1.className = "flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all bg-emerald-800 text-white shadow-md border border-emerald-900 cursor-pointer";
-            btn2.className = "flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 shadow-sm cursor-pointer";
-        } else {
-            tab1.style.display = 'none';
-            tab2.style.display = 'block';
-            btn2.className = "flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all bg-emerald-800 text-white shadow-md border border-emerald-900 cursor-pointer";
-            btn1.className = "flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 shadow-sm cursor-pointer";
-            
-            if (!regionalChartsRendered) {
-                setTimeout(function() {
-                    renderRegionalCharts();
-                    window.dispatchEvent(new Event('resize'));
-                }, 50);
-                regionalChartsRendered = true;
-            } else {
-                setTimeout(function() {
-                    window.dispatchEvent(new Event('resize'));
-                }, 50);
-            }
-        }
-    };
-
-    function renderRegionalCharts() {
-        const categoriesRegional = [
-            @foreach($regionals as $r) 'Regional {{ $r }}', @endforeach
-        ];
-
-        // 1. Chart Produksi Karet per Regional
-        new ApexCharts(document.querySelector("#chart-reg-karet-prod"), {
-            series: [
-                { name: 'RKAP', data: [@foreach($regionals as $r) {{ round($data['karet'][$r]['produksi']['rkap'] / 1000, 1) }}, @endforeach] },
-                { name: 'Thn Lalu', data: [@foreach($regionals as $r) {{ round($data['karet'][$r]['produksi']['thn_lalu'] / 1000, 1) }}, @endforeach] },
-                { name: 'Realisasi', data: [@foreach($regionals as $r) {{ round($data['karet'][$r]['produksi']['real'] / 1000, 1) }}, @endforeach] }
-            ],
-            chart: { type: 'bar', height: 260, toolbar: { show: false }, fontFamily: 'Plus Jakarta Sans, sans-serif' },
-            colors: ['#0284c7', '#f59e0b', '#84cc16'],
-            plotOptions: { bar: { horizontal: false, columnWidth: '55%', borderRadius: 4 } },
-            xaxis: { categories: categoriesRegional, labels: { style: { fontSize: '11px', fontWeight: 700 } } },
-            yaxis: { labels: { formatter: function (val) { return val.toLocaleString('id-ID'); }, style: { fontSize: '10px' } } },
-            tooltip: { y: { formatter: function (val) { return val.toLocaleString('id-ID') + " Ton"; } } },
-            legend: { position: 'top', fontSize: '11px', fontWeight: 600 }
-        }).render();
-
-        // 2. Chart Produksi Teh per Regional
-        new ApexCharts(document.querySelector("#chart-reg-teh-prod"), {
-            series: [
-                { name: 'RKAP', data: [@foreach($regionals as $r) {{ round($data['teh'][$r]['produksi']['rkap'] / 1000, 1) }}, @endforeach] },
-                { name: 'Thn Lalu', data: [@foreach($regionals as $r) {{ round($data['teh'][$r]['produksi']['thn_lalu'] / 1000, 1) }}, @endforeach] },
-                { name: 'Realisasi', data: [@foreach($regionals as $r) {{ round($data['teh'][$r]['produksi']['real'] / 1000, 1) }}, @endforeach] }
-            ],
-            chart: { type: 'bar', height: 260, toolbar: { show: false }, fontFamily: 'Plus Jakarta Sans, sans-serif' },
+    function makeBar(series, unit) {
+        return {
+            series: series,
+            chart: { type: 'bar', height: 230, toolbar: { show: false }, fontFamily: font },
             colors: ['#0284c7', '#f59e0b', '#10b981'],
             plotOptions: { bar: { horizontal: false, columnWidth: '55%', borderRadius: 4 } },
-            xaxis: { categories: categoriesRegional, labels: { style: { fontSize: '11px', fontWeight: 700 } } },
-            yaxis: { labels: { formatter: function (val) { return val.toLocaleString('id-ID'); }, style: { fontSize: '10px' } } },
-            tooltip: { y: { formatter: function (val) { return val.toLocaleString('id-ID') + " Ton"; } } },
+            dataLabels: { enabled: false },
+            stroke: { show: true, width: 2, colors: ['transparent'] },
+            xaxis: { categories: kategoris, labels: { style: { fontSize: '11px', fontWeight: 700 } } },
+            yaxis: { labels: { formatter: function(v) { return v.toLocaleString('id-ID'); } } },
+            tooltip: { y: { formatter: function(v) { return v.toLocaleString('id-ID', { maximumFractionDigits: 2 }) + ' ' + unit; } } },
             legend: { position: 'top', fontSize: '11px', fontWeight: 600 }
-        }).render();
-
-        // 3. Chart Produktivitas Realisasi (Kg/Ha) per Regional
-        new ApexCharts(document.querySelector("#chart-reg-protas"), {
-            series: [
-                { name: 'Protas Karet', data: [@foreach($regionals as $r) {{ round($data['karet'][$r]['produktivitas']['real'], 1) }}, @endforeach] },
-                { name: 'Protas Teh', data: [@foreach($regionals as $r) {{ round($data['teh'][$r]['produktivitas']['real'], 1) }}, @endforeach] }
-            ],
-            chart: { type: 'bar', height: 260, toolbar: { show: false }, fontFamily: 'Plus Jakarta Sans, sans-serif' },
-            colors: ['#84cc16', '#10b981'],
-            plotOptions: { bar: { horizontal: false, columnWidth: '50%', borderRadius: 4 } },
-            xaxis: { categories: categoriesRegional, labels: { style: { fontSize: '11px', fontWeight: 700 } } },
-            yaxis: { labels: { formatter: function (val) { return val.toLocaleString('id-ID'); }, style: { fontSize: '10px' } } },
-            tooltip: { y: { formatter: function (val) { return val.toLocaleString('id-ID') + " Kg/Ha"; } } },
-            legend: { position: 'top', fontSize: '11px', fontWeight: 600 }
-        }).render();
-
-        // 4. Chart % Capaian RKAP Produksi per Regional
-        new ApexCharts(document.querySelector("#chart-reg-pct-rkap"), {
-            series: [
-                { name: '% RKAP Karet', data: [@foreach($regionals as $r) {{ number_format($data['karet'][$r]['produksi']['pct_rkap'], 1, '.', '') }}, @endforeach] },
-                { name: '% RKAP Teh', data: [@foreach($regionals as $r) {{ number_format($data['teh'][$r]['produksi']['pct_rkap'], 1, '.', '') }}, @endforeach] }
-            ],
-            chart: { type: 'bar', height: 260, toolbar: { show: false }, fontFamily: 'Plus Jakarta Sans, sans-serif' },
-            colors: ['#84cc16', '#059669'],
-            plotOptions: { bar: { horizontal: true, barHeight: '55%', borderRadius: 4 } },
-            annotations: {
-                xaxis: [{
-                    x: 100,
-                    borderColor: '#dc2626',
-                    label: { borderColor: '#dc2626', style: { color: '#fff', background: '#dc2626', fontSize: '10px', fontWeight: 700 }, text: 'Target 100%' }
-                }]
-            },
-            xaxis: {
-                categories: categoriesRegional,
-                max: 130
-            },
-            yaxis: { labels: { style: { fontSize: '11px', fontWeight: 700 } } },
-            tooltip: { y: { formatter: function (val) { return val + "%"; } } },
-            legend: { position: 'top', fontSize: '11px', fontWeight: 600 }
-        }).render();
+        };
     }
 
-    document.addEventListener("DOMContentLoaded", function () {
-        const categoriesKomoditi = ['Karet', 'Teh'];
+    new ApexCharts(document.getElementById('chart-luas-compare'), makeBar([
+        { name: 'RKAP (Target)',    data: [{{ round($data['karet_total']['luas']['rkap'], 1) }}, {{ round($data['teh_total']['luas']['rkap'], 1) }}] },
+        { name: 'Tahun Lalu (YoY)', data: [{{ round($data['karet_total']['luas']['thn_lalu'], 1) }}, {{ round($data['teh_total']['luas']['thn_lalu'], 1) }}] },
+        { name: 'Realisasi',        data: [{{ round($data['karet_total']['luas']['real'], 1) }}, {{ round($data['teh_total']['luas']['real'], 1) }}] }
+    ], 'Ha')).render();
 
-        // Common Chart Options Builder
-        function createCompareChartOptions(seriesData, unit, yAxisFormatter) {
-            return {
-                series: [
-                    { name: 'RKAP (Target)', data: seriesData.rkap },
-                    { name: 'Tahun Lalu (YoY)', data: seriesData.thn_lalu },
-                    { name: 'Realisasi', data: seriesData.real }
-                ],
-                chart: {
-                    type: 'bar',
-                    height: 230,
-                    toolbar: { show: false },
-                    fontFamily: 'Plus Jakarta Sans, sans-serif'
-                },
-                colors: ['#0284c7', '#f59e0b', '#10b981'], // Blue (RKAP), Amber (Thn Lalu), Emerald (Real)
-                plotOptions: {
-                    bar: {
-                        horizontal: false,
-                        columnWidth: '55%',
-                        borderRadius: 4,
-                    },
-                },
-                dataLabels: { enabled: false },
-                stroke: { show: true, width: 2, colors: ['transparent'] },
-                xaxis: {
-                    categories: categoriesKomoditi,
-                    labels: { style: { fontSize: '11px', fontWeight: 700 } }
-                },
-                yaxis: {
-                    labels: {
-                        formatter: yAxisFormatter || function (val) { return val.toLocaleString('id-ID'); },
-                        style: { fontSize: '10px' }
-                    }
-                },
-                fill: { opacity: 1 },
-                tooltip: {
-                    y: {
-                        formatter: function (val) {
-                            return val.toLocaleString('id-ID', { maximumFractionDigits: 2 }) + " " + unit;
-                        }
-                    }
-                },
-                legend: { position: 'top', fontSize: '11px', fontWeight: 600 }
-            };
-        }
+    new ApexCharts(document.getElementById('chart-produksi-compare'), makeBar([
+        { name: 'RKAP (Target)',    data: [{{ round($data['karet_total']['produksi']['rkap'] / 1000, 1) }}, {{ round($data['teh_total']['produksi']['rkap'] / 1000, 1) }}] },
+        { name: 'Tahun Lalu (YoY)', data: [{{ round($data['karet_total']['produksi']['thn_lalu'] / 1000, 1) }}, {{ round($data['teh_total']['produksi']['thn_lalu'] / 1000, 1) }}] },
+        { name: 'Realisasi',        data: [{{ round($data['karet_total']['produksi']['real'] / 1000, 1) }}, {{ round($data['teh_total']['produksi']['real'] / 1000, 1) }}] }
+    ], 'Ton')).render();
 
-        // 1. Chart Luas Areal TM (Ha)
-        const dataLuas = {
-            rkap: [
-                {{ round($data['karet_total']['luas']['rkap'], 1) }},
-                {{ round($data['teh_total']['luas']['rkap'], 1) }}
-            ],
-            thn_lalu: [
-                {{ round($data['karet_total']['luas']['thn_lalu'], 1) }},
-                {{ round($data['teh_total']['luas']['thn_lalu'], 1) }}
-            ],
-            real: [
-                {{ round($data['karet_total']['luas']['real'], 1) }},
-                {{ round($data['teh_total']['luas']['real'], 1) }}
-            ]
-        };
-        new ApexCharts(document.querySelector("#chart-luas-compare"), createCompareChartOptions(dataLuas, 'Ha')).render();
-
-        // 2. Chart Produksi Total (Ton)
-        const dataProduksi = {
-            rkap: [
-                {{ round($data['karet_total']['produksi']['rkap'] / 1000, 1) }},
-                {{ round($data['teh_total']['produksi']['rkap'] / 1000, 1) }}
-            ],
-            thn_lalu: [
-                {{ round($data['karet_total']['produksi']['thn_lalu'] / 1000, 1) }},
-                {{ round($data['teh_total']['produksi']['thn_lalu'] / 1000, 1) }}
-            ],
-            real: [
-                {{ round($data['karet_total']['produksi']['real'] / 1000, 1) }},
-                {{ round($data['teh_total']['produksi']['real'] / 1000, 1) }}
-            ]
-        };
-        new ApexCharts(document.querySelector("#chart-produksi-compare"), createCompareChartOptions(dataProduksi, 'Ton')).render();
-
-        // 3. Chart Produktivitas / Protas (Kg/Ha)
-        const dataProtas = {
-            rkap: [
-                {{ round($data['karet_total']['produktivitas']['rkap'], 1) }},
-                {{ round($data['teh_total']['produktivitas']['rkap'], 1) }}
-            ],
-            thn_lalu: [
-                {{ round($data['karet_total']['produktivitas']['thn_lalu'], 1) }},
-                {{ round($data['teh_total']['produktivitas']['thn_lalu'], 1) }}
-            ],
-            real: [
-                {{ round($data['karet_total']['produktivitas']['real'], 1) }},
-                {{ round($data['teh_total']['produktivitas']['real'], 1) }}
-            ]
-        };
-        new ApexCharts(document.querySelector("#chart-protas-compare"), createCompareChartOptions(dataProtas, 'Kg/Ha')).render();
-    });
+    new ApexCharts(document.getElementById('chart-protas-compare'), makeBar([
+        { name: 'RKAP (Target)',    data: [{{ round($data['karet_total']['produktivitas']['rkap'], 1) }}, {{ round($data['teh_total']['produktivitas']['rkap'], 1) }}] },
+        { name: 'Tahun Lalu (YoY)', data: [{{ round($data['karet_total']['produktivitas']['thn_lalu'], 1) }}, {{ round($data['teh_total']['produktivitas']['thn_lalu'], 1) }}] },
+        { name: 'Realisasi',        data: [{{ round($data['karet_total']['produktivitas']['real'], 1) }}, {{ round($data['teh_total']['produktivitas']['real'], 1) }}] }
+    ], 'Kg/Ha')).render();
+});
 </script>
 @endsection
