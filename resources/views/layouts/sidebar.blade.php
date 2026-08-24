@@ -77,7 +77,7 @@ if (isset($user)) {
                 <a href="{{url('')}}/fin_console"><i class="fa-solid fa-layer-group menu-icon"></i>Consolidate</a>
                 <a href="{{url('')}}/fin_parent"><i class="fa-solid fa-building menu-icon"></i>Parent Only</a>
                 <a href="{{url('')}}/fin_ratio"><i class="fa-solid fa-building menu-icon"></i>Rasio Keuangan</a>
-                <a href="{{url('')}}/fin_executive"><i class="fa-solid fa-building menu-icon"></i>Executive Dashboard</a>
+                {{-- <a href="{{url('')}}/fin_executive"><i class="fa-solid fa-building menu-icon"></i>Executive Dashboard</a> --}}
                 <!-- <a href="{{url('')}}/fin_sub"><i class="fa-solid fa-sitemap menu-icon"></i>Subsidiary</a> -->
             </div>
         @endif
