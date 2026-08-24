@@ -98,6 +98,11 @@ class PageController extends Controller
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/e594bb0d-abf4-45a9-9b6c-9158a7758ca4/page/wpSPE';
         return view('pages/overview_page', compact('linkiframe'));
     }
+    public function hr_sgna()
+    {
+        $linkiframe = 'https://datastudio.google.com/embed/reporting/f94db28a-54d4-4a88-9610-0ee66e5e9db7/page/p_ue56ja524d';
+        return view('pages/overview_page', compact('linkiframe'));
+    }
     public function hr_dev()
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/e594bb0d-abf4-45a9-9b6c-9158a7758ca4/page/p_4r8uabgumd';

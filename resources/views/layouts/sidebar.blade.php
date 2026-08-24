@@ -76,7 +76,7 @@ if (isset($user)) {
             <div class="submenu" id="finansialSubmenu">
                 <a href="{{url('')}}/fin_console"><i class="fa-solid fa-layer-group menu-icon"></i>Consolidate</a>
                 <a href="{{url('')}}/fin_parent"><i class="fa-solid fa-building menu-icon"></i>Parent Only</a>
-                <a href="{{url('')}}/fin_ratio"><i class="fa-solid fa-building menu-icon"></i>Rasio Keuangan</a>
+                {{-- <a href="{{url('')}}/fin_ratio"><i class="fa-solid fa-building menu-icon"></i>Rasio Keuangan</a> --}}
                 {{-- <a href="{{url('')}}/fin_executive"><i class="fa-solid fa-building menu-icon"></i>Executive Dashboard</a> --}}
                 <!-- <a href="{{url('')}}/fin_sub"><i class="fa-solid fa-sitemap menu-icon"></i>Subsidiary</a> -->
             </div>
@@ -91,6 +91,7 @@ if (isset($user)) {
                                             <a href="{{url('')}}/hr_revenue"><i class="fa-solid fa-money-bill-trend-up menu-icon"></i>HR Revenue &
                                                 Cost</a> -->
                 <a href="{{url('')}}/hr_demographic"><i class="fa-solid fa-user-group menu-icon"></i>HR Demographic</a>
+                <a href="{{url('')}}/hr_sgna"><i class="fa-solid fa-user-group menu-icon"></i>HR SGnA</a>
             </div>
         @endif
         @if($user && $user->hasFeature('legal'))
@@ -200,7 +201,7 @@ if (isset($user)) {
         <div class="submenu" id="lmSubmenu">
             <a href="{{url('')}}/sales_operational_karet"><i class="fa-solid fa-book-open menu-icon"></i>Sales & Operation
                 Karet</a>
-            <a href="{{url('')}}/pemasaran_karet"><i class="fa-solid fa-book-open menu-icon"></i>Dummy</a>
+            {{-- <a href="{{url('')}}/pemasaran_karet"><i class="fa-solid fa-book-open menu-icon"></i>Dummy</a> --}}
         </div>
     @endif
 
