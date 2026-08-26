@@ -1853,7 +1853,7 @@
                     return;
                 }
 
-                tableTitle.textContent = `Hasil Evaluasi Aplikasi ${selectedApp} &mdash; Periode ${formattedPeriod}`;
+                tableTitle.textContent = `Hasil Evaluasi Aplikasi ${selectedApp} — Periode ${formattedPeriod}`;
 
                 if (selectedApp === 'HRIS') {
                     currentPeriode = periodVal;
