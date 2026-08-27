@@ -63,24 +63,12 @@
                                 <!-- Group Header (Parent Feature or Virtual Group Header) -->
                                 <div class="bg-gradient-to-r from-green-800 to-green-950 px-6 py-4 flex items-center justify-between text-white">
                                     <div class="flex items-center gap-3">
-                                        @if($group['parent'])
-                                            <input
-                                                type="checkbox"
-                                                name="features[]"
-                                                value="{{ $group['parent']->id }}"
-                                                id="parent_{{ $prefix }}"
-                                                data-prefix="{{ $prefix }}"
-                                                {{ in_array($group['parent']->id, $userFeatures) ? 'checked' : '' }}
-                                                class="parent-checkbox w-5 h-5 text-green-600 rounded focus:ring-green-500 border-gray-300 cursor-pointer"
-                                            >
-                                        @else
-                                            <input
-                                                type="checkbox"
-                                                id="parent_{{ $prefix }}"
-                                                data-prefix="{{ $prefix }}"
-                                                class="parent-checkbox w-5 h-5 text-green-600 rounded focus:ring-green-500 border-gray-300 cursor-pointer"
-                                            >
-                                        @endif
+                                        <input
+                                            type="checkbox"
+                                            id="parent_{{ $prefix }}"
+                                            data-prefix="{{ $prefix }}"
+                                            class="parent-checkbox w-5 h-5 text-green-600 rounded focus:ring-green-500 border-gray-300 cursor-pointer"
+                                        >
                                         <label for="parent_{{ $prefix }}" class="font-bold text-lg cursor-pointer flex items-center gap-2 select-none">
                                             <i class="fa-solid fa-folder-open text-yellow-400"></i>
                                             {{ $getGroupName($prefix) }}
@@ -108,7 +96,7 @@
                                                 value="{{ $child->id }}"
                                                 id="feature_{{ $child->id }}"
                                                 data-parent="{{ $prefix }}"
-                                                {{ in_array($child->id, $userFeatures) ? 'checked' : '' }}
+                                                {{ $user->hasFeature($child->slug) ? 'checked' : '' }}
                                                 class="child-checkbox w-4 h-4 text-green-600 rounded focus:ring-green-500 border-gray-300 cursor-pointer"
                                             >
                                             <label for="feature_{{ $child->id }}" class="flex-1 ml-4 cursor-pointer flex flex-col md:flex-row justify-between md:items-center gap-2">
@@ -158,7 +146,7 @@
                                                 name="features[]"
                                                 value="{{ $feat->id }}"
                                                 id="feature_{{ $feat->id }}"
-                                                {{ in_array($feat->id, $userFeatures) ? 'checked' : '' }}
+                                                {{ $user->hasFeature($feat->slug) ? 'checked' : '' }}
                                                 class="w-5 h-5 text-green-600 rounded focus:ring-green-500 border-gray-300 cursor-pointer"
                                             >
                                             <label for="feature_{{ $feat->id }}" class="flex-1 ml-4 cursor-pointer">
