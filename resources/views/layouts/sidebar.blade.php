@@ -289,6 +289,7 @@ if (isset($user)) {
             @endif
             @if($user->hasFeature('management_features'))
                 <a href="{{ route('management.features.index') }}"><i class="fa-solid fa-cube menu-icon"></i>Fitur</a>
+                <a href="{{ route('management.features.dictionary') }}"><i class="fa-solid fa-book-bookmark menu-icon"></i>Kamus Fitur</a>
             @endif
             @if($user->hasFeature('management_access'))
                 <a href="{{ route('management.access.index') }}"><i class="fa-solid fa-shield-halved menu-icon"></i>Hak
