@@ -43,7 +43,11 @@ if (isset($user)) {
                                     } elseif ($child->slug === 'gis_cuaca') {
                                         $url = 'http://aset-dives-dev.ptpn1.co.id/weather?token=234kjjlksflk8y98ksafdklj23';
                                     } else {
-                                        $url = (str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) ? $url : url($url);
+                                        if (empty($url)) {
+                                            $url = '#';
+                                        } else {
+                                            $url = (str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) ? $url : url($url);
+                                        }
                                     }
                                 @endphp
                                 <a href="{{ $url }}" 
@@ -57,7 +61,11 @@ if (isset($user)) {
                 @else
                     @php
                         $url = $menu->url;
-                        $url = (str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) ? $url : url($url);
+                        if (empty($url)) {
+                            $url = '#';
+                        } else {
+                            $url = (str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) ? $url : url($url);
+                        }
                     @endphp
                     <a href="{{ $url }}" 
                        @if(str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) target="_blank" rel="noopener noreferrer" @endif
