@@ -159,6 +159,14 @@ class CustomUser extends Model implements AuthenticatableContract
             }
         }
 
+        // Tambahan khusus untuk legacy standalone features yang berubah menjadi sub-menu
+        if ($slug === 'sales_sonia' && in_array('sonia', $this->featureCache)) {
+            return true;
+        }
+        if ($slug === 'operasional_cctv' && in_array('cctv', $this->featureCache)) {
+            return true;
+        }
+
         // Case C: Jika parameter yang dicek adalah PARENT MENU, buka jika user punya minimal salah satu sub-menunya
         // Contoh: Cek 'hr', tetapi user hanya punya 'hr_dev' di DB
         $subFeatures = array_keys($parentMapping, $slug);

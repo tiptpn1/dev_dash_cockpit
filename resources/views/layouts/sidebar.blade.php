@@ -68,7 +68,7 @@ if (isset($user)) {
                 @endif
             </div>
         @endif
-        @if($user && $user->hasFeature('warehouse'))
+        @if($user && $user->hasFeature('warehouse_gudang'))
             <a href="{{url('')}}/gudangutilisasi" class="menu-item" id='warehouse'><i
                     class="fa-solid fa-warehouse menu-icon"></i>Warehouse</a>
         @endif
