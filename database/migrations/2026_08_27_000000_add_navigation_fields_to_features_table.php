@@ -14,7 +14,6 @@ return new class extends Migration {
             $table->integer('sort_order')->default(0);
             $table->boolean('is_sidebar')->default(true);
             $table->boolean('is_active')->default(true);
-            $table->text('description')->nullable();
         });
     }
 
@@ -22,7 +21,7 @@ return new class extends Migration {
     {
         Schema::table('features', function (Blueprint $table) {
             $table->dropForeign(['parent_id']);
-            $table->dropColumn(['parent_id', 'icon', 'url', 'sort_order', 'is_sidebar', 'is_active', 'description']);
+            $table->dropColumn(['parent_id', 'icon', 'url', 'sort_order', 'is_sidebar', 'is_active']);
         });
     }
 };
