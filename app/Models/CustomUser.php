@@ -79,6 +79,7 @@ class CustomUser extends Model implements AuthenticatableContract
             'operasional_offfarmkaret' => 'operasional',
             'operasional_offfarmteh'   => 'operasional',
             'operasional_offfarmkopi'  => 'operasional',
+            'operasional_sdmpenyadap'  => 'operasional',
 
             // PICA
             'pica_kuadran'             => 'pica',

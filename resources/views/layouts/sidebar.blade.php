@@ -52,6 +52,10 @@ if (isset($user)) {
                 @if($user->hasFeature('operasional_offfarmkopi'))
                     <a href="{{url('')}}/offfarmkopi"><i class="fa-solid fa-mug-hot menu-icon"></i>Off Farm Kopi</a>
                 @endif
+                @if($user->hasFeature('operasional_sdmpenyadap'))
+                    <a href="{{url('')}}/sdmpenyadap"><i class="fa-solid fa-users menu-icon"></i>Monitoring SDM Penyadap</a>
+                @endif
+
             </div>
         @endif
         @if($user && $user->hasFeature('pica'))
@@ -281,8 +285,8 @@ if (isset($user)) {
     @endif
 
     @if($user && $user->hasFeature('pemasaran_karet'))
-        <a href="#pmskaret" id="pmskaret_parent" class="parent"><i class="fa-solid fa-book menu-icon"></i>Sales & Operation <span
-                class="toggle-icon">&#9654;</span></a>
+        <a href="#pmskaret" id="pmskaret_parent" class="parent"><i class="fa-solid fa-book menu-icon"></i>Sales & Operation
+            <span class="toggle-icon">&#9654;</span></a>
         <div class="submenu" id="pmskaretSubmenu">
             @if($user->hasFeature('pemasaran_karet_sales'))
                 <a href="{{url('')}}/sales_operational_karet"><i class="fa-solid fa-book-open menu-icon"></i>Sales & Operation
@@ -300,7 +304,8 @@ if (isset($user)) {
             @endif
             @if($user->hasFeature('management_features'))
                 <a href="{{ route('management.features.index') }}"><i class="fa-solid fa-cube menu-icon"></i>Fitur</a>
-                <a href="{{ route('management.features.dictionary') }}"><i class="fa-solid fa-book-bookmark menu-icon"></i>Kamus Fitur</a>
+                <a href="{{ route('management.features.dictionary') }}"><i class="fa-solid fa-book-bookmark menu-icon"></i>Kamus
+                    Fitur</a>
             @endif
             @if($user->hasFeature('management_access'))
                 <a href="{{ route('management.access.index') }}"><i class="fa-solid fa-shield-halved menu-icon"></i>Hak

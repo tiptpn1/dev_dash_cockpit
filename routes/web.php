@@ -88,6 +88,7 @@ Route::middleware('auth:custom')->group(function () {
     Route::get('/get_data_kebun', [ApiController::class, 'get_data_kebun'])->name('get_data_kebun');
     Route::get('/get_data_aktivitas', [ApiController::class, 'get_data_aktivitas'])->name('get_data_aktivitas');
     Route::get('/dfarmkaretbkmsap', [PageController::class, 'dfarmkaretbkm'])->name('dfarmkaretbkm');
+    Route::get('/sdmpenyadap', [PageController::class, 'sdmpenyadap'])->name('sdmpenyadap');
 
     Route::get('/sapa-evaluasi', [PageController::class, 'sapaEvaluasi'])->name('sapa.evaluasi');
     Route::get('/bpd-evaluasi', [PageController::class, 'bpdEvaluasi'])->name('bpd.evaluasi');
@@ -185,7 +186,7 @@ Route::middleware('auth:custom')->group(function () {
 
     // AI Response Routes
     Route::post('/ai/response', [AiResponseController::class, 'aiResponse']);
-    
+
     // Log Viewer Routes (Admin only)
     Route::prefix('admin/logs')->name('admin.logs.')->group(function () {
         Route::get('/', [App\Http\Controllers\LogViewerController::class, 'index'])->name('index');

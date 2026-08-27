@@ -287,6 +287,17 @@ class FeatureManagementController extends Controller
             ],
             [
                 'no' => 11,
+                'category' => 'Operasional',
+                'position' => 'Operasional -> Monitoring SDM Penyadap',
+                'name' => 'Operasional - Monitoring SDM Penyadap',
+                'slug' => 'operasional_sdmpenyadap',
+                'url' => '/sdmpenyadap',
+                'route_name' => 'sdmpenyadap',
+                'source' => 'Looker Studio',
+                'description' => 'Dashboard monitoring produktivitas dan kehadiran SDM Penyadap'
+            ],
+            [
+                'no' => 12,
                 'category' => 'PICA',
                 'position' => 'PICA -> Kuadran Problem',
                 'name' => 'PICA - Kuadran Problem',
@@ -297,7 +308,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Matriks kuadran problem identifications'
             ],
             [
-                'no' => 12,
+                'no' => 13,
                 'category' => 'PICA',
                 'position' => 'PICA -> List Corrective Actions',
                 'name' => 'PICA - List Corrective Actions',
@@ -308,7 +319,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Laporan progress tindakan perbaikan'
             ],
             [
-                'no' => 13,
+                'no' => 14,
                 'category' => 'Warehouse',
                 'position' => 'Utama (Direct)',
                 'name' => 'Warehouse - Gudang Utilisasi',
@@ -319,7 +330,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Dashboard utilisasi ruang gudang regional (dilengkapi legacy fallback ke slug warehouse)'
             ],
             [
-                'no' => 14,
+                'no' => 15,
                 'category' => 'Sales',
                 'position' => 'Sales -> Overview Sales',
                 'name' => 'Sales - Overview Sales',
@@ -330,7 +341,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Overview penjualan korporat'
             ],
             [
-                'no' => 15,
+                'no' => 16,
                 'category' => 'Sales',
                 'position' => 'Sales -> Comodities Sales',
                 'name' => 'Sales - Comodities Sales',
@@ -341,7 +352,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Dashboard penjualan berbasis komoditas'
             ],
             [
-                'no' => 16,
+                'no' => 17,
                 'category' => 'Sales',
                 'position' => 'Sales -> Tea Inventory',
                 'name' => 'Sales - Tea Inventory',
@@ -352,7 +363,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Stok teh dan SOP komoditas teh'
             ],
             [
-                'no' => 17,
+                'no' => 18,
                 'category' => 'Sales',
                 'position' => 'Sales -> Rubber Delivery',
                 'name' => 'Sales - Rubber Delivery',
@@ -363,7 +374,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Pengiriman dan realisasi penjualan karet'
             ],
             [
-                'no' => 18,
+                'no' => 19,
                 'category' => 'Sales',
                 'position' => 'Sales -> CRM',
                 'name' => 'Sales - CRM',
@@ -374,7 +385,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Manajemen hubungan pelanggan / customer'
             ],
             [
-                'no' => 19,
+                'no' => 20,
                 'category' => 'Sales',
                 'position' => 'Sales -> SONIA',
                 'name' => 'Sales - SONIA',
@@ -385,7 +396,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Sistem Operasional Niaga Terintegrasi (dilengkapi legacy fallback ke slug sonia)'
             ],
             [
-                'no' => 20,
+                'no' => 21,
                 'category' => 'Asset',
                 'position' => 'Asset -> Peta',
                 'name' => 'Asset - Peta',
@@ -396,7 +407,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Pemetaan aset wilayah PTPN I'
             ],
             [
-                'no' => 21,
+                'no' => 22,
                 'category' => 'Asset',
                 'position' => 'Asset -> Recovery',
                 'name' => 'Asset - Recovery',
@@ -407,7 +418,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Pemulihan dan optimalisasi status aset'
             ],
             [
-                'no' => 22,
+                'no' => 23,
                 'category' => 'Asset',
                 'position' => 'Asset -> Optimalisasi',
                 'name' => 'Asset - Optimalisasi',
@@ -418,7 +429,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Strategi pendayagunaan aset'
             ],
             [
-                'no' => 23,
+                'no' => 24,
                 'category' => 'Asset',
                 'position' => 'Asset -> Divestasi',
                 'name' => 'Asset - Divestasi',
@@ -429,7 +440,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Dashboard status divestasi aset'
             ],
             [
-                'no' => 24,
+                'no' => 25,
                 'category' => 'Finansial',
                 'position' => 'Finansial -> Consolidate',
                 'name' => 'Finansial - Consolidate',
@@ -440,7 +451,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Konsolidasi laporan keuangan korporasi'
             ],
             [
-                'no' => 25,
+                'no' => 26,
                 'category' => 'Finansial',
                 'position' => 'Finansial -> Parent Only',
                 'name' => 'Finansial - Parent Only',
@@ -451,7 +462,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Laporan keuangan perusahaan induk'
             ],
             [
-                'no' => 26,
+                'no' => 27,
                 'category' => 'Finansial',
                 'position' => 'Finansial -> Rasio Keuangan',
                 'name' => 'Finansial - Rasio Keuangan',
@@ -462,7 +473,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Dashboard analisis rasio keuangan'
             ],
             [
-                'no' => 27,
+                'no' => 28,
                 'category' => 'Finansial',
                 'position' => 'Finansial -> Executive Dashboard',
                 'name' => 'Finansial - Executive Dashboard',
@@ -473,7 +484,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Dashboard eksekutif ringkasan finansial'
             ],
             [
-                'no' => 28,
+                'no' => 29,
                 'category' => 'Finansial',
                 'position' => 'Finansial -> Subsidiary',
                 'name' => 'Finansial - Subsidiary',
@@ -484,7 +495,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Laporan keuangan anak perusahaan'
             ],
             [
-                'no' => 29,
+                'no' => 30,
                 'category' => 'Human Resource',
                 'position' => 'HR -> Demographics (Dashboard)',
                 'name' => 'HR - Demographics',
@@ -495,7 +506,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Visualisasi demografi karyawan'
             ],
             [
-                'no' => 30,
+                'no' => 31,
                 'category' => 'Human Resource',
                 'position' => 'HR -> Learning & Development',
                 'name' => 'HR - Learning & Development',
@@ -506,7 +517,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Monitoring L&D dan pelatihan karyawan'
             ],
             [
-                'no' => 31,
+                'no' => 32,
                 'category' => 'Human Resource',
                 'position' => 'HR -> Revenue & Cost',
                 'name' => 'HR - Revenue & Cost',
@@ -517,7 +528,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Analisis biaya karyawan terhadap revenue'
             ],
             [
-                'no' => 32,
+                'no' => 33,
                 'category' => 'Human Resource',
                 'position' => 'HR -> Demographic (Aplikasi)',
                 'name' => 'HR - Demographic',
@@ -525,10 +536,10 @@ class FeatureManagementController extends Controller
                 'url' => '/hr_demographic',
                 'route_name' => 'hr_demographic',
                 'source' => 'Aplikasi Lokal',
-                'description' => 'Data detail demografi lokal internal'
+                'description' => 'Sistem monitoring data demografi karyawan PTPN I'
             ],
             [
-                'no' => 33,
+                'no' => 34,
                 'category' => 'Human Resource',
                 'position' => 'HR -> SGnA',
                 'name' => 'HR - SGnA',
@@ -536,10 +547,10 @@ class FeatureManagementController extends Controller
                 'url' => '/hr_sgna',
                 'route_name' => 'hr_sgna',
                 'source' => 'Looker Studio',
-                'description' => 'Dashboard beban penjualan, umum, dan administrasi'
+                'description' => 'Dashboard SGnA korporasi PTPN I'
             ],
             [
-                'no' => 34,
+                'no' => 35,
                 'category' => 'Legal',
                 'position' => 'Legal -> Tax Relaxation BPHTB 0%',
                 'name' => 'Legal - Tax Relaxation',
@@ -547,10 +558,10 @@ class FeatureManagementController extends Controller
                 'url' => '/agraria_tax',
                 'route_name' => 'agraria_tax',
                 'source' => 'Looker Studio',
-                'description' => 'Relaksasi pajak BPHTB 0%'
+                'description' => 'Dashboard pemantauan relaksasi pajak agraria'
             ],
             [
-                'no' => 35,
+                'no' => 36,
                 'category' => 'Legal',
                 'position' => 'Legal -> Agraria',
                 'name' => 'Legal - Agraria',
@@ -558,10 +569,10 @@ class FeatureManagementController extends Controller
                 'url' => '/agraria',
                 'route_name' => 'agraria',
                 'source' => 'Looker Studio',
-                'description' => 'Status tanah dan sertifikat HGU/agraria'
+                'description' => 'Dashboard monitoring legalitas tanah dan aset agraria'
             ],
             [
-                'no' => 36,
+                'no' => 37,
                 'category' => 'Capaian Progres',
                 'position' => 'Capaian Progres -> SLA',
                 'name' => 'Progress - SLA',
@@ -569,10 +580,10 @@ class FeatureManagementController extends Controller
                 'url' => '/sla',
                 'route_name' => 'sla',
                 'source' => 'Looker Studio',
-                'description' => 'Kinerja dan SLA tim TI'
+                'description' => 'Dashboard pemantauan Service Level Agreement'
             ],
             [
-                'no' => 37,
+                'no' => 38,
                 'category' => 'Pengadaan',
                 'position' => 'Pengadaan -> Pra Pengadaan',
                 'name' => 'Pengadaan - Pra Pengadaan',
@@ -580,10 +591,10 @@ class FeatureManagementController extends Controller
                 'url' => '/prapengadaan',
                 'route_name' => 'prapengadaan',
                 'source' => 'Looker Studio',
-                'description' => 'Rencana dan tahapan awal pengadaan'
+                'description' => 'Pemantauan dokumen pra-pengadaan regional'
             ],
             [
-                'no' => 38,
+                'no' => 39,
                 'category' => 'Pengadaan',
                 'position' => 'Pengadaan -> Proses Pengadaan',
                 'name' => 'Pengadaan - Proses Pengadaan',
@@ -591,10 +602,10 @@ class FeatureManagementController extends Controller
                 'url' => '/prosespengadaan',
                 'route_name' => 'prosespengadaan',
                 'source' => 'Looker Studio',
-                'description' => 'Monitoring proses pengadaan barang/jasa'
+                'description' => 'Dashboard monitoring proses pengadaan berjalan'
             ],
             [
-                'no' => 39,
+                'no' => 40,
                 'category' => 'Pengadaan',
                 'position' => 'Pengadaan -> Kontrak Pengadaan',
                 'name' => 'Pengadaan - Kontrak Pengadaan',
@@ -602,10 +613,10 @@ class FeatureManagementController extends Controller
                 'url' => '/kontrakpengadaan',
                 'route_name' => 'kontrakpengadaan',
                 'source' => 'Looker Studio',
-                'description' => 'Monitoring penyusunan dan tanda tangan kontrak'
+                'description' => 'Monitoring kontrak dan SPK pengadaan'
             ],
             [
-                'no' => 40,
+                'no' => 41,
                 'category' => 'Pengadaan',
                 'position' => 'Pengadaan -> Stok Pengadaan',
                 'name' => 'Pengadaan - Stok Pengadaan',
@@ -616,7 +627,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Realisasi stok barang pengadaan regional'
             ],
             [
-                'no' => 41,
+                'no' => 42,
                 'category' => 'Carbon',
                 'position' => 'Carbon -> Dashboard Emisi',
                 'name' => 'Carbon - Dashboard Emisi',
@@ -627,7 +638,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Pantauan emisi gas rumah kaca'
             ],
             [
-                'no' => 42,
+                'no' => 43,
                 'category' => 'GIS',
                 'position' => 'GIS -> PETA',
                 'name' => 'GIS - Areal',
@@ -638,7 +649,7 @@ class FeatureManagementController extends Controller
                 'description' => 'WebGIS peta areal komoditas'
             ],
             [
-                'no' => 43,
+                'no' => 44,
                 'category' => 'GIS',
                 'position' => 'GIS -> NDVI',
                 'name' => 'GIS - NDVI',
@@ -649,7 +660,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Pemantauan indeks vegetasi satelit'
             ],
             [
-                'no' => 44,
+                'no' => 45,
                 'category' => 'GIS',
                 'position' => 'GIS -> CUACA',
                 'name' => 'GIS - Cuaca',
@@ -660,7 +671,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Monitoring cuaca regional'
             ],
             [
-                'no' => 45,
+                'no' => 46,
                 'category' => 'AGRO Skyview',
                 'position' => 'AGRO Skyview -> AGRO Skyview Table',
                 'name' => 'Skyview - AGRO Skyview Table',
@@ -671,7 +682,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Manajemen data penerbangan drone & peta udara'
             ],
             [
-                'no' => 46,
+                'no' => 47,
                 'category' => 'AGRO Skyview',
                 'position' => 'AGRO Skyview -> Exec Summary',
                 'name' => 'Skyview - Exec Summary',
@@ -682,7 +693,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Ringkasan eksekutif AGRO Skyview'
             ],
             [
-                'no' => 47,
+                'no' => 48,
                 'category' => 'Laporan Manajemen',
                 'position' => 'Laporan Manajemen -> LM13',
                 'name' => 'LM - LM13',
@@ -693,7 +704,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Laporan manajemen LM13'
             ],
             [
-                'no' => 48,
+                'no' => 49,
                 'category' => 'Laporan Manajemen',
                 'position' => 'Laporan Manajemen -> LM14',
                 'name' => 'LM - LM14',
@@ -704,7 +715,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Laporan manajemen LM14'
             ],
             [
-                'no' => 49,
+                'no' => 50,
                 'category' => 'Laporan Manajemen',
                 'position' => 'Laporan Manajemen -> LM16',
                 'name' => 'LM - LM16',
@@ -715,7 +726,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Laporan manajemen LM16'
             ],
             [
-                'no' => 50,
+                'no' => 51,
                 'category' => 'Laporan Manajemen',
                 'position' => 'Laporan Manajemen -> LM34',
                 'name' => 'LM - LM34',
@@ -726,7 +737,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Laporan manajemen LM34'
             ],
             [
-                'no' => 51,
+                'no' => 52,
                 'category' => 'Laporan Manajemen',
                 'position' => 'Laporan Manajemen -> LM62',
                 'name' => 'LM - LM62',
@@ -737,7 +748,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Laporan manajemen LM62'
             ],
             [
-                'no' => 52,
+                'no' => 53,
                 'category' => 'Sales & Operation',
                 'position' => 'Sales & Operation -> Karet',
                 'name' => 'Sales & Operation - Karet',
@@ -748,7 +759,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Realisasi penjualan operasional karet'
             ],
             [
-                'no' => 53,
+                'no' => 54,
                 'category' => 'AIGR1',
                 'position' => 'Utama (Direct)',
                 'name' => 'AIGR1',
@@ -759,7 +770,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Menu aplikasi AIGR1'
             ],
             [
-                'no' => 54,
+                'no' => 55,
                 'category' => 'Garda AI',
                 'position' => 'Utama (Direct)',
                 'name' => 'Garda AI',
@@ -770,7 +781,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Portal AI Garda Holding Perkebunan'
             ],
             [
-                'no' => 55,
+                'no' => 56,
                 'category' => 'Portal Aplikasi',
                 'position' => 'Utama (Direct)',
                 'name' => 'Portal Aplikasi',
@@ -781,7 +792,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Menu Portal Aplikasi'
             ],
             [
-                'no' => 56,
+                'no' => 57,
                 'category' => 'Evaluasi Aplikasi',
                 'position' => 'Utama (Direct)',
                 'name' => 'Evaluasi Aplikasi',
@@ -792,7 +803,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Sistem evaluasi aplikasi PTPN I'
             ],
             [
-                'no' => 57,
+                'no' => 58,
                 'category' => 'System Management',
                 'position' => 'System Management -> User',
                 'name' => 'User Management',
@@ -803,7 +814,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Manajemen data user dan pembuatan akun baru'
             ],
             [
-                'no' => 58,
+                'no' => 59,
                 'category' => 'System Management',
                 'position' => 'System Management -> Fitur',
                 'name' => 'Feature Management',
@@ -814,7 +825,7 @@ class FeatureManagementController extends Controller
                 'description' => 'Manajemen pendaftaran slug fitur baru dan Kamus Fitur'
             ],
             [
-                'no' => 59,
+                'no' => 60,
                 'category' => 'System Management',
                 'position' => 'System Management -> Hak Akses / Last Login',
                 'name' => 'Access Management',

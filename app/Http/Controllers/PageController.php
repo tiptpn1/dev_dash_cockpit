@@ -67,6 +67,12 @@ class PageController extends Controller
         return view('pages/overview_page', compact('linkiframe'));
     }
 
+    public function sdmpenyadap()
+    {
+        $linkiframe = 'https://datastudio.google.com/embed/reporting/5907ba05-bfc3-4360-bb39-f1d4a6b5798b/page/p_g3o10faxmd';
+        return view('pages/overview_page', compact('linkiframe'));
+    }
+
     public function fin_console()
     {
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/2195aff4-6f81-4d0c-a245-74f9f3e7a981/page/oPLPE';
@@ -978,28 +984,28 @@ class PageController extends Controller
 
         // 5 Summary Card yang tampil di dashboard (judul sesuai label di halaman).
         $cards = [
-            ['key' => 'total',       'title' => 'Total Karyawan',       'value' => (int)($summary['total'] ?? 0)],
-            ['key' => 'head_office', 'title' => 'Head Office',          'value' => (int)($summary['head_office'] ?? 0)],
-            ['key' => 'regional',    'title' => 'Regional',             'value' => (int)($summary['regional'] ?? 0)],
-            ['key' => 'tetap',       'title' => 'Karyawan Tetap',       'value' => (int)($summary['tetap'] ?? 0)],
-            ['key' => 'tidak_tetap', 'title' => 'Karyawan Tidak Tetap', 'value' => (int)($summary['tidak_tetap'] ?? 0)],
+            ['key' => 'total', 'title' => 'Total Karyawan', 'value' => (int) ($summary['total'] ?? 0)],
+            ['key' => 'head_office', 'title' => 'Head Office', 'value' => (int) ($summary['head_office'] ?? 0)],
+            ['key' => 'regional', 'title' => 'Regional', 'value' => (int) ($summary['regional'] ?? 0)],
+            ['key' => 'tetap', 'title' => 'Karyawan Tetap', 'value' => (int) ($summary['tetap'] ?? 0)],
+            ['key' => 'tidak_tetap', 'title' => 'Karyawan Tidak Tetap', 'value' => (int) ($summary['tidak_tetap'] ?? 0)],
         ];
 
         // Definisi chart sesuai urutan tampil pada halaman (key, judul, tipe).
         $chartDefs = [
-            ['key' => 'chart1',  'title' => 'Komposisi Status Karyawan (Tetap vs Tidak Tetap)',                'type' => 'stacked_bar'],
-            ['key' => 'chart2',  'title' => 'Komposisi Jabatan Karyawan (Karpim vs Karpel)',                   'type' => 'stacked_bar'],
-            ['key' => 'chart8',  'title' => 'Komposisi Level Organisasi per Regional (BOD Level)',             'type' => 'stacked_bar'],
-            ['key' => 'chart9',  'title' => 'Komposisi Person Grade per Regional',                             'type' => 'stacked_bar'],
-            ['key' => 'chart5',  'title' => 'Komposisi Jenis Kelamin per Regional (Laki-laki vs Perempuan)',   'type' => 'stacked_bar'],
+            ['key' => 'chart1', 'title' => 'Komposisi Status Karyawan (Tetap vs Tidak Tetap)', 'type' => 'stacked_bar'],
+            ['key' => 'chart2', 'title' => 'Komposisi Jabatan Karyawan (Karpim vs Karpel)', 'type' => 'stacked_bar'],
+            ['key' => 'chart8', 'title' => 'Komposisi Level Organisasi per Regional (BOD Level)', 'type' => 'stacked_bar'],
+            ['key' => 'chart9', 'title' => 'Komposisi Person Grade per Regional', 'type' => 'stacked_bar'],
+            ['key' => 'chart5', 'title' => 'Komposisi Jenis Kelamin per Regional (Laki-laki vs Perempuan)', 'type' => 'stacked_bar'],
             ['key' => 'chart15', 'title' => 'Komposisi Status Pernikahan per Regional (Menikah vs Belum Menikah)', 'type' => 'stacked_bar'],
-            ['key' => 'chart4',  'title' => 'Komposisi Tingkat Pendidikan per Regional (SD s/d S3)',           'type' => 'stacked_bar'],
-            ['key' => 'chart6',  'title' => 'Komposisi Sebaran Agama per Regional',                            'type' => 'stacked_bar'],
-            ['key' => 'chart7',  'title' => 'Suku & Keberagaman Kultur',                                       'type' => 'treemap'],
-            ['key' => 'chart13', 'title' => 'Distribusi Umur Karyawan',                                        'type' => 'stacked_bar'],
-            ['key' => 'chart14', 'title' => 'Masa Kerja Karyawan',                                             'type' => 'stacked_bar'],
-            ['key' => 'chart16', 'title' => 'Sebaran Karyawan Berdasarkan Job Group',                          'type' => 'bar'],
-            ['key' => 'chart17', 'title' => 'Estimasi Pensiun Pegawai',                                        'type' => 'stacked_bar'],
+            ['key' => 'chart4', 'title' => 'Komposisi Tingkat Pendidikan per Regional (SD s/d S3)', 'type' => 'stacked_bar'],
+            ['key' => 'chart6', 'title' => 'Komposisi Sebaran Agama per Regional', 'type' => 'stacked_bar'],
+            ['key' => 'chart7', 'title' => 'Suku & Keberagaman Kultur', 'type' => 'treemap'],
+            ['key' => 'chart13', 'title' => 'Distribusi Umur Karyawan', 'type' => 'stacked_bar'],
+            ['key' => 'chart14', 'title' => 'Masa Kerja Karyawan', 'type' => 'stacked_bar'],
+            ['key' => 'chart16', 'title' => 'Sebaran Karyawan Berdasarkan Job Group', 'type' => 'bar'],
+            ['key' => 'chart17', 'title' => 'Estimasi Pensiun Pegawai', 'type' => 'stacked_bar'],
         ];
 
         $charts = [];
@@ -1010,9 +1016,9 @@ class PageController extends Controller
             }
 
             $chart = [
-                'key'   => $def['key'],
+                'key' => $def['key'],
                 'title' => $def['title'],
-                'type'  => $def['type'],
+                'type' => $def['type'],
             ];
 
             if ($def['type'] === 'treemap') {
@@ -1021,7 +1027,7 @@ class PageController extends Controller
             } else {
                 // stacked_bar & bar: categories + series
                 $chart['categories'] = $data['categories'] ?? [];
-                $chart['series']     = $data['series'] ?? [];
+                $chart['series'] = $data['series'] ?? [];
             }
 
             $charts[] = $chart;
@@ -1030,16 +1036,16 @@ class PageController extends Controller
         return response()->json([
             'meta' => [
                 'generated_at' => now()->toIso8601String(),
-                'last_update'  => $summary['last_update'] ?? null,
+                'last_update' => $summary['last_update'] ?? null,
                 'filters' => [
-                    'tahun'              => $request->input('tahun', 'ALL'),
-                    'regional'           => $request->input('regional', 'ALL'),
-                    'personnel_area'     => $request->input('personnel_area', 'ALL'),
+                    'tahun' => $request->input('tahun', 'ALL'),
+                    'regional' => $request->input('regional', 'ALL'),
+                    'personnel_area' => $request->input('personnel_area', 'ALL'),
                     'personnel_sub_area' => $request->input('personnel_sub_area', 'ALL'),
-                    'status_pegawai'     => $request->input('status_pegawai', 'ALL'),
+                    'status_pegawai' => $request->input('status_pegawai', 'ALL'),
                 ],
             ],
-            'cards'  => $cards,
+            'cards' => $cards,
             'charts' => $charts,
         ]);
     }

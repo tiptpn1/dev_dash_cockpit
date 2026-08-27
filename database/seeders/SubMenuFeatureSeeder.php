@@ -23,6 +23,7 @@ class SubMenuFeatureSeeder extends Seeder
             ['slug' => 'operasional_offfarmkaret', 'name' => 'Operasional - Off Farm Karet'],
             ['slug' => 'operasional_offfarmteh',   'name' => 'Operasional - Off Farm Teh'],
             ['slug' => 'operasional_offfarmkopi',  'name' => 'Operasional - Off Farm Kopi'],
+            ['slug' => 'operasional_sdmpenyadap',  'name' => 'Operasional - Monitoring SDM Penyadap'],
 
             // PICA
             ['slug' => 'pica_kuadran',             'name' => 'PICA - Kuadran Problem'],
