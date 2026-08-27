@@ -37,24 +37,99 @@
                     @csrf
                     @method('PUT')
 
-                    <div class="space-y-3">
-                        @forelse($allFeatures as $feature)
-                            <div class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-green-50 hover:border-green-300 transition duration-200">
-                                <input
-                                    type="checkbox"
-                                    name="features[]"
-                                    value="{{ $feature->id }}"
-                                    id="feature_{{ $feature->id }}"
-                                    {{ in_array($feature->id, $userFeatures) ? 'checked' : '' }}
-                                    class="w-5 h-5 text-green-600 rounded focus:ring-green-500 border-gray-300 cursor-pointer"
-                                >
-                                <label for="feature_{{ $feature->id }}" class="flex-1 ml-4 cursor-pointer">
-                                    <div class="font-bold text-gray-800">{{ $feature->name }}</div>
-                                    <div class="text-sm font-medium text-gray-500"><i class="fas fa-link text-xs mr-1"></i>{{ $feature->slug }}</div>
-                                </label>
-                                <span class="text-xs font-bold bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full shadow-sm">
-                                    <i class="fas fa-users mr-1 text-gray-500"></i>{{ $feature->users->count() }}
-                                </span>
+                    @php
+                        $getGroupName = function($prefix) {
+                            $specialNames = [
+                                'lm' => 'Laporan Manajemen (LM)',
+                                'gis' => 'Geographic Information System (GIS)',
+                                'mrc' => 'Management Review Committee (MRC)',
+                                'aigr1' => 'AIGR1',
+                                'hr' => 'Human Resource (HR)',
+                                'pica' => 'PICA (Problem Identification & Corrective Action)',
+                                'management' => 'System Management',
+                                'pemasaran' => 'Pemasaran Karet',
+                                'carbon' => 'Carbon Monitoring',
+                                'warehouse' => 'Warehouse Management',
+                                'skyview' => 'AGRO Skyview',
+                                'progress' => 'Capaian Progres',
+                            ];
+                            return $specialNames[strtolower($prefix)] ?? ucfirst(str_replace('_', ' ', $prefix));
+                        };
+                    @endphp
+
+                    <div class="space-y-6">
+                        @forelse($groupedFeatures as $prefix => $group)
+                            <div class="bg-gray-50 border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition">
+                                <!-- Group Header (Parent Feature or Virtual Group Header) -->
+                                <div class="bg-gradient-to-r from-green-800 to-green-950 px-6 py-4 flex items-center justify-between text-white">
+                                    <div class="flex items-center gap-3">
+                                        @if($group['parent'])
+                                            <input
+                                                type="checkbox"
+                                                name="features[]"
+                                                value="{{ $group['parent']->id }}"
+                                                id="parent_{{ $prefix }}"
+                                                data-prefix="{{ $prefix }}"
+                                                {{ in_array($group['parent']->id, $userFeatures) ? 'checked' : '' }}
+                                                class="parent-checkbox w-5 h-5 text-green-600 rounded focus:ring-green-500 border-gray-300 cursor-pointer"
+                                            >
+                                        @else
+                                            <input
+                                                type="checkbox"
+                                                id="parent_{{ $prefix }}"
+                                                data-prefix="{{ $prefix }}"
+                                                class="parent-checkbox w-5 h-5 text-green-600 rounded focus:ring-green-500 border-gray-300 cursor-pointer"
+                                            >
+                                        @endif
+                                        <label for="parent_{{ $prefix }}" class="font-bold text-lg cursor-pointer flex items-center gap-2 select-none">
+                                            <i class="fa-solid fa-folder-open text-yellow-400"></i>
+                                            {{ $getGroupName($prefix) }}
+                                        </label>
+                                    </div>
+                                    <span class="text-xs font-semibold bg-green-700/50 text-green-100 px-3 py-1 rounded-full border border-green-600/30">
+                                        @if($group['parent'])
+                                            MENU INDUK
+                                        @else
+                                            VIRTUAL GROUP
+                                        @endif
+                                    </span>
+                                </div>
+
+                                <!-- Group Children (Sub-Menus) -->
+                                <div class="p-4 bg-white divide-y divide-gray-100">
+                                    @foreach($group['children'] as $child)
+                                        <div class="flex items-center py-3 pl-6 hover:bg-green-50/50 rounded-lg transition group">
+                                            <!-- Tree structure line helper -->
+                                            <span class="text-gray-300 font-mono mr-3 select-none">└─</span>
+                                            
+                                            <input
+                                                type="checkbox"
+                                                name="features[]"
+                                                value="{{ $child->id }}"
+                                                id="feature_{{ $child->id }}"
+                                                data-parent="{{ $prefix }}"
+                                                {{ in_array($child->id, $userFeatures) ? 'checked' : '' }}
+                                                class="child-checkbox w-4 h-4 text-green-600 rounded focus:ring-green-500 border-gray-300 cursor-pointer"
+                                            >
+                                            <label for="feature_{{ $child->id }}" class="flex-1 ml-4 cursor-pointer flex flex-col md:flex-row justify-between md:items-center gap-2">
+                                                <div>
+                                                    @php
+                                                        $childName = $child->name;
+                                                        $groupName = $getGroupName($prefix);
+                                                        if (strpos($childName, ' - ') !== false) {
+                                                            $childName = explode(' - ', $childName)[1];
+                                                        }
+                                                    @endphp
+                                                    <div class="font-bold text-gray-800 group-hover:text-green-900 transition">{{ $childName }}</div>
+                                                    <div class="text-xs font-mono text-gray-400 mt-0.5">{{ $child->slug }}</div>
+                                                </div>
+                                                <span class="self-start md:self-center inline-flex items-center gap-1 px-2.5 py-1 rounded bg-blue-50 text-blue-700 border border-blue-100 text-[10px] font-bold">
+                                                    SUB MENU
+                                                </span>
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                </div>
                             </div>
                         @empty
                             <div class="text-gray-500 text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-300">
@@ -62,6 +137,39 @@
                                 No features available
                             </div>
                         @endforelse
+
+                        <!-- Standalone Features Card -->
+                        @if(!empty($standaloneFeatures))
+                            <div class="bg-gray-50 border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                                <div class="bg-gradient-to-r from-gray-700 to-gray-800 px-6 py-4 flex items-center justify-between text-white">
+                                    <label class="font-bold text-lg flex items-center gap-2 select-none">
+                                        <i class="fa-solid fa-link text-blue-400"></i>
+                                        Fitur Mandiri & Eksternal (Direct Menus)
+                                    </label>
+                                    <span class="text-xs font-semibold bg-gray-600 text-gray-200 px-3 py-1 rounded-full border border-gray-500/30">
+                                        STANDALONE
+                                    </span>
+                                </div>
+                                <div class="p-6 bg-white grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    @foreach($standaloneFeatures as $feat)
+                                        <div class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition duration-200">
+                                            <input
+                                                type="checkbox"
+                                                name="features[]"
+                                                value="{{ $feat->id }}"
+                                                id="feature_{{ $feat->id }}"
+                                                {{ in_array($feat->id, $userFeatures) ? 'checked' : '' }}
+                                                class="w-5 h-5 text-green-600 rounded focus:ring-green-500 border-gray-300 cursor-pointer"
+                                            >
+                                            <label for="feature_{{ $feat->id }}" class="flex-1 ml-4 cursor-pointer">
+                                                <div class="font-bold text-gray-800">{{ $feat->name }}</div>
+                                                <div class="text-xs font-mono text-gray-400 mt-0.5">{{ $feat->slug }}</div>
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
                     </div>
 
                     <!-- Buttons -->
@@ -160,4 +268,42 @@
         background: rgba(5, 150, 105, 0.8); /* green-600 */
     }
 </style>
+
+@section('scripts')
+<script>
+    $(document).ready(function() {
+        // 1. When a parent checkbox changes
+        $('.parent-checkbox').change(function() {
+            var prefix = $(this).data('prefix');
+            var isChecked = $(this).prop('checked');
+            // Find all child checkboxes under this prefix and sync them
+            $('.child-checkbox[data-parent="' + prefix + '"]').prop('checked', isChecked);
+        });
+
+        // 2. When a child checkbox changes
+        $('.child-checkbox').change(function() {
+            var parentPrefix = $(this).data('parent');
+            var siblingCheckedCount = $('.child-checkbox[data-parent="' + parentPrefix + '"]:checked').length;
+            
+            // If at least one child is checked, the parent should be checked
+            if (siblingCheckedCount > 0) {
+                $('#parent_' + parentPrefix).prop('checked', true);
+            } else {
+                $('#parent_' + parentPrefix).prop('checked', false);
+            }
+        });
+
+        // 3. Initialize: check parent if at least one child is checked
+        $('.parent-checkbox').each(function() {
+            var prefix = $(this).data('prefix');
+            var checkedChildren = $('.child-checkbox[data-parent="' + prefix + '"]:checked').length;
+            
+            if (checkedChildren > 0) {
+                $(this).prop('checked', true);
+            }
+        });
+    });
+</script>
+@endsection
+
 @endsection
