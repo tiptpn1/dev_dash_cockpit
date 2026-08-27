@@ -69,7 +69,7 @@ class PageController extends Controller
 
     public function sdmpenyadap()
     {
-        $linkiframe = 'https://datastudio.google.com/embed/reporting/5907ba05-bfc3-4360-bb39-f1d4a6b5798b/page/p_g3o10faxmd';
+        $linkiframe = 'https://datastudio.google.com/embed/reporting/89c816d3-086c-451d-abc9-f95578d05411/page/p_k6tmnjaxmd';
         return view('pages/overview_page', compact('linkiframe'));
     }
 
