@@ -61,7 +61,116 @@ class CustomUser extends Model implements AuthenticatableContract
     public function hasFeature(string $slug): bool
     {
         $this->loadFeatureCache();
-        return in_array($slug, $this->featureCache);
+
+        // 1. Cek akses langsung dari database
+        if (in_array($slug, $this->featureCache)) {
+            return true;
+        }
+
+        // 2. Pemetaan Sub-Menu ke Parent Menu (untuk Fallback)
+        $parentMapping = [
+            // Operasional
+            'operasional_amanah'       => 'operasional',
+            'operasional_dfarm'        => 'operasional',
+            'operasional_cctv'         => 'operasional',
+            'operasional_onfarmkaret'  => 'operasional',
+            'operasional_onfarmteh'    => 'operasional',
+            'operasional_onfarmkopi'   => 'operasional',
+            'operasional_offfarmkaret' => 'operasional',
+            'operasional_offfarmteh'   => 'operasional',
+            'operasional_offfarmkopi'  => 'operasional',
+
+            // PICA
+            'pica_kuadran'             => 'pica',
+            'pica_corrective'          => 'pica',
+
+            // Warehouse
+            'warehouse_gudang'         => 'warehouse',
+
+            // Sales
+            'sales_overview'           => 'sales',
+            'sales_comodities'         => 'sales',
+            'sales_tea_inventory'      => 'sales',
+            'sales_rubber_delivery'    => 'sales',
+            'sales_crm'                => 'sales',
+            'sales_sonia'              => 'sales',
+
+            // Aset
+            'aset_peta'                => 'aset',
+            'aset_recovery'            => 'aset',
+            'aset_optimalisasi'        => 'aset',
+            'aset_divestasi'           => 'aset',
+
+            // Finansial
+            'finansial_console'        => 'finansial',
+            'finansial_parent'         => 'finansial',
+            'finansial_ratio'          => 'finansial',
+            'finansial_executive'      => 'finansial',
+            'finansial_sub'            => 'finansial',
+
+            // HR
+            'hr_demographics'          => 'hr',
+            'hr_dev'                   => 'hr',
+            'hr_revenue'               => 'hr',
+            'hr_demographic'           => 'hr',
+            'hr_sgna'                  => 'hr',
+
+            // Legal
+            'legal_tax'                => 'legal',
+            'legal_agraria'            => 'legal',
+
+            // Progress
+            'progress_sla'             => 'progress',
+
+            // Pengadaan
+            'pengadaan_pra'            => 'pengadaan',
+            'pengadaan_proses'         => 'pengadaan',
+            'pengadaan_kontrak'        => 'pengadaan',
+            'pengadaan_stok'           => 'pengadaan',
+
+            // Carbon
+            'carbon_emisi'             => 'carbon',
+
+            // GIS
+            'gis_areal'                => 'gis',
+            'gis_ndvi'                 => 'gis',
+            'gis_cuaca'                => 'gis',
+
+            // Skyview
+            'skyview_table'            => 'skyview',
+            'skyview_exec'             => 'skyview',
+
+            // Laporan Manajemen (LM)
+            'lm_13'                    => 'lm',
+            'lm_14'                    => 'lm',
+            'lm_16'                    => 'lm',
+            'lm_34'                    => 'lm',
+            'lm_62'                    => 'lm',
+
+            // Pemasaran Karet
+            'pemasaran_karet_sales'    => 'pemasaran_karet',
+        ];
+
+        // Case B: Jika parameter yang dicek adalah SUB-MENU, fallback ke Parent Menu
+        if (isset($parentMapping[$slug])) {
+            $parentSlug = $parentMapping[$slug];
+            if (in_array($parentSlug, $this->featureCache)) {
+                return true;
+            }
+        }
+
+        // Case C: Jika parameter yang dicek adalah PARENT MENU, buka jika user punya minimal salah satu sub-menunya
+        // Contoh: Cek 'hr', tetapi user hanya punya 'hr_dev' di DB
+        $subFeatures = array_keys($parentMapping, $slug);
+        if (!empty($subFeatures)) {
+            foreach ($subFeatures as $subFeature) {
+                if (in_array($subFeature, $this->featureCache)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
 

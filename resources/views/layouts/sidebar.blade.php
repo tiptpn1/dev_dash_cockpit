@@ -24,20 +24,30 @@ if (isset($user)) {
             <a href="#operasional" id="operasional" class="parent"><i class="fa-solid fa-gears menu-icon"></i>Operasional
                 <span class="toggle-icon">&#9654;</span></a>
             <div class="submenu" id="operasionalSubmenu">
-                <a href="{{url('')}}/amanah"><i class="fa-solid fa-building menu-icon"></i>AMANAH</a>
-                <a href="{{url('')}}/dfarmkaret"><i class="fa-solid fa-seedling menu-icon"></i>DFarm PTPN I</a>
-                <a href="https://cctv.ptpn1.co.id/index.php?token=QMekBGJyEv4kFk8tscWzEV2xXFxUWfqvQ2poIDqb1z2LaDJiJzJrGwveJ7DLxz76"
-                    target="_blank" id="cctv"><i class="fa-solid fa-video menu-icon"></i>CCTV</a>
+                @if($user->hasFeature('operasional_amanah'))
+                    <a href="{{url('')}}/amanah"><i class="fa-solid fa-building menu-icon"></i>AMANAH</a>
+                @endif
+                @if($user->hasFeature('operasional_dfarm'))
+                    <a href="{{url('')}}/dfarmkaret"><i class="fa-solid fa-seedling menu-icon"></i>DFarm PTPN I</a>
+                @endif
+                @if($user->hasFeature('operasional_cctv'))
+                    <a href="https://cctv.ptpn1.co.id/index.php?token=QMekBGJyEv4kFk8tscWzEV2xXFxUWfqvQ2poIDqb1z2LaDJiJzJrGwveJ7DLxz76"
+                        target="_blank" id="cctv"><i class="fa-solid fa-video menu-icon"></i>CCTV</a>
+                @endif
             </div>
         @endif
         @if($user && $user->hasFeature('pica'))
             <a href="#pica" id="pica" class="parent"><i class="fa-solid fa-clipboard-list menu-icon"></i>PICA
                 <span class="toggle-icon">&#9654;</span></a>
             <div class="submenu" id="picaSubmenu">
-                <a href="{{ route('pica.kuadran_problem_identifications') }}"><i
-                        class="fa-solid fa-table-cells-large menu-icon"></i>Kuadran Problem Identifications</a>
-                <a href="{{ route('pica.list_corrective_actions') }}"><i class="fa-solid fa-list-check menu-icon"></i>List
-                    Corrective Actions</a>
+                @if($user->hasFeature('pica_kuadran'))
+                    <a href="{{ route('pica.kuadran_problem_identifications') }}"><i
+                            class="fa-solid fa-table-cells-large menu-icon"></i>Kuadran Problem Identifications</a>
+                @endif
+                @if($user->hasFeature('pica_corrective'))
+                    <a href="{{ route('pica.list_corrective_actions') }}"><i class="fa-solid fa-list-check menu-icon"></i>List
+                        Corrective Actions</a>
+                @endif
             </div>
         @endif
         @if($user && $user->hasFeature('warehouse'))
@@ -48,113 +58,189 @@ if (isset($user)) {
             <a href="#sales" id="sales" class="parent"><i class="fa-solid fa-chart-line menu-icon"></i>Sales<span
                     class="toggle-icon">&#9654;</span></a>
             <div class="submenu" id="salesSubmenu">
-                <a href="{{url('')}}/overview_sales"><i class="fa-solid fa-chart-bar menu-icon"></i>Overview Sales</a>
-                <a href="{{url('')}}/sales_comodities"><i class="fa-solid fa-boxes-stacked menu-icon"></i>Comodities
-                    Sales</a>
-                <a href="{{url('')}}/soptea"><i class="fa-solid fa-mug-hot menu-icon"></i>Tea Inventory</a>
-                <a href="{{url('')}}/penjualan_karet"><i class="fa-solid fa-tree menu-icon"></i>Rubber Delivery</a>
-                <a href="{{url('')}}/crm"><i class="fa-solid fa-tree menu-icon"></i>CRM</a>
-                <a href="{{ rtrim(config('services.sonia.url'), '/') }}/auth/agrinav?token={{ urlencode(config('services.sonia.sso_token')) }}"
-                    target="_blank" rel="noopener noreferrer" id="sonia">
-                    <i class="fa-solid fa-store menu-icon"></i>SONIA
-                </a>
+                @if($user->hasFeature('sales_overview'))
+                    <a href="{{url('')}}/overview_sales"><i class="fa-solid fa-chart-bar menu-icon"></i>Overview Sales</a>
+                @endif
+                @if($user->hasFeature('sales_comodities'))
+                    <a href="{{url('')}}/sales_comodities"><i class="fa-solid fa-boxes-stacked menu-icon"></i>Comodities
+                        Sales</a>
+                @endif
+                @if($user->hasFeature('sales_tea_inventory'))
+                    <a href="{{url('')}}/soptea"><i class="fa-solid fa-mug-hot menu-icon"></i>Tea Inventory</a>
+                @endif
+                @if($user->hasFeature('sales_rubber_delivery'))
+                    <a href="{{url('')}}/penjualan_karet"><i class="fa-solid fa-tree menu-icon"></i>Rubber Delivery</a>
+                @endif
+                @if($user->hasFeature('sales_crm'))
+                    <a href="{{url('')}}/crm"><i class="fa-solid fa-tree menu-icon"></i>CRM</a>
+                @endif
+                @if($user->hasFeature('sales_sonia'))
+                    <a href="{{ rtrim(config('services.sonia.url'), '/') }}/auth/agrinav?token={{ urlencode(config('services.sonia.sso_token')) }}"
+                        target="_blank" rel="noopener noreferrer" id="sonia">
+                        <i class="fa-solid fa-store menu-icon"></i>SONIA
+                    </a>
+                @endif
             </div>
         @endif
         @if($user && $user->hasFeature('aset'))
             <a href="#aset" id="aset" class="parent"><i class="fa-solid fa-building menu-icon"></i>Asset <span
                     class="toggle-icon">&#9654;</span></a>
             <div class="submenu" id="asetSubmenu">
-                <a href="{{url('')}}/asset_peta"><i class="fa-solid fa-map menu-icon"></i>Peta</a>
-                <a href="{{url('')}}/asset_recovery"><i class="fa-solid fa-rotate menu-icon"></i>Recovery</a>
-                <a href="{{url('')}}/asset_optimalisasi"><i class="fa-solid fa-chart-pie menu-icon"></i>Optimalisasi</a>
-                <a href="{{url('')}}/asset_divestasi"><i class="fa-solid fa-hand-holding-dollar menu-icon"></i>Divestasi</a>
+                @if($user->hasFeature('aset_peta'))
+                    <a href="{{url('')}}/asset_peta"><i class="fa-solid fa-map menu-icon"></i>Peta</a>
+                @endif
+                @if($user->hasFeature('aset_recovery'))
+                    <a href="{{url('')}}/asset_recovery"><i class="fa-solid fa-rotate menu-icon"></i>Recovery</a>
+                @endif
+                @if($user->hasFeature('aset_optimalisasi'))
+                    <a href="{{url('')}}/asset_optimalisasi"><i class="fa-solid fa-chart-pie menu-icon"></i>Optimalisasi</a>
+                @endif
+                @if($user->hasFeature('aset_divestasi'))
+                    <a href="{{url('')}}/asset_divestasi"><i class="fa-solid fa-hand-holding-dollar menu-icon"></i>Divestasi</a>
+                @endif
             </div>
         @endif
         @if($user && $user->hasFeature('finansial'))
             <a href="#finansial" id="finansial" class="parent"><i class="fa-solid fa-coins menu-icon"></i>Finansial <span
                     class="toggle-icon">&#9654;</span></a>
             <div class="submenu" id="finansialSubmenu">
-                <a href="{{url('')}}/fin_console"><i class="fa-solid fa-layer-group menu-icon"></i>Consolidate</a>
-                <a href="{{url('')}}/fin_parent"><i class="fa-solid fa-building menu-icon"></i>Parent Only</a>
-                <a href="{{url('')}}/fin_ratio"><i class="fa-solid fa-building menu-icon"></i>Rasio Keuangan</a>
-                <a href="{{url('')}}/fin_executive"><i class="fa-solid fa-building menu-icon"></i>Executive Dashboard</a>
-                <a href="{{url('')}}/fin_sub"><i class="fa-solid fa-sitemap menu-icon"></i>Subsidiary</a>
+                @if($user->hasFeature('finansial_console'))
+                    <a href="{{url('')}}/fin_console"><i class="fa-solid fa-layer-group menu-icon"></i>Consolidate</a>
+                @endif
+                @if($user->hasFeature('finansial_parent'))
+                    <a href="{{url('')}}/fin_parent"><i class="fa-solid fa-building menu-icon"></i>Parent Only</a>
+                @endif
+                @if($user->hasFeature('finansial_ratio'))
+                    <a href="{{url('')}}/fin_ratio"><i class="fa-solid fa-building menu-icon"></i>Rasio Keuangan</a>
+                @endif
+                @if($user->hasFeature('finansial_executive'))
+                    <a href="{{url('')}}/fin_executive"><i class="fa-solid fa-building menu-icon"></i>Executive Dashboard</a>
+                @endif
+                @if($user->hasFeature('finansial_sub'))
+                    <a href="{{url('')}}/fin_sub"><i class="fa-solid fa-sitemap menu-icon"></i>Subsidiary</a>
+                @endif
             </div>
         @endif
         @if($user && $user->hasFeature('hr'))
             <a href="#hrsdm" id="hrsdm" class="parent"><i class="fa-solid fa-users menu-icon"></i>Human Resource <span
                     class="toggle-icon">&#9654;</span></a>
             <div class="submenu" id="hrSubmenu">
-                <a href="{{url('')}}/hr_demographics"><i class="fa-solid fa-user-group menu-icon"></i>HR Demographics</a>
-                <a href="{{url('')}}/hr_dev"><i class="fa-solid fa-graduation-cap menu-icon"></i>HR Learning &
-                    Development</a>
-                <a href="{{url('')}}/hr_revenue"><i class="fa-solid fa-money-bill-trend-up menu-icon"></i>HR Revenue &
-                    Cost</a>
-                <a href="{{url('')}}/hr_demographic"><i class="fa-solid fa-user-group menu-icon"></i>HR Demographic</a>
-                <a href="{{url('')}}/hr_sgna"><i class="fa-solid fa-user-group menu-icon"></i>HR SGnA</a>
+                @if($user->hasFeature('hr_demographics'))
+                    <a href="{{url('')}}/hr_demographics"><i class="fa-solid fa-user-group menu-icon"></i>HR Demographics</a>
+                @endif
+                @if($user->hasFeature('hr_dev'))
+                    <a href="{{url('')}}/hr_dev"><i class="fa-solid fa-graduation-cap menu-icon"></i>HR Learning &
+                        Development</a>
+                @endif
+                @if($user->hasFeature('hr_revenue'))
+                    <a href="{{url('')}}/hr_revenue"><i class="fa-solid fa-money-bill-trend-up menu-icon"></i>HR Revenue &
+                        Cost</a>
+                @endif
+                @if($user->hasFeature('hr_demographic'))
+                    <a href="{{url('')}}/hr_demographic"><i class="fa-solid fa-user-group menu-icon"></i>HR Demographic</a>
+                @endif
+                @if($user->hasFeature('hr_sgna'))
+                    <a href="{{url('')}}/hr_sgna"><i class="fa-solid fa-user-group menu-icon"></i>HR SGnA</a>
+                @endif
             </div>
         @endif
         @if($user && $user->hasFeature('legal'))
             <a href="#agraria" id="legal" class="parent"><i class="fa-solid fa-scale-balanced menu-icon"></i>Legal & Agraria
                 <span class="toggle-icon">&#9654;</span></a>
             <div class="submenu" id="legalSubmenu">
-                <a href="{{url('')}}/agraria_tax"><i class="fa-solid fa-percent menu-icon"></i>Tax Relaxation BPHTP 0%</a>
-                <a href="{{url('')}}/agraria"><i class="fa-solid fa-file-contract menu-icon"></i>Agraria</a>
+                @if($user->hasFeature('legal_tax'))
+                    <a href="{{url('')}}/agraria_tax"><i class="fa-solid fa-percent menu-icon"></i>Tax Relaxation BPHTP 0%</a>
+                @endif
+                @if($user->hasFeature('legal_agraria'))
+                    <a href="{{url('')}}/agraria"><i class="fa-solid fa-file-contract menu-icon"></i>Agraria</a>
+                @endif
             </div>
         @endif
         @if($user && $user->hasFeature('progress'))
             <a href="#capaian" id="capaian" class="parent"><i class="fa-solid fa-chart-line menu-icon"></i>Capaian Progres
                 <span class="toggle-icon">&#9654;</span></a>
             <div class="submenu" id="capaianSubmenu">
-                <a href="{{url('')}}/sla"><i class="fa-solid fa-clock menu-icon"></i>SLA</a>
+                @if($user->hasFeature('progress_sla'))
+                    <a href="{{url('')}}/sla"><i class="fa-solid fa-clock menu-icon"></i>SLA</a>
+                @endif
             </div>
         @endif
         @if($user && $user->hasFeature('pengadaan'))
             <a href="#pengadaan" id="pengadaan" class="parent"><i
                     class="fa-solid fa-cart-shopping menu-icon"></i>Pengadaan<span class="toggle-icon">&#9654;</span></a>
             <div class="submenu" id="pengadaanSubmenu">
-                <a href="{{url('')}}/prapengadaan"><i class="fa-solid fa-clipboard-check menu-icon"></i>Pra Pengadaan</a>
-                <a href="{{url('')}}/prosespengadaan"><i class="fa-solid fa-spinner menu-icon"></i>Proses Pengadaan</a>
-                <a href="{{url('')}}/kontrakpengadaan"><i class="fa-solid fa-file-signature menu-icon"></i>Kontrak
-                    Pengadaan</a>
-                <a href="{{url('')}}/stokpengadaan"><i class="fa-solid fa-boxes-stacked menu-icon"></i>Stok Pengadaan</a>
+                @if($user->hasFeature('pengadaan_pra'))
+                    <a href="{{url('')}}/prapengadaan"><i class="fa-solid fa-clipboard-check menu-icon"></i>Pra Pengadaan</a>
+                @endif
+                @if($user->hasFeature('pengadaan_proses'))
+                    <a href="{{url('')}}/prosespengadaan"><i class="fa-solid fa-spinner menu-icon"></i>Proses Pengadaan</a>
+                @endif
+                @if($user->hasFeature('pengadaan_kontrak'))
+                    <a href="{{url('')}}/kontrakpengadaan"><i class="fa-solid fa-file-signature menu-icon"></i>Kontrak
+                        Pengadaan</a>
+                @endif
+                @if($user->hasFeature('pengadaan_stok'))
+                    <a href="{{url('')}}/stokpengadaan"><i class="fa-solid fa-boxes-stacked menu-icon"></i>Stok Pengadaan</a>
+                @endif
             </div>
         @endif
         @if($user && $user->hasFeature('carbon'))
             <a href="#carbon" id="carbon" class="parent"><i class="fa-solid fa-smog menu-icon"></i>Carbon
                 <span class="toggle-icon">&#9654;</span></a>
             <div class="submenu" id="carbonSubmenu">
-                <a href="{{url('')}}/dashboardemisi"><i class="fa-solid fa-smog menu-icon"></i>Dashboard Emisi</a>
+                @if($user->hasFeature('carbon_emisi'))
+                    <a href="{{url('')}}/dashboardemisi"><i class="fa-solid fa-smog menu-icon"></i>Dashboard Emisi</a>
+                @endif
             </div>
         @endif
         @if($user && $user->hasFeature('gis'))
             <a href="#gis" id="gis" class="parent"><i class="fa-solid fa-map-location-dot menu-icon"></i>GIS <span
                     class="toggle-icon">&#9654;</span></a>
             <div class="submenu" id="gisSubmenu">
-                <a href="https://gis.ptpn1.co.id/tree.php?id=0&token=eofkp4456432oewkf465oew#" target="_blank"
-                    rel="noopener noreferrer" class="menu-item" id="gis-areal"><i class="fa-solid fa-map menu-icon"></i></a>
-                <a href="http://gis.ptpn1.co.id/mbtiles/tree5.php?id=0&token=eofkp4456432oewkf465oew" target='_blank'
-                    class="menu-item" id="gis-ndvi"><i class="fa-solid fa-satellite-dish menu-icon"></i>NDVI</a>
-                <a href="http://aset-dives-dev.ptpn1.co.id/weather?token=234kjjlksflk8y98ksafdklj23" target='_blank'
-                    class="menu-item" id="gis-cuaca"><i class="fa-solid fa-cloud-sun menu-icon"></i>CUACA</a>
+                @if($user->hasFeature('gis_areal'))
+                    <a href="https://gis.ptpn1.co.id/tree.php?id=0&token=eofkp4456432oewkf465oew#" target="_blank"
+                        rel="noopener noreferrer" class="menu-item" id="gis-areal"><i
+                            class="fa-solid fa-map menu-icon"></i>PETA</a>
+                @endif
+                @if($user->hasFeature('gis_ndvi'))
+                    <a href="http://gis.ptpn1.co.id/mbtiles/tree5.php?id=0&token=eofkp4456432oewkf465oew" target='_blank'
+                        class="menu-item" id="gis-ndvi"><i class="fa-solid fa-satellite-dish menu-icon"></i>NDVI</a>
+                @endif
+                @if($user->hasFeature('gis_cuaca'))
+                    <a href="http://aset-dives-dev.ptpn1.co.id/weather?token=234kjjlksflk8y98ksafdklj23" target='_blank'
+                        class="menu-item" id="gis-cuaca"><i class="fa-solid fa-cloud-sun menu-icon"></i>CUACA</a>
+                @endif
             </div>
         @endif
         @if($user && $user->hasFeature('skyview'))
-            <a href="{{url('')}}/skyview-table" class="menu-item" id='skyview'><i
-                    class="fa-solid fa-map-location-dot menu-icon"></i>AGRO Skyview</a>
-            <a href="{{url('')}}/exec_summary" class="menu-item" id='exec_summary'><i
-                    class="fa-solid fa-map-location-dot menu-icon"></i>Exec Summary</a>
-
+            @if($user->hasFeature('skyview_table'))
+                <a href="{{url('')}}/skyview-table" class="menu-item" id='skyview'><i
+                        class="fa-solid fa-map-location-dot menu-icon"></i>AGRO Skyview</a>
+            @endif
+            @if($user->hasFeature('skyview_exec'))
+                <a href="{{url('')}}/exec_summary" class="menu-item" id='exec_summary'><i
+                        class="fa-solid fa-map-location-dot menu-icon"></i>Exec Summary</a>
+            @endif
         @endif
         @if($user && $user->hasFeature('lm'))
             <a href="#lm" id="lm" class="parent"><i class="fa-solid fa-book menu-icon"></i>LM <span
                     class="toggle-icon">&#9654;</span></a>
             <div class="submenu" id="lmSubmenu">
-                <a href="{{url('')}}/lm13"><i class="fa-solid fa-book-open menu-icon"></i>LM13</a>
-                <a href="{{url('')}}/lm14"><i class="fa-solid fa-book-open menu-icon"></i>LM14</a>
-                <a href="{{url('')}}/lm16"><i class="fa-solid fa-book-open menu-icon"></i>LM16</a>
-                <a href="{{url('')}}/lm34_tab"><i class="fa-solid fa-book-open menu-icon"></i>LM34</a>
-                <a href="{{url('')}}/lm62"><i class="fa-solid fa-book-open menu-icon"></i>LM62</a>
+                @if($user->hasFeature('lm_13'))
+                    <a href="{{url('')}}/lm13"><i class="fa-solid fa-book-open menu-icon"></i>LM13</a>
+                @endif
+                @if($user->hasFeature('lm_14'))
+                    <a href="{{url('')}}/lm14"><i class="fa-solid fa-book-open menu-icon"></i>LM14</a>
+                @endif
+                @if($user->hasFeature('lm_16'))
+                    <a href="{{url('')}}/lm16"><i class="fa-solid fa-book-open menu-icon"></i>LM16</a>
+                @endif
+                @if($user->hasFeature('lm_34'))
+                    <a href="{{url('')}}/lm34_tab"><i class="fa-solid fa-book-open menu-icon"></i>LM34</a>
+                @endif
+                @if($user->hasFeature('lm_62'))
+                    <a href="{{url('')}}/lm62"><i class="fa-solid fa-book-open menu-icon"></i>LM62</a>
+                @endif
             </div>
         @endif
     </div>
@@ -199,9 +285,10 @@ if (isset($user)) {
         <a href="#pmskaret" id="lm" class="parent"><i class="fa-solid fa-book menu-icon"></i>Sales & Operation <span
                 class="toggle-icon">&#9654;</span></a>
         <div class="submenu" id="lmSubmenu">
-            <a href="{{url('')}}/sales_operational_karet"><i class="fa-solid fa-book-open menu-icon"></i>Sales & Operation
-                Karet</a>
-            {{-- <a href="{{url('')}}/pemasaran_karet"><i class="fa-solid fa-book-open menu-icon"></i>Dummy</a> --}}
+            @if($user->hasFeature('pemasaran_karet_sales'))
+                <a href="{{url('')}}/sales_operational_karet"><i class="fa-solid fa-book-open menu-icon"></i>Sales & Operation
+                    Karet</a>
+            @endif
         </div>
     @endif
 
@@ -209,5 +296,4 @@ if (isset($user)) {
             class="fa-solid fa-key menu-icon"></i>Ubah Password</a>
     <a href="{{url('')}}/logout" class="menu-item" id="logout"><i
             class="fa-solid fa-right-from-bracket menu-icon"></i>Logout</a>
-</div>
 </div>
