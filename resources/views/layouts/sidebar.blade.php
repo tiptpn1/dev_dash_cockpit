@@ -280,6 +280,17 @@ if (isset($user)) {
                 class="fa-solid fa-clipboard-check menu-icon"></i>Evaluasi Aplikasi</a>
     @endif
 
+    @if($user && $user->hasFeature('pemasaran_karet'))
+        <a href="#pmskaret" id="pmskaret_parent" class="parent"><i class="fa-solid fa-book menu-icon"></i>Sales & Operation <span
+                class="toggle-icon">&#9654;</span></a>
+        <div class="submenu" id="pmskaretSubmenu">
+            @if($user->hasFeature('pemasaran_karet_sales'))
+                <a href="{{url('')}}/sales_operational_karet"><i class="fa-solid fa-book-open menu-icon"></i>Sales & Operation
+                    Karet</a>
+            @endif
+        </div>
+    @endif
+
     @if($user && ($user->hasFeature('management_users') || $user->hasFeature('management_features') || $user->hasFeature('management_access')))
         <a href="#management" id="management" class="parent"><i class="fa-solid fa-cogs menu-icon"></i>System Management
             <span class="toggle-icon">&#9654;</span></a>
@@ -296,17 +307,6 @@ if (isset($user)) {
                     Akses</a>
                 <a href="{{ route('management.lastlogin.index') }}"><i class="fa-solid fa-clock-rotate-left menu-icon"></i>Last
                     Login</a>
-            @endif
-        </div>
-    @endif
-
-    @if($user && $user->hasFeature('pemasaran_karet'))
-        <a href="#pmskaret" id="lm" class="parent"><i class="fa-solid fa-book menu-icon"></i>Sales & Operation <span
-                class="toggle-icon">&#9654;</span></a>
-        <div class="submenu" id="lmSubmenu">
-            @if($user->hasFeature('pemasaran_karet_sales'))
-                <a href="{{url('')}}/sales_operational_karet"><i class="fa-solid fa-book-open menu-icon"></i>Sales & Operation
-                    Karet</a>
             @endif
         </div>
     @endif

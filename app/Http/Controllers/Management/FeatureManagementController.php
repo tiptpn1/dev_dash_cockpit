@@ -790,6 +790,39 @@ class FeatureManagementController extends Controller
                 'route_name' => '-',
                 'source' => 'Situs Eksternal',
                 'description' => 'Sistem evaluasi aplikasi PTPN I'
+            ],
+            [
+                'no' => 57,
+                'category' => 'System Management',
+                'position' => 'System Management -> User',
+                'name' => 'User Management',
+                'slug' => 'management_users',
+                'url' => '/management/users',
+                'route_name' => 'management.users.index',
+                'source' => 'Aplikasi Lokal',
+                'description' => 'Manajemen data user dan pembuatan akun baru'
+            ],
+            [
+                'no' => 58,
+                'category' => 'System Management',
+                'position' => 'System Management -> Fitur',
+                'name' => 'Feature Management',
+                'slug' => 'management_features',
+                'url' => '/management/features',
+                'route_name' => 'management.features.index',
+                'source' => 'Aplikasi Lokal',
+                'description' => 'Manajemen pendaftaran slug fitur baru dan Kamus Fitur'
+            ],
+            [
+                'no' => 59,
+                'category' => 'System Management',
+                'position' => 'System Management -> Hak Akses / Last Login',
+                'name' => 'Access Management',
+                'slug' => 'management_access',
+                'url' => '/management/access',
+                'route_name' => 'management.access.index',
+                'source' => 'Aplikasi Lokal',
+                'description' => 'Manajemen otorisasi hak akses user ke fitur dan pantauan log login terakhir'
             ]
         ];
 

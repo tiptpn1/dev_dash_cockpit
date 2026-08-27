@@ -64,6 +64,9 @@ Dokumen ini berisi daftar lengkap seluruh slug fitur/akses kontrol yang terdafta
 | 54 | **Garda AI** | Utama (Direct) | Garda AI | `garda` | `https://gardaprep.holding-perkebunan.com/` | - (Eksternal) | Situs Eksternal |
 | 55 | **Portal Aplikasi** | Utama (Direct) | Portal Aplikasi | `portalaplikasi` | `/portalaplikasi` | `portalaplikasi` | Aplikasi Lokal |
 | 56 | **Evaluasi Aplikasi** | Utama (Direct) | Evaluasi Aplikasi | `evaluasi_aplikasi` | `https://evaluasi-aplikasi.ptpn1.co.id/` | - (Eksternal) | Situs Eksternal |
+| 57 | **System Management** | System Management -> User | User Management | `management_users` | `/management/users` | `management.users.index` | Aplikasi Lokal |
+| 58 | **System Management** | System Management -> Fitur | Feature Management | `management_features` | `/management/features` | `management.features.index` | Aplikasi Lokal |
+| 59 | **System Management** | System Management -> Hak Akses / Last Login | Access Management | `management_access` | `/management/access` | `management.access.index` | Aplikasi Lokal |
 
 ---
 
@@ -260,3 +263,14 @@ Berikut adalah asosiasi detail antara rute dengan method controller dan deskrips
 * **Sales & Operation Karet**
   * Rute: `GET /sales_operational_karet` (Nama: `sales_operational_karet`)
   * Controller: `PageController@sales_operational_karet`
+
+### 16. Modul System Management (`management`)
+* **User Management**
+  * Rute: `GET /management/users` (Nama: `management.users.index`)
+  * Controller: `UserManagementController`
+* **Feature Management**
+  * Rute: `GET /management/features` (Nama: `management.features.index`)
+  * Controller: `FeatureManagementController`
+* **Access Management**
+  * Rute: `GET /management/access` (Nama: `management.access.index`)
+  * Controller: `UserFeatureAccessController`
