@@ -94,7 +94,8 @@ class FeatureManagementController extends Controller
         if (!auth('custom')->user() || !auth('custom')->user()->hasFeature('management_features')) {
             abort(403, 'Akses ditolak: Anda tidak memiliki fitur Feature Management.');
         }
-        return view('management.features.create');
+        $parents = Feature::whereNull('parent_id')->orderBy('name')->get();
+        return view('management.features.create', compact('parents'));
     }
 
     /**
@@ -109,6 +110,12 @@ class FeatureManagementController extends Controller
         $validated = $request->validate([
             'slug' => 'required|unique:features,slug|min:2|max:50|alpha_dash',
             'name' => 'required|string|max:100',
+            'parent_id' => 'nullable|exists:features,id',
+            'icon' => 'nullable|string|max:100',
+            'url' => 'nullable|string|max:255',
+            'sort_order' => 'required|integer',
+            'is_sidebar' => 'required|boolean',
+            'is_active' => 'required|boolean',
         ]);
 
         Feature::create($validated);
@@ -125,7 +132,8 @@ class FeatureManagementController extends Controller
         if (!auth('custom')->user() || !auth('custom')->user()->hasFeature('management_features')) {
             abort(403, 'Akses ditolak: Anda tidak memiliki fitur Feature Management.');
         }
-        return view('management.features.edit', compact('feature'));
+        $parents = Feature::whereNull('parent_id')->where('id', '!=', $feature->id)->orderBy('name')->get();
+        return view('management.features.edit', compact('feature', 'parents'));
     }
 
     /**
@@ -140,6 +148,12 @@ class FeatureManagementController extends Controller
         $validated = $request->validate([
             'slug' => 'required|unique:features,slug,' . $feature->id . '|min:2|max:50|alpha_dash',
             'name' => 'required|string|max:100',
+            'parent_id' => 'nullable|exists:features,id',
+            'icon' => 'nullable|string|max:100',
+            'url' => 'nullable|string|max:255',
+            'sort_order' => 'required|integer',
+            'is_sidebar' => 'required|boolean',
+            'is_active' => 'required|boolean',
         ]);
 
         $feature->update($validated);

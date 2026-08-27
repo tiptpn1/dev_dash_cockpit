@@ -33,6 +33,10 @@ class UserFeatureSeeder extends Seeder
             ['slug' => 'carbon',     'name' => 'Carbon'],
             ['slug' => 'warehouse',  'name' => 'Warehouse'],
             ['slug' => 'sonia',      'name' => 'SONIA'],
+            ['slug' => 'management', 'name' => 'System Management'],
+            ['slug' => 'management_users', 'name' => 'User Management'],
+            ['slug' => 'management_features', 'name' => 'Feature Management'],
+            ['slug' => 'management_access', 'name' => 'Access Management'],
         ];
 
         foreach ($featureDefs as $feat) {
@@ -49,10 +53,10 @@ class UserFeatureSeeder extends Seeder
         // Format: [ username, password, role, plant, regional, [features...] ]
         $users = [
             ['admin',              'Nusantara@1',          'admin',      null, null,
-                ['mrc','gis','lm','aigr1','garda','skyview','operasional','aset','finansial','hr','sales','legal','progress','pengadaan','carbon','warehouse']],
+                ['mrc','gis','lm','aigr1','garda','skyview','operasional','aset','finansial','hr','sales','legal','progress','pengadaan','carbon','warehouse','management','management_users','management_features','management_access']],
 
             ['superadmin',         'Nusantara1@!',         'superadmin', null, null,
-                ['mrc','gis','lm','aigr1','garda','skyview','operasional','aset','finansial','hr','sales','legal','progress','pengadaan','carbon','warehouse']],
+                ['mrc','gis','lm','aigr1','garda','skyview','operasional','aset','finansial','hr','sales','legal','progress','pengadaan','carbon','warehouse','management','management_users','management_features','management_access']],
 
             ['mrc',                'Nusantara@1',          'viewer',     null, null,
                 ['mrc','lm','skyview','warehouse']],

@@ -46,47 +46,21 @@ class UserFeatureAccessController extends Controller
         }
         $user = CustomUser::findOrFail($id);
 
-        $allFeatures = Feature::orderBy('slug')->get();
+        // Ambil fitur utama (parent_id IS NULL) beserta anak-anaknya (children)
+        $topFeatures = Feature::with('children')->whereNull('parent_id')->orderBy('sort_order')->get();
         $userFeatures = $user->features->pluck('id')->toArray();
 
-        // Dynamic grouping logic
         $groupedFeatures = [];
         $standaloneFeatures = [];
 
-        // 1. Grouping by prefix
-        foreach ($allFeatures as $feature) {
-            $slug = $feature->slug;
-            $parts = explode('_', $slug);
-            $prefix = $parts[0];
-
-            if ($slug === $prefix) {
-                // Potential parent feature
-                if (!isset($groupedFeatures[$prefix])) {
-                    $groupedFeatures[$prefix] = [
-                        'parent' => null,
-                        'children' => []
-                    ];
-                }
-                $groupedFeatures[$prefix]['parent'] = $feature;
+        foreach ($topFeatures as $feature) {
+            if ($feature->children->isNotEmpty()) {
+                $groupedFeatures[$feature->slug] = [
+                    'parent' => $feature,
+                    'children' => $feature->children
+                ];
             } else {
-                // Child feature
-                if (!isset($groupedFeatures[$prefix])) {
-                    $groupedFeatures[$prefix] = [
-                        'parent' => null,
-                        'children' => []
-                    ];
-                }
-                $groupedFeatures[$prefix]['children'][] = $feature;
-            }
-        }
-
-        // 2. Separate standalone features
-        foreach ($groupedFeatures as $key => $group) {
-            if (empty($group['children'])) {
-                if ($group['parent']) {
-                    $standaloneFeatures[] = $group['parent'];
-                }
-                unset($groupedFeatures[$key]);
+                $standaloneFeatures[] = $feature;
             }
         }
 
