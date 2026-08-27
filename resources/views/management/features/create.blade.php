@@ -101,6 +101,21 @@
                 @enderror
             </div>
 
+            <!-- Description -->
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-2" for="description">Description</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 flex items-start pl-3 pt-3 pointer-events-none">
+                        <i class="fas fa-file-alt text-green-600 opacity-70"></i>
+                    </div>
+                    <textarea class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white text-gray-900 font-medium transition duration-200 @error('description') border-red-500 ring-1 ring-red-500 @enderror"
+                        name="description" id="description" rows="3" placeholder="e.g., Detailed description of this feature or menu...">{{ old('description') }}</textarea>
+                </div>
+                @error('description')
+                    <span class="text-red-500 text-sm mt-1 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}</span>
+                @enderror
+            </div>
+
             <!-- Sort Order -->
             <div class="mb-6">
                 <label class="block text-sm font-semibold text-gray-700 mb-2" for="sort_order">Sort Order <span class="text-red-500">*</span></label>

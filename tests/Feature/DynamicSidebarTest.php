@@ -123,6 +123,7 @@ class DynamicSidebarTest extends TestCase
             'sort_order' => 12,
             'is_sidebar' => 1,
             'is_active' => 1,
+            'description' => 'Test description for sample child',
         ]);
 
         $storeResponse->assertRedirect(route('management.features.index'));
@@ -136,6 +137,7 @@ class DynamicSidebarTest extends TestCase
             'sort_order' => 12,
             'is_sidebar' => 1,
             'is_active' => 1,
+            'description' => 'Test description for sample child',
         ]);
 
         $childFeature = Feature::where('slug', 'sample_child')->first();
@@ -155,6 +157,7 @@ class DynamicSidebarTest extends TestCase
             'sort_order' => 45,
             'is_sidebar' => 0,
             'is_active' => 0,
+            'description' => 'Updated test description',
         ]);
 
         $updateResponse->assertRedirect(route('management.features.index'));
@@ -169,6 +172,7 @@ class DynamicSidebarTest extends TestCase
             'sort_order' => 45,
             'is_sidebar' => 0,
             'is_active' => 0,
+            'description' => 'Updated test description',
         ]);
     }
 }

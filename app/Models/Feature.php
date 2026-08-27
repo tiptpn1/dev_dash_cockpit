@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Cache;
 
 class Feature extends Model
 {
-    protected $fillable = ['slug', 'name', 'parent_id', 'icon', 'url', 'sort_order', 'is_sidebar', 'is_active'];
+    protected $fillable = ['slug', 'name', 'parent_id', 'icon', 'url', 'sort_order', 'is_sidebar', 'is_active', 'description'];
 
     protected static function booted()
     {
