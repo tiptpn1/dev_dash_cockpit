@@ -34,6 +34,24 @@ if (isset($user)) {
                     <a href="https://cctv.ptpn1.co.id/index.php?token=QMekBGJyEv4kFk8tscWzEV2xXFxUWfqvQ2poIDqb1z2LaDJiJzJrGwveJ7DLxz76"
                         target="_blank" id="cctv"><i class="fa-solid fa-video menu-icon"></i>CCTV</a>
                 @endif
+                @if($user->hasFeature('operasional_onfarmkaret'))
+                    <a href="{{url('')}}/onfarmkaret"><i class="fa-solid fa-seedling menu-icon"></i>On Farm Karet</a>
+                @endif
+                @if($user->hasFeature('operasional_onfarmteh'))
+                    <a href="{{url('')}}/onfarmteh"><i class="fa-solid fa-leaf menu-icon"></i>On Farm Teh</a>
+                @endif
+                @if($user->hasFeature('operasional_onfarmkopi'))
+                    <a href="{{url('')}}/onfarmkopi"><i class="fa-solid fa-mug-hot menu-icon"></i>On Farm Kopi</a>
+                @endif
+                @if($user->hasFeature('operasional_offfarmkaret'))
+                    <a href="{{url('')}}/offfarmkaret"><i class="fa-solid fa-industry menu-icon"></i>Off Farm Karet</a>
+                @endif
+                @if($user->hasFeature('operasional_offfarmteh'))
+                    <a href="{{url('')}}/offfarmteh"><i class="fa-solid fa-leaf menu-icon"></i>Off Farm Teh</a>
+                @endif
+                @if($user->hasFeature('operasional_offfarmkopi'))
+                    <a href="{{url('')}}/offfarmkopi"><i class="fa-solid fa-mug-hot menu-icon"></i>Off Farm Kopi</a>
+                @endif
             </div>
         @endif
         @if($user && $user->hasFeature('pica'))
