@@ -50,11 +50,19 @@ if (isset($user)) {
                                         }
                                     }
                                 @endphp
-                                <a href="{{ $url }}" 
-                                   @if(str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) target="_blank" rel="noopener noreferrer" @endif
-                                   id="{{ $child->slug }}">
-                                    <i class="{{ $child->icon }} menu-icon"></i>{{ $child->name }}
-                                </a>
+                                @php
+                                     $childName = $child->name;
+                                     $parts = explode(' - ', $childName);
+                                     if (count($parts) > 1) {
+                                         array_shift($parts);
+                                         $childName = implode(' - ', $parts);
+                                     }
+                                 @endphp
+                                 <a href="{{ $url }}" 
+                                    @if(str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) target="_blank" rel="noopener noreferrer" @endif
+                                    id="{{ $child->slug }}">
+                                     <i class="{{ $child->icon }} menu-icon"></i>{{ $childName }}
+                                 </a>
                             @endif
                         @endforeach
                     </div>
