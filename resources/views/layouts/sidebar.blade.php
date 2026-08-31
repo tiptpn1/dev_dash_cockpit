@@ -31,23 +31,25 @@ if (isset($user)) {
                         @foreach($menu->children as $child)
                             @if($user && $user->hasFeature($child->slug))
                                 @php
-                                    $url = $child->url;
+                                    $rawUrl = $child->url;
                                     if ($child->slug === 'sales_sonia') {
-                                        $url = rtrim(config('services.sonia.url'), '/') . '/auth/agrinav?token=' . urlencode(config('services.sonia.sso_token'));
+                                        $rawUrl = rtrim(config('services.sonia.url'), '/') . '/auth/agrinav?token=' . urlencode(config('services.sonia.sso_token'));
                                     } elseif ($child->slug === 'operasional_cctv') {
-                                        $url = 'https://cctv.ptpn1.co.id/index.php?token=QMekBGJyEv4kFk8tscWzEV2xXFxUWfqvQ2poIDqb1z2LaDJiJzJrGwveJ7DLxz76';
+                                        $rawUrl = 'https://cctv.ptpn1.co.id/index.php?token=QMekBGJyEv4kFk8tscWzEV2xXFxUWfqvQ2poIDqb1z2LaDJiJzJrGwveJ7DLxz76';
                                     } elseif ($child->slug === 'gis_areal') {
-                                        $url = 'https://gis.ptpn1.co.id/tree.php?id=0&token=eofkp4456432oewkf465oew#';
+                                        $rawUrl = 'https://gis.ptpn1.co.id/tree.php?id=0&token=eofkp4456432oewkf465oew#';
                                     } elseif ($child->slug === 'gis_ndvi') {
-                                        $url = 'http://gis.ptpn1.co.id/mbtiles/tree5.php?id=0&token=eofkp4456432oewkf465oew';
+                                        $rawUrl = 'http://gis.ptpn1.co.id/mbtiles/tree5.php?id=0&token=eofkp4456432oewkf465oew';
                                     } elseif ($child->slug === 'gis_cuaca') {
-                                        $url = 'http://aset-dives-dev.ptpn1.co.id/weather?token=234kjjlksflk8y98ksafdklj23';
+                                        $rawUrl = 'http://aset-dives-dev.ptpn1.co.id/weather?token=234kjjlksflk8y98ksafdklj23';
+                                    }
+
+                                    $isExternalHttp = false;
+                                    if (empty($rawUrl)) {
+                                        $url = '#';
                                     } else {
-                                        if (empty($url)) {
-                                            $url = '#';
-                                        } else {
-                                            $url = (str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) ? $url : url($url);
-                                        }
+                                        $isExternalHttp = str_starts_with($rawUrl, 'http://');
+                                        $url = (str_starts_with($rawUrl, 'http://') || str_starts_with($rawUrl, 'https://')) ? $rawUrl : url($rawUrl);
                                     }
                                 @endphp
                                 @php
@@ -59,7 +61,7 @@ if (isset($user)) {
                                      }
                                  @endphp
                                  <a href="{{ $url }}" 
-                                    @if(str_starts_with($url, 'http://')) target="_blank" rel="noopener noreferrer" @endif
+                                    @if($isExternalHttp) target="_blank" rel="noopener noreferrer" @endif
                                     id="{{ $child->slug }}">
                                      <i class="{{ $child->icon }} menu-icon"></i>{{ $childName }}
                                  </a>
@@ -68,15 +70,17 @@ if (isset($user)) {
                     </div>
                 @else
                     @php
-                        $url = $menu->url;
-                        if (empty($url)) {
+                        $rawUrl = $menu->url;
+                        $isExternalHttp = false;
+                        if (empty($rawUrl)) {
                             $url = '#';
                         } else {
-                            $url = (str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) ? $url : url($url);
+                            $isExternalHttp = str_starts_with($rawUrl, 'http://');
+                            $url = (str_starts_with($rawUrl, 'http://') || str_starts_with($rawUrl, 'https://')) ? $rawUrl : url($rawUrl);
                         }
                     @endphp
                     <a href="{{ $url }}" 
-                       @if(str_starts_with($url, 'http://')) target="_blank" rel="noopener noreferrer" @endif
+                       @if($isExternalHttp) target="_blank" rel="noopener noreferrer" @endif
                        class="menu-item" 
                        id="{{ $menu->slug }}">
                         <i class="{{ $menu->icon }} menu-icon"></i>{{ $menu->name }}
