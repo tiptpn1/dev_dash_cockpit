@@ -51,9 +51,6 @@ Route::get('/sse-test', [AiResponseController::class, 'sseTest']);
 
 Route::middleware('auth:custom')->group(function () {
     Route::get('/', [PageController::class, 'overview'])->name('overview');
-    Route::get('/areal_produksi', [\App\Http\Controllers\ArealProduksiController::class, 'index'])->name('areal_produksi');
-    Route::get('/areal_produksi/regional', [\App\Http\Controllers\ArealProduksiController::class, 'regional'])->name('areal_produksi.regional');
-
 
     // Change Password Routes
     Route::get('/ubah-password', [\App\Http\Controllers\Auth\PasswordController::class, 'showChangePasswordForm'])->name('password.change');
