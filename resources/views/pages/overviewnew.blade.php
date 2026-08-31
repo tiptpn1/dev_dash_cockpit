@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+    @if(!session('evo_intro_played'))
     <div class="d-flex flex-column align-items-center">
         <div id="imagePopup" class="popup">
             <img src="{{ asset('halo_evo.gif') }}" alt="Hello" class="popup-image">
@@ -11,6 +12,7 @@
             <source src="{{ asset('greeting.mp3') }}" type="audio/mpeg">
         </audio>
     </div>
+    @endif
 
 
     <div class="iframe-container main-content">
@@ -117,6 +119,7 @@
         }
     </style>
 
+    @if(!session('evo_intro_played'))
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const audio = document.getElementById('greeting');
@@ -144,5 +147,9 @@
             }, 10000);
         });
     </script>
+    @php
+        session(['evo_intro_played' => true]);
+    @endphp
+    @endif
 
 @endsection
