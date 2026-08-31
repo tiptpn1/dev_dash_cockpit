@@ -43,18 +43,36 @@ class FeatureManagementController extends Controller
             abort(403, 'Akses ditolak: Anda tidak memiliki fitur Feature Management.');
         }
 
-        $query = Feature::query();
+        // Fetch all features with their parent eager loaded to avoid N+1 query issues
+        $allFeatures = Feature::with('parent')->orderBy('sort_order')->get();
+        $featuresByParent = $allFeatures->groupBy('parent_id');
+        $roots = $featuresByParent->get(null) ?? collect();
 
-        // Search functionality
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('slug', 'like', "%{$search}%")
-                  ->orWhere('name', 'like', "%{$search}%");
-            });
+        // Reconstruct the hierarchical tree order in PHP
+        $flatFeatures = collect();
+        foreach ($roots as $root) {
+            $flatFeatures->push($root);
+            $children = $featuresByParent->get($root->id) ?? collect();
+            foreach ($children as $child) {
+                $flatFeatures->push($child);
+            }
         }
 
-        $features = $query->get();
+        // Handle orphans if any exist (safety fallback)
+        $addedIds = $flatFeatures->pluck('id')->toArray();
+        $orphans = $allFeatures->whereNotIn('id', $addedIds);
+        foreach ($orphans as $orphan) {
+            $flatFeatures->push($orphan);
+        }
+
+        // Apply search filter if requested by the user, while preserving the tree order
+        if ($request->filled('search')) {
+            $search = strtolower($request->input('search'));
+            $flatFeatures = $flatFeatures->filter(function ($feature) use ($search) {
+                return str_contains(strtolower($feature->slug), $search) ||
+                       str_contains(strtolower($feature->name), $search);
+            });
+        }
 
         $fileName = 'Export_Manajemen_Fitur_' . date('Y-m-d_His') . '.xls';
 
@@ -66,18 +84,41 @@ class FeatureManagementController extends Controller
             "Expires"             => "0"
         ];
 
-        $callback = function() use($features) {
+        $callback = function() use($flatFeatures) {
+            // Write UTF-8 BOM to tell Excel that the file is UTF-8 encoded
+            echo "\xEF\xBB\xBF";
+            echo '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">';
+            
             echo '<table border="1">';
-            echo '<tr style="background-color: #16A34A; color: #FFFFFF;">';
-            echo '<th>No.</th><th>Slug</th><th>Nama Fitur</th><th>Created At</th>';
+            echo '<tr style="background-color: #16A34A; color: #FFFFFF; font-weight: bold;">';
+            echo '<th style="padding: 5px;">No.</th>';
+            echo '<th style="padding: 5px;">Nama Fitur</th>';
+            echo '<th style="padding: 5px;">Slug</th>';
+            echo '<th style="padding: 5px;">Induk (Parent)</th>';
+            echo '<th style="padding: 5px;">URL / Rute</th>';
+            echo '<th style="padding: 5px;">Sort Order</th>';
+            echo '<th style="padding: 5px;">Sidebar</th>';
+            echo '<th style="padding: 5px;">Status</th>';
+            echo '<th style="padding: 5px;">Created At</th>';
             echo '</tr>';
 
-            foreach ($features as $index => $feature) {
+            $no = 1;
+            foreach ($flatFeatures as $feature) {
+                $isChild = !empty($feature->parent_id);
+                // Indent sub-menus with spaces and tree branch symbol for a better spreadsheet layout
+                $displayName = $isChild ? ' &nbsp;&nbsp;&nbsp;&nbsp;└─ ' . htmlspecialchars($feature->name) : htmlspecialchars($feature->name);
+                $parentName = $feature->parent ? htmlspecialchars($feature->parent->name) : '-';
+
                 echo '<tr>';
-                echo '<td style="text-align: center;">' . ($index + 1) . '</td>';
-                echo '<td>' . htmlspecialchars($feature->slug) . '</td>';
-                echo '<td>' . htmlspecialchars($feature->name) . '</td>';
-                echo '<td>' . htmlspecialchars($feature->created_at ? $feature->created_at->format('Y-m-d H:i:s') : '-') . '</td>';
+                echo '<td style="text-align: center; padding: 5px;">' . $no++ . '</td>';
+                echo '<td style="padding: 5px;">' . $displayName . '</td>';
+                echo '<td style="padding: 5px;">' . htmlspecialchars($feature->slug) . '</td>';
+                echo '<td style="padding: 5px;">' . $parentName . '</td>';
+                echo '<td style="padding: 5px;">' . htmlspecialchars($feature->url ?? '-') . '</td>';
+                echo '<td style="text-align: center; padding: 5px;">' . $feature->sort_order . '</td>';
+                echo '<td style="text-align: center; padding: 5px;">' . ($feature->is_sidebar ? 'Tampil' : 'Tersembunyi') . '</td>';
+                echo '<td style="text-align: center; padding: 5px;">' . ($feature->is_active ? 'Aktif' : 'Nonaktif') . '</td>';
+                echo '<td style="padding: 5px;">' . htmlspecialchars($feature->created_at ? $feature->created_at->format('Y-m-d H:i:s') : '-') . '</td>';
                 echo '</tr>';
             }
             echo '</table>';
