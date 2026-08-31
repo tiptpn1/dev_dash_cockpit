@@ -59,7 +59,7 @@ if (isset($user)) {
                                      }
                                  @endphp
                                  <a href="{{ $url }}" 
-                                    @if(str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) target="_blank" rel="noopener noreferrer" @endif
+                                    @if(str_starts_with($url, 'http://')) target="_blank" rel="noopener noreferrer" @endif
                                     id="{{ $child->slug }}">
                                      <i class="{{ $child->icon }} menu-icon"></i>{{ $childName }}
                                  </a>
@@ -76,7 +76,7 @@ if (isset($user)) {
                         }
                     @endphp
                     <a href="{{ $url }}" 
-                       @if(str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) target="_blank" rel="noopener noreferrer" @endif
+                       @if(str_starts_with($url, 'http://')) target="_blank" rel="noopener noreferrer" @endif
                        class="menu-item" 
                        id="{{ $menu->slug }}">
                         <i class="{{ $menu->icon }} menu-icon"></i>{{ $menu->name }}

@@ -69,6 +69,7 @@ Route::middleware('auth:custom')->group(function () {
     Route::get('/offfarmteh', [PageController::class, 'offfarmteh'])->name('offfarmteh');
     Route::get('/offfarmkopi', [PageController::class, 'offfarmkopi'])->name('offfarmkopi');
     Route::get('/gudangutilisasi', [PageController::class, 'gudangutilisasi'])->name('gudangutilisasi');
+    Route::get('/arealproduksi', [PageController::class, 'arealproduksi'])->name('arealproduksi');
 
     Route::get('/picaonfarm', [PageController::class, 'picaonfarm'])->name('picaonfarm');
     Route::get('/picaofffarm', [PageController::class, 'picaofffarm'])->name('picaofffarm');
