@@ -69,7 +69,7 @@ class PageController extends Controller
 
     public function arealproduksi()
     {
-        $linkiframe = 'https://datastudio.google.com/embed/reporting/14c2d7fe-7e91-4a7d-9635-f5129f8a1793/page/9a86F';
+        $linkiframe = 'https://datastudio.google.com/embed/reporting/9a30fd2b-2b2b-47e8-903c-967d1b5400c9/page/9a86F';
         return view('pages/overview_page', compact('linkiframe'));
     }
 
