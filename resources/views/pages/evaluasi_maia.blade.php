@@ -163,8 +163,10 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script>
 const API_BASE = '/api/maia';
+let _maiaData = null;
 
 function initMaia() {
     loadMaiaData();
@@ -204,6 +206,7 @@ async function loadMaiaData() {
         if (!response.ok) throw new Error('HTTP ' + response.status);
         
         const data = await response.json();
+        _maiaData = data;
         renderDashboard(data);
         showData();
     } catch (error) {
@@ -320,6 +323,9 @@ function renderDashboard(data) {
                 <div class="table-title" style="color: #fff; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-table"></i> Rekap Sinkronisasi Aset per Regional (MAIA)
                 </div>
+                <button type="button" onclick="exportMaiaExcel()" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background-color: #15803d; color: #fff; border: 1px solid #166534; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; transition: background-color 0.2s;">
+                    <i class="fas fa-file-excel"></i> Excel
+                </button>
             </div>
             <div class="table-wrapper" style="overflow-x: auto; width: 100%;">
                 <table class="report-table" style="width: 100%; border-collapse: collapse; font-size: 12.5px; color: #1f2937;">
@@ -340,6 +346,103 @@ function renderDashboard(data) {
             </div>
         </div>
     `;
+}
+
+async function exportMaiaExcel() {
+    if (!_maiaData || !_maiaData.regions || !_maiaData.regions.length) {
+        alert('Tidak ada data MAIA untuk diekspor.');
+        return;
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    const ws = workbook.addWorksheet('MAIA');
+
+    ws.columns = [
+        { key: 'no', width: 6 },
+        { key: 'regional', width: 30 },
+        { key: 'total', width: 18 },
+        { key: 'teridentifikasi', width: 20 },
+        { key: 'belum', width: 22 },
+        { key: 'persentase', width: 18 }
+    ];
+
+    const borderStyle = {
+        top: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+        left: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+        bottom: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+        right: { style: 'thin', color: { argb: 'FFE5E7EB' } }
+    };
+    const fillGreenHeader = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF166534' } };
+
+    // Title Row
+    ws.mergeCells(1, 1, 1, 6);
+    const titleCell = ws.getCell(1, 1);
+    titleCell.value = 'REKAP SINKRONISASI ASET PER REGIONAL (MAIA)';
+    titleCell.font = { bold: true, size: 14, color: { argb: 'FF166534' } };
+    titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    ws.getRow(1).height = 28;
+
+    ws.addRow([]);
+
+    const headers = ['No', 'Regional', 'Total Aset', 'Teridentifikasi', 'Belum Teridentifikasi', 'Persentase'];
+    const hRow = ws.addRow(headers);
+    hRow.height = 22;
+    hRow.eachCell(cell => {
+        cell.fill = fillGreenHeader;
+        cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 10 };
+        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+        cell.border = borderStyle;
+    });
+
+    _maiaData.regions.forEach((r, idx) => {
+        const rowData = [
+            idx + 1,
+            `${r.master_region_nama} (${r.master_region_kode})`,
+            r.total_aset || 0,
+            r.sudah_teridentifikasi || 0,
+            r.belum_teridentifikasi || 0,
+            `${(r.persentase_teridentifikasi || 0)}%`
+        ];
+        const exRow = ws.addRow(rowData);
+        exRow.height = 20;
+        const bg = idx % 2 === 0 ? 'FFFFFFFF' : 'FFF9FAFB';
+
+        exRow.eachCell({ includeEmpty: true }, (cell, colNum) => {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } };
+            cell.font = { size: 9.5 };
+            cell.border = borderStyle;
+            cell.alignment = { horizontal: colNum === 2 ? 'left' : (colNum === 1 || colNum === 6 ? 'center' : 'right'), vertical: 'middle' };
+        });
+    });
+
+    // Summary Row
+    if (_maiaData.summary) {
+        const s = _maiaData.summary;
+        const sumRow = ws.addRow([
+            '-',
+            'TOTAL KESELURUHAN',
+            s.total_aset || 0,
+            s.sudah_teridentifikasi || 0,
+            s.belum_teridentifikasi || 0,
+            `${(s.persentase_teridentifikasi || 0)}%`
+        ]);
+        sumRow.height = 22;
+        sumRow.eachCell({ includeEmpty: true }, (cell, colNum) => {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFCBD5E1' } };
+            cell.font = { bold: true, size: 10, color: { argb: 'FF1F2937' } };
+            cell.border = borderStyle;
+            cell.alignment = { horizontal: colNum === 2 ? 'left' : (colNum === 1 || colNum === 6 ? 'center' : 'right'), vertical: 'middle' };
+        });
+    }
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Evaluasi_MAIA_${new Date().toISOString().slice(0,10)}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
 }
 </script>
 @endsection
