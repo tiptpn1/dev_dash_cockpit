@@ -67,6 +67,12 @@ class PageController extends Controller
         return view('pages/overview_page', compact('linkiframe'));
     }
 
+    public function arealproduksi()
+    {
+        $linkiframe = 'https://datastudio.google.com/embed/reporting/9a30fd2b-2b2b-47e8-903c-967d1b5400c9/page/9a86F';
+        return view('pages/overview_page', compact('linkiframe'));
+    }
+
     public function sdmpenyadap()
     {
         $linkiframe = 'https://datastudio.google.com/embed/reporting/89c816d3-086c-451d-abc9-f95578d05411/page/p_k6tmnjaxmd';

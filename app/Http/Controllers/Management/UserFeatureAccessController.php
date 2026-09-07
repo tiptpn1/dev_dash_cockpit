@@ -158,6 +158,7 @@ class UserFeatureAccessController extends Controller
             abort(403, 'Akses ditolak: Anda tidak memiliki fitur Access Management.');
         }
 
+        // Fetch users matching search filter (to be represented as columns)
         $query = CustomUser::with('features');
 
         if ($request->filled('search')) {
@@ -169,23 +170,52 @@ class UserFeatureAccessController extends Controller
         }
 
         $users = $query->get();
-        $features = Feature::orderBy('name')->get();
+
+        // Fetch all features in tree hierarchy order (to be represented as rows)
+        $allFeatures = Feature::with('parent')->orderBy('sort_order')->get();
+        $featuresByParent = $allFeatures->groupBy('parent_id');
+        $roots = $featuresByParent->get(null) ?? collect();
+
+        $flatFeatures = collect();
+        foreach ($roots as $root) {
+            $flatFeatures->push($root);
+            $children = $featuresByParent->get($root->id) ?? collect();
+            foreach ($children as $child) {
+                $flatFeatures->push($child);
+            }
+        }
+
+        // Handle orphans if any exist (safety fallback)
+        $addedIds = $flatFeatures->pluck('id')->toArray();
+        $orphans = $allFeatures->whereNotIn('id', $addedIds);
+        foreach ($orphans as $orphan) {
+            $flatFeatures->push($orphan);
+        }
 
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('User Access Matrix');
 
-        // Set Headers
-        $headers = ['No.', 'Username', 'NIK', 'Role'];
+        // Set Header Row (No., Nama Fitur, Slug, then each user username)
+        $headers = ['No.', 'Nama Fitur', 'Slug'];
         $columnIndex = 1;
-        
+
         foreach ($headers as $header) {
             $sheet->setCellValueExplicit([$columnIndex, 1], $header, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
             $columnIndex++;
         }
 
-        foreach ($features as $feature) {
-            $sheet->setCellValueExplicit([$columnIndex, 1], $feature->name, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+        foreach ($users as $user) {
+            $userLabel = $user->username;
+            if (!empty($user->role)) {
+                $roleDisplay = $user->role;
+                if ($user->role === 'admin') $roleDisplay = 'ADMIN';
+                elseif ($user->role === 'superadmin') $roleDisplay = 'SUPERADMIN';
+                elseif ($user->role === 'viewer_ho' || $user->role === 'viewer_unit') $roleDisplay = 'VIEWER';
+                else $roleDisplay = strtoupper($roleDisplay);
+                $userLabel .= ' (' . $roleDisplay . ')';
+            }
+            $sheet->setCellValueExplicit([$columnIndex, 1], $userLabel, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
             $columnIndex++;
         }
 
@@ -198,7 +228,7 @@ class UserFeatureAccessController extends Controller
             ],
             'fill' => [
                 'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                'startColor' => ['argb' => 'FF16A34A'],
+                'startColor' => ['argb' => 'FF16A34A'], // Green background
             ],
             'alignment' => [
                 'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
@@ -213,42 +243,40 @@ class UserFeatureAccessController extends Controller
         $sheet->getStyle('A1:' . $maxColLetter . '1')->applyFromArray($headerStyle);
         $sheet->getRowDimension(1)->setRowHeight(25);
 
-        // Populate Data
+        // Populate Rows (Features)
         $row = 2;
-        foreach ($users as $index => $user) {
+        foreach ($flatFeatures as $index => $feature) {
             $col = 1;
+            // No.
             $sheet->setCellValue([$col++, $row], $index + 1);
-            $sheet->setCellValue([$col++, $row], $user->username);
-            $sheet->setCellValue([$col++, $row], $user->nik ?? '-');
-            
-            $roleDisplay = $user->role ?? '-';
-            if ($user->role === 'admin') $roleDisplay = 'ADMIN';
-            elseif ($user->role === 'superadmin') $roleDisplay = 'SUPERADMIN';
-            elseif ($user->role === 'viewer_ho' || $user->role === 'viewer_unit') $roleDisplay = 'VIEWER';
-            else $roleDisplay = strtoupper($roleDisplay);
-            
-            $sheet->setCellValue([$col++, $row], $roleDisplay);
 
-            $userFeatureIds = $user->features->pluck('id')->toArray();
-            
-            foreach ($features as $feature) {
-                $hasAccess = in_array($feature->id, $userFeatureIds);
+            // Nama Fitur (indented if it is a child)
+            $isChild = !empty($feature->parent_id);
+            $displayName = $isChild ? '    └─ ' . $feature->name : $feature->name;
+            $sheet->setCellValue([$col++, $row], $displayName);
+
+            // Slug
+            $sheet->setCellValue([$col++, $row], $feature->slug);
+
+            // Access Indicators for each user
+            foreach ($users as $user) {
+                $hasAccess = $user->features->contains('id', $feature->id);
                 $value = $hasAccess ? 'V' : '-';
                 $sheet->setCellValue([$col, $row], $value);
-                
-                // Center align the matrix cells
+
+                // Center align matrix cells
                 $sheet->getStyle([$col, $row])->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-                
+
                 if ($hasAccess) {
-                    $sheet->getStyle([$col, $row])->getFont()->getColor()->setARGB('FF16A34A');
+                    $sheet->getStyle([$col, $row])->getFont()->getColor()->setARGB('FF16A34A'); // Green text
                     $sheet->getStyle([$col, $row])->getFont()->setBold(true);
                 } else {
-                    $sheet->getStyle([$col, $row])->getFont()->getColor()->setARGB('FF9CA3AF');
+                    $sheet->getStyle([$col, $row])->getFont()->getColor()->setARGB('FF9CA3AF'); // Gray text
                 }
                 $col++;
             }
 
-            // Apply borders to the entire row
+            // Apply borders to the row
             $sheet->getStyle('A' . $row . ':' . $maxColLetter . $row)->applyFromArray([
                 'borders' => [
                     'allBorders' => [
@@ -259,7 +287,7 @@ class UserFeatureAccessController extends Controller
                     'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
                 ],
             ]);
-            
+
             $sheet->getStyle('A' . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
             $row++;

@@ -379,9 +379,9 @@
 
         .filter-grid-tab2 {
             display: grid;
-            grid-template-columns: 160px 1fr 150px 150px;
+            grid-template-columns: 160px 1fr 140px 140px auto;
             gap: 12px;
-            align-items: start;
+            align-items: end;
         }
 
         .filter-grid-tab2-harian {
@@ -822,6 +822,9 @@
                                         class="fas fa-calendar-alt" style="color:#166534;"></i> Periode:</label>
                                 <input type="month" id="periode_select" class="form-input" value="{{ date('Y-m') }}"
                                     style="width:160px;">
+                                <button type="button" id="btnExportExcelRekap" class="btn-export-excel">
+                                    <i class="fas fa-file-excel"></i> Excel
+                                </button>
                             </div>
                             <div id="rekap-periode-info" style="font-size:12px; color:#6b7280; font-style:italic;"></div>
                         </div>
@@ -931,6 +934,11 @@
                                     <label class="form-label">Tanggal Akhir</label>
                                     <input type="date" id="perkaryawan_tanggal_akhir" class="form-input">
                                 </div>
+                                <div class="form-group" style="justify-content: flex-end;">
+                                    <button type="button" id="btnExportExcelPerkaryawan" class="btn-export-excel">
+                                        <i class="fas fa-file-excel"></i> Excel
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <div class="table-wrapper">
@@ -968,6 +976,9 @@
                                         class="fas fa-calendar-alt" style="color:#166534;"></i> Periode:</label>
                                 <input type="month" id="rekap_regional_periode_select" class="form-input"
                                     value="{{ date('Y-m') }}" style="width:160px;">
+                                <button type="button" id="btnExportExcelRekapRegional" class="btn-export-excel">
+                                    <i class="fas fa-file-excel"></i> Excel
+                                </button>
                             </div>
                             <div id="rekap-regional-periode-info" style="font-size:12px; color:#6b7280; font-style:italic;">
                             </div>
@@ -1118,7 +1129,10 @@
             let currentPeriode = null;
             let lastHarianPeriode = null;
             let activeHrisTab = 'rekap';
+            let _rekapData = null;
             let _harianData = [];
+            let _perkaryawanData = [];
+            let _rekapRegionalData = [];
 
             const monthNames = [
                 "Januari", "Februari", "Maret", "April", "Mei", "Juni",
@@ -1882,6 +1896,7 @@
 
                     fetchHrisData(periodVal)
                         .then(data => {
+                            _rekapData = data;
                             hrisError.style.display = 'none';
                             hrisTbody.innerHTML = '';
 
@@ -2124,10 +2139,11 @@
                     const periode = document.getElementById('rekap_regional_periode_select').value;
                     const params = new URLSearchParams({ periode, area, unit });
 
-                    fetch(`${hrisRekapRegionalPegawaiUrl}?${params}`)
+                    fetch(`${hrisPerKaryawanUrl}?${params}`)
                         .then(res => res.json())
                         .then(data => {
                             if (data.status !== 'success') throw new Error(data.message);
+                            _perkaryawanData = data.data || [];
                             container.dataset.loaded = 'true';
 
                             if (!data.data || !data.data.length) {
@@ -2266,6 +2282,7 @@
                     .then(res => res.json())
                     .then(data => {
                         if (data.status !== 'success') throw new Error(data.message);
+                        _rekapRegionalData = data.data || [];
 
                         rekapRegionalChartContainer.innerHTML = '';
                         if (!data.data || !data.data.length) {
@@ -2305,6 +2322,331 @@
             }
 
             rekapRegionalPeriodeSelect.addEventListener('change', loadRekapRegionalData);
+
+            // Export listeners for Rekap, Per Karyawan, and Rekap Regional
+            const btnExportExcelRekap = document.getElementById('btnExportExcelRekap');
+            if (btnExportExcelRekap) {
+                btnExportExcelRekap.addEventListener('click', exportRekapExcel);
+            }
+
+            const btnExportExcelPerkaryawan = document.getElementById('btnExportExcelPerkaryawan');
+            if (btnExportExcelPerkaryawan) {
+                btnExportExcelPerkaryawan.addEventListener('click', exportPerKaryawanExcel);
+            }
+
+            const btnExportExcelRekapRegional = document.getElementById('btnExportExcelRekapRegional');
+            if (btnExportExcelRekapRegional) {
+                btnExportExcelRekapRegional.addEventListener('click', exportRekapRegionalExcel);
+            }
+
+            async function exportRekapExcel() {
+                if (!_rekapData || !_rekapData.data || !_rekapData.data.length) {
+                    alert('Tidak ada data rekap kehadiran untuk diekspor.');
+                    return;
+                }
+
+                const periodVal = periodeSelect.value || '';
+                const formattedPeriod = formatPeriodLabel(periodVal);
+
+                const workbook = new ExcelJS.Workbook();
+                const ws = workbook.addWorksheet('Rekap Kehadiran');
+
+                ws.columns = [
+                    { key: 'no', width: 6 },
+                    { key: 'divisi', width: 35 },
+                    { key: 'jumlah_pegawai', width: 18 },
+                    { key: 'hari_kerja', width: 18 },
+                    { key: 'absensi', width: 18 },
+                    { key: 'persentase', width: 22 }
+                ];
+
+                const fillGreenHeader = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF166534' } };
+                const fillSummary = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDCFCE7' } };
+                const borderStyle = {
+                    top: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+                    left: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+                    bottom: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+                    right: { style: 'thin', color: { argb: 'FFE5E7EB' } }
+                };
+
+                // Title Row
+                ws.mergeCells(1, 1, 1, 6);
+                const titleCell = ws.getCell(1, 1);
+                titleCell.value = 'REKAP KEHADIRAN KARYAWAN SUPPCO HO';
+                titleCell.font = { bold: true, size: 14, color: { argb: 'FF166534' } };
+                titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+                ws.getRow(1).height = 28;
+
+                // Subtitle
+                ws.mergeCells(2, 1, 2, 6);
+                const subTitleCell = ws.getCell(2, 1);
+                subTitleCell.value = `Periode: ${formattedPeriod}`;
+                subTitleCell.font = { italic: true, size: 10, color: { argb: 'FF4B5563' } };
+                subTitleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+                ws.getRow(2).height = 20;
+
+                ws.addRow([]);
+
+                // Header Row (Row 4)
+                const headers = ['No', 'Divisi', 'Jumlah Karyawan', 'Jumlah Hari Kerja', 'Total Absensi', 'Persentase Kehadiran'];
+                const hRow = ws.addRow(headers);
+                hRow.height = 24;
+                hRow.eachCell(cell => {
+                    cell.fill = fillGreenHeader;
+                    cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 10 };
+                    cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+                    cell.border = borderStyle;
+                });
+
+                // Summary Row (SuppCo HO Total)
+                if (_rekapData.summary) {
+                    const s = _rekapData.summary;
+                    const sumRow = ws.addRow([
+                        '-',
+                        'REKAP ALL SUPPCO HO',
+                        s.jumlah_pegawai ?? 0,
+                        s.hari_kerja ?? 0,
+                        s.absensi ?? 0,
+                        `${parseFloat(s.persentase_kehadiran ?? 0).toFixed(1)}%`
+                    ]);
+                    sumRow.height = 22;
+                    sumRow.eachCell({ includeEmpty: true }, (cell, colNum) => {
+                        cell.fill = fillSummary;
+                        cell.font = { bold: true, size: 10, color: { argb: 'FF166534' } };
+                        cell.border = borderStyle;
+                        cell.alignment = { horizontal: colNum === 2 ? 'left' : 'center', vertical: 'middle' };
+                    });
+                }
+
+                // Division Data Rows
+                _rekapData.data.forEach((row, i) => {
+                    const pct = parseFloat(row.persentase_kehadiran ?? 0).toFixed(1);
+                    const rRow = ws.addRow([
+                        i + 1,
+                        row.divisi,
+                        row.jumlah_pegawai,
+                        row.hari_kerja,
+                        row.absensi,
+                        `${pct}%`
+                    ]);
+                    rRow.height = 20;
+                    const bg = i % 2 === 0 ? 'FFFFFFFF' : 'FFF9FAFB';
+
+                    rRow.eachCell({ includeEmpty: true }, (cell, colNum) => {
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } };
+                        cell.font = { size: 9.5 };
+                        cell.border = borderStyle;
+                        cell.alignment = { horizontal: colNum === 2 ? 'left' : 'center', vertical: 'middle' };
+
+                        if (colNum === 6) {
+                            cell.font = { bold: true, size: 9.5, color: { argb: pct >= 98 ? 'FF166534' : (pct >= 95 ? 'FF1D4ED8' : 'FF92400E') } };
+                        }
+                    });
+                });
+
+                const buffer = await workbook.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Rekap_Kehadiran_HRIS_${periodVal}.xlsx`;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+
+            async function exportPerKaryawanExcel() {
+                if (!_perkaryawanData || !_perkaryawanData.length) {
+                    alert('Tidak ada data detail per karyawan untuk diekspor.');
+                    return;
+                }
+
+                const regional = perkaryawanRegionalSelect.value || '-';
+                const nama = perkaryawanSelectedNama.textContent.replace(/^✓\s*/, '') || perkaryawanNamaSearch.value || '-';
+                const tglAwal = perkaryawanTanggalAwal.value || '-';
+                const tglAkhir = perkaryawanTanggalAkhir.value || '-';
+
+                const workbook = new ExcelJS.Workbook();
+                const ws = workbook.addWorksheet('Detail Per Karyawan');
+
+                ws.columns = [
+                    { key: 'no', width: 6 },
+                    { key: 'tanggal', width: 18 },
+                    { key: 'nik', width: 14 },
+                    { key: 'hari_kerja', width: 12 },
+                    { key: 'check_in', width: 12 },
+                    { key: 'mood_masuk', width: 16 },
+                    { key: 'check_out', width: 12 },
+                    { key: 'mood_pulang', width: 16 },
+                    { key: 'lokasi', width: 45 },
+                    { key: 'jenis_absen', width: 15 }
+                ];
+
+                const borderStyle = {
+                    top: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+                    left: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+                    bottom: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+                    right: { style: 'thin', color: { argb: 'FFE5E7EB' } }
+                };
+                const fillGreenHeader = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF166534' } };
+
+                // Title Row
+                ws.mergeCells(1, 1, 1, 10);
+                const titleCell = ws.getCell(1, 1);
+                titleCell.value = 'DETAIL ABSENSI INDIVIDUAL KARYAWAN';
+                titleCell.font = { bold: true, size: 14, color: { argb: 'FF166534' } };
+                titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+                ws.getRow(1).height = 28;
+
+                // Subtitle
+                ws.mergeCells(2, 1, 2, 10);
+                const subTitleCell = ws.getCell(2, 1);
+                subTitleCell.value = `Nama: ${nama}   |   Regional: ${regional}   |   Periode: ${tglAwal} s/d ${tglAkhir}`;
+                subTitleCell.font = { italic: true, size: 10, color: { argb: 'FF4B5563' } };
+                subTitleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+                ws.getRow(2).height = 20;
+
+                ws.addRow([]);
+
+                const headers = [
+                    'No', 'Tanggal Absensi', 'NIK', 'Hari Kerja',
+                    'Check In', 'Mood Check In', 'Check Out', 'Mood Check Out', 'Lokasi', 'Jenis Absen'
+                ];
+                const hRow = ws.addRow(headers);
+                hRow.height = 22;
+                hRow.eachCell(cell => {
+                    cell.fill = fillGreenHeader;
+                    cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 10 };
+                    cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+                    cell.border = borderStyle;
+                });
+
+                _perkaryawanData.forEach((row, i) => {
+                    const noAbsen = row.checkin_time === '-' && row.checkout_time === '-';
+                    const rRow = ws.addRow([
+                        i + 1,
+                        row.tanggal + (noAbsen ? ' (Belum Absen)' : ''),
+                        row.pegawai_nik,
+                        row.hari_kerja,
+                        row.checkin_time,
+                        row.mood_masuk,
+                        row.checkout_time,
+                        row.mood_pulang,
+                        row.lokasi,
+                        row.jenis_absen
+                    ]);
+                    rRow.height = 20;
+                    const bg = noAbsen ? 'FFFFF5F5' : (i % 2 === 0 ? 'FFFFFFFF' : 'FFF9FAFB');
+
+                    rRow.eachCell({ includeEmpty: true }, (cell, colNum) => {
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } };
+                        cell.font = { size: 9.5 };
+                        cell.border = borderStyle;
+                        if (colNum === 1 || colNum === 3 || colNum === 4 || colNum === 5 || colNum === 6 || colNum === 7 || colNum === 8 || colNum === 10) {
+                            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                        } else {
+                            cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: colNum === 9 };
+                        }
+
+                        if (noAbsen && colNum === 2) {
+                            cell.font = { bold: true, size: 9.5, color: { argb: 'FF991B1B' } };
+                        }
+                    });
+                });
+
+                const buffer = await workbook.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Detail_Karyawan_${nama.replace(/[^a-zA-Z0-9]/g, '_')}_${tglAwal}_${tglAkhir}.xlsx`;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+
+            async function exportRekapRegionalExcel() {
+                if (!_rekapRegionalData || !_rekapRegionalData.length) {
+                    alert('Tidak ada data rekap regional untuk diekspor.');
+                    return;
+                }
+
+                const periodVal = rekapRegionalPeriodeSelect.value || '';
+                const formattedPeriod = formatPeriodLabel(periodVal);
+
+                const workbook = new ExcelJS.Workbook();
+                const ws = workbook.addWorksheet('Rekap Regional');
+
+                ws.columns = [
+                    { key: 'no', width: 6 },
+                    { key: 'regional', width: 35 },
+                    { key: 'persentase', width: 22 }
+                ];
+
+                const borderStyle = {
+                    top: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+                    left: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+                    bottom: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+                    right: { style: 'thin', color: { argb: 'FFE5E7EB' } }
+                };
+                const fillGreenHeader = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF166534' } };
+
+                // Title Row
+                ws.mergeCells(1, 1, 1, 3);
+                const titleCell = ws.getCell(1, 1);
+                titleCell.value = 'REKAP KEHADIRAN SELURUH REGIONAL';
+                titleCell.font = { bold: true, size: 14, color: { argb: 'FF166534' } };
+                titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+                ws.getRow(1).height = 28;
+
+                // Subtitle
+                ws.mergeCells(2, 1, 2, 3);
+                const subTitleCell = ws.getCell(2, 1);
+                subTitleCell.value = `Periode: ${formattedPeriod}`;
+                subTitleCell.font = { italic: true, size: 10, color: { argb: 'FF4B5563' } };
+                subTitleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+                ws.getRow(2).height = 20;
+
+                ws.addRow([]);
+
+                const headers = ['No', 'Regional / Unit', 'Persentase Kehadiran'];
+                const hRow = ws.addRow(headers);
+                hRow.height = 22;
+                hRow.eachCell(cell => {
+                    cell.fill = fillGreenHeader;
+                    cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 10 };
+                    cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                    cell.border = borderStyle;
+                });
+
+                _rekapRegionalData.forEach((row, i) => {
+                    const pct = parseFloat(row.persentase_kehadiran ?? 0).toFixed(1);
+                    const rRow = ws.addRow([
+                        i + 1,
+                        row.regional,
+                        `${pct}%`
+                    ]);
+                    rRow.height = 20;
+                    const bg = i % 2 === 0 ? 'FFFFFFFF' : 'FFF9FAFB';
+
+                    rRow.eachCell({ includeEmpty: true }, (cell, colNum) => {
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } };
+                        cell.font = { size: 9.5 };
+                        cell.border = borderStyle;
+                        cell.alignment = { horizontal: colNum === 2 ? 'left' : 'center', vertical: 'middle' };
+                        if (colNum === 3) {
+                            cell.font = { bold: true, size: 9.5, color: { argb: pct >= 98 ? 'FF166534' : (pct >= 95 ? 'FF1D4ED8' : 'FF92400E') } };
+                        }
+                    });
+                });
+
+                const buffer = await workbook.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Rekap_Regional_HRIS_${periodVal}.xlsx`;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
 
             mapPopupClose.addEventListener('click', () => {
                 mapPopupOverlay.classList.remove('show');

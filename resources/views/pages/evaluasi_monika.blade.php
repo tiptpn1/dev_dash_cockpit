@@ -163,8 +163,10 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script>
 const API_BASE = '/api/monika';
+let _monikaData = null;
 
 function initMonika() {
     loadMonikaData();
@@ -204,6 +206,7 @@ async function loadMonikaData() {
         if (!response.ok) throw new Error('HTTP ' + response.status);
         
         const data = await response.json();
+        _monikaData = data;
         renderDashboard(data);
         showData();
     } catch (error) {
@@ -332,6 +335,9 @@ function renderDashboard(data) {
                 <div class="table-title" style="color: #fff; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-table"></i> Rekap Monitoring Kinerja per Regional (MONIKA)
                 </div>
+                <button type="button" onclick="exportMonikaExcel()" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background-color: #15803d; color: #fff; border: 1px solid #166534; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; transition: background-color 0.2s;">
+                    <i class="fas fa-file-excel"></i> Excel
+                </button>
             </div>
             <div class="table-wrapper" style="overflow-x: auto; width: 100%;">
                 <table class="report-table" style="width: 100%; border-collapse: collapse; font-size: 12px; color: #1f2937;">
@@ -360,6 +366,140 @@ function renderDashboard(data) {
             </div>
         </div>
     `;
+}
+
+async function exportMonikaExcel() {
+    if (!_monikaData || !_monikaData.regions || !_monikaData.regions.length) {
+        alert('Tidak ada data MONIKA untuk diekspor.');
+        return;
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    const ws = workbook.addWorksheet('MONIKA');
+
+    ws.columns = [
+        { key: 'no', width: 6 },
+        { key: 'regional', width: 30 },
+        { key: 'pra', width: 16 },
+        { key: 'potensial', width: 16 },
+        { key: 'jalan_belum', width: 22 },
+        { key: 'jalan_lengkap', width: 22 },
+        { key: 'akhir_belum', width: 22 },
+        { key: 'akhir_lengkap', width: 22 },
+        { key: 'belum_diisi', width: 16 },
+        { key: 'total', width: 18 }
+    ];
+
+    const borderStyle = {
+        top: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+        left: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+        bottom: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+        right: { style: 'thin', color: { argb: 'FFE5E7EB' } }
+    };
+    const fillGreenHeader = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF166534' } };
+
+    // Title Row
+    ws.mergeCells(1, 1, 1, 10);
+    const titleCell = ws.getCell(1, 1);
+    titleCell.value = 'REKAP MONITORING KINERJA PER REGIONAL (MONIKA)';
+    titleCell.font = { bold: true, size: 14, color: { argb: 'FF166534' } };
+    titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    ws.getRow(1).height = 28;
+
+    ws.addRow([]);
+
+    // Header Row 1 (merged headers for Kerjasama Berjalan & Berakhir)
+    ws.mergeCells(3, 1, 4, 1); // No
+    ws.mergeCells(3, 2, 4, 2); // Regional
+    ws.mergeCells(3, 3, 4, 3); // Pra
+    ws.mergeCells(3, 4, 4, 4); // Potensial
+    ws.mergeCells(3, 5, 3, 6); // Kerjasama Berjalan
+    ws.mergeCells(3, 7, 3, 8); // Kerjasama Berakhir
+    ws.mergeCells(3, 9, 4, 9); // Belum Diisi
+    ws.mergeCells(3, 10, 4, 10); // Total
+
+    ws.getCell(3, 1).value = 'NO';
+    ws.getCell(3, 2).value = 'REGIONAL';
+    ws.getCell(3, 3).value = 'PRA KERJASAMA';
+    ws.getCell(3, 4).value = 'POTENSIAL';
+    ws.getCell(3, 5).value = 'KERJASAMA BERJALAN';
+    ws.getCell(3, 7).value = 'KERJASAMA BERAKHIR';
+    ws.getCell(3, 9).value = 'BELUM DIISI';
+    ws.getCell(3, 10).value = 'TOTAL';
+
+    ws.getCell(4, 5).value = 'BELUM LENGKAP';
+    ws.getCell(4, 6).value = 'LENGKAP';
+    ws.getCell(4, 7).value = 'BELUM LENGKAP';
+    ws.getCell(4, 8).value = 'LENGKAP';
+
+    [3, 4].forEach(rIdx => {
+        const r = ws.getRow(rIdx);
+        r.height = 20;
+        r.eachCell({ includeEmpty: true }, cell => {
+            cell.fill = fillGreenHeader;
+            cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 9.5 };
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            cell.border = borderStyle;
+        });
+    });
+
+    _monikaData.regions.forEach((r, idx) => {
+        const rowData = [
+            idx + 1,
+            `${r.master_region_nama} (${r.master_region_kode})`,
+            r.pra_kerjasama || 0,
+            r.potensial || 0,
+            r.jalan_belum || 0,
+            r.jalan_lengkap || 0,
+            r.akhir_belum || 0,
+            r.akhir_lengkap || 0,
+            r.belum_diisi || 0,
+            r.total_kerjasama || 0
+        ];
+        const exRow = ws.addRow(rowData);
+        exRow.height = 20;
+        const bg = idx % 2 === 0 ? 'FFFFFFFF' : 'FFF9FAFB';
+
+        exRow.eachCell({ includeEmpty: true }, (cell, colNum) => {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } };
+            cell.font = { size: 9.5 };
+            cell.border = borderStyle;
+            cell.alignment = { horizontal: colNum === 2 ? 'left' : (colNum === 1 ? 'center' : 'right'), vertical: 'middle' };
+        });
+    });
+
+    // Summary Row
+    if (_monikaData.summary) {
+        const s = _monikaData.summary;
+        const sumRow = ws.addRow([
+            '-',
+            'TOTAL KESELURUHAN',
+            s.pra_kerjasama || 0,
+            s.potensial || 0,
+            s.jalan_belum || 0,
+            s.jalan_lengkap || 0,
+            s.akhir_belum || 0,
+            s.akhir_lengkap || 0,
+            s.belum_diisi || 0,
+            s.total_kerjasama || 0
+        ]);
+        sumRow.height = 22;
+        sumRow.eachCell({ includeEmpty: true }, (cell, colNum) => {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFCBD5E1' } };
+            cell.font = { bold: true, size: 10, color: { argb: 'FF1F2937' } };
+            cell.border = borderStyle;
+            cell.alignment = { horizontal: colNum === 2 ? 'left' : (colNum === 1 ? 'center' : 'right'), vertical: 'middle' };
+        });
+    }
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Evaluasi_MONIKA_${new Date().toISOString().slice(0,10)}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
 }
 </script>
 @endsection
