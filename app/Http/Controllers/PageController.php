@@ -1655,6 +1655,7 @@ class PageController extends Controller
     }
     public function dfarmkaretpresensi()
     {
+        set_time_limit(120);
         $regional = $_GET['id_reg'] ?? '';
         $tglAwal = $_GET['tgl_awal'] ?? date('Y-m-d');
         $tglAkhir = $_GET['tgl_akhir'] ?? date('Y-m-d');
@@ -2241,6 +2242,7 @@ class PageController extends Controller
 
     public function dfarmkaretpresensitabular()
     {
+        set_time_limit(120);
         $regional = $_GET['id_reg'] ?? '';
         $tglAwal = $_GET['tgl_awal'] ?? date('Y-m-d');
         $tglAkhir = $_GET['tgl_akhir'] ?? date('Y-m-d');
