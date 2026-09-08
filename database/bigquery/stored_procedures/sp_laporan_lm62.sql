@@ -124,10 +124,10 @@ select regional, group_id, plant, material, material_desc, material_type_desc, u
     where movement_type='702' and material_type='Z003' group by regional, group_id, plant, material, material_desc, material_type_desc, uom
     union all
     SELECT regional, group_id, plant, material, material_desc, 'Bahan Baku Pabrik' as material_type_desc, uom, sum(quantity) as GR, 0 as Kor_GR, 0 as GI, 0 as Kor_GI, 0 as OW, 0 as Kor_OW, 0 as LAIN FROM TAHUN_INI 
-    where movement_type in ('309','310','411','561') and material_type='Z003' and quantity>0 group by regional, group_id, plant, material, material_desc, material_type_desc, uom
+    where movement_type in ('309','310','411','412','561') and material_type='Z003' and quantity>0 group by regional, group_id, plant, material, material_desc, material_type_desc, uom
     union all
     SELECT regional, group_id, plant, material, material_desc, 'Bahan Baku Pabrik' as material_type_desc, uom, 0 as GR, 0 as Kor_GR, sum(quantity) as GI, 0 as Kor_GI, 0 as OW, 0 as Kor_OW, 0 as LAIN FROM TAHUN_INI 
-    where movement_type in ('309','310','411','561') and material_type='Z003' and quantity<0 group by regional, group_id, plant, material, material_desc, material_type_desc, uom
+    where movement_type in ('309','310','411','412','561') and material_type='Z003' and quantity<0 group by regional, group_id, plant, material, material_desc, material_type_desc, uom
     union all
     SELECT regional, group_id, plant, material, material_desc, 'Bahan Baku Pabrik' as material_type_desc, uom, 0 as GR, 0 as Kor_GR, 0 as GI, 0 as Kor_GI, 0 as OW, 0 as Kor_OW, sum(quantity) as LAIN FROM TAHUN_INI 
     where movement_type in ('601','602') and material_type='Z003' group by regional, group_id, plant, material, material_desc, material_type_desc, uom
@@ -153,13 +153,13 @@ select regional, group_id, plant, material, material_desc, material_type_desc, u
     where movement_type='702' and material_type<>'Z003' group by regional, group_id, plant, material, material_desc, material_type_desc, uom
     union all
     SELECT regional, group_id, plant, material, material_desc, material_type_desc, uom, sum(quantity) as GR, 0 as Kor_GR, 0 as GI, 0 as Kor_GI, 0 as OW, 0 as Kor_OW, 0 as LAIN FROM TAHUN_INI 
-    where movement_type in ('309','310','411','561') and material_type<>'Z003' and quantity>=0 group by regional, group_id, plant, material, material_desc, material_type_desc, uom
+    where movement_type in ('309','310','411','412','561') and material_type<>'Z003' and quantity>=0 group by regional, group_id, plant, material, material_desc, material_type_desc, uom
     union all
     SELECT regional, group_id, plant, material, material_desc, material_type_desc, uom, sum(quantity) as GR, 0 as Kor_GR, 0 as GI, 0 as Kor_GI, 0 as OW, 0 as Kor_OW, 0 as LAIN FROM TAHUN_INI 
     where movement_type in ('301','302','303','304','305','306','311','312') and material_type<>'Z003' and quantity>=0 group by regional, group_id, plant, material, material_desc, material_type_desc, uom
     union all
     SELECT regional, group_id, plant, material, material_desc, material_type_desc, uom, 0 as GR, 0 as Kor_GR, sum(quantity) as GI, 0 as Kor_GI, 0 as OW, 0 as Kor_OW, 0 as LAIN FROM TAHUN_INI 
-    where movement_type in ('309','310','411','561') and material_type<>'Z003' and quantity<0 group by regional, group_id, plant, material, material_desc, material_type_desc, uom
+    where movement_type in ('309','310','411','412','561') and material_type<>'Z003' and quantity<0 group by regional, group_id, plant, material, material_desc, material_type_desc, uom
     union all
     SELECT regional, group_id, plant, material, material_desc, material_type_desc, uom, 0 as GR, 0 as Kor_GR, sum(quantity) as GI, 0 as Kor_GI, 0 as OW, 0 as Kor_OW, 0 as LAIN FROM TAHUN_INI 
     where movement_type in ('301','302','303','304','305','306','311','312') and material_type<>'Z003' and quantity<0 group by regional, group_id, plant, material, material_desc, material_type_desc, uom
@@ -184,7 +184,7 @@ ROUND(PENERIMAAN,0) as PENERIMAAN,
 ROUND(PENGELUARAN,0) as PENGELUARAN, 
 ROUND(OVERWEIGHT,0) as OVERWEIGHT, 
 ROUND(LAIN,0) as PENJUALAN, 
-ROUND((SAW+PENERIMAAN+PENGELUARAN+LAIN),0) as SALDO_AKHIR 
+ROUND((SAW+PENERIMAAN+PENGELUARAN+OVERWEIGHT+LAIN),0) as SALDO_AKHIR 
 from 
 FINAL
 order by material_type_desc, material, regional, group_id, plant;
