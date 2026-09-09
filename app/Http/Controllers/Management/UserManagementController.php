@@ -31,7 +31,7 @@ class UserManagementController extends Controller
             });
         }
 
-        $users = $query->paginate(5);
+        $users = $query->paginate(10);
         return view('management.users.index', compact('users'));
     }
 

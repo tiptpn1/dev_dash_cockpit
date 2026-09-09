@@ -173,6 +173,7 @@ Route::middleware('auth:custom')->group(function () {
 
         Route::get('features/export', [FeatureManagementController::class, 'export'])->name('features.export');
         Route::get('features/dictionary', [FeatureManagementController::class, 'dictionary'])->name('features.dictionary');
+        Route::post('features/reorder', [FeatureManagementController::class, 'reorder'])->name('features.reorder');
         Route::resource('features', FeatureManagementController::class);
 
         Route::get('access/export', [UserFeatureAccessController::class, 'export'])->name('access.export');

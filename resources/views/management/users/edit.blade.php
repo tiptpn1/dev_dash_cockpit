@@ -107,12 +107,12 @@
             </div>
 
             <!-- Buttons -->
-            <div class="flex gap-4 pt-4 border-t border-gray-100 mt-2">
-                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition duration-200 flex items-center">
-                    <i class="fas fa-save mr-2"></i> Update User
+            <div class="flex gap-2 pt-4 border-t border-gray-100 mt-2">
+                <button type="submit" class="font-semibold py-1.5 px-4 rounded-lg shadow-sm transition flex items-center gap-1.5 text-xs" style="background-color: #166534; color: #ffffff;">
+                    <i class="fas fa-save"></i> <span>Update User</span>
                 </button>
-                <a href="{{ route('management.users.index') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-8 rounded-lg transition duration-200 text-center flex items-center">
-                    <i class="fas fa-times mr-2"></i> Batal
+                <a href="{{ route('management.users.index') }}" class="font-semibold py-1.5 px-4 rounded-lg border transition flex items-center gap-1.5 text-xs" style="background-color: #f3f4f6; color: #4b5563; border-color: #d1d5db;">
+                    <i class="fas fa-times"></i> <span>Batal</span>
                 </a>
             </div>
         </form>

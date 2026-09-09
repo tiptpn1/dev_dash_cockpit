@@ -19,19 +19,64 @@ class FeatureManagementController extends Controller
             abort(403, 'Akses ditolak: Anda tidak memiliki fitur Feature Management.');
         }
 
-        $query = Feature::query();
+        $query = Feature::with(['allChildren' => function ($q) {
+            $q->orderBy('sort_order');
+        }])->whereNull('parent_id')->orderBy('sort_order');
 
-        // Search functionality
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('slug', 'like', "%{$search}%")
-                  ->orWhere('name', 'like', "%{$search}%");
-            });
+        $features = $query->get();
+        return view('management.features.index', compact('features'));
+    }
+
+    /**
+     * Reorder feature hierarchy and sort order via drag and drop
+     */
+    public function reorder(Request $request)
+    {
+        if (!auth('custom')->user() || !auth('custom')->user()->hasFeature('management_features')) {
+            return response()->json(['status' => 'error', 'message' => 'Akses ditolak.'], 403);
         }
 
-        $features = $query->paginate(5);
-        return view('management.features.index', compact('features'));
+        $tree = $request->input('tree', []);
+
+        if (!is_array($tree)) {
+            return response()->json(['status' => 'error', 'message' => 'Format data tidak valid.'], 422);
+        }
+
+        try {
+            \DB::transaction(function () use ($tree) {
+                foreach ($tree as $parentIndex => $parentData) {
+                    $parentId = $parentData['id'];
+
+                    // Update parent item: set parent_id to null and set sort_order
+                    Feature::where('id', $parentId)->update([
+                        'parent_id'  => null,
+                        'sort_order' => $parentIndex + 1,
+                    ]);
+
+                    if (!empty($parentData['children']) && is_array($parentData['children'])) {
+                        foreach ($parentData['children'] as $childIndex => $childData) {
+                            $childId = $childData['id'];
+                            Feature::where('id', $childId)->update([
+                                'parent_id'  => $parentId,
+                                'sort_order' => $childIndex + 1,
+                            ]);
+                        }
+                    }
+                }
+            });
+
+            \Illuminate\Support\Facades\Cache::forget('feature_parent_mapping');
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'Urutan dan hirarki fitur berhasil disimpan!'
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Gagal menyimpan urutan: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

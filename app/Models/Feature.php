@@ -34,6 +34,12 @@ class Feature extends Model
                     ->orderBy('sort_order');
     }
 
+    public function allChildren()
+    {
+        return $this->hasMany(Feature::class, 'parent_id')
+                    ->orderBy('sort_order');
+    }
+
     public function parent()
     {
         return $this->belongsTo(Feature::class, 'parent_id');

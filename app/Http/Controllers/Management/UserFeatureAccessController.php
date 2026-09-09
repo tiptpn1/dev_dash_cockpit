@@ -31,7 +31,7 @@ class UserFeatureAccessController extends Controller
             });
         }
 
-        $users = $query->paginate(5);
+        $users = $query->paginate(10);
         return view('management.access.index', compact('users'));
     }
 

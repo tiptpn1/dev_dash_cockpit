@@ -161,12 +161,12 @@
                     </div>
 
                     <!-- Buttons -->
-                    <div class="mt-8 pt-6 border-t border-gray-100 flex gap-4">
-                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition duration-200 flex items-center">
-                            <i class="fas fa-save mr-2"></i> Save Changes
+                    <div class="mt-6 pt-4 border-t border-gray-100 flex gap-2">
+                        <button type="submit" class="font-semibold py-1.5 px-4 rounded-lg shadow-sm transition flex items-center gap-1.5 text-xs" style="background-color: #166534; color: #ffffff;">
+                            <i class="fas fa-save"></i> <span>Simpan Akses</span>
                         </button>
-                        <a href="{{ route('management.access.index') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-8 rounded-lg transition duration-200 flex items-center">
-                            <i class="fas fa-times mr-2"></i> Cancel
+                        <a href="{{ route('management.access.index') }}" class="font-semibold py-1.5 px-4 rounded-lg border transition flex items-center gap-1.5 text-xs" style="background-color: #f3f4f6; color: #4b5563; border-color: #d1d5db;">
+                            <i class="fas fa-times"></i> <span>Batal</span>
                         </a>
                     </div>
                 </form>
