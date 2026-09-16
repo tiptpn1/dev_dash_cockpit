@@ -86,16 +86,25 @@
                 @enderror
             </div>
 
-            <!-- Icon -->
+            <!-- Icon with Visual Picker & Live Preview -->
             <div class="mb-6">
-                <label class="block text-sm font-semibold text-gray-700 mb-2" for="icon">Icon Class (FontAwesome)</label>
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <i class="fas fa-icons text-green-600 opacity-70"></i>
-                    </div>
-                    <input class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white text-gray-900 font-medium transition duration-200 @error('icon') border-red-500 ring-1 ring-red-500 @enderror"
-                        type="text" name="icon" id="icon" value="{{ old('icon') }}" placeholder="e.g., fa-solid fa-cube">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-semibold text-gray-700" for="icon">Icon Class (FontAwesome)</label>
+                    <button type="button" onclick="openIconPickerModal('icon')" class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1 rounded-lg transition shadow-sm">
+                        <i class="fa-solid fa-shapes text-emerald-600"></i>
+                        Pilih Icon Visual
+                    </button>
                 </div>
+                <div class="relative flex items-center gap-3">
+                    <div class="relative flex-1">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <i id="iconLivePreviewBox" class="fa-solid fa-icons text-emerald-600 text-lg"></i>
+                        </div>
+                        <input class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white text-gray-900 font-medium transition duration-200 @error('icon') border-red-500 ring-1 ring-red-500 @enderror"
+                            type="text" name="icon" id="icon" value="{{ old('icon') }}" placeholder="e.g., fa-solid fa-cube">
+                    </div>
+                </div>
+                <p class="text-gray-500 text-xs mt-2 ml-1"><i class="fas fa-info-circle text-blue-400 mr-1"></i>Ketik class Font Awesome atau klik <b>Pilih Icon Visual</b> untuk memilih dengan gambar preview.</p>
                 @error('icon')
                     <span class="text-red-500 text-sm mt-1 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}</span>
                 @enderror
@@ -187,4 +196,11 @@
         max-width: 1000px;
     }
 </style>
+@include('management.features.partials.icon_picker_modal')
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        setupIconInputPreview('icon', 'iconLivePreviewBox');
+    });
+</script>
 @endsection

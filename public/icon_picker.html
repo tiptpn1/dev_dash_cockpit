@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Icon Selector & Preview - AGRINAV / PTPN I</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Tailwind CSS (CDN for standalone preview) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #f8fafc;
+            color: #0f172a;
+        }
+        .icon-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .icon-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 24px -8px rgba(22, 101, 52, 0.15);
+        }
+        .icon-card.selected-areal {
+            border-color: #0d9488 !important;
+            background-color: #f0fdfa !important;
+            box-shadow: 0 0 0 2px #0d9488 !important;
+        }
+        .icon-card.selected-produksi {
+            border-color: #84cc16 !important;
+            background-color: #f7fee7 !important;
+            box-shadow: 0 0 0 2px #84cc16 !important;
+        }
+        .preview-kpi-lime {
+            background: linear-gradient(135deg, #a3e635 0%, #84cc16 100%);
+        }
+        .preview-kpi-emerald {
+            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+        }
+        .preview-sidebar {
+            background-color: #202124;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+
+    <!-- TOP HEADER -->
+    <header class="max-w-7xl mx-auto mb-8 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center gap-3">
+                <span class="w-10 h-10 rounded-xl bg-brand-800 flex items-center justify-center text-white shadow-md shadow-brand-900/20">
+                    <i class="fa-solid fa-shapes text-lg"></i>
+                </span>
+                <div>
+                    <h1 class="text-2xl font-black text-slate-900 tracking-tight">Visual Icon Picker & Live Preview</h1>
+                    <p class="text-sm font-medium text-slate-500">Pilih dan bandingkan icon visual untuk menu & kartu indikator <b>Areal</b> dan <b>Produksi</b></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-50 text-teal-700 text-xs font-bold border border-teal-200">
+                <span class="w-2 h-2 rounded-full bg-teal-500"></span> Areal Terpilih: <span id="label-areal-chosen" class="font-mono ml-1">fa-draw-polygon</span>
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-lime-50 text-lime-700 text-xs font-bold border border-lime-200">
+                <span class="w-2 h-2 rounded-full bg-lime-500"></span> Produksi Terpilih: <span id="label-produksi-chosen" class="font-mono ml-1">fa-boxes-stacked</span>
+            </span>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- LEFT: VISUAL GALLERY SELECTION (7 Cols) -->
+        <div class="lg:col-span-7 space-y-6">
+
+            <!-- SEARCH & FILTER BAR -->
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="relative w-full sm:w-72">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <input type="text" id="searchInput" placeholder="Cari nama icon / keyword..." 
+                           class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                </div>
+                <div class="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+                    <button onclick="filterCategory('all')" class="cat-btn active px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-900 text-white shadow-sm transition">Semua</button>
+                    <button onclick="filterCategory('areal')" class="cat-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-teal-50 hover:text-teal-700 transition">Areal & Lahan</button>
+                    <button onclick="filterCategory('produksi')" class="cat-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-lime-50 hover:text-lime-700 transition">Produksi & Panen</button>
+                    <button onclick="filterCategory('operasional')" class="cat-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">Operasional</button>
+                </div>
+            </div>
+
+            <!-- SECTION 1: AREAL ICONS -->
+            <div class="icon-section" data-section="areal">
+                <div class="flex items-center justify-between mb-3 px-1">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-lg bg-teal-100 text-teal-800 flex items-center justify-center text-xs font-bold">1</span>
+                        <h2 class="text-sm font-extrabold uppercase tracking-wider text-teal-900">Pilihan Visual: Icon Areal</h2>
+                    </div>
+                    <span class="text-xs text-slate-400">Klik tombol "Pilih sbg Areal"</span>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5" id="gridAreal">
+                    <!-- Cards will be populated by JS -->
+                </div>
+            </div>
+
+            <!-- SECTION 2: PRODUKSI ICONS -->
+            <div class="icon-section" data-section="produksi">
+                <div class="flex items-center justify-between mb-3 px-1 pt-4 border-t border-slate-200">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-lg bg-lime-100 text-lime-800 flex items-center justify-center text-xs font-bold">2</span>
+                        <h2 class="text-sm font-extrabold uppercase tracking-wider text-lime-900">Pilihan Visual: Icon Produksi</h2>
+                    </div>
+                    <span class="text-xs text-slate-400">Klik tombol "Pilih sbg Produksi"</span>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5" id="gridProduksi">
+                    <!-- Cards will be populated by JS -->
+                </div>
+            </div>
+
+            <!-- SECTION 3: OPERASIONAL LAINNYA -->
+            <div class="icon-section" data-section="operasional">
+                <div class="flex items-center justify-between mb-3 px-1 pt-4 border-t border-slate-200">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-lg bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold">3</span>
+                        <h2 class="text-sm font-extrabold uppercase tracking-wider text-slate-700">Icon Pendukung Lainnya</h2>
+                    </div>
+                    <span class="text-xs text-slate-400">Komoditas & Analitika</span>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5" id="gridOperasional">
+                    <!-- Cards will be populated by JS -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT: LIVE INTERACTIVE PREVIEWS (5 Cols Sticky) -->
+        <div class="lg:col-span-5 space-y-6">
+            <div class="sticky top-6 space-y-6">
+
+                <!-- PREVIEW 1: EXECUTIVE KPI CARDS -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+                        <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                            <i class="fa-solid fa-eye text-emerald-600"></i> Live Preview: Kartu KPI Dashboard
+                        </h3>
+                        <span class="text-[10px] font-bold px-2 py-0.5 bg-slate-100 rounded text-slate-600">Executive Style</span>
+                    </div>
+
+                    <div class="space-y-4">
+                        <!-- CARD AREAL -->
+                        <div class="preview-kpi-emerald p-5 rounded-2xl relative overflow-hidden text-white shadow-lg shadow-emerald-700/20">
+                            <div class="absolute -right-3 -bottom-3 opacity-20 text-white pointer-events-none">
+                                <i id="preview-watermark-areal" class="fa-solid fa-draw-polygon text-8xl"></i>
+                            </div>
+                            <div class="flex justify-between items-start mb-3 relative z-10">
+                                <div>
+                                    <div class="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-emerald-100">
+                                        <i id="preview-icon-areal-badge" class="fa-solid fa-draw-polygon"></i>
+                                        <span>Total Luas Areal TM</span>
+                                    </div>
+                                    <h4 class="text-2xl font-black mt-1 font-mono tracking-tight">12.450,80 <span class="text-xs font-semibold opacity-90">Ha</span></h4>
+                                </div>
+                                <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                                    <i class="fa-solid fa-arrow-up-right text-sm"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 text-[11px] font-bold bg-white/20 px-3 py-1 rounded-lg w-fit backdrop-blur-sm relative z-10">
+                                <i class="fa-solid fa-chart-line text-[10px]"></i>
+                                <span>Ach. RKAP: 101,4%</span>
+                            </div>
+                        </div>
+
+                        <!-- CARD PRODUKSI -->
+                        <div class="preview-kpi-lime p-5 rounded-2xl relative overflow-hidden text-lime-950 shadow-lg shadow-lime-700/20">
+                            <div class="absolute -right-3 -bottom-3 opacity-20 text-lime-950 pointer-events-none">
+                                <i id="preview-watermark-produksi" class="fa-solid fa-boxes-stacked text-8xl"></i>
+                            </div>
+                            <div class="flex justify-between items-start mb-3 relative z-10">
+                                <div>
+                                    <div class="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-lime-900 opacity-90">
+                                        <i id="preview-icon-produksi-badge" class="fa-solid fa-boxes-stacked"></i>
+                                        <span>Realisasi Produksi Total</span>
+                                    </div>
+                                    <h4 class="text-2xl font-black mt-1 font-mono tracking-tight">18.920,45 <span class="text-xs font-semibold">Ton</span></h4>
+                                </div>
+                                <div class="w-9 h-9 rounded-xl bg-black/10 flex items-center justify-center">
+                                    <i class="fa-solid fa-arrow-up-right text-sm"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 text-[11px] font-bold bg-white/40 px-3 py-1 rounded-lg w-fit backdrop-blur-sm relative z-10">
+                                <i class="fa-solid fa-chart-line text-[10px]"></i>
+                                <span>Ach. RKAP: 98,2%</span>
+                                <span class="opacity-50">|</span>
+                                <span>YoY: +4,6%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PREVIEW 2: SIDEBAR MENU ITEM -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+                        <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                            <i class="fa-solid fa-bars text-emerald-600"></i> Live Preview: Sidebar AGRINAV
+                        </h3>
+                        <span class="text-[10px] font-bold px-2 py-0.5 bg-slate-100 rounded text-slate-600">Dark Theme</span>
+                    </div>
+
+                    <div class="preview-sidebar p-3 rounded-xl space-y-1.5 text-slate-300 text-xs font-medium">
+                        <!-- Menu Item 1: Areal -->
+                        <a href="javascript:void(0)" class="flex items-center justify-between px-3 py-2 rounded-lg bg-white/10 text-white font-bold border-l-4 border-emerald-500 transition">
+                            <div class="flex items-center gap-2.5">
+                                <i id="preview-sidebar-areal" class="fa-solid fa-draw-polygon text-emerald-400 w-4 text-center"></i>
+                                <span>Data Areal Perkebunan</span>
+                            </div>
+                            <span class="text-[10px] text-emerald-400 font-semibold bg-emerald-950/60 px-1.5 py-0.5 rounded">Aktif</span>
+                        </a>
+
+                        <!-- Menu Item 2: Produksi -->
+                        <a href="javascript:void(0)" class="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/5 transition text-slate-400 hover:text-white">
+                            <div class="flex items-center gap-2.5">
+                                <i id="preview-sidebar-produksi" class="fa-solid fa-boxes-stacked text-lime-400 w-4 text-center"></i>
+                                <span>Data Produksi Komoditi</span>
+                            </div>
+                            <span class="text-[10px] opacity-40">&#9654;</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- PREVIEW 3: TABLE HEADER & BADGES -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+                        <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                            <i class="fa-solid fa-table text-emerald-600"></i> Preview Tabel & Header Kolom
+                        </h3>
+                    </div>
+
+                    <table class="w-full text-xs border border-slate-200 rounded-lg overflow-hidden">
+                        <thead>
+                            <tr class="bg-slate-800 text-white text-center font-bold">
+                                <th class="p-2 border-r border-slate-700">Regional</th>
+                                <th class="p-2 border-r border-slate-700 bg-teal-900/80">
+                                    <div class="flex items-center justify-center gap-1.5">
+                                        <i id="preview-table-areal" class="fa-solid fa-draw-polygon text-teal-300"></i>
+                                        <span>Areal (Ha)</span>
+                                    </div>
+                                </th>
+                                <th class="p-2 bg-emerald-900/80">
+                                    <div class="flex items-center justify-center gap-1.5">
+                                        <i id="preview-table-produksi" class="fa-solid fa-boxes-stacked text-lime-300"></i>
+                                        <span>Produksi (Ton)</span>
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 font-mono text-slate-700">
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-2 font-sans font-bold text-center">REGIONAL 1</td>
+                                <td class="p-2 text-right">4.120,50</td>
+                                <td class="p-2 text-right">6.840,20</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-2 font-sans font-bold text-center">REGIONAL 2</td>
+                                <td class="p-2 text-right">3.890,20</td>
+                                <td class="p-2 text-right">5.910,15</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- CODE SNIPPET COPY HELPER -->
+                <div class="bg-slate-900 p-4 rounded-2xl text-white text-xs font-mono">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Snippet Kode Siap Salin:</span>
+                        <span id="copyToast" class="text-emerald-400 text-[11px] font-sans font-bold hidden">Tersalin!</span>
+                    </div>
+                    <div class="space-y-1.5">
+                        <div class="flex items-center justify-between bg-slate-800/80 p-2 rounded-lg cursor-pointer hover:bg-slate-800 transition" onclick="copySnippet('areal')">
+                            <span class="text-teal-300" id="code-snippet-areal">&lt;i class="fa-solid fa-draw-polygon"&gt;&lt;/i&gt;</span>
+                            <i class="fa-regular fa-copy text-slate-400 hover:text-white"></i>
+                        </div>
+                        <div class="flex items-center justify-between bg-slate-800/80 p-2 rounded-lg cursor-pointer hover:bg-slate-800 transition" onclick="copySnippet('produksi')">
+                            <span class="text-lime-300" id="code-snippet-produksi">&lt;i class="fa-solid fa-boxes-stacked"&gt;&lt;/i&gt;</span>
+                            <i class="fa-regular fa-copy text-slate-400 hover:text-white"></i>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-3 transform translate-y-20 opacity-0 transition duration-300 z-50">
+        <i class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+        <div class="text-xs font-medium">
+            <div id="toastTitle" class="font-bold text-white">Icon Dipilih</div>
+            <div id="toastMsg" class="text-slate-400 text-[11px]">Icon telah diperbarui pada live preview</div>
+        </div>
+    </div>
+
+    <script>
+        // ICON DATA STORE
+        const iconData = {
+            areal: [
+                { class: 'fa-solid fa-draw-polygon', name: 'Draw Polygon', desc: 'Delineasi batas blok kebun & GIS', tag: 'polygon batas blok kebun gis peta' },
+                { class: 'fa-solid fa-map-location-dot', name: 'Map Location Dot', desc: 'Sebaran wilayah estate kebun', tag: 'peta lokasi map estate wilayah' },
+                { class: 'fa-solid fa-vector-square', name: 'Vector Square', desc: 'Pengukuran luasan hektar (Ha)', tag: 'luas hektar dimensi square' },
+                { class: 'fa-solid fa-tree', name: 'Tree', desc: 'Areal tegakan pohon / TM perkebunan', tag: 'pohon kayu tegakan karet sawit' },
+                { class: 'fa-solid fa-seedling', name: 'Seedling', desc: 'Areal tanaman muda / TBM', tag: 'bibit tanaman kebun nursery' },
+                { class: 'fa-solid fa-layer-group', name: 'Layer Group', desc: 'Klasifikasi strata status areal lahan', tag: 'layer lapisan zonasi status' },
+                { class: 'fa-solid fa-map', name: 'Map', desc: 'Peta hamparan lahan perkebunan', tag: 'peta hamparan wilayah' },
+                { class: 'fa-solid fa-earth-asia', name: 'Earth Asia', desc: 'Cakupan makro geospasial regional', tag: 'globe dunia bumi regional' }
+            ],
+            produksi: [
+                { class: 'fa-solid fa-boxes-stacked', name: 'Boxes Stacked', desc: 'Tumpukan tonase hasil panen komoditas', tag: 'tumpukan box stok panen kuantum' },
+                { class: 'fa-solid fa-weight-hanging', name: 'Weight Hanging', desc: 'Timbangan bobot tonase panen (Kg/Ton)', tag: 'timbangan berat ton kg beban' },
+                { class: 'fa-solid fa-industry', name: 'Industry / Factory', desc: 'Pabrik hilirisasi pengolahan (Off-farm)', tag: 'pabrik pks mill industri off-farm' },
+                { class: 'fa-solid fa-leaf', name: 'Leaf', desc: 'Pucuk teh segar / lateks karet panen', tag: 'daun teh lateks hasil petik hijau' },
+                { class: 'fa-solid fa-wheat-awn', name: 'Wheat Awn', desc: 'Simbol agrikultur tuaian hasil bumi', tag: 'panen gandum hasil bumi tanaman' },
+                { class: 'fa-solid fa-arrow-trend-up', name: 'Trend Up', desc: 'Tren kenaikan target capaian produksi', tag: 'tren grafik naik performa target' },
+                { class: 'fa-solid fa-truck-ramp-box', name: 'Truck Ramp Box', desc: 'Pengiriman & logistik hasil komoditas', tag: 'truk kirim logistik distribusi angkut' },
+                { class: 'fa-solid fa-cubes', name: 'Cubes', desc: 'Kuantum output komoditas', tag: 'bal balan getah karet produk cubes' }
+            ],
+            operasional: [
+                { class: 'fa-solid fa-chart-pie', name: 'Chart Pie', desc: 'Komposisi persentase luasan / TM', tag: 'pie chart komposisi rasio' },
+                { class: 'fa-solid fa-clipboard-check', name: 'Clipboard Check', desc: 'Evaluasi kesesuaian SOP kebun', tag: 'sop evaluasi verifikasi audit' },
+                { class: 'fa-solid fa-mug-hot', name: 'Mug Hot', desc: 'Komoditas Teh & Kopi', tag: 'teh kopi cangkir minuman' },
+                { class: 'fa-solid fa-gears', name: 'Gears', desc: 'Operasional mekanisasi kebun', tag: 'mekanisasi mesin operasional' }
+            ]
+        };
+
+        let currentAreal = 'fa-solid fa-draw-polygon';
+        let currentProduksi = 'fa-solid fa-boxes-stacked';
+
+        function renderGrid(sectionId, list, type) {
+            const container = document.getElementById(sectionId);
+            container.innerHTML = '';
+
+            list.forEach(item => {
+                const isSelected = (type === 'areal' && item.class === currentAreal) || (type === 'produksi' && item.class === currentProduksi);
+                const selectedClass = isSelected ? (type === 'areal' ? 'selected-areal' : 'selected-produksi') : '';
+
+                const card = document.createElement('div');
+                card.className = `icon-card bg-white p-3.5 rounded-xl border border-slate-200 flex flex-col justify-between cursor-pointer relative ${selectedClass}`;
+                card.setAttribute('data-name', item.name.toLowerCase());
+                card.setAttribute('data-tags', item.tag.toLowerCase());
+                card.setAttribute('data-class', item.class);
+
+                card.innerHTML = `
+                    <div>
+                        <div class="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-800 text-2xl mx-auto mb-2.5 transition">
+                            <i class="${item.class}"></i>
+                        </div>
+                        <h4 class="text-xs font-bold text-slate-900 text-center truncate">${item.name}</h4>
+                        <p class="text-[10px] text-slate-400 font-mono text-center truncate mt-0.5">${item.class}</p>
+                        <p class="text-[11px] text-slate-500 mt-1.5 leading-snug line-clamp-2">${item.desc}</p>
+                    </div>
+                    <div class="mt-3 pt-2 border-t border-slate-100 flex items-center gap-1">
+                        <button onclick="setArealIcon('${item.class}', '${item.name}')" class="flex-1 py-1 rounded-md text-[10px] font-bold bg-teal-50 text-teal-700 hover:bg-teal-600 hover:text-white transition">
+                            Areal
+                        </button>
+                        <button onclick="setProduksiIcon('${item.class}', '${item.name}')" class="flex-1 py-1 rounded-md text-[10px] font-bold bg-lime-50 text-lime-700 hover:bg-lime-600 hover:text-white transition">
+                            Produksi
+                        </button>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        function setArealIcon(iconClass, iconName) {
+            currentAreal = iconClass;
+            document.getElementById('label-areal-chosen').textContent = iconClass.replace('fa-solid ', '');
+            
+            // Update live previews
+            document.getElementById('preview-watermark-areal').className = `${iconClass} text-8xl`;
+            document.getElementById('preview-icon-areal-badge').className = iconClass;
+            document.getElementById('preview-sidebar-areal').className = `${iconClass} text-emerald-400 w-4 text-center`;
+            document.getElementById('preview-table-areal').className = `${iconClass} text-teal-300`;
+            document.getElementById('code-snippet-areal').textContent = `<i class="${iconClass}"></i>`;
+
+            // Refresh cards highlight
+            reHighlightCards();
+            showToast('Areal Diperbarui', `Icon Areal diganti ke: ${iconName}`);
+        }
+
+        function setProduksiIcon(iconClass, iconName) {
+            currentProduksi = iconClass;
+            document.getElementById('label-produksi-chosen').textContent = iconClass.replace('fa-solid ', '');
+
+            // Update live previews
+            document.getElementById('preview-watermark-produksi').className = `${iconClass} text-8xl`;
+            document.getElementById('preview-icon-produksi-badge').className = iconClass;
+            document.getElementById('preview-sidebar-produksi').className = `${iconClass} text-lime-400 w-4 text-center`;
+            document.getElementById('preview-table-produksi').className = `${iconClass} text-lime-300`;
+            document.getElementById('code-snippet-produksi').textContent = `<i class="${iconClass}"></i>`;
+
+            // Refresh cards highlight
+            reHighlightCards();
+            showToast('Produksi Diperbarui', `Icon Produksi diganti ke: ${iconName}`);
+        }
+
+        function reHighlightCards() {
+            document.querySelectorAll('.icon-card').forEach(card => {
+                const cls = card.getAttribute('data-class');
+                card.classList.remove('selected-areal', 'selected-produksi');
+                if (cls === currentAreal) card.classList.add('selected-areal');
+                if (cls === currentProduksi) card.classList.add('selected-produksi');
+            });
+        }
+
+        function showToast(title, msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastTitle').textContent = title;
+            document.getElementById('toastMsg').textContent = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2500);
+        }
+
+        function copySnippet(type) {
+            const text = type === 'areal' ? `<i class="${currentAreal}"></i>` : `<i class="${currentProduksi}"></i>`;
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('Disalin ke Clipboard!', text);
+            });
+        }
+
+        // FILTER SEARCH
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const q = e.target.value.toLowerCase().trim();
+            document.querySelectorAll('.icon-card').forEach(card => {
+                const name = card.getAttribute('data-name');
+                const tags = card.getAttribute('data-tags');
+                const cls = card.getAttribute('data-class');
+                if (name.includes(q) || tags.includes(q) || cls.includes(q)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        // FILTER CATEGORY
+        function filterCategory(cat) {
+            document.querySelectorAll('.cat-btn').forEach(b => {
+                b.classList.remove('bg-slate-900', 'text-white');
+                b.classList.add('bg-slate-100', 'text-slate-600');
+            });
+            event.currentTarget.classList.remove('bg-slate-100', 'text-slate-600');
+            event.currentTarget.classList.add('bg-slate-900', 'text-white');
+
+            document.querySelectorAll('.icon-section').forEach(sec => {
+                if (cat === 'all' || sec.getAttribute('data-section') === cat) {
+                    sec.style.display = 'block';
+                } else {
+                    sec.style.display = 'none';
+                }
+            });
+        }
+
+        // INITIAL RENDER
+        window.addEventListener('DOMContentLoaded', () => {
+            renderGrid('gridAreal', iconData.areal, 'areal');
+            renderGrid('gridProduksi', iconData.produksi, 'produksi');
+            renderGrid('gridOperasional', iconData.operasional, 'operasional');
+            reHighlightCards();
+        });
+    </script>
+</body>
+</html>
