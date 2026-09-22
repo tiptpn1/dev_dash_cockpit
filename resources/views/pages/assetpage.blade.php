@@ -1,0 +1,1 @@
+@include('pages.alas_hak')

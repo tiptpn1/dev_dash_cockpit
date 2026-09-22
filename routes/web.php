@@ -124,6 +124,7 @@ Route::middleware('auth:custom')->group(function () {
     Route::get('/asset_recovery', [PageController::class, 'asset_recovery'])->name('asset_recovery');
     Route::get('/asset_optimalisasi', [PageController::class, 'asset_optimalisasi'])->name('asset_optimalisasi');
     Route::get('/asset_divestasi', [PageController::class, 'asset_divestasi'])->name('asset_divestasi');
+    Route::get('/konsesidanalashak', [PageController::class, 'konsesidanalashak'])->name('konsesidanalashak');
 
     Route::get('/sla', [PageController::class, 'sla'])->name('sla');
     Route::get('/pengadaan', [PageController::class, 'pengadaan'])->name('pengadaaan');

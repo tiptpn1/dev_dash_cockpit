@@ -1625,6 +1625,306 @@ class PageController extends Controller
         $linkiframe = 'https://lookerstudio.google.com/embed/reporting/9e0d8865-4fb9-48bf-946e-08a8ff1e45f5/page/NrNUE';
         return view('pages/overview_page', compact('linkiframe'));
     }
+    public function konsesidanalashak()
+    {
+        $rekapFile = storage_path('Rekap Luas Areal Statement.xlsx');
+        $asetCsvFile = storage_path('Data Aset Tanah PTPN I.csv');
+        $googleSheetCsvUrl = 'https://docs.google.com/spreadsheets/d/120L9JOJvLh_8T422ny_t26yKG3lrJu6f6VMTuCBIIo0/export?format=csv&gid=455820876';
+
+        // Fetch live CSV if file is missing or older than 1 hour
+        if (!file_exists($asetCsvFile) || (time() - filemtime($asetCsvFile)) > 3600) {
+            try {
+                $response = Http::timeout(5)->get($googleSheetCsvUrl);
+                if ($response->successful() && strlen($response->body()) > 1000) {
+                    file_put_contents($asetCsvFile, $response->body());
+                }
+            } catch (\Throwable $e) {
+                // Fallback to existing local file if request fails
+            }
+        }
+
+        $cacheKey = 'rekap_luas_areal_statement_v7_' .
+            (file_exists($rekapFile) ? filemtime($rekapFile) : '0') . '_' .
+            (file_exists($asetCsvFile) ? filemtime($asetCsvFile) : '0');
+
+        $rekapAlasHak = \Illuminate\Support\Facades\Cache::remember(
+            $cacheKey,
+            3600,
+            function () use ($rekapFile, $asetCsvFile) {
+                if (!file_exists($rekapFile)) {
+                    return [];
+                }
+
+                // 1. Load Rekap Luas Areal Statement.xlsx
+                $reader1 = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($rekapFile);
+                $reader1->setReadDataOnly(true);
+                $spreadsheet1 = $reader1->load($rekapFile);
+                $sheet1 = $spreadsheet1->getActiveSheet();
+
+                $rekapData = [];
+                $emptyCount = 0;
+                $row = 2;
+
+                while (true) {
+                    $region = trim((string)$sheet1->getCell("A$row")->getValue());
+                    $kebun = trim((string)$sheet1->getCell("B$row")->getValue());
+                    $luasRaw = $sheet1->getCell("C$row")->getValue();
+
+                    if (empty($region) || empty($kebun)) {
+                        $emptyCount++;
+                        if ($emptyCount > 10) break;
+                        $row++;
+                        continue;
+                    }
+
+                    $emptyCount = 0;
+
+                    if (in_array(strtolower($region), ['region', 'row labels', 'total', 'grand total'])) {
+                        $row++;
+                        continue;
+                    }
+
+                    if (is_numeric($luasRaw)) {
+                        $luas = (float)$luasRaw;
+                    } else {
+                        $clean = str_replace(['.', ','], ['', '.'], (string)$luasRaw);
+                        $luas = (float)$clean;
+                    }
+
+                    if (!isset($rekapData[$region])) {
+                        $rekapData[$region] = [
+                            'areal_konsesi' => 0,
+                            'kebun_list' => []
+                        ];
+                    }
+
+                    $rekapData[$region]['kebun_list'][$kebun] = [
+                        'kebun' => $kebun,
+                        'areal_konsesi' => $luas,
+                        'areal_gis' => null,
+                        'items' => []
+                    ];
+                    $rekapData[$region]['areal_konsesi'] += $luas;
+
+                    $row++;
+                }
+
+                // 2. Load Data Aset Tanah from Google Sheet CSV
+                if (file_exists($asetCsvFile)) {
+                    $handle = fopen($asetCsvFile, 'r');
+                    if ($handle !== false) {
+                        $header = fgetcsv($handle);
+                        $asetRows = [];
+
+                        while (($data = fgetcsv($handle)) !== false) {
+                            if (count($data) < 10) continue;
+
+                            $namaUnit = trim($data[9] ?? '');
+                            if (empty($namaUnit)) continue;
+
+                            $namaSertifikat = trim($data[7] ?? '');
+                            $jenisHak = trim($data[8] ?? '');
+                            if (empty($jenisHak) || str_starts_with($jenisHak, '=')) {
+                                $jenisHak = 'TIDAK BERSERTIFIKAT';
+                            }
+                            if (empty($namaSertifikat) || str_starts_with($namaSertifikat, '=')) {
+                                $namaSertifikat = '-';
+                            }
+
+                            $luasRaw = trim($data[16] ?? '');
+                            if ($luasRaw === '' || $luasRaw === '-') {
+                                $luasRaw = trim($data[17] ?? '0');
+                            }
+
+                            if (is_numeric($luasRaw)) {
+                                $luasVal = (float)$luasRaw;
+                            } else {
+                                $clean = str_replace(['.', ','], ['', '.'], $luasRaw);
+                                $luasVal = (float)$clean;
+                            }
+
+                            $regionAset = trim($data[3] ?? '');
+                            $tglTerbitRaw = trim($data[32] ?? '-');
+                            $tglAkhirRaw = trim($data[33] ?? '-');
+                            $statusVal = trim(strtoupper($data[40] ?? ''));
+
+                            if (empty($statusVal) || str_starts_with($statusVal, '=')) {
+                                if ($tglAkhirRaw === '-' || empty($tglAkhirRaw)) {
+                                    $statusVal = 'BELUM BERSERTIFIKAT';
+                                } else {
+                                    $ts = strtotime($tglAkhirRaw);
+                                    if ($ts !== false && $ts < time()) {
+                                        $statusVal = 'BERAKHIR';
+                                    } else {
+                                        $statusVal = 'BERLAKU';
+                                    }
+                                }
+                            }
+
+                            if (str_contains(strtoupper($jenisHak), 'EKS') || str_contains(strtoupper($namaSertifikat), 'EKS') || str_contains($statusVal, 'EKS')) {
+                                $statusNorm = 'EKS HGU';
+                            } elseif (str_contains($statusVal, 'BELUM') || str_contains($statusVal, 'PROSES')) {
+                                $statusNorm = 'BELUM BERSERTIFIKAT';
+                            } elseif (str_contains($statusVal, 'AKHIR') || str_contains($statusVal, 'EXPIRE')) {
+                                $statusNorm = 'BERAKHIR';
+                            } else {
+                                $statusNorm = 'BERLAKU';
+                            }
+
+                            $jenisHakClean = str_replace('\\', '/', $jenisHak);
+                            $namaSertifikatClean = str_replace('\\', '/', $namaSertifikat);
+                            $namaUnitClean = str_replace('\\', '/', $namaUnit);
+                            $regionAsetClean = str_replace('\\', '/', $regionAset);
+
+                            $asetRows[] = [
+                                'jenis' => $jenisHakClean,
+                                'nomor' => $namaSertifikatClean,
+                                'tgl_terbit' => $tglTerbitRaw,
+                                'tgl_berakhir' => $tglAkhirRaw,
+                                'status' => $statusNorm,
+                                'luas' => $luasVal,
+                                'nama_unit' => $namaUnitClean,
+                                'region' => $regionAsetClean,
+                                'no_sertifikat' => trim($data[5] ?? '-'),
+                                'sap_legal' => trim($data[6] ?? '-'),
+                                'eks_ptpn' => trim($data[4] ?? '-'),
+                                'desa' => trim($data[10] ?? '-'),
+                                'kecamatan' => trim($data[11] ?? '-'),
+                                'kabupaten' => trim($data[12] ?? '-'),
+                                'provinsi' => trim($data[13] ?? '-'),
+                                'pulau' => trim($data[14] ?? '-'),
+                                'komoditas' => trim($data[15] ?? '-'),
+                                'areal_planted' => trim($data[18] ?? '-'),
+                                'areal_lahan_kosong' => trim($data[20] ?? '-'),
+                                'areal_jalan_jembatan' => trim($data[21] ?? '-'),
+                                'areal_bangunan' => trim($data[22] ?? '-'),
+                                'areal_kanal_rawa' => trim($data[23] ?? '-'),
+                                'areal_konservasi' => trim($data[24] ?? '-'),
+                                'areal_kerjasama' => trim($data[25] ?? '-'),
+                                'areal_okupasi' => trim($data[26] ?? '-'),
+                                'okupasi_berat' => trim($data[27] ?? '-'),
+                                'okupasi_sedang' => trim($data[28] ?? '-'),
+                                'okupasi_ringan' => trim($data[29] ?? '-'),
+                                'jumlah_bidang' => trim($data[30] ?? '-'),
+                                'nilai_buku' => trim($data[34] ?? '-'),
+                                'njop' => trim($data[35] ?? '-'),
+                                'fair_value' => trim($data[36] ?? '-'),
+                                'nop' => trim($data[37] ?? '-'),
+                                'status_bphtb' => trim(!empty($data[1]) ? $data[1] : ($data[44] ?? '-')),
+                                'link_polygon' => trim($data[43] ?? '-'),
+                                'tahun_berakhir' => trim($data[45] ?? '-')
+                            ];
+                        }
+                        fclose($handle);
+
+                        $normalize = function ($str) {
+                            $str = strtolower($str);
+                            $str = preg_replace('/unit\s+kebun\s+/i', '', $str);
+                            $str = preg_replace('/unit\s+ternak\s+/i', '', $str);
+                            $str = preg_replace('/unit\s+tebu\s+/i', '', $str);
+                            $str = preg_replace('/unit\s+/i', '', $str);
+                            $str = preg_replace('/kebun\s+/i', '', $str);
+                            $str = preg_replace('/pt\s+/i', '', $str);
+                            $str = preg_replace('/\([^)]*\)/', '', $str);
+                            $str = preg_replace('/[^a-z0-9\/]/', '', $str);
+                            return trim($str);
+                        };
+
+                        $extractRegNum = function ($str) {
+                            preg_match('/\d+/', $str, $m);
+                            return $m[0] ?? null;
+                        };
+
+                        foreach ($rekapData as $regionName => &$rInfo) {
+                            $regNum = $extractRegNum($regionName);
+
+                            foreach ($rInfo['kebun_list'] as $kebName => &$kData) {
+                                $normKeb = $normalize($kebName);
+                                $partsKeb = array_filter(explode('/', $normKeb));
+
+                                foreach ($asetRows as $aRow) {
+                                    $asetRegNum = $extractRegNum($aRow['region']);
+
+                                    if ($regNum !== null && $asetRegNum !== null && $regNum !== $asetRegNum) {
+                                        continue;
+                                    }
+
+                                    $normUnit = $normalize($aRow['nama_unit']);
+                                    $partsUnit = array_filter(explode('/', $normUnit));
+
+                                    $isMatch = false;
+
+                                    if (!empty($normKeb) && !empty($normUnit)) {
+                                        if ($normKeb === $normUnit || str_contains($normUnit, $normKeb) || str_contains($normKeb, $normUnit)) {
+                                            $isMatch = true;
+                                        }
+                                    }
+
+                                    if (!$isMatch) {
+                                        foreach ($partsKeb as $pk) {
+                                            if (strlen($pk) < 3) continue;
+                                            foreach ($partsUnit as $pu) {
+                                                if (strlen($pu) < 3) continue;
+                                                if ($pk === $pu || str_contains($pu, $pk) || str_contains($pk, $pu)) {
+                                                    $isMatch = true;
+                                                    break 2;
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    if ($isMatch) {
+                                        $kData['items'][] = [
+                                            'jenis' => $aRow['jenis'],
+                                            'nomor' => $aRow['nomor'],
+                                            'tgl_terbit' => $aRow['tgl_terbit'],
+                                            'tgl_berakhir' => $aRow['tgl_berakhir'],
+                                            'status' => $aRow['status'],
+                                            'luas' => $aRow['luas'],
+                                            'no_sertifikat' => $aRow['no_sertifikat'],
+                                            'sap_legal' => $aRow['sap_legal'],
+                                            'eks_ptpn' => $aRow['eks_ptpn'],
+                                            'desa' => $aRow['desa'],
+                                            'kecamatan' => $aRow['kecamatan'],
+                                            'kabupaten' => $aRow['kabupaten'],
+                                            'provinsi' => $aRow['provinsi'],
+                                            'pulau' => $aRow['pulau'],
+                                            'komoditas' => $aRow['komoditas'],
+                                            'areal_planted' => $aRow['areal_planted'],
+                                            'areal_lahan_kosong' => $aRow['areal_lahan_kosong'],
+                                            'areal_jalan_jembatan' => $aRow['areal_jalan_jembatan'],
+                                            'areal_bangunan' => $aRow['areal_bangunan'],
+                                            'areal_kanal_rawa' => $aRow['areal_kanal_rawa'],
+                                            'areal_konservasi' => $aRow['areal_konservasi'],
+                                            'areal_kerjasama' => $aRow['areal_kerjasama'],
+                                            'areal_okupasi' => $aRow['areal_okupasi'],
+                                            'okupasi_berat' => $aRow['okupasi_berat'],
+                                            'okupasi_sedang' => $aRow['okupasi_sedang'],
+                                            'okupasi_ringan' => $aRow['okupasi_ringan'],
+                                            'jumlah_bidang' => $aRow['jumlah_bidang'],
+                                            'nilai_buku' => $aRow['nilai_buku'],
+                                            'njop' => $aRow['njop'],
+                                            'fair_value' => $aRow['fair_value'],
+                                            'nop' => $aRow['nop'],
+                                            'status_bphtb' => $aRow['status_bphtb'],
+                                            'link_polygon' => $aRow['link_polygon'],
+                                            'tahun_berakhir' => $aRow['tahun_berakhir']
+                                        ];
+                                    }
+                                }
+                            }
+                            unset($kData);
+                        }
+                        unset($rInfo);
+                    }
+                }
+
+                return $rekapData;
+            }
+        );
+
+        return view('pages/alas_hak', compact('rekapAlasHak'));
+    }
 
     public function picaonfarm()
     {

@@ -115,7 +115,7 @@ async function checkRecentErrors() {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
             },
             body: JSON.stringify({
-                path: '{{ storage_path("logs/laravel.log") }}',
+                path: @json(storage_path("logs/laravel.log")),
                 lines: 50,
                 level: 'ERROR'
             })
