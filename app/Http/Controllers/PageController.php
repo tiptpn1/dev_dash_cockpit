@@ -20,7 +20,12 @@ class PageController extends Controller
     public function overview()
     {
         $user = Auth::guard('custom')->user();
-        $username = $user->username;
+        $username = $user->username ?? '';
+
+        if (in_array(strtolower($username), ['regional1', 'regional2', 'regional3', 'regional5', 'regional7', 'regional8'])) {
+            return redirect('/arealproduksi');
+        }
+
         if ($username != 'mrc') {
             return view('pages/overviewnew');
         } else {
@@ -1666,13 +1671,14 @@ class PageController extends Controller
                 $row = 2;
 
                 while (true) {
-                    $region = trim((string)$sheet1->getCell("A$row")->getValue());
-                    $kebun = trim((string)$sheet1->getCell("B$row")->getValue());
+                    $region = trim((string) $sheet1->getCell("A$row")->getValue());
+                    $kebun = trim((string) $sheet1->getCell("B$row")->getValue());
                     $luasRaw = $sheet1->getCell("C$row")->getValue();
 
                     if (empty($region) || empty($kebun)) {
                         $emptyCount++;
-                        if ($emptyCount > 10) break;
+                        if ($emptyCount > 10)
+                            break;
                         $row++;
                         continue;
                     }
@@ -1685,10 +1691,10 @@ class PageController extends Controller
                     }
 
                     if (is_numeric($luasRaw)) {
-                        $luas = (float)$luasRaw;
+                        $luas = (float) $luasRaw;
                     } else {
-                        $clean = str_replace(['.', ','], ['', '.'], (string)$luasRaw);
-                        $luas = (float)$clean;
+                        $clean = str_replace(['.', ','], ['', '.'], (string) $luasRaw);
+                        $luas = (float) $clean;
                     }
 
                     if (!isset($rekapData[$region])) {
@@ -1717,10 +1723,12 @@ class PageController extends Controller
                         $asetRows = [];
 
                         while (($data = fgetcsv($handle)) !== false) {
-                            if (count($data) < 10) continue;
+                            if (count($data) < 10)
+                                continue;
 
                             $namaUnit = trim($data[9] ?? '');
-                            if (empty($namaUnit)) continue;
+                            if (empty($namaUnit))
+                                continue;
 
                             $namaSertifikat = trim($data[7] ?? '');
                             $jenisHak = trim($data[8] ?? '');
@@ -1737,10 +1745,10 @@ class PageController extends Controller
                             }
 
                             if (is_numeric($luasRaw)) {
-                                $luasVal = (float)$luasRaw;
+                                $luasVal = (float) $luasRaw;
                             } else {
                                 $clean = str_replace(['.', ','], ['', '.'], $luasRaw);
-                                $luasVal = (float)$clean;
+                                $luasVal = (float) $clean;
                             }
 
                             $regionAset = trim($data[3] ?? '');
@@ -1862,9 +1870,11 @@ class PageController extends Controller
 
                                     if (!$isMatch) {
                                         foreach ($partsKeb as $pk) {
-                                            if (strlen($pk) < 3) continue;
+                                            if (strlen($pk) < 3)
+                                                continue;
                                             foreach ($partsUnit as $pu) {
-                                                if (strlen($pu) < 3) continue;
+                                                if (strlen($pu) < 3)
+                                                    continue;
                                                 if ($pk === $pu || str_contains($pu, $pk) || str_contains($pk, $pu)) {
                                                     $isMatch = true;
                                                     break 2;
@@ -2408,6 +2418,12 @@ class PageController extends Controller
 
         $data = $query->orderBy('mb.nama')->get();
         return $data;
+    }
+
+    public function monev_sap()
+    {
+        $linkiframe = 'https://datastudio.google.com/embed/reporting/bf658269-0708-426b-8149-d1bad3d9c089/page/NjQ5F';
+        return view('pages/overview_page', compact('linkiframe'));
     }
 
     public function getBidangStatusApi()

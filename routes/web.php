@@ -146,6 +146,8 @@ Route::middleware('auth:custom')->group(function () {
     Route::get('/lm34_tab', [PageController::class, 'lm34_tab'])->name('lm34_tab');
     Route::get('/lm62', [PageController::class, 'lm62'])->name('lm62');
 
+    Route::get('/monev_sap', [PageController::class, 'monev_sap'])->name('monev_sap');
+
     Route::get('/under_construction', [PageController::class, 'under_construction'])->name('under_construction');
 
     Route::get('/skyview', [PageController::class, 'skyview'])->name('skyview');

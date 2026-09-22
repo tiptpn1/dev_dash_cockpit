@@ -16,7 +16,12 @@ if (isset($user)) {
     <div class="menu">
         <!-- <a href="#home">Home</a> -->
 
-        <a href="{{url('')}}" class="menu-item" id="overview"><i class="fa-solid fa-house menu-icon"></i>Overview</a>
+        @php
+            $isRegional = in_array(strtolower($username), ['regional1', 'regional2', 'regional3', 'regional5', 'regional7', 'regional8']) || str_starts_with(strtolower($username), 'regional');
+        @endphp
+        @if(!$isRegional)
+            <a href="{{url('')}}" class="menu-item" id="overview"><i class="fa-solid fa-house menu-icon"></i>Overview</a>
+        @endif
         @if(isset($sidebarMenus))
             @foreach($sidebarMenus as $menu)
                 @if($menu->children->isNotEmpty())
