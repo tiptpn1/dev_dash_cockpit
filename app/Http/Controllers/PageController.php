@@ -1633,6 +1633,7 @@ class PageController extends Controller
     public function konsesidanalashak()
     {
         $rekapFile = storage_path('Rekap Luas Areal Statement.xlsx');
+        $rekapCsvFile = storage_path('Rekap Luas Areal Statement.csv');
         $asetCsvFile = storage_path('Data Aset Tanah PTPN I.csv');
         $googleSheetCsvUrl = 'https://docs.google.com/spreadsheets/d/120L9JOJvLh_8T422ny_t26yKG3lrJu6f6VMTuCBIIo0/export?format=csv&gid=455820876';
 
@@ -1648,71 +1649,115 @@ class PageController extends Controller
             }
         }
 
-        $cacheKey = 'rekap_luas_areal_statement_v7_' .
-            (file_exists($rekapFile) ? filemtime($rekapFile) : '0') . '_' .
+        $cacheKey = 'rekap_luas_areal_statement_v8_' .
+            (file_exists($rekapCsvFile) ? filemtime($rekapCsvFile) : (file_exists($rekapFile) ? filemtime($rekapFile) : '0')) . '_' .
             (file_exists($asetCsvFile) ? filemtime($asetCsvFile) : '0');
 
         $rekapAlasHak = \Illuminate\Support\Facades\Cache::remember(
             $cacheKey,
             3600,
-            function () use ($rekapFile, $asetCsvFile) {
-                if (!file_exists($rekapFile)) {
-                    return [];
-                }
-
-                // 1. Load Rekap Luas Areal Statement.xlsx
-                $reader1 = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($rekapFile);
-                $reader1->setReadDataOnly(true);
-                $spreadsheet1 = $reader1->load($rekapFile);
-                $sheet1 = $spreadsheet1->getActiveSheet();
-
+            function () use ($rekapFile, $rekapCsvFile, $asetCsvFile) {
                 $rekapData = [];
-                $emptyCount = 0;
-                $row = 2;
 
-                while (true) {
-                    $region = trim((string) $sheet1->getCell("A$row")->getValue());
-                    $kebun = trim((string) $sheet1->getCell("B$row")->getValue());
-                    $luasRaw = $sheet1->getCell("C$row")->getValue();
+                // 1. Load Rekap Luas Areal Statement (Prioritas CSV agar tidak butuh ekstensi ZipArchive/PhpSpreadsheet)
+                if (file_exists($rekapCsvFile)) {
+                    if (($handle = fopen($rekapCsvFile, 'r')) !== false) {
+                        $header = fgetcsv($handle);
+                        while (($row = fgetcsv($handle)) !== false) {
+                            $region = trim($row[0] ?? '');
+                            $kebun = trim($row[1] ?? '');
+                            $luasRaw = $row[2] ?? 0;
 
-                    if (empty($region) || empty($kebun)) {
-                        $emptyCount++;
-                        if ($emptyCount > 10)
-                            break;
-                        $row++;
-                        continue;
+                            if (empty($region) || empty($kebun)) {
+                                continue;
+                            }
+
+                            if (in_array(strtolower($region), ['region', 'row labels', 'total', 'grand total'])) {
+                                continue;
+                            }
+
+                            if (is_numeric($luasRaw)) {
+                                $luas = (float) $luasRaw;
+                            } else {
+                                $clean = str_replace(['.', ','], ['', '.'], (string) $luasRaw);
+                                $luas = (float) $clean;
+                            }
+
+                            if (!isset($rekapData[$region])) {
+                                $rekapData[$region] = [
+                                    'areal_konsesi' => 0,
+                                    'kebun_list' => []
+                                ];
+                            }
+
+                            $rekapData[$region]['kebun_list'][$kebun] = [
+                                'kebun' => $kebun,
+                                'areal_konsesi' => $luas,
+                                'areal_gis' => null,
+                                'items' => []
+                            ];
+                            $rekapData[$region]['areal_konsesi'] += $luas;
+                        }
+                        fclose($handle);
                     }
+                } elseif (file_exists($rekapFile) && class_exists('ZipArchive')) {
+                    // Fallback to Excel jika CSV tidak ada dan ekstensi ZipArchive terpasang
+                    $reader1 = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($rekapFile);
+                    $reader1->setReadDataOnly(true);
+                    $spreadsheet1 = $reader1->load($rekapFile);
+                    $sheet1 = $spreadsheet1->getActiveSheet();
 
                     $emptyCount = 0;
+                    $row = 2;
 
-                    if (in_array(strtolower($region), ['region', 'row labels', 'total', 'grand total'])) {
-                        $row++;
-                        continue;
-                    }
+                    while (true) {
+                        $region = trim((string) $sheet1->getCell("A$row")->getValue());
+                        $kebun = trim((string) $sheet1->getCell("B$row")->getValue());
+                        $luasRaw = $sheet1->getCell("C$row")->getValue();
 
-                    if (is_numeric($luasRaw)) {
-                        $luas = (float) $luasRaw;
-                    } else {
-                        $clean = str_replace(['.', ','], ['', '.'], (string) $luasRaw);
-                        $luas = (float) $clean;
-                    }
+                        if (empty($region) || empty($kebun)) {
+                            $emptyCount++;
+                            if ($emptyCount > 10)
+                                break;
+                            $row++;
+                            continue;
+                        }
 
-                    if (!isset($rekapData[$region])) {
-                        $rekapData[$region] = [
-                            'areal_konsesi' => 0,
-                            'kebun_list' => []
+                        $emptyCount = 0;
+
+                        if (in_array(strtolower($region), ['region', 'row labels', 'total', 'grand total'])) {
+                            $row++;
+                            continue;
+                        }
+
+                        if (is_numeric($luasRaw)) {
+                            $luas = (float) $luasRaw;
+                        } else {
+                            $clean = str_replace(['.', ','], ['', '.'], (string) $luasRaw);
+                            $luas = (float) $clean;
+                        }
+
+                        if (!isset($rekapData[$region])) {
+                            $rekapData[$region] = [
+                                'areal_konsesi' => 0,
+                                'kebun_list' => []
+                            ];
+                        }
+
+                        $rekapData[$region]['kebun_list'][$kebun] = [
+                            'kebun' => $kebun,
+                            'areal_konsesi' => $luas,
+                            'areal_gis' => null,
+                            'items' => []
                         ];
+                        $rekapData[$region]['areal_konsesi'] += $luas;
+
+                        $row++;
                     }
+                }
 
-                    $rekapData[$region]['kebun_list'][$kebun] = [
-                        'kebun' => $kebun,
-                        'areal_konsesi' => $luas,
-                        'areal_gis' => null,
-                        'items' => []
-                    ];
-                    $rekapData[$region]['areal_konsesi'] += $luas;
-
-                    $row++;
+                if (empty($rekapData)) {
+                    return [];
                 }
 
                 // 2. Load Data Aset Tanah from Google Sheet CSV
