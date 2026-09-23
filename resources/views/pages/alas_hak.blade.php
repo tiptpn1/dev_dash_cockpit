@@ -1397,36 +1397,7 @@
                                                     <button type="button" class="ah-btn-detail" onclick="openDetailModal(this)"
                                                         data-region="{{ $regionName }}"
                                                         data-kebun="{{ $kebunName }}"
-                                                        data-jenis="{{ $item['jenis'] ?? '-' }}"
-                                                        data-nomor="{{ $item['nomor'] ?? '-' }}"
-                                                        data-status="{{ $statusVal }}"
-                                                        data-luas="{{ number_format($luas, 2, ',', '.') }}"
-                                                        data-nosert="{{ $item['no_sertifikat'] ?? '-' }}"
-                                                        data-saplegal="{{ $item['sap_legal'] ?? '-' }}"
-                                                        data-eksptpn="{{ $item['eks_ptpn'] ?? '-' }}"
-                                                        data-desa="{{ $item['desa'] ?? '-' }}"
-                                                        data-kecamatan="{{ $item['kecamatan'] ?? '-' }}"
-                                                        data-kabupaten="{{ $item['kabupaten'] ?? '-' }}"
-                                                        data-provinsi="{{ $item['provinsi'] ?? '-' }}"
-                                                        data-pulau="{{ $item['pulau'] ?? '-' }}"
-                                                        data-komoditas="{{ $item['komoditas'] ?? '-' }}"
-                                                        data-planted="{{ $item['areal_planted'] ?? '-' }}"
-                                                        data-kosong="{{ $item['areal_lahan_kosong'] ?? '-' }}"
-                                                        data-jalan="{{ $item['areal_jalan_jembatan'] ?? '-' }}"
-                                                        data-bangunan="{{ $item['areal_bangunan'] ?? '-' }}"
-                                                        data-rawa="{{ $item['areal_kanal_rawa'] ?? '-' }}"
-                                                        data-konservasi="{{ $item['areal_konservasi'] ?? '-' }}"
-                                                        data-kerjasama="{{ $item['areal_kerjasama'] ?? '-' }}"
-                                                        data-okupasi="{{ $item['areal_okupasi'] ?? '-' }}"
-                                                        data-okupasiberat="{{ $item['okupasi_berat'] ?? '-' }}"
-                                                        data-bidang="{{ $item['jumlah_bidang'] ?? '-' }}"
-                                                        data-nilaibuku="{{ $item['nilai_buku'] ?? '-' }}"
-                                                        data-njop="{{ $item['njop'] ?? '-' }}"
-                                                        data-fairvalue="{{ $item['fair_value'] ?? '-' }}"
-                                                        data-nop="{{ $item['nop'] ?? '-' }}"
-                                                        data-statusbphtb="{{ $item['status_bphtb'] ?? '-' }}"
-                                                        data-linkpolygon="{{ $item['link_polygon'] ?? '-' }}"
-                                                        data-tahunberakhir="{{ $item['tahun_berakhir'] ?? '-' }}">
+                                                        data-idx="{{ $index }}">
                                                         <i class="fa-solid fa-eye"></i> Detail
                                                     </button>
                                                 </td>
@@ -2794,69 +2765,87 @@
     // ===== DETAIL MODAL HANDLERS =====
     function openDetailModal(btn) {
         const ds = btn.dataset;
+        const region = ds.region || '';
+        const kebun = ds.kebun || '';
+        const idx = parseInt(ds.idx, 10);
 
-        document.getElementById('modalSubTitle').textContent = (ds.kebun || '-') + ' • ' + (ds.region || '-');
-        document.getElementById('mMainNomor').textContent = ds.nomor || '-';
+        const kebunObj = (regionKebunData[region] && regionKebunData[region].kebun_list) 
+            ? regionKebunData[region].kebun_list[kebun] 
+            : null;
+        const item = (kebunObj && kebunObj.items && kebunObj.items[idx]) 
+            ? kebunObj.items[idx] 
+            : {};
+
+        document.getElementById('modalSubTitle').textContent = (kebun || '-') + ' • ' + (region || '-');
+        document.getElementById('mMainNomor').textContent = item.nomor || '-';
 
         const mJenisEl = document.getElementById('mMainJenis');
-        if (mJenisEl) mJenisEl.textContent = ds.jenis || '-';
+        if (mJenisEl) mJenisEl.textContent = item.jenis || '-';
 
         const mStatusEl = document.getElementById('mMainStatus');
         if (mStatusEl) {
-            mStatusEl.textContent = ds.status || '-';
-            const st = (ds.status || '').toUpperCase();
-            if (st.includes('BERLAKU')) {
-                mStatusEl.className = 'badge-status badge-status-berlaku';
-            } else if (st.includes('AKHIR') || st.includes('EXPIRE')) {
-                mStatusEl.className = 'badge-status badge-status-berakhir';
-            } else if (st.includes('BELUM') || st.includes('PROSES')) {
-                mStatusEl.className = 'badge-status badge-status-belum';
-            } else {
-                mStatusEl.className = 'badge-status badge-status-eks';
+            const rawStatus = (item.status || 'BELUM BERSERTIFIKAT').toUpperCase();
+            const rawJenis = (item.jenis || '').toUpperCase();
+            const rawNomor = (item.nomor || '').toUpperCase();
+
+            let statusVal = rawStatus;
+            let statusClass = 'badge-status-berlaku';
+
+            if (rawJenis.includes('EKS') || rawNomor.includes('EKS') || rawStatus.includes('EKS')) {
+                statusVal = 'EKS HGU';
+                statusClass = 'badge-status-eks';
+            } else if (rawStatus.includes('AKHIR') || rawStatus.includes('EXPIRE')) {
+                statusClass = 'badge-status-berakhir';
+            } else if (rawStatus.includes('BELUM') || rawStatus.includes('PROSES')) {
+                statusClass = 'badge-status-belum';
             }
+
+            mStatusEl.textContent = statusVal;
+            mStatusEl.className = 'badge-status ' + statusClass;
         }
 
         // Set fields (extra spreadsheet details)
-        document.getElementById('mNoSertifikat').textContent = ds.nosert || '-';
-        document.getElementById('mSapLegal').textContent = ds.saplegal || '-';
-        document.getElementById('mEksPtpn').textContent = ds.eksptpn || '-';
-        document.getElementById('mJumlahBidang').textContent = ds.bidang || '-';
-        document.getElementById('mDesa').textContent = ds.desa || '-';
-        document.getElementById('mKecamatan').textContent = ds.kecamatan || '-';
-        document.getElementById('mKabupaten').textContent = ds.kabupaten || '-';
-        document.getElementById('mProvinsi').textContent = ds.provinsi || '-';
-        document.getElementById('mPulau').textContent = ds.pulau || '-';
-        document.getElementById('mKomoditas').textContent = ds.komoditas || '-';
+        document.getElementById('mNoSertifikat').textContent = item.no_sertifikat || '-';
+        document.getElementById('mSapLegal').textContent = item.sap_legal || '-';
+        document.getElementById('mEksPtpn').textContent = item.eks_ptpn || '-';
+        document.getElementById('mJumlahBidang').textContent = item.jumlah_bidang || '-';
+        document.getElementById('mDesa').textContent = item.desa || '-';
+        document.getElementById('mKecamatan').textContent = item.kecamatan || '-';
+        document.getElementById('mKabupaten').textContent = item.kabupaten || '-';
+        document.getElementById('mProvinsi').textContent = item.provinsi || '-';
+        document.getElementById('mPulau').textContent = item.pulau || '-';
+        document.getElementById('mKomoditas').textContent = item.komoditas || '-';
 
-        document.getElementById('mArealPlanted').textContent = ds.planted && ds.planted !== '-' ? ds.planted + ' Ha' : '-';
-        document.getElementById('mArealKosong').textContent = ds.kosong && ds.kosong !== '-' ? ds.kosong + ' Ha' : '-';
-        document.getElementById('mArealJalan').textContent = ds.jalan && ds.jalan !== '-' ? ds.jalan + ' Ha' : '-';
-        document.getElementById('mArealBangunan').textContent = ds.bangunan && ds.bangunan !== '-' ? ds.bangunan + ' Ha' : '-';
-        document.getElementById('mArealKanalRawa').textContent = ds.rawa && ds.rawa !== '-' ? ds.rawa + ' Ha' : '-';
-        document.getElementById('mArealKonservasi').textContent = ds.konservasi && ds.konservasi !== '-' ? ds.konservasi + ' Ha' : '-';
-        document.getElementById('mArealKerjasama').textContent = ds.kerjasama && ds.kerjasama !== '-' ? ds.kerjasama + ' Ha' : '-';
+        document.getElementById('mArealPlanted').textContent = item.areal_planted && item.areal_planted !== '-' ? item.areal_planted + ' Ha' : '-';
+        document.getElementById('mArealKosong').textContent = item.areal_lahan_kosong && item.areal_lahan_kosong !== '-' ? item.areal_lahan_kosong + ' Ha' : '-';
+        document.getElementById('mArealJalan').textContent = item.areal_jalan_jembatan && item.areal_jalan_jembatan !== '-' ? item.areal_jalan_jembatan + ' Ha' : '-';
+        document.getElementById('mArealBangunan').textContent = item.areal_bangunan && item.areal_bangunan !== '-' ? item.areal_bangunan + ' Ha' : '-';
+        document.getElementById('mArealKanalRawa').textContent = item.areal_kanal_rawa && item.areal_kanal_rawa !== '-' ? item.areal_kanal_rawa + ' Ha' : '-';
+        document.getElementById('mArealKonservasi').textContent = item.areal_konservasi && item.areal_konservasi !== '-' ? item.areal_konservasi + ' Ha' : '-';
+        document.getElementById('mArealKerjasama').textContent = item.areal_kerjasama && item.areal_kerjasama !== '-' ? item.areal_kerjasama + ' Ha' : '-';
         
-        let okupasiStr = ds.okupasi && ds.okupasi !== '-' ? ds.okupasi + ' Ha' : '-';
-        if (ds.okupasiberat && ds.okupasiberat !== '0' && ds.okupasiberat !== '-') {
-            okupasiStr += ' (Berat: ' + ds.okupasiberat + ')';
+        let okupasiStr = item.areal_okupasi && item.areal_okupasi !== '-' ? item.areal_okupasi + ' Ha' : '-';
+        if (item.okupasi_berat && item.okupasi_berat !== '0' && item.okupasi_berat !== '-') {
+            okupasiStr += ' (Berat: ' + item.okupasi_berat + ')';
         }
         document.getElementById('mArealOkupasi').textContent = okupasiStr;
 
-        document.getElementById('mNilaiBuku').textContent = ds.nilaibuku || '-';
-        document.getElementById('mNjop').textContent = ds.njop || '-';
-        document.getElementById('mFairValue').textContent = ds.fairvalue || '-';
-        document.getElementById('mNop').textContent = ds.nop || '-';
-        document.getElementById('mStatusBphtb').textContent = ds.statusbphtb || '-';
-        document.getElementById('mTahunBerakhir').textContent = ds.tahunberakhir || '-';
+        document.getElementById('mNilaiBuku').textContent = item.nilai_buku || '-';
+        document.getElementById('mNjop').textContent = item.njop || '-';
+        document.getElementById('mFairValue').textContent = item.fair_value || '-';
+        document.getElementById('mNop').textContent = item.nop || '-';
+        document.getElementById('mStatusBphtb').textContent = item.status_bphtb || '-';
+        document.getElementById('mTahunBerakhir').textContent = item.tahun_berakhir || '-';
 
         const polyContainer = document.getElementById('mLinkPolygonContainer');
         if (polyContainer) {
-            if (ds.linkpolygon && ds.linkpolygon !== '-' && ds.linkpolygon.startsWith('http')) {
-                polyContainer.innerHTML = `<a href="${ds.linkpolygon}" target="_blank" style="color: #1d4ed8; font-weight: 700; text-decoration: underline; display: inline-flex; align-items: center; gap: 6px;">
+            const linkPoly = item.link_polygon || '';
+            if (linkPoly && linkPoly !== '-' && linkPoly.startsWith('http')) {
+                polyContainer.innerHTML = `<a href="${linkPoly}" target="_blank" style="color: #1d4ed8; font-weight: 700; text-decoration: underline; display: inline-flex; align-items: center; gap: 6px;">
                     <i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Link Polygon / Peta GIS
                 </a>`;
             } else {
-                polyContainer.textContent = ds.linkpolygon || '-';
+                polyContainer.textContent = linkPoly || '-';
             }
         }
 

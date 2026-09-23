@@ -1632,6 +1632,22 @@ class PageController extends Controller
     }
     public function konsesidanalashak()
     {
+        @ini_set('memory_limit', '512M');
+        @set_time_limit(180);
+
+        $prebuiltJsonFile = storage_path('alas_hak_prebuilt.json');
+
+        // Prioritas utama: Muat langsung dari prebuilt JSON (sangat cepat ~0.02s, tanpa ZipArchive/PhpSpreadsheet/Google Sheet timeout)
+        if (file_exists($prebuiltJsonFile) && !request()->has('refresh')) {
+            $jsonContent = @file_get_contents($prebuiltJsonFile);
+            if ($jsonContent !== false) {
+                $rekapAlasHak = json_decode($jsonContent, true);
+                if (!empty($rekapAlasHak) && is_array($rekapAlasHak)) {
+                    return view('pages/alas_hak', compact('rekapAlasHak'));
+                }
+            }
+        }
+
         $rekapFile = storage_path('Rekap Luas Areal Statement.xlsx');
         $rekapCsvFile = storage_path('Rekap Luas Areal Statement.csv');
         $asetCsvFile = storage_path('Data Aset Tanah PTPN I.csv');
@@ -1977,6 +1993,10 @@ class PageController extends Controller
                 return $rekapData;
             }
         );
+
+        if (!empty($rekapAlasHak) && is_array($rekapAlasHak)) {
+            @file_put_contents($prebuiltJsonFile, json_encode($rekapAlasHak, JSON_UNESCAPED_UNICODE));
+        }
 
         return view('pages/alas_hak', compact('rekapAlasHak'));
     }
