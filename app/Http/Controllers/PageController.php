@@ -6732,4 +6732,271 @@ class PageController extends Controller
             'data' => $allData
         ]);
     }
+
+    public function dfarmlosis()
+    {
+        $commodities = [];
+        $products = [];
+
+        try {
+            $db = DB::connection('pgsql_secondary');
+            $commodities = $db->table('m_commodity')
+                ->whereIn('id', [1, 2])
+                ->select('id', 'nama')
+                ->orderBy('id', 'desc')
+                ->get();
+
+            $products = $db->table('produk')
+                ->where('kategori_id', 1)
+                ->whereIn('comodity_id', [1, 2])
+                ->select('id', 'nama', 'comodity_id')
+                ->orderBy('nama')
+                ->get();
+        } catch (\Throwable $e) {
+            \Log::error('dfarmlosis initial fetch error: ' . $e->getMessage());
+        }
+
+        return view('pages/dfarm/monitoring_losis', compact('commodities', 'products'));
+    }
+
+    public function ajax_dfarmlosis(Request $request)
+    {
+        @set_time_limit(300);
+        @ini_set('memory_limit', '512M');
+
+        try {
+            $komoditiId = (int)$request->input('komoditi_id', 2);
+            $produkId = $request->input('produk_id', 'all');
+            $tglAwal = $request->input('tgl_awal', date('Y-m-d', strtotime('-1 day')));
+            $tglAkhir = $request->input('tgl_akhir', date('Y-m-d'));
+
+            if ($tglAwal > $tglAkhir) {
+                return response()->json(['success' => false, 'error' => 'Tanggal awal tidak boleh lebih besar dari tanggal akhir.'], 400);
+            }
+
+            $db = DB::connection('pgsql_secondary');
+
+            $params = [
+                'komoditi_id_kebun'  => $komoditiId,
+                'tgl_awal'           => $tglAwal,
+                'tgl_akhir'          => $tglAkhir,
+            ];
+
+            $productFilterKebun = "";
+            if (!empty($produkId) && $produkId !== 'all') {
+                $params['produk_id'] = (int)$produkId;
+                $productFilterKebun = " AND kd.produk_id = :produk_id ";
+            }
+
+            $sql = "
+            WITH 
+            kebun AS (
+                SELECT
+                    pk.tanggal,
+                    pk.kebun_id,
+                    pk.afdeling_id,
+                    pk.komoditi_id,
+                    kd.produk_id,
+                    pk.dokumen_transport_id,
+                    SUM(kd.berat)        AS berat,
+                    SUM(kd.berat_tara)   AS berat_tara,
+                    SUM(kd.berat_fix)    AS berat_fix,
+                    SUM(kd.berat_basah)  AS berat_basah,
+                    SUM(kd.berat_kering) AS berat_kering
+                FROM penerimaan_kebun pk
+                JOIN penerimaan_kebun_detail kd
+                       ON kd.penerimaan_id = pk.id AND kd.is_deleted = false
+                WHERE pk.is_deleted = false
+                  AND pk.komoditi_id = :komoditi_id_kebun
+                  AND pk.dokumen_transport_id IS NOT NULL
+                  AND pk.tanggal >= :tgl_awal AND pk.tanggal <= :tgl_akhir
+                  {$productFilterKebun}
+                GROUP BY pk.tanggal, pk.kebun_id, pk.afdeling_id, pk.komoditi_id,
+                         kd.produk_id, pk.dokumen_transport_id
+            ),
+            pabrik AS (
+                SELECT
+                    pp.dokumen_transport_id,
+                    pp.komoditi_id,
+                    pd.produk_id,
+                    CASE 
+                        WHEN pp.komoditi_id=1 THEN (SUM(COALESCE(pd.berat_bruto,0)) - SUM(COALESCE(pd.berat_tara,0))) 
+                        WHEN pp.komoditi_id=2 THEN (SUM(COALESCE(pd.bruto,0)))
+                        ELSE (SUM(COALESCE(pd.bruto,0)))
+                    END as berat
+                FROM (SELECT DISTINCT dokumen_transport_id, produk_id FROM kebun) k
+                JOIN penerimaan_pabrik pp
+                       ON pp.dokumen_transport_id = k.dokumen_transport_id AND pp.is_deleted = false
+                JOIN penerimaan_pabrik_detail pd
+                       ON pd.penerimaan_id = pp.id AND pd.produk_id = k.produk_id AND pd.is_deleted = false
+                GROUP BY pp.dokumen_transport_id, pp.komoditi_id, pd.produk_id
+            )
+            SELECT
+                k.tanggal,
+                k.kebun_id,
+                mkbn.nama as nama_kebun,
+                mkbn.regional_id as regional,
+                k.afdeling_id,
+                mafd.nama as nama_afd,
+                k.komoditi_id,
+                mkom.nama as nama_kom,
+                k.produk_id,
+                mprd.nama as nama_prod,
+                k.dokumen_transport_id,
+                dt.nomor,
+                dt.rit,
+                dt.truk_id,
+                mtrk.no_pol,
+                k.berat as kg_kebun,     
+                COALESCE(p.berat,0) AS kg_pabrik,
+                (k.berat - COALESCE(p.berat,0)) AS selisih
+            FROM kebun k
+            LEFT JOIN dokumen_transport dt
+                   ON dt.id = k.dokumen_transport_id AND dt.is_deleted = false
+            LEFT JOIN pabrik p
+                   ON p.dokumen_transport_id = k.dokumen_transport_id
+                  AND p.produk_id = k.produk_id
+            LEFT JOIN m_kebun mkbn
+                   ON k.kebun_id=mkbn.id
+            LEFT JOIN m_afdeling mafd
+                   ON k.afdeling_id=mafd.id
+            LEFT JOIN m_commodity mkom
+                   ON k.komoditi_id=mkom.id
+            LEFT JOIN produk mprd
+                   ON k.produk_id=mprd.id
+            LEFT JOIN m_truk mtrk
+                   ON dt.truk_id=mtrk.id
+            WHERE k.dokumen_transport_id is not null
+            ORDER BY mkbn.regional_id, k.kebun_id, k.afdeling_id, k.produk_id;
+            ";
+
+            $rows = $db->select($sql, $params);
+
+            // Aggregation
+            $totalKebun = 0;
+            $totalPabrik = 0;
+            $totalSelisih = 0;
+            $regionalMap = [];
+            $tableData = [];
+
+            foreach ($rows as $r) {
+                $regName = !empty($r->regional) ? 'Regional ' . $r->regional : 'Regional Lainnya';
+                $kbnName = !empty($r->nama_kebun) ? $r->nama_kebun : 'Kebun ' . $r->kebun_id;
+
+                $kgK = (float)$r->kg_kebun;
+                $kgP = (float)$r->kg_pabrik;
+                $diff = (float)$r->selisih;
+
+                $totalKebun += $kgK;
+                $totalPabrik += $kgP;
+                $totalSelisih += $diff;
+
+                if (!isset($regionalMap[$regName])) {
+                    $regionalMap[$regName] = [
+                        'name' => $regName,
+                        'regional_id' => $r->regional,
+                        'kg_kebun' => 0,
+                        'kg_pabrik' => 0,
+                        'selisih' => 0,
+                        'kebun_map' => [],
+                    ];
+                }
+
+                $regionalMap[$regName]['kg_kebun'] += $kgK;
+                $regionalMap[$regName]['kg_pabrik'] += $kgP;
+                $regionalMap[$regName]['selisih'] += $diff;
+
+                if (!isset($regionalMap[$regName]['kebun_map'][$kbnName])) {
+                    $regionalMap[$regName]['kebun_map'][$kbnName] = [
+                        'name' => $kbnName,
+                        'kebun_id' => $r->kebun_id,
+                        'kg_kebun' => 0,
+                        'kg_pabrik' => 0,
+                        'selisih' => 0,
+                    ];
+                }
+
+                $regionalMap[$regName]['kebun_map'][$kbnName]['kg_kebun'] += $kgK;
+                $regionalMap[$regName]['kebun_map'][$kbnName]['kg_pabrik'] += $kgP;
+                $regionalMap[$regName]['kebun_map'][$kbnName]['selisih'] += $diff;
+
+                $losisPctRow = $kgK > 0 ? round(($diff / $kgK) * 100, 2) : 0;
+                $tglFormatted = !empty($r->tanggal) ? date('d/m/Y', strtotime($r->tanggal)) : '-';
+
+                $tableData[] = [
+                    'tanggal' => $tglFormatted,
+                    'regional' => $regName,
+                    'kebun' => $kbnName,
+                    'afdeling' => $r->nama_afd ?: '-',
+                    'produk' => $r->nama_prod ?: '-',
+                    'nomor_dokumen' => $r->nomor ?: '-',
+                    'rit' => $r->rit ?: '-',
+                    'no_pol' => $r->no_pol ?: '-',
+                    'kg_kebun' => round($kgK, 2),
+                    'kg_pabrik' => round($kgP, 2),
+                    'selisih' => round($diff, 2),
+                    'losis_pct' => $losisPctRow,
+                ];
+            }
+
+            $regionalList = [];
+            $kebunBreakdown = [];
+
+            ksort($regionalMap);
+            foreach ($regionalMap as $regName => $regData) {
+                $pct = $regData['kg_kebun'] > 0 ? round(($regData['selisih'] / $regData['kg_kebun']) * 100, 2) : 0;
+                
+                $kbnList = [];
+                foreach ($regData['kebun_map'] as $kbnName => $kbnData) {
+                    $kbnPct = $kbnData['kg_kebun'] > 0 ? round(($kbnData['selisih'] / $kbnData['kg_kebun']) * 100, 2) : 0;
+                    $kbnList[] = [
+                        'name' => $kbnName,
+                        'kg_kebun' => round($kbnData['kg_kebun'], 2),
+                        'kg_pabrik' => round($kbnData['kg_pabrik'], 2),
+                        'selisih' => round($kbnData['selisih'], 2),
+                        'losis_pct' => $kbnPct,
+                    ];
+                }
+
+                usort($kbnList, function($a, $b) {
+                    return $b['kg_kebun'] <=> $a['kg_kebun'];
+                });
+
+                $regionalList[] = [
+                    'name' => $regName,
+                    'kg_kebun' => round($regData['kg_kebun'], 2),
+                    'kg_pabrik' => round($regData['kg_pabrik'], 2),
+                    'selisih' => round($regData['selisih'], 2),
+                    'losis_pct' => $pct,
+                    'kebun_count' => count($kbnList),
+                ];
+
+                $kebunBreakdown[$regName] = $kbnList;
+            }
+
+            $overallLosisPct = $totalKebun > 0 ? round(($totalSelisih / $totalKebun) * 100, 2) : 0;
+
+            return response()->json([
+                'success' => true,
+                'kpi' => [
+                    'total_kebun' => round($totalKebun, 2),
+                    'total_pabrik' => round($totalPabrik, 2),
+                    'total_selisih' => round($totalSelisih, 2),
+                    'losis_pct' => $overallLosisPct,
+                    'total_ritase' => count($rows),
+                ],
+                'regional_chart' => $regionalList,
+                'kebun_breakdown' => $kebunBreakdown,
+                'table_data' => $tableData,
+            ]);
+
+        } catch (\Throwable $e) {
+            \Log::error('ajax_dfarmlosis Error: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine());
+            return response()->json([
+                'success' => false,
+                'error' => 'Gagal memuat data monitoring losis: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
+

@@ -50,6 +50,10 @@
           <i class="fa-solid fa-chart-line" style="width: 14px;"></i>
           Prestasi Pemeliharaan
         </a>
+        <a class="dropdown-menu-item" href="{{ route('dfarmlosis') }}">
+          <i class="fa-solid fa-scale-unbalanced" style="width: 14px;"></i>
+          Monitoring Losis
+        </a>
       </div>
     </div>
   </div>
