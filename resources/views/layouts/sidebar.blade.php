@@ -1,6 +1,3 @@
-<div class="icon" id="menuIcon">
-    <img src="{{url('')}}/asset/images/menu.png" alt="Menu Icon">
-</div>
 <div class="sidebar" id="sidebar">
     <?php
 $user = Auth::guard('custom')->user();
@@ -10,8 +7,11 @@ if (isset($user)) {
 }
         ?>
     <div class="sidebar-header">
-        <img src="{{ asset('ptpn1.png') }}" alt="PTPN 1" class="sidebar-logo">
-        <span class="sidebar-title">AGRINAV</span>
+        <div class="sidebar-brand">
+            <img src="{{ asset('ptpn1.png') }}" alt="PTPN 1" class="sidebar-logo">
+            <span class="sidebar-title">AGRINAV</span>
+        </div>
+        <button type="button" class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup Menu">&times;</button>
     </div>
     <div class="menu">
         <!-- <a href="#home">Home</a> -->

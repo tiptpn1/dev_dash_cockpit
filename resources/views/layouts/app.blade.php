@@ -35,32 +35,65 @@
             left: 0;
             width: 0;
             height: 100%;
-            background-color: transparent;
+            height: 100vh;
+            height: 100dvh;
+            background-color: #202124;
             overflow-x: hidden;
-            transition: width 0.3s;
-            z-index: 998;
+            overflow-y: auto;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.3s;
+            z-index: 99999;
             visibility: hidden;
-
+            box-sizing: border-box;
+            box-shadow: none;
         }
 
         .sidebar.open {
-            width: 230px;
+            width: 250px;
             padding: 1rem;
             visibility: visible;
-            background-color: #202124;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.4);
         }
 
         .sidebar-header {
             display: none;
             align-items: center;
             justify-content: space-between;
-            padding: 16px 14px;
+            padding: 12px 10px;
+            margin-bottom: 8px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.12);
             background: rgba(0, 0, 0, 0.15);
+            border-radius: 6px;
         }
         .sidebar.open .sidebar-header {
             display: flex;
         }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-close-btn {
+            background: none;
+            border: none;
+            color: #9aa0a6;
+            font-size: 1.75rem;
+            line-height: 1;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: color 0.2s, background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-close-btn:hover {
+            color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
         .sidebar-title {
             font-size: 1.35rem;
             font-weight: 700;
@@ -146,20 +179,91 @@
         }
 
         .sidebar.open ~ .main-content {
-            margin-left: 230px;
+            margin-left: 250px;
         }
 
         .icon {
             position: fixed;
-            top: 5px;
-            left: 5px;
+            top: 10px;
+            left: 10px;
             cursor: pointer;
-            z-index: 1000;
+            z-index: 10002;
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.35);
+            border-radius: 8px;
+            backdrop-filter: blur(4px);
+            transition: background-color 0.2s;
+        }
+
+        .icon:hover {
+            background: rgba(0, 0, 0, 0.55);
         }
 
         .icon img {
-            width: 30px;
-            height: 30px;
+            width: 26px;
+            height: 26px;
+        }
+
+        .sidebar-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(2px);
+            z-index: 99998;
+            transition: opacity 0.3s;
+        }
+
+        .sidebar-backdrop.active {
+            display: block;
+        }
+
+        /* Custom scrollbar */
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .sidebar::-webkit-scrollbar-track {
+            background: #1e1f22;
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #4e5058;
+            border-radius: 3px;
+        }
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: #6d6f78;
+        }
+
+        /* Responsive Mobile Rules */
+        @media (max-width: 768px) {
+            .sidebar {
+                display: block !important;
+                z-index: 99999 !important;
+            }
+
+            .sidebar.open {
+                display: block !important;
+                width: 280px !important;
+                max-width: 82vw !important;
+                box-shadow: 6px 0 25px rgba(0, 0, 0, 0.6) !important;
+            }
+
+            /* Di HP, jangan pernah dorong .main-content agar dashboard/iframe tidak terpotong */
+            .sidebar.open ~ .main-content {
+                margin-left: 0 !important;
+            }
+
+            .sidebar a {
+                padding: 12px 14px;
+                font-size: 0.95rem;
+            }
         }
         .submenu {
             display: none;
@@ -192,9 +296,12 @@
 </head>
 <body class="h-screen bg-gray-100">
     <!-- Step 3: Icon Outside Sidebar -->
-    <div class="icon" id="menuIcon">
+    <div class="icon" id="menuIcon" title="Toggle Menu">
         <img src="{{url('')}}/asset/images/menu.png" alt="Menu Icon">
     </div>
+
+    <!-- Backdrop Overlay for Mobile -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
     <!-- Step 4: Sidebar Menu -->
     @include('layouts.sidebar')
@@ -203,10 +310,35 @@
     <!-- Step 6: JavaScript to Toggle Sidebar -->
     <script>
         $(document).ready(function() {
-            console.log('lalalala');
-            $('#menuIcon img').click(function() {
-                console.log('lalalala');
-                $('.sidebar').toggleClass('open');
+            function toggleSidebar(forceState) {
+                var $sidebar = $('.sidebar');
+                var $backdrop = $('#sidebarBackdrop');
+                var willOpen = forceState !== undefined ? forceState : !$sidebar.hasClass('open');
+
+                if (willOpen) {
+                    $sidebar.addClass('open');
+                    $backdrop.addClass('active');
+                } else {
+                    $sidebar.removeClass('open');
+                    $backdrop.removeClass('active');
+                }
+            }
+
+            // Click menu icon
+            $(document).on('click', '#menuIcon', function(e) {
+                e.stopPropagation();
+                toggleSidebar();
+            });
+
+            // Click close button inside sidebar header
+            $(document).on('click', '#sidebarCloseBtn', function(e) {
+                e.stopPropagation();
+                toggleSidebar(false);
+            });
+
+            // Click backdrop overlay to close sidebar on mobile
+            $(document).on('click', '#sidebarBackdrop', function() {
+                toggleSidebar(false);
             });
         });
         $('.sidebar .parent').click(function(event) {
