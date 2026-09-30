@@ -74,7 +74,7 @@ class PageController extends Controller
 
     public function arealproduksi()
     {
-        $linkiframe = 'https://datastudio.google.com/embed/reporting/9a30fd2b-2b2b-47e8-903c-967d1b5400c9/page/9a86F';
+        $linkiframe = 'https://https://datastudio.google.com/embed/reporting/59173a73-2c4a-48b1-b85e-71665576cd0b/page/p_h0ju9qnv7d';
         return view('pages/overview_page', compact('linkiframe'));
     }
 
@@ -6785,7 +6785,7 @@ class PageController extends Controller
         @ini_set('memory_limit', '512M');
 
         try {
-            $komoditiId = (int)$request->input('komoditi_id', 2);
+            $komoditiId = (int) $request->input('komoditi_id', 2);
             $produkId = $request->input('produk_id', 'all');
             $tglAwal = $request->input('tgl_awal', date('Y-m-d', strtotime('-1 day')));
             $tglAkhir = $request->input('tgl_akhir', date('Y-m-d'));
@@ -6797,14 +6797,14 @@ class PageController extends Controller
             $db = DB::connection('pgsql_secondary');
 
             $params = [
-                'komoditi_id_kebun'  => $komoditiId,
-                'tgl_awal'           => $tglAwal,
-                'tgl_akhir'          => $tglAkhir,
+                'komoditi_id_kebun' => $komoditiId,
+                'tgl_awal' => $tglAwal,
+                'tgl_akhir' => $tglAkhir,
             ];
 
             $productFilterKebun = "";
             if (!empty($produkId) && $produkId !== 'all') {
-                $params['produk_id'] = (int)$produkId;
+                $params['produk_id'] = (int) $produkId;
                 $productFilterKebun = " AND kd.produk_id = :produk_id ";
             }
 
@@ -6903,9 +6903,9 @@ class PageController extends Controller
                 $regName = !empty($r->regional) ? 'Regional ' . $r->regional : 'Regional Lainnya';
                 $kbnName = !empty($r->nama_kebun) ? $r->nama_kebun : 'Kebun ' . $r->kebun_id;
 
-                $kgK = (float)$r->kg_kebun;
-                $kgP = (float)$r->kg_pabrik;
-                $diff = (float)$r->selisih;
+                $kgK = (float) $r->kg_kebun;
+                $kgP = (float) $r->kg_pabrik;
+                $diff = (float) $r->selisih;
 
                 $totalKebun += $kgK;
                 $totalPabrik += $kgP;
@@ -6965,7 +6965,7 @@ class PageController extends Controller
             ksort($regionalMap);
             foreach ($regionalMap as $regName => $regData) {
                 $pct = $regData['kg_kebun'] > 0 ? round(($regData['selisih'] / $regData['kg_kebun']) * 100, 2) : 0;
-                
+
                 $kbnList = [];
                 foreach ($regData['kebun_map'] as $kbnName => $kbnData) {
                     $kbnPct = $kbnData['kg_kebun'] > 0 ? round(($kbnData['selisih'] / $kbnData['kg_kebun']) * 100, 2) : 0;
@@ -6978,7 +6978,7 @@ class PageController extends Controller
                     ];
                 }
 
-                usort($kbnList, function($a, $b) {
+                usort($kbnList, function ($a, $b) {
                     return $b['kg_kebun'] <=> $a['kg_kebun'];
                 });
 
