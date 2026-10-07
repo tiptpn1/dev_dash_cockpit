@@ -2089,7 +2089,7 @@
                         data.data.forEach((row, index) => {
                             const area = row.area_name || '-';
                             const unit = row.unit_name || '-';
-                            const label = `${area} - ${unit}`;
+                            const label = unit !== '-' ? unit : area;
                             const attendance = parseFloat(row.persentase_kehadiran ?? 0).toFixed(1);
                             const pegawai = row.jumlah_pegawai || 0;
 
@@ -2139,7 +2139,7 @@
                     const periode = document.getElementById('rekap_regional_periode_select').value;
                     const params = new URLSearchParams({ periode, area, unit });
 
-                    fetch(`${hrisPerKaryawanUrl}?${params}`)
+                    fetch(`${hrisRekapRegionalPegawaiUrl}?${params}`)
                         .then(res => res.json())
                         .then(data => {
                             if (data.status !== 'success') throw new Error(data.message);

@@ -4929,7 +4929,8 @@ class PageController extends Controller
                 OR {$penugasanAlias}.pegawai_id IS NOT NULL
             )
               AND NOT COALESCE(NULLIF({$pegawaiAlias}.regional_grup_kode, ''), 'x') = 'x'
-              AND LOWER({$pegawaiAlias}.status_pegawai) IN ('aktif', 'mbt')";
+              AND LOWER({$pegawaiAlias}.status_pegawai) IN ('aktif', 'mbt')
+              AND ({$pegawaiAlias}.fungsi_jabatan IS NULL OR UPPER(TRIM({$pegawaiAlias}.fungsi_jabatan)) NOT IN ('PRODUCTION PROCESS DIRECT ON FARM', 'PRODUCTION PROCESS DIRECT OFF FARM'))";
     }
 
     /** Area kode efektif (penugasan lebih diutamakan) untuk hari kerja / absensi_periode */
@@ -5060,9 +5061,9 @@ class PageController extends Controller
         try {
             $rows = $this->fetchRekapSeluruhRegionalDetail($tahun, $bulan, $regionalName);
 
-            // Sort by attendance descending
+            // Sort alphabetically by unit_name
             usort($rows, function ($a, $b) {
-                return $b->persentase_kehadiran <=> $a->persentase_kehadiran;
+                return strcasecmp($a->unit_name ?? '', $b->unit_name ?? '');
             });
 
             return response()->json([
@@ -5486,6 +5487,7 @@ class PageController extends Controller
               AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
               /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
               AND LOWER(p.status_pegawai) IN ('aktif', 'active')
+              AND (p.fungsi_jabatan IS NULL OR UPPER(TRIM(p.fungsi_jabatan)) NOT IN ('PRODUCTION PROCESS DIRECT ON FARM', 'PRODUCTION PROCESS DIRECT OFF FARM'))
             GROUP BY 
                 CASE 
                     WHEN UPPER(p.regional) LIKE '%REG%01%' OR UPPER(p.regional) LIKE '%REGIONAL 1%' THEN 'Regional 1'
@@ -5544,6 +5546,7 @@ class PageController extends Controller
               AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
               /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
               AND LOWER(p.status_pegawai) IN ('aktif', 'active')
+              AND (p.fungsi_jabatan IS NULL OR UPPER(TRIM(p.fungsi_jabatan)) NOT IN ('PRODUCTION PROCESS DIRECT ON FARM', 'PRODUCTION PROCESS DIRECT OFF FARM'))
             GROUP BY 
                 CASE 
                     WHEN UPPER(p.regional) LIKE '%REG%01%' OR UPPER(p.regional) LIKE '%REGIONAL 1%' THEN 'Regional 1'
@@ -5579,8 +5582,8 @@ class PageController extends Controller
 
         $sql = "
             SELECT
-                p.area AS area_name,
-                d.nama AS unit_name,
+                COALESCE(NULLIF(TRIM(d.nama), ''), NULLIF(TRIM(p.divisi), ''), NULLIF(TRIM(p.area), '')) AS area_name,
+                COALESCE(NULLIF(TRIM(d.nama), ''), NULLIF(TRIM(p.divisi), ''), NULLIF(TRIM(p.area), '')) AS unit_name,
                 ROUND(AVG(" . $dynamicHariKerja . "), 0) AS hari_kerja,
                 COUNT(DISTINCT p.pegawai_id) AS jumlah_pegawai,
                 ROUND(AVG(
@@ -5604,6 +5607,7 @@ class PageController extends Controller
               AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
               /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
               AND LOWER(p.status_pegawai) IN ('aktif', 'active')
+              AND (p.fungsi_jabatan IS NULL OR UPPER(TRIM(p.fungsi_jabatan)) NOT IN ('PRODUCTION PROCESS DIRECT ON FARM', 'PRODUCTION PROCESS DIRECT OFF FARM'))
               AND (
                   CASE 
                       WHEN UPPER(p.regional) LIKE '%REG%01%' OR UPPER(p.regional) LIKE '%REGIONAL 1%' THEN 'Regional 1'
@@ -5618,7 +5622,7 @@ class PageController extends Controller
                       ELSE 'Lainnya'
                   END
               ) = ?
-            GROUP BY p.area, d.nama
+            GROUP BY COALESCE(NULLIF(TRIM(d.nama), ''), NULLIF(TRIM(p.divisi), ''), NULLIF(TRIM(p.area), ''))
         ";
 
         return DB::connection('hris')->select($sql, [$periodeHris, $periodeHris, $regionalName]);
@@ -5630,8 +5634,8 @@ class PageController extends Controller
 
         $sql = "
             SELECT
-                p.area AS area_name,
-                d.nama AS unit_name,
+                COALESCE(NULLIF(TRIM(d.nama), ''), NULLIF(TRIM(p.divisi), ''), NULLIF(TRIM(p.area), '')) AS area_name,
+                COALESCE(NULLIF(TRIM(d.nama), ''), NULLIF(TRIM(p.divisi), ''), NULLIF(TRIM(p.area), '')) AS unit_name,
                 ROUND(AVG(" . $dynamicHariKerja . "), 0) AS hari_kerja,
                 COUNT(DISTINCT p.pegawai_id) AS jumlah_pegawai,
                 ROUND(AVG(
@@ -5655,6 +5659,7 @@ class PageController extends Controller
               AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
               /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
               AND LOWER(p.status_pegawai) IN ('aktif', 'active')
+              AND (p.fungsi_jabatan IS NULL OR UPPER(TRIM(p.fungsi_jabatan)) NOT IN ('PRODUCTION PROCESS DIRECT ON FARM', 'PRODUCTION PROCESS DIRECT OFF FARM'))
               AND (
                   CASE 
                       WHEN UPPER(p.regional) LIKE '%REG%01%' OR UPPER(p.regional) LIKE '%REGIONAL 1%' THEN 'Regional 1'
@@ -5669,7 +5674,7 @@ class PageController extends Controller
                       ELSE 'Lainnya'
                   END
               ) = ?
-            GROUP BY p.area, d.nama
+            GROUP BY COALESCE(NULLIF(TRIM(d.nama), ''), NULLIF(TRIM(p.divisi), ''), NULLIF(TRIM(p.area), ''))
         ";
 
         return DB::connection('hris')->select($sql, [$periodeHris, $periodeHris, $regionalName]);
@@ -5690,10 +5695,12 @@ class PageController extends Controller
     {
         $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris);
 
-        $unitCondition = $unit === '' ? "AND (d.nama IS NULL OR TRIM(d.nama) = '')" : "AND d.nama = ?";
-        $bindings = [$periodeHris, $periodeHris, $area];
-        if ($unit !== '') {
-            $bindings[] = $unit;
+        $unitExpr = "COALESCE(NULLIF(TRIM(d.nama), ''), NULLIF(TRIM(p.divisi), ''), NULLIF(TRIM(p.area), ''))";
+        $targetUnit = ($unit !== '' && $unit !== '-') ? $unit : $area;
+        $unitCondition = ($targetUnit === '' || $targetUnit === '-') ? "AND ($unitExpr IS NULL OR TRIM($unitExpr) = '')" : "AND $unitExpr = ?";
+        $bindings = [$periodeHris, $periodeHris];
+        if ($targetUnit !== '' && $targetUnit !== '-') {
+            $bindings[] = $targetUnit;
         }
 
         $sql = "
@@ -5725,7 +5732,7 @@ class PageController extends Controller
               AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
               /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
               AND LOWER(p.status_pegawai) IN ('aktif', 'active')
-              AND p.area = ?
+              AND (p.fungsi_jabatan IS NULL OR UPPER(TRIM(p.fungsi_jabatan)) NOT IN ('PRODUCTION PROCESS DIRECT ON FARM', 'PRODUCTION PROCESS DIRECT OFF FARM'))
               $unitCondition
             ORDER BY p.nama ASC
         ";
@@ -5737,10 +5744,12 @@ class PageController extends Controller
     {
         $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris);
 
-        $unitCondition = $unit === '' ? "AND (d.nama IS NULL OR TRIM(d.nama) = '')" : "AND d.nama = ?";
-        $bindings = [$periodeHris, $periodeHris, $area];
-        if ($unit !== '') {
-            $bindings[] = $unit;
+        $unitExpr = "COALESCE(NULLIF(TRIM(d.nama), ''), NULLIF(TRIM(p.divisi), ''), NULLIF(TRIM(p.area), ''))";
+        $targetUnit = ($unit !== '' && $unit !== '-') ? $unit : $area;
+        $unitCondition = ($targetUnit === '' || $targetUnit === '-') ? "AND ($unitExpr IS NULL OR TRIM($unitExpr) = '')" : "AND $unitExpr = ?";
+        $bindings = [$periodeHris, $periodeHris];
+        if ($targetUnit !== '' && $targetUnit !== '-') {
+            $bindings[] = $targetUnit;
         }
 
         $sql = "
@@ -5772,7 +5781,7 @@ class PageController extends Controller
               AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
               /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
               AND LOWER(p.status_pegawai) IN ('aktif', 'active')
-              AND p.area = ?
+              AND (p.fungsi_jabatan IS NULL OR UPPER(TRIM(p.fungsi_jabatan)) NOT IN ('PRODUCTION PROCESS DIRECT ON FARM', 'PRODUCTION PROCESS DIRECT OFF FARM'))
               $unitCondition
             ORDER BY p.nama ASC
         ";
