@@ -67,6 +67,11 @@ Route::middleware('auth:custom')->group(function () {
     Route::get('/offfarmkopi', [PageController::class, 'offfarmkopi'])->name('offfarmkopi');
     Route::get('/gudangutilisasi', [PageController::class, 'gudangutilisasi'])->name('gudangutilisasi');
     Route::get('/arealproduksi', [PageController::class, 'arealproduksi'])->name('arealproduksi');
+    Route::get('/arealproduksi_regional2', [PageController::class, 'arealproduksi_regional2'])->name('arealproduksi_regional2');
+    Route::get('/arealproduksi_regional3', [PageController::class, 'arealproduksi_regional3'])->name('arealproduksi_regional3');
+    Route::get('/arealproduksi_regional5', [PageController::class, 'arealproduksi_regional5'])->name('arealproduksi_regional5');
+    Route::get('/arealproduksi_regional7', [PageController::class, 'arealproduksi_regional7'])->name('arealproduksi_regional7');
+    Route::get('/arealproduksi_regional8', [PageController::class, 'arealproduksi_regional8'])->name('arealproduksi_regional8');
     Route::get('/arealproduksikebun', [PageController::class, 'arealproduksikebun'])->name('arealproduksikebun');
 
     Route::get('/picaonfarm', [PageController::class, 'picaonfarm'])->name('picaonfarm');

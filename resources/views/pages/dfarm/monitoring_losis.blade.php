@@ -800,7 +800,7 @@
         <div class="chart-card">
             <div class="chart-card-header">
                 <div class="chart-card-title">
-                    <i class="fa-solid fa-chart-column"></i> Perbandingan Produksi Kebun vs Penerimaan Pabrik per Regional
+                    <i class="fa-solid fa-chart-column"></i> Perbandingan Produksi Kebun vs Penerimaan Pabrik & Selisih per Regional
                 </div>
                 <div class="chart-card-hint">
                     <i class="fa-solid fa-hand-pointer"></i> Klik salah satu batang Regional untuk melihat breakdown kebun
@@ -822,7 +822,7 @@
             <div class="breakdown-card">
                 <div class="breakdown-header">
                     <div class="breakdown-title">
-                        <i class="fa-solid fa-tree"></i> Breakdown Produksi Kebun vs Pabrik: <span id="selectedRegionalTitle" style="text-decoration: underline; margin-left: 4px;">Regional</span>
+                        <i class="fa-solid fa-tree"></i> Breakdown Produksi Kebun vs Pabrik & Selisih: <span id="selectedRegionalTitle" style="text-decoration: underline; margin-left: 4px;">Regional</span>
                     </div>
                     <button class="btn-close-breakdown" onclick="closeBreakdown()">
                         <i class="fa-solid fa-xmark"></i> Tutup Rincian
@@ -1068,6 +1068,7 @@
         const labels = regionalList.map(r => r.name);
         const dataKebun = regionalList.map(r => r.kg_kebun);
         const dataPabrik = regionalList.map(r => r.kg_pabrik);
+        const dataSelisih = regionalList.map(r => r.selisih);
 
         regionalChartInstance = new Chart(ctx, {
             type: 'bar',
@@ -1081,7 +1082,7 @@
                         hoverBackgroundColor: '#14532d',
                         borderRadius: 5,
                         barPercentage: 0.85,
-                        categoryPercentage: 0.7,
+                        categoryPercentage: 0.75,
                     },
                     {
                         label: 'Diterima Pabrik (Kg)',
@@ -1090,7 +1091,16 @@
                         hoverBackgroundColor: '#1d4ed8',
                         borderRadius: 5,
                         barPercentage: 0.85,
-                        categoryPercentage: 0.7,
+                        categoryPercentage: 0.75,
+                    },
+                    {
+                        label: 'Selisih (Kg)',
+                        data: dataSelisih,
+                        backgroundColor: '#dc2626',
+                        hoverBackgroundColor: '#b91c1c',
+                        borderRadius: 5,
+                        barPercentage: 0.85,
+                        categoryPercentage: 0.75,
                     }
                 ]
             },
@@ -1120,8 +1130,6 @@
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                const idx = context.dataIndex;
-                                const regObj = regionalList[idx];
                                 const label = context.dataset.label || '';
                                 const valStr = formatNumber(context.raw) + ' kg';
                                 return ` ${label}: ${valStr}`;
@@ -1142,13 +1150,26 @@
                         }
                     },
                     datalabels: {
-                        anchor: 'end',
-                        align: 'top',
+                        anchor: function(context) {
+                            const val = context.dataset.data[context.dataIndex];
+                            return val < 0 ? 'start' : 'end';
+                        },
+                        align: function(context) {
+                            const val = context.dataset.data[context.dataIndex];
+                            return val < 0 ? 'bottom' : 'top';
+                        },
                         offset: 4,
-                        color: '#475569',
-                        font: { weight: 'bold', size: 11 },
+                        color: function(context) {
+                            if (context.datasetIndex === 2) {
+                                const val = context.dataset.data[context.dataIndex];
+                                return val < 0 ? '#15803d' : '#b91c1c';
+                            }
+                            return '#475569';
+                        },
+                        font: { weight: 'bold', size: 10 },
                         formatter: function(value) {
-                            return value > 0 ? formatNumber(value) : '';
+                            if (value === null || value === undefined || value === 0) return '';
+                            return formatNumber(value);
                         }
                     }
                 },
@@ -1189,7 +1210,7 @@
         breakdownSection.style.display = 'block';
 
         // Dynamic height based on kebun count
-        const calculatedHeight = Math.max(340, kebunList.length * 48);
+        const calculatedHeight = Math.max(360, kebunList.length * 56);
         document.getElementById('breakdownChartWrapper').style.height = `${calculatedHeight}px`;
 
         const ctx = document.getElementById('kebunChart').getContext('2d');
@@ -1200,6 +1221,7 @@
         const labels = kebunList.map(k => k.name);
         const dataKebun = kebunList.map(k => k.kg_kebun);
         const dataPabrik = kebunList.map(k => k.kg_pabrik);
+        const dataSelisih = kebunList.map(k => k.selisih);
 
         kebunChartInstance = new Chart(ctx, {
             type: 'bar',
@@ -1220,6 +1242,15 @@
                         data: dataPabrik,
                         backgroundColor: '#60a5fa',
                         hoverBackgroundColor: '#3b82f6',
+                        borderRadius: 4,
+                        barPercentage: 0.85,
+                        categoryPercentage: 0.8,
+                    },
+                    {
+                        label: 'Selisih (Kg)',
+                        data: dataSelisih,
+                        backgroundColor: '#ef4444',
+                        hoverBackgroundColor: '#dc2626',
                         borderRadius: 4,
                         barPercentage: 0.85,
                         categoryPercentage: 0.8,
@@ -1267,13 +1298,26 @@
                         }
                     },
                     datalabels: {
-                        anchor: 'end',
-                        align: 'right',
+                        anchor: function(context) {
+                            const val = context.dataset.data[context.dataIndex];
+                            return val < 0 ? 'start' : 'end';
+                        },
+                        align: function(context) {
+                            const val = context.dataset.data[context.dataIndex];
+                            return val < 0 ? 'left' : 'right';
+                        },
                         offset: 4,
-                        color: '#475569',
+                        color: function(context) {
+                            if (context.datasetIndex === 2) {
+                                const val = context.dataset.data[context.dataIndex];
+                                return val < 0 ? '#15803d' : '#b91c1c';
+                            }
+                            return '#475569';
+                        },
                         font: { weight: 'bold', size: 10 },
                         formatter: function(val) {
-                            return val > 0 ? formatNumber(val) : '';
+                            if (val === null || val === undefined || val === 0) return '';
+                            return formatNumber(val);
                         }
                     }
                 },
