@@ -83,6 +83,18 @@ class PageController extends Controller
         return view('pages/overview_page', compact('linkiframe'));
     }
 
+    private function checkArealProduksiAccess(string $allowedRegional)
+    {
+        $user = Auth::guard('custom')->user();
+        $username = strtolower($user->username ?? '');
+        $allRegionals = ['regional1', 'regional2', 'regional3', 'regional5', 'regional7', 'regional8'];
+
+        // Pembatasan HANYA berlaku untuk akun regional
+        if (in_array($username, $allRegionals) && $username !== $allowedRegional) {
+            abort(403, 'Akses Ditolak: Anda tidak memiliki hak akses ke halaman areal produksi regional ini.');
+        }
+    }
+
     public function arealproduksi()
     {
         $user = Auth::guard('custom')->user();
@@ -106,26 +118,31 @@ class PageController extends Controller
 
     public function arealproduksi_regional2()
     {
+        $this->checkArealProduksiAccess('regional2');
         $linkiframe = 'https://datastudio.google.com/embed/reporting/dd9a8823-f18f-477d-ac61-b814f4774fd0/page/p_h0ju9qnv7d';
         return view('pages/overview_page', compact('linkiframe'));
     }
     public function arealproduksi_regional3()
     {
+        $this->checkArealProduksiAccess('regional3');
         $linkiframe = 'https://datastudio.google.com/embed/reporting/2d0d5c6c-b57e-44f2-be51-18a659127484/page/p_h0ju9qnv7d';
         return view('pages/overview_page', compact('linkiframe'));
     }
     public function arealproduksi_regional5()
     {
+        $this->checkArealProduksiAccess('regional5');
         $linkiframe = 'https://datastudio.google.com/embed/reporting/c759c740-f559-4fde-a8a0-5fca7fc6be14/page/p_h0ju9qnv7d';
         return view('pages/overview_page', compact('linkiframe'));
     }
     public function arealproduksi_regional7()
     {
+        $this->checkArealProduksiAccess('regional7');
         $linkiframe = 'https://datastudio.google.com/embed/reporting/f94dc51f-7ed8-418c-980a-0f86795b74f2/page/p_h0ju9qnv7d';
         return view('pages/overview_page', compact('linkiframe'));
     }
     public function arealproduksi_regional8()
     {
+        $this->checkArealProduksiAccess('regional8');
         $linkiframe = 'https://datastudio.google.com/embed/reporting/48edb349-17fb-4fbb-82c6-537c49ef88f9/page/p_h0ju9qnv7d';
         return view('pages/overview_page', compact('linkiframe'));
     }
