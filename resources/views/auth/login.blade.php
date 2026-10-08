@@ -230,9 +230,302 @@
                 max-width: 100%;
             }
         }
+
+        /* ===== POPUP MODAL KEBIJAKAN SMKI ===== */
+        .smki-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .smki-modal-backdrop.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .smki-modal-card {
+            position: relative;
+            width: 100%;
+            max-width: 640px;
+            max-height: 90vh;
+            background: #ffffff;
+            border-radius: 16px;
+            border-top: 5px solid #dc2626;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transform: translateY(0) scale(1);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: smkiSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .smki-modal-backdrop.hidden .smki-modal-card {
+            transform: translateY(20px) scale(0.96);
+        }
+        @keyframes smkiSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(24px) scale(0.96);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        .smki-modal-header {
+            padding: 22px 28px 10px;
+            background: #ffffff;
+        }
+        .smki-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            background: #fef2f2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+        .smki-badge svg {
+            flex-shrink: 0;
+        }
+        .smki-modal-body {
+            padding: 0 28px 16px;
+            overflow-y: auto;
+            color: #374151;
+            font-size: 0.88rem;
+            line-height: 1.6;
+        }
+        /* Sleek scrollbar */
+        .smki-modal-body::-webkit-scrollbar {
+            width: 6px;
+        }
+        .smki-modal-body::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        .smki-modal-body::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .smki-modal-body::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .smki-title {
+            color: #b91c1c;
+            font-size: 1.02rem;
+            font-weight: 800;
+            line-height: 1.45;
+            margin: 12px 0 16px;
+            text-transform: uppercase;
+            letter-spacing: -0.01em;
+        }
+        .smki-highlight-box {
+            border-left: 4px solid #059669;
+            background: #f8fafc;
+            padding: 12px 16px;
+            border-radius: 0 8px 8px 0;
+            margin: 0 0 16px;
+            color: #334155;
+            font-size: 0.88rem;
+            line-height: 1.55;
+        }
+        .smki-highlight-box p {
+            margin: 0;
+        }
+        .smki-intro {
+            color: #374151;
+            font-weight: 500;
+            margin: 0 0 14px;
+            font-size: 0.88rem;
+        }
+        .smki-list {
+            padding-left: 20px;
+            margin: 0 0 10px;
+        }
+        .smki-list > li {
+            margin-bottom: 12px;
+            color: #374151;
+            font-size: 0.88rem;
+            line-height: 1.55;
+        }
+        .smki-list > li strong {
+            color: #111827;
+        }
+        .smki-sublist {
+            list-style: none;
+            padding-left: 0;
+            margin: 8px 0 0;
+        }
+        .smki-sublist li {
+            position: relative;
+            padding-left: 16px;
+            margin-bottom: 6px;
+            color: #4b5563;
+            font-size: 0.86rem;
+        }
+        .smki-sublist li::before {
+            content: "•";
+            position: absolute;
+            left: 2px;
+            color: #059669;
+            font-size: 1.2rem;
+            line-height: 1;
+            top: -2px;
+        }
+        .smki-modal-footer {
+            padding: 16px 28px 24px;
+            background: #ffffff;
+            border-top: 1px solid #f3f4f6;
+            display: flex;
+            justify-content: center;
+        }
+        .btn-smki-agree {
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: 12px;
+            background: #059669;
+            color: #ffffff;
+            border: none;
+            font-size: 0.96rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35);
+            transition: all 0.2s ease;
+        }
+        .btn-smki-agree:hover {
+            background: #047857;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(5, 150, 105, 0.45);
+        }
+        .btn-smki-agree:active {
+            transform: translateY(0);
+        }
+        .btn-smki-agree svg {
+            flex-shrink: 0;
+        }
+        .smki-reopen-link {
+            display: block;
+            margin-top: 16px;
+            font-size: 0.8rem;
+            color: #8ab4f8;
+            text-decoration: none;
+            text-align: center;
+            cursor: pointer;
+            transition: color 0.2s, text-decoration 0.2s;
+        }
+        .smki-reopen-link:hover {
+            color: #adc8ff;
+            text-decoration: underline;
+        }
+        @media (max-width: 640px) {
+            .smki-modal-card {
+                max-height: 94vh;
+                border-radius: 14px;
+            }
+            .smki-modal-header {
+                padding: 18px 20px 10px;
+            }
+            .smki-modal-body {
+                padding: 0 20px 14px;
+                font-size: 0.84rem;
+            }
+            .smki-title {
+                font-size: 0.95rem;
+            }
+            .smki-modal-footer {
+                padding: 12px 20px 20px;
+            }
+            .btn-smki-agree {
+                padding: 12px 16px;
+                font-size: 0.9rem;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- SMKI POLICY MODAL POPUP -->
+    <div class="smki-modal-backdrop" id="smkiModalBackdrop">
+        <div class="smki-modal-card" role="dialog" aria-modal="true" aria-labelledby="smkiTitle">
+            <div class="smki-modal-header">
+                <div class="smki-badge">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12v4.7c0 4.67-3.13 9.01-7 10.15-3.87-1.14-7-5.48-7-10.15V6.3l7-3.12z"/>
+                    </svg>
+                    <span>KEBIJAKAN KEAMANAN INFORMASI (SMKI)</span>
+                </div>
+            </div>
+
+            <div class="smki-modal-body">
+                <h2 id="smkiTitle" class="smki-title">
+                    JAJARAN MANAJEMEN , SELURUH KARYAWAN DAN SEMUA PIHAK YANG BERADA DI LINGKUNGAN PT PERKEBUNAN NUSANTARA I (PERSERO) DAN ANAK PERUSAHAAN BERKOMITMEN TERHADAP KEAMANAN INFORMASI &amp; PENGGUNAAN APLIKASI PT PERKEBUNAN NUSANTARA I (PERSERO)
+                </h2>
+
+                <div class="smki-highlight-box">
+                    <p>
+                        Aplikasi dan sistem informasi ini adalah milik <strong>PT Perkebunan Nusantara I</strong> dan disediakan hanya untuk penggunaan resmi perusahaan yang sah, sebagaimana diatur dalam <strong>Kebijakan Sistem Manajemen Keamanan Informasi (SMKI)</strong>.
+                    </p>
+                </div>
+
+                <p class="smki-intro">
+                    Dengan mengakses dan menggunakan aplikasi ini, Anda menyatakan memahami dan menyetujui ketentuan berikut:
+                </p>
+
+                <ol class="smki-list">
+                    <li>
+                        <strong>Kerahasiaan Kredensial:</strong> Anda bertanggung jawab penuh atas kerahasiaan <em>username</em> dan <em>password</em> akun Anda serta dilarang membagikan hak akses kepada pihak mana pun.
+                    </li>
+                    <li>
+                        <strong>Penggunaan yang Sah:</strong> Penggunaan aplikasi dan data di dalamnya hanya diizinkan untuk kepentingan pekerjaan sesuai dengan wewenang Anda (<em>Need-to-Know / Least Privilege</em>).
+                    </li>
+                    <li>
+                        <strong>Perlindungan Data &amp; Privasi:</strong> Anda wajib menjaga kerahasiaan data perusahaan dan Data Pribadi yang diolah dalam aplikasi ini sesuai aturan perundang-undangan (UU PDP) dan kebijakan internal PTPN I(Persero).
+                    </li>
+                    <li>
+                        <strong>Pemantauan &amp; Audit:</strong> Setiap aktivitas pada aplikasi ini dipantau, direkam (<em>logged</em>), dan dapat diaudit secara berkala untuk kepentingan keamanan informasi.
+                    </li>
+                    <li>
+                        <strong>Sanksi Pelanggaran:</strong> Penyalahgunaan akses, manipulasi data, atau pelanggaran keamanan dapat dikenakan sanksi disipliner perusahaan hingga proses hukum perdata/pidana yang berlaku.
+                    </li>
+                    <li>
+                        <strong>Pengguna aplikasi wajib melakukan penggantian password secara berkala, dengan ketentuan sebagai berikut:</strong>
+                        <ul class="smki-sublist">
+                            <li>Gunakan password yang kuat dan aman</li>
+                            <li>Password minimal 8 karakter</li>
+                            <li>Mengandung kombinasi alfanumerik (huruf dan angka) serta karakter spesial.</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+
+            <div class="smki-modal-footer">
+                <button type="button" class="btn-smki-agree" id="btnSmkiAgree">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                    <span>Saya sudah membaca &amp; Setuju</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div class="login-page">
         <div class="login-photo" id="loginPhotoBg" data-bg="{{ asset('5.jpg') }}" role="presentation"></div>
         <div class="login-form-wrap">
@@ -274,6 +567,9 @@
                             @endforeach
                         </div>
                     @endif
+                    <a href="javascript:void(0)" class="smki-reopen-link" id="linkReopenSmki">
+                        🛡️ Baca Kebijakan Keamanan Informasi (SMKI)
+                    </a>
                 </form>
             </div>
         </div>
@@ -323,6 +619,28 @@
                     var base = "{{ route('svg.captcha') }}";
                     img.src = base + '?t=' + Date.now();
                 }
+            });
+        }
+
+        // SMKI Modal Interactions
+        var smkiModal = document.getElementById('smkiModalBackdrop');
+        var btnSmkiAgree = document.getElementById('btnSmkiAgree');
+        var linkReopenSmki = document.getElementById('linkReopenSmki');
+
+        if (btnSmkiAgree && smkiModal) {
+            btnSmkiAgree.addEventListener('click', function() {
+                smkiModal.classList.add('hidden');
+                var userInput = document.getElementById('username');
+                if (userInput) {
+                    userInput.focus();
+                }
+            });
+        }
+
+        if (linkReopenSmki && smkiModal) {
+            linkReopenSmki.addEventListener('click', function(e) {
+                e.preventDefault();
+                smkiModal.classList.remove('hidden');
             });
         }
     </script>
