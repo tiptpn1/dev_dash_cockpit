@@ -376,7 +376,15 @@
             $icon.toggleClass('open');
         });
     </script>
-    @include('components.chat-icon')
+    @php
+        $chatUser = Auth::guard('custom')->user();
+        $chatUsername = strtolower($chatUser->username ?? '');
+        $isRegionalUser = in_array($chatUsername, ['regional1', 'regional2', 'regional3', 'regional5', 'regional7', 'regional8']) 
+            || str_starts_with($chatUsername, 'regional');
+    @endphp
+    @if(!$isRegionalUser)
+        @include('components.chat-icon')
+    @endif
     @include('components.log-viewer-button')
     @yield('scripts')
 </body>

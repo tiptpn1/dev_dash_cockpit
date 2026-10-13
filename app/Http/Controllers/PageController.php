@@ -153,6 +153,31 @@ class PageController extends Controller
         return view('pages/overview_page', compact('linkiframe'));
     }
 
+    public function agrowisata_overview()
+    {
+        $linkiframe = 'https://datastudio.google.com/embed/reporting/0c43491c-baab-4735-a4b1-bbaab8f1019e/page/0tkkF';
+        return view('pages/overview_page', compact('linkiframe'));
+    }
+    public function agrowisata_pendapatan()
+    {
+        $linkiframe = 'https://datastudio.google.com/embed/reporting/0c43491c-baab-4735-a4b1-bbaab8f1019e/page/p_pmj2u9u8zd';
+        return view('pages/overview_page', compact('linkiframe'));
+    }
+    public function agrowisata_biaya()
+    {
+        $linkiframe = 'https://datastudio.google.com/embed/reporting/0c43491c-baab-4735-a4b1-bbaab8f1019e/page/p_n8sfabzc7d';
+        return view('pages/overview_page', compact('linkiframe'));
+    }
+    public function agrowisata_yoy()
+    {
+        $linkiframe = 'https://datastudio.google.com/embed/reporting/0c43491c-baab-4735-a4b1-bbaab8f1019e/page/p_yhwjvg510d';
+        return view('pages/overview_page', compact('linkiframe'));
+    }
+    public function agrowisata_okupansi()
+    {
+        $linkiframe = 'https://datastudio.google.com/embed/reporting/0c43491c-baab-4735-a4b1-bbaab8f1019e/page/p_if6fzmbc0d';
+        return view('pages/overview_page', compact('linkiframe'));
+    }
     public function sdmpenyadap()
     {
         $linkiframe = 'https://datastudio.google.com/embed/reporting/89c816d3-086c-451d-abc9-f95578d05411/page/p_k6tmnjaxmd';

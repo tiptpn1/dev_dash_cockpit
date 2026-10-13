@@ -1,3 +1,10 @@
+@php
+    $chatUser = Auth::guard('custom')->user();
+    $chatUsername = strtolower($chatUser->username ?? '');
+    $isRegionalUser = in_array($chatUsername, ['regional1', 'regional2', 'regional3', 'regional5', 'regional7', 'regional8']) 
+        || str_starts_with($chatUsername, 'regional');
+@endphp
+@if(!$isRegionalUser)
 <div class="chat-icon-container">
     <img src="{{ asset('evo.gif') }}" alt="Chat Icon" class="chat-icon" id="chatIcon" style="width: 100px; height: 100px;">
 </div>
@@ -1081,3 +1088,4 @@ function sendUserMessageWS(message) {
 }
 */
 </script>
+@endif

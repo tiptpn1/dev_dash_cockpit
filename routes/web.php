@@ -74,6 +74,12 @@ Route::middleware('auth:custom')->group(function () {
     Route::get('/arealproduksi_regional8', [PageController::class, 'arealproduksi_regional8'])->name('arealproduksi_regional8');
     Route::get('/arealproduksikebun', [PageController::class, 'arealproduksikebun'])->name('arealproduksikebun');
 
+    Route::get('/agrowisata_overview', [PageController::class, 'agrowisata_overview'])->name('agrowisata_overview');
+    Route::get('/agrowisata_pendapatan', [PageController::class, 'agrowisata_pendapatan'])->name('agrowisata_pendapatan');
+    Route::get('/agrowisata_biaya', [PageController::class, 'agrowisata_biaya'])->name('agrowisata_biaya');
+    Route::get('/agrowisata_yoy', [PageController::class, 'agrowisata_yoy'])->name('agrowisata_yoy');
+    Route::get('/agrowisata_okupansi', [PageController::class, 'agrowisata_okupansi'])->name('agrowisata_okupansi');
+
     Route::get('/picaonfarm', [PageController::class, 'picaonfarm'])->name('picaonfarm');
     Route::get('/picaofffarm', [PageController::class, 'picaofffarm'])->name('picaofffarm');
     Route::get('/pica/kuadran-problem-identifications', [PageController::class, 'picaKuadranProblemIdentifications'])->name('pica.kuadran_problem_identifications');

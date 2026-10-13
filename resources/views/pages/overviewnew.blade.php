@@ -1,7 +1,14 @@
 @extends('layouts.app')
 
 @section('content')
-    @if(!session('evo_intro_played'))
+    @php
+        $evoUser = Auth::guard('custom')->user();
+        $evoUsername = strtolower($evoUser->username ?? '');
+        $isRegionalUser = in_array($evoUsername, ['regional1', 'regional2', 'regional3', 'regional5', 'regional7', 'regional8']) 
+            || str_starts_with($evoUsername, 'regional');
+    @endphp
+
+    @if(!$isRegionalUser && !session('evo_intro_played'))
     <div class="d-flex flex-column align-items-center">
         <div id="imagePopup" class="popup">
             <img src="{{ asset('halo_evo.gif') }}" alt="Hello" class="popup-image">
@@ -119,7 +126,7 @@
         }
     </style>
 
-    @if(!session('evo_intro_played'))
+    @if(!$isRegionalUser && !session('evo_intro_played'))
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const audio = document.getElementById('greeting');
