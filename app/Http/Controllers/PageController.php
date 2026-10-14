@@ -4507,11 +4507,18 @@ class PageController extends Controller
         return view('pages/under-construction');
     }
 
-    public function evaluasi_aplikasi()
+    public function evaluasi_aplikasi(Request $request)
     {
+        $regParam = $request->get('regional', $request->get('scope', $request->get('reg')));
+        if ($regParam !== null && trim((string) $regParam) !== '') {
+            session(['hris_user_regional' => trim((string) $regParam)]);
+        }
+
         // Deteksi akses via token URL — locked ke HRIS readonly
         $tokenMode = session('url_token_valid') === true;
-        return view('pages/evaluasi', compact('tokenMode'));
+        $scope = $this->getHrisRegionalScope($request);
+
+        return view('pages/evaluasi', compact('tokenMode', 'scope'));
     }
 
     public function evaluasi_monika()
@@ -4881,6 +4888,75 @@ class PageController extends Controller
 
     private const HRIS_REGIONAL_FILTER = 'SuppCo HO';
 
+    /**
+     * Parse string regional menjadi scope data HRIS
+     */
+    public function parseHrisRegional(?string $raw): array
+    {
+        $str = trim((string) $raw);
+
+        // Jika kosong atau HO/Pusat
+        if ($str === '' || preg_match('/^(ho|suppco\s*ho|head\s*office|all|pusat)$/i', $str)) {
+            return [
+                'is_ho' => true,
+                'db_regional' => 'SuppCo HO',
+                'regional_name' => 'SuppCo HO',
+                'display_label' => 'SuppCo HO',
+                'code' => 'HO',
+                'regional_pattern' => '%HO%',
+            ];
+        }
+
+        // Cek jika nomor regional (1 sampai 8)
+        // Cocok dengan: 'Suppco Reg02', 'SuppCo Reg 02', 'Reg02', 'Reg 02', 'Regional 2', 'R2', dll.
+        if (preg_match('/(?:reg(?:ional)?|r)?[_\s-]*0?([1-8])\b/i', $str, $m)) {
+            $num = (int) $m[1];
+            $pad = str_pad((string) $num, 2, '0', STR_PAD_LEFT);
+            return [
+                'is_ho' => false,
+                'db_regional' => "SuppCo Reg {$pad} - HO",
+                'regional_name' => "Regional {$num}",
+                'display_label' => "Regional {$num}",
+                'code' => "REG{$pad}",
+                'regional_pattern' => "SuppCo Reg {$pad}%",
+            ];
+        }
+
+        return [
+            'is_ho' => true,
+            'db_regional' => 'SuppCo HO',
+            'regional_name' => 'SuppCo HO',
+            'display_label' => 'SuppCo HO',
+            'code' => 'HO',
+            'regional_pattern' => '%HO%',
+        ];
+    }
+
+    /**
+     * Dapatkan scope regional aktif berdasarkan request, session, atau user login
+     */
+    public function getHrisRegionalScope(?Request $request = null): array
+    {
+        $raw = null;
+
+        if ($request) {
+            $raw = $request->get('regional', $request->get('scope', $request->get('reg')));
+        }
+
+        if ($raw === null || trim((string) $raw) === '') {
+            $raw = session('hris_user_regional');
+        }
+
+        if ($raw === null || trim((string) $raw) === '') {
+            $customUser = \Illuminate\Support\Facades\Auth::guard('custom')->user();
+            if ($customUser && !empty($customUser->regional)) {
+                $raw = $customUser->regional;
+            }
+        }
+
+        return $this->parseHrisRegional($raw);
+    }
+
     /** Label divisi virtual untuk Calon Karyawan Pimpinan (dipisah dari divisi HRIS aslinya) */
     private const HRIS_CKP_DIVISI_LABEL = 'CALON KARYAWAN PIMPINAN';
 
@@ -4917,9 +4993,10 @@ class PageController extends Controller
      * @param string $asOfStart tanggal mulai overlap (Y-m-d)
      * @param string $asOfEnd tanggal akhir overlap (Y-m-d)
      */
-    private function hrisActivePenugasanJoinSql(string $asOfStart, string $asOfEnd, string $alias = 'pen'): string
+    private function hrisActivePenugasanJoinSql(string $asOfStart, string $asOfEnd, string $alias = 'pen', ?string $regionalFilter = null): string
     {
-        $regional = str_replace("'", "''", self::HRIS_REGIONAL_FILTER);
+        $regionalVal = $regionalFilter ?: self::HRIS_REGIONAL_FILTER;
+        $regional = str_replace("'", "''", $regionalVal);
         $start = str_replace("'", "''", $asOfStart);
         $end = str_replace("'", "''", $asOfEnd);
 
@@ -5023,13 +5100,15 @@ class PageController extends Controller
         [$tahun, $bulan] = array_map('intval', explode('-', $periode));
 
         try {
-            $rows = $this->fetchRekapAbsenHrisByDivisi($tahun, $bulan);
-            $summary = $this->fetchRekapAbsenRegionalSummary($tahun, $bulan);
+            $scope = $this->getHrisRegionalScope($request);
+            $rows = $this->fetchRekapAbsenHrisByDivisi($tahun, $bulan, $scope['db_regional']);
+            $summary = $this->fetchRekapAbsenRegionalSummary($tahun, $bulan, $scope['db_regional'], $scope['display_label']);
 
             return response()->json([
                 'status' => 'success',
                 'periode' => $periode,
-                'regional' => self::HRIS_REGIONAL_FILTER,
+                'regional' => $scope['display_label'],
+                'scope' => $scope,
                 'total' => count($rows),
                 'summary' => $summary,
                 'data' => $rows,
@@ -5055,6 +5134,28 @@ class PageController extends Controller
         [$tahun, $bulan] = array_map('intval', explode('-', $periode));
 
         try {
+            $scope = $this->getHrisRegionalScope($request);
+
+            if (!$scope['is_ho']) {
+                // REGIONAL MODE: Rekap seluruh kebun / unit di bawah regional ini
+                $rows = $this->fetchRekapSeluruhRegionalDetail($tahun, $bulan, $scope['regional_name']);
+
+                usort($rows, function ($a, $b) {
+                    return strcasecmp($a->unit_name ?? $a->area_name ?? '', $b->unit_name ?? $b->area_name ?? '');
+                });
+
+                return response()->json([
+                    'status' => 'success',
+                    'periode' => $periode,
+                    'is_regional_mode' => true,
+                    'regional_name' => $scope['regional_name'],
+                    'display_label' => $scope['display_label'],
+                    'total' => count($rows),
+                    'data' => $rows,
+                ]);
+            }
+
+            // HO MODE: Rekap seluruh regional (R1 s/d R8, HO)
             $rows = $this->fetchRekapSeluruhRegional($tahun, $bulan);
 
             usort($rows, function ($a, $b) {
@@ -5068,6 +5169,7 @@ class PageController extends Controller
             return response()->json([
                 'status' => 'success',
                 'periode' => $periode,
+                'is_regional_mode' => false,
                 'total' => count($rows),
                 'data' => $rows,
             ]);
@@ -5229,13 +5331,14 @@ class PageController extends Controller
         [$tahun, $bulan] = array_map('intval', explode('-', $periode));
 
         try {
-            $rows = $this->fetchRekapAbsenHrisByPegawai($tahun, $bulan, $divisi);
+            $scope = $this->getHrisRegionalScope($request);
+            $rows = $this->fetchRekapAbsenHrisByPegawai($tahun, $bulan, $divisi, $scope['db_regional']);
 
             return response()->json([
                 'status' => 'success',
                 'periode' => $periode,
                 'divisi' => $divisi,
-                'regional' => self::HRIS_REGIONAL_FILTER,
+                'regional' => $scope['display_label'],
                 'total' => count($rows),
                 'data' => $rows,
             ]);
@@ -5258,12 +5361,13 @@ class PageController extends Controller
         }
 
         try {
-            $rows = $this->fetchDivisiList(self::HRIS_REGIONAL_FILTER);
+            $scope = $this->getHrisRegionalScope($request);
+            $rows = $this->fetchDivisiList($scope['db_regional']);
 
             return response()->json([
                 'status' => 'success',
                 'periode' => $periode,
-                'regional' => self::HRIS_REGIONAL_FILTER,
+                'regional' => $scope['display_label'],
                 'data' => $rows,
             ]);
         } catch (\Throwable $e) {
@@ -5295,7 +5399,8 @@ class PageController extends Controller
 
         try {
             [$tahun, $bulan] = array_map('intval', explode('-', $tanggal));
-            $rows = $this->fetchAbsenHarian($tahun, $bulan, $divisi, $tanggal);
+            $scope = $this->getHrisRegionalScope($request);
+            $rows = $this->fetchAbsenHarian($tahun, $bulan, $divisi, $tanggal, $scope['db_regional']);
 
             // Filter by status if requested
             $status = trim((string) $request->get('status', ''));
@@ -5318,7 +5423,7 @@ class PageController extends Controller
                 'periode' => $periode,
                 'divisi' => $divisi,
                 'tanggal' => $tanggal,
-                'regional' => self::HRIS_REGIONAL_FILTER,
+                'regional' => $scope['display_label'],
                 'total' => count($rows),
                 'data' => $rows,
             ]);
@@ -5449,7 +5554,7 @@ class PageController extends Controller
     private function fetchDivisiList(string $regional): array
     {
         [$asOfStart, $asOfEnd] = $this->hrisPenugasanPeriodRange(date('mY'));
-        $penugasanJoin = $this->hrisActivePenugasanJoinSql($asOfStart, $asOfEnd);
+        $penugasanJoin = $this->hrisActivePenugasanJoinSql($asOfStart, $asOfEnd, 'pen', $regional);
         $effectiveDivisi = $this->hrisEffectiveDivisiExpr('p');
         $eligibility = $this->hrisHoEligibilitySql('p', 'pen');
 
@@ -5465,15 +5570,15 @@ class PageController extends Controller
         return $this->sortHrisByDivisi($rows);
     }
 
-    private function fetchRekapAbsenHrisByDivisi(int $tahun, int $bulan): array
+    private function fetchRekapAbsenHrisByDivisi(int $tahun, int $bulan, string $regional = 'SuppCo HO'): array
     {
         $periodeHris = $this->periodeYmToHris($tahun, $bulan);
 
         if ($this->hrisUsesImportData($periodeHris)) {
-            return $this->fetchRekapAbsenFromImport($periodeHris);
+            return $this->fetchRekapAbsenFromImport($periodeHris, $regional);
         }
 
-        return $this->fetchRekapAbsenFromAbsensi($periodeHris);
+        return $this->fetchRekapAbsenFromAbsensi($periodeHris, $regional);
     }
 
     private function fetchRekapSeluruhRegional(int $tahun, int $bulan): array
@@ -5901,22 +6006,20 @@ class PageController extends Controller
         return array_values($grouped);
     }
 
-    private function fetchRekapAbsenRegionalSummary(int $tahun, int $bulan): ?object
+    private function fetchRekapAbsenRegionalSummary(int $tahun, int $bulan, string $regional = 'SuppCo HO', string $displayLabel = 'SuppCo HO'): ?object
     {
         $periodeHris = $this->periodeYmToHris($tahun, $bulan);
 
         if ($this->hrisUsesImportData($periodeHris)) {
-            return $this->fetchRegionalSummaryFromImport($periodeHris);
+            return $this->fetchRegionalSummaryFromImport($periodeHris, $regional, $displayLabel);
         }
 
-        return $this->fetchRegionalSummaryFromAbsensi($periodeHris);
+        return $this->fetchRegionalSummaryFromAbsensi($periodeHris, $regional, $displayLabel);
     }
 
-    private function fetchRegionalSummaryFromImport(string $periodeHris): ?object
+    private function fetchRegionalSummaryFromImport(string $periodeHris, string $regional = 'SuppCo HO', string $displayLabel = 'SuppCo HO'): ?object
     {
         $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris);
-
-        $regional = self::HRIS_REGIONAL_FILTER;
 
         $rows = DB::connection('hris')->select("
             SELECT
@@ -5947,14 +6050,12 @@ class PageController extends Controller
               AND LOWER(p.status_pegawai) IN ('aktif', 'active')
         ", [$periodeHris, $periodeHris, $regional]);
 
-        return $this->formatRegionalSummary($rows[0] ?? null);
+        return $this->formatRegionalSummary($rows[0] ?? null, $displayLabel);
     }
 
-    private function fetchRegionalSummaryFromAbsensi(string $periodeHris): ?object
+    private function fetchRegionalSummaryFromAbsensi(string $periodeHris, string $regional = 'SuppCo HO', string $displayLabel = 'SuppCo HO'): ?object
     {
         $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris);
-
-        $regional = self::HRIS_REGIONAL_FILTER;
 
         $rows = DB::connection('hris')->select("
             SELECT
@@ -5983,17 +6084,17 @@ class PageController extends Controller
               AND LOWER(p.status_pegawai) IN ('aktif', 'active')
         ", [$periodeHris, $periodeHris, $regional]);
 
-        return $this->formatRegionalSummary($rows[0] ?? null);
+        return $this->formatRegionalSummary($rows[0] ?? null, $displayLabel);
     }
 
-    private function formatRegionalSummary(?object $row): ?object
+    private function formatRegionalSummary(?object $row, string $displayLabel = 'SuppCo HO'): ?object
     {
         if (!$row || ($row->jumlah_pegawai ?? 0) == 0) {
             return null;
         }
 
         return (object) [
-            'divisi' => 'RATA-RATA KESELURUHAN — ' . self::HRIS_REGIONAL_FILTER,
+            'divisi' => 'RATA-RATA KESELURUHAN — ' . $displayLabel,
             'hari_kerja' => $row->hari_kerja,
             'jumlah_pegawai' => $row->jumlah_pegawai,
             'persentase_kehadiran' => $row->persentase_kehadiran,
@@ -6001,39 +6102,37 @@ class PageController extends Controller
         ];
     }
 
-    private function fetchRekapAbsenHrisByPegawai(int $tahun, int $bulan, string $divisi): array
+    private function fetchRekapAbsenHrisByPegawai(int $tahun, int $bulan, string $divisi, string $regional = 'SuppCo HO'): array
     {
         $periodeHris = $this->periodeYmToHris($tahun, $bulan);
 
         if ($this->hrisUsesImportData($periodeHris)) {
-            return $this->fetchDetailAbsenFromImport($periodeHris, $divisi);
+            return $this->fetchDetailAbsenFromImport($periodeHris, $divisi, $regional);
         }
 
-        return $this->fetchDetailAbsenFromAbsensi($periodeHris, $divisi);
+        return $this->fetchDetailAbsenFromAbsensi($periodeHris, $divisi, $regional);
     }
 
-    private function fetchAbsenHarian(int $tahun, int $bulan, string $divisi, string $tanggal): array
+    private function fetchAbsenHarian(int $tahun, int $bulan, string $divisi, string $tanggal, string $regional = 'SuppCo HO'): array
     {
         $periodeHris = $this->periodeYmToHris($tahun, $bulan);
 
         if ($this->hrisUsesImportData($periodeHris)) {
-            return $this->fetchHarianFromImport($divisi, $tanggal);
+            return $this->fetchHarianFromImport($divisi, $tanggal, $regional);
         }
 
-        return $this->fetchHarianFromAbsensi($divisi, $tanggal);
+        return $this->fetchHarianFromAbsensi($divisi, $tanggal, $regional);
     }
 
-    private function fetchRekapAbsenFromImport(string $periodeHris): array
+    private function fetchRekapAbsenFromImport(string $periodeHris, string $regional = 'SuppCo HO'): array
     {
         [$asOfStart, $asOfEnd] = $this->hrisPenugasanPeriodRange($periodeHris);
-        $penugasanJoin = $this->hrisActivePenugasanJoinSql($asOfStart, $asOfEnd);
+        $penugasanJoin = $this->hrisActivePenugasanJoinSql($asOfStart, $asOfEnd, 'pen', $regional);
         $effectiveDivisi = $this->hrisEffectiveDivisiExpr('p');
         $effectiveArea = $this->hrisEffectiveAreaKodeExpr('p', 'pen');
         $effectiveRegionalKode = $this->hrisEffectiveRegionalKodeExpr('p', 'pen');
         $eligibility = $this->hrisHoEligibilitySql('p', 'pen');
         $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris, $effectiveArea);
-
-        $regional = self::HRIS_REGIONAL_FILTER;
 
         $sql = "
             SELECT
@@ -6070,17 +6169,15 @@ class PageController extends Controller
         );
     }
 
-    private function fetchRekapAbsenFromAbsensi(string $periodeHris): array
+    private function fetchRekapAbsenFromAbsensi(string $periodeHris, string $regional = 'SuppCo HO'): array
     {
         [$asOfStart, $asOfEnd] = $this->hrisPenugasanPeriodRange($periodeHris);
-        $penugasanJoin = $this->hrisActivePenugasanJoinSql($asOfStart, $asOfEnd);
+        $penugasanJoin = $this->hrisActivePenugasanJoinSql($asOfStart, $asOfEnd, 'pen', $regional);
         $effectiveDivisi = $this->hrisEffectiveDivisiExpr('p');
         $effectiveArea = $this->hrisEffectiveAreaKodeExpr('p', 'pen');
         $effectiveRegionalKode = $this->hrisEffectiveRegionalKodeExpr('p', 'pen');
         $eligibility = $this->hrisHoEligibilitySql('p', 'pen');
         $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris, $effectiveArea);
-
-        $regional = self::HRIS_REGIONAL_FILTER;
 
         $sql = "
             SELECT
@@ -6115,18 +6212,16 @@ class PageController extends Controller
         );
     }
 
-    private function fetchDetailAbsenFromImport(string $periodeHris, string $divisi): array
+    private function fetchDetailAbsenFromImport(string $periodeHris, string $divisi, string $regional = 'SuppCo HO'): array
     {
         [$asOfStart, $asOfEnd] = $this->hrisPenugasanPeriodRange($periodeHris);
-        $penugasanJoin = $this->hrisActivePenugasanJoinSql($asOfStart, $asOfEnd);
+        $penugasanJoin = $this->hrisActivePenugasanJoinSql($asOfStart, $asOfEnd, 'pen', $regional);
         $effectiveDivisi = $this->hrisEffectiveDivisiExpr('p');
         $effectiveJabatan = $this->hrisEffectiveJabatanExpr('p', 'pen');
         $effectiveArea = $this->hrisEffectiveAreaKodeExpr('p', 'pen');
         $effectiveRegionalKode = $this->hrisEffectiveRegionalKodeExpr('p', 'pen');
         $eligibility = $this->hrisHoEligibilitySql('p', 'pen');
         $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris, $effectiveArea);
-
-        $regional = self::HRIS_REGIONAL_FILTER;
 
         $sql = "
             SELECT
@@ -6173,18 +6268,16 @@ class PageController extends Controller
         return DB::connection('hris')->select($sql, [$periodeHris, $periodeHris, $regional, $divisi]);
     }
 
-    private function fetchDetailAbsenFromAbsensi(string $periodeHris, string $divisi): array
+    private function fetchDetailAbsenFromAbsensi(string $periodeHris, string $divisi, string $regional = 'SuppCo HO'): array
     {
         [$asOfStart, $asOfEnd] = $this->hrisPenugasanPeriodRange($periodeHris);
-        $penugasanJoin = $this->hrisActivePenugasanJoinSql($asOfStart, $asOfEnd);
+        $penugasanJoin = $this->hrisActivePenugasanJoinSql($asOfStart, $asOfEnd, 'pen', $regional);
         $effectiveDivisi = $this->hrisEffectiveDivisiExpr('p');
         $effectiveJabatan = $this->hrisEffectiveJabatanExpr('p', 'pen');
         $effectiveArea = $this->hrisEffectiveAreaKodeExpr('p', 'pen');
         $effectiveRegionalKode = $this->hrisEffectiveRegionalKodeExpr('p', 'pen');
         $eligibility = $this->hrisHoEligibilitySql('p', 'pen');
         $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris, $effectiveArea);
-
-        $regional = self::HRIS_REGIONAL_FILTER;
 
         $sql = "
             SELECT
@@ -6209,7 +6302,7 @@ class PageController extends Controller
             LEFT JOIN (
                 SELECT
                     pegawai_id,
-                    COUNT(DISTINCT CASE WHEN UPPER(TRIM(jenis_absen)) IN ('WFO', 'WFH', 'IZIN', 'IJIN', 'DINAS') THEN DATE(jam) END) AS absensi,
+                    COUNT(DISTINCT CASE WHEN UPPER(TRIM(jenis_absen)) IN ('WFO', 'WFH', 'IZIN', 'IJIN', 'DINAS') THEN DATE(jam) END) AS check_in,
                     COUNT(DISTINCT CASE WHEN UPPER(TRIM(jenis_absen)) = 'WFO' THEN DATE(jam) END) AS cnt_wfo,
                     COUNT(DISTINCT CASE WHEN UPPER(TRIM(jenis_absen)) = 'WFH' THEN DATE(jam) END) AS cnt_wfh,
                     COUNT(DISTINCT CASE WHEN UPPER(TRIM(jenis_absen)) IN ('IZIN', 'IJIN') THEN DATE(jam) END) AS cnt_izin,
@@ -6231,18 +6324,16 @@ class PageController extends Controller
         return DB::connection('hris')->select($sql, [$periodeHris, $periodeHris, $regional, $divisi]);
     }
 
-    private function fetchHarianFromImport(string $divisi, string $tanggal): array
+    private function fetchHarianFromImport(string $divisi, string $tanggal, string $regional = 'SuppCo HO'): array
     {
         $periodeHris = date('mY', strtotime($tanggal));
-        $penugasanJoin = $this->hrisActivePenugasanJoinSql($tanggal, $tanggal);
+        $penugasanJoin = $this->hrisActivePenugasanJoinSql($tanggal, $tanggal, 'pen', $regional);
         $effectiveDivisi = $this->hrisEffectiveDivisiExpr('p');
         $effectiveJabatan = $this->hrisEffectiveJabatanExpr('p', 'pen');
         $effectiveArea = $this->hrisEffectiveAreaKodeExpr('p', 'pen');
         $effectiveRegionalKode = $this->hrisEffectiveRegionalKodeExpr('p', 'pen');
         $eligibility = $this->hrisHoEligibilitySql('p', 'pen');
         $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris, $effectiveArea);
-
-        $regional = self::HRIS_REGIONAL_FILTER;
 
         $divisiCondition = $divisi !== '' ? "AND {$effectiveDivisi} = ?" : '';
 
@@ -6285,18 +6376,16 @@ class PageController extends Controller
         return $this->sortHrisByDivisi(DB::connection('hris')->select($sql, $params));
     }
 
-    private function fetchHarianFromAbsensi(string $divisi, string $tanggal): array
+    private function fetchHarianFromAbsensi(string $divisi, string $tanggal, string $regional = 'SuppCo HO'): array
     {
         $periodeHris = date('mY', strtotime($tanggal));
-        $penugasanJoin = $this->hrisActivePenugasanJoinSql($tanggal, $tanggal);
+        $penugasanJoin = $this->hrisActivePenugasanJoinSql($tanggal, $tanggal, 'pen', $regional);
         $effectiveDivisi = $this->hrisEffectiveDivisiExpr('p');
         $effectiveJabatan = $this->hrisEffectiveJabatanExpr('p', 'pen');
         $effectiveArea = $this->hrisEffectiveAreaKodeExpr('p', 'pen');
         $effectiveRegionalKode = $this->hrisEffectiveRegionalKodeExpr('p', 'pen');
         $eligibility = $this->hrisHoEligibilitySql('p', 'pen');
         $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris, $effectiveArea);
-
-        $regional = self::HRIS_REGIONAL_FILTER;
 
         $divisiCondition = $divisi !== '' ? "AND {$effectiveDivisi} = ?" : '';
 
@@ -6346,18 +6435,21 @@ class PageController extends Controller
         return $this->sortHrisByDivisi(DB::connection('hris')->select($sql, $params));
     }
 
-    public function evaluasi_hris_regional_list()
+    public function evaluasi_hris_regional_list(Request $request)
     {
+        $scope = $this->getHrisRegionalScope($request);
+
         return response()->json([
             'status' => 'success',
-            'data' => self::HRIS_REGIONAL_FILTER,
+            'data' => $scope['display_label'],
+            'scope' => $scope,
         ]);
     }
 
     public function evaluasi_hris_pegawai_list(Request $request)
     {
         $search = trim((string) $request->get('search', ''));
-        $regional = trim((string) $request->get('regional', ''));
+        $scope = $this->getHrisRegionalScope($request);
 
         if (strlen($search) < 3) {
             return response()->json([
@@ -6368,10 +6460,17 @@ class PageController extends Controller
 
         try {
             [$asOfStart, $asOfEnd] = $this->hrisPenugasanPeriodRange(date('mY'));
-            $penugasanJoin = $this->hrisActivePenugasanJoinSql($asOfStart, $asOfEnd);
+            $penugasanJoin = $this->hrisActivePenugasanJoinSql($asOfStart, $asOfEnd, 'pen', $scope['db_regional']);
             $effectiveDivisi = $this->hrisEffectiveDivisiExpr('p');
             $effectiveJabatan = $this->hrisEffectiveJabatanExpr('p', 'pen');
-            $eligibility = $this->hrisHoEligibilitySql('p', 'pen');
+
+            if ($scope['is_ho']) {
+                $regionalCondition = "(TRIM(p.regional) = ? OR pen.pegawai_id IS NOT NULL)";
+                $regionalParam = $scope['db_regional'];
+            } else {
+                $regionalCondition = "TRIM(p.regional) LIKE ?";
+                $regionalParam = $scope['regional_pattern'];
+            }
 
             $sql = "
                 SELECT
@@ -6382,15 +6481,15 @@ class PageController extends Controller
                     {$effectiveJabatan} AS jabatan
                 FROM pegawai p
                 {$penugasanJoin}
-                WHERE {$eligibility}
+                WHERE {$regionalCondition}
+                  AND LOWER(p.status_pegawai) IN ('aktif', 'active', 'mbt')
                   AND (p.nama LIKE ? OR p.nik LIKE ?)
-                  /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
                 ORDER BY p.nama ASC
                 LIMIT 20
             ";
 
             $searchPattern = '%' . $search . '%';
-            $rows = DB::connection('hris')->select($sql, [$regional, $searchPattern, $searchPattern]);
+            $rows = DB::connection('hris')->select($sql, [$regionalParam, $searchPattern, $searchPattern]);
 
             return response()->json([
                 'status' => 'success',
@@ -6427,12 +6526,13 @@ class PageController extends Controller
         try {
             [$tahun, $bulan] = array_map('intval', explode('-', $tanggal_awal));
             $periodeHris = $this->periodeYmToHris($tahun, $bulan);
-            $regional = self::HRIS_REGIONAL_FILTER;
+            $scope = $this->getHrisRegionalScope($request);
+            $regionalPattern = $scope['is_ho'] ? $scope['db_regional'] : $scope['regional_pattern'];
 
             if ($this->hrisUsesImportData($periodeHris)) {
-                $rows = $this->fetchPerKaryawanFromImport($pegawai_id, $tanggal_awal, $tanggal_akhir, $regional);
+                $rows = $this->fetchPerKaryawanFromImport($pegawai_id, $tanggal_awal, $tanggal_akhir, $regionalPattern, $scope['is_ho']);
             } else {
-                $rows = $this->fetchPerKaryawanFromAbsensi($pegawai_id, $tanggal_awal, $tanggal_akhir, $regional);
+                $rows = $this->fetchPerKaryawanFromAbsensi($pegawai_id, $tanggal_awal, $tanggal_akhir, $regionalPattern, $scope['is_ho']);
             }
 
             return response()->json([
@@ -6451,10 +6551,11 @@ class PageController extends Controller
         }
     }
 
-    private function fetchPerKaryawanFromAbsensi(string $pegawai_id, string $tanggal_awal, string $tanggal_akhir, string $regional): array
+    private function fetchPerKaryawanFromAbsensi(string $pegawai_id, string $tanggal_awal, string $tanggal_akhir, string $regional = 'SuppCo HO', bool $isHo = true): array
     {
         $periodeHris = date('mY', strtotime($tanggal_awal));
         $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris);
+        $regionalCondition = $isHo ? "AND TRIM(p.regional) = ?" : "AND TRIM(p.regional) LIKE ?";
 
         $sql = "
             SELECT
@@ -6487,7 +6588,7 @@ class PageController extends Controller
                 AND p.area_kode = b.area_kode
                 AND b.periode = DATE_FORMAT(a.jam, '%m%Y')
             WHERE p.pegawai_id = ?
-              AND TRIM(p.regional) = ?
+              {$regionalCondition}
               AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
               /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
               AND LOWER(p.status_pegawai) IN ('aktif', 'active')
@@ -6503,8 +6604,12 @@ class PageController extends Controller
         ]);
     }
 
-    private function fetchPerKaryawanFromImport(string $pegawai_id, string $tanggal_awal, string $tanggal_akhir, string $regional): array
+    private function fetchPerKaryawanFromImport(string $pegawai_id, string $tanggal_awal, string $tanggal_akhir, string $regional = 'SuppCo HO', bool $isHo = true): array
     {
+        $periodeHris = date('mY', strtotime($tanggal_awal));
+        $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris);
+        $regionalCondition = $isHo ? "AND TRIM(p.regional) = ?" : "AND TRIM(p.regional) LIKE ?";
+
         $sql = "
             SELECT
                 p.nama,
@@ -6530,7 +6635,7 @@ class PageController extends Controller
                 AND p.area_kode = b.area_kode
                 AND b.periode = DATE_FORMAT(ai.tanggal_date, '%m%Y')
             WHERE p.pegawai_id = ?
-              AND TRIM(p.regional) = ?
+              {$regionalCondition}
               AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
               /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
               AND LOWER(p.status_pegawai) IN ('aktif', 'active')

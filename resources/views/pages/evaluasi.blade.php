@@ -322,6 +322,64 @@
             margin-left: 8px;
         }
 
+        .form-select:disabled {
+            background-color: #f1f5f9 !important;
+            color: #64748b !important;
+            cursor: not-allowed !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        .kebun-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .kebun-summary-card {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .kebun-summary-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+        }
+
+        .kebun-summary-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .kebun-summary-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1e293b;
+            line-height: 1.2;
+        }
+
+        .kebun-summary-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+        }
+
         .hris-tabs {
             display: flex;
             gap: 0;
@@ -790,7 +848,7 @@
                 <div class="table-header">
                     <div class="table-title">
                         <i class="fas fa-table"></i> <span id="table-title">Data Evaluasi Aplikasi</span>
-                        <span id="regional-badge" class="regional-badge" style="display:none;">SuppCo HO</span>
+                        <span id="regional-badge" class="regional-badge" style="display:none;">{{ !empty($scope) ? $scope['display_label'] : 'SuppCo HO' }}</span>
                     </div>
                     <span id="data-count-badge" class="table-count">-- Data</span>
                 </div>
@@ -806,8 +864,12 @@
                         <button type="button" class="hris-tab-btn" data-tab="perkaryawan">
                             <i class="fas fa-user"></i> Detail per Karyawan
                         </button>
-                        <button type="button" class="hris-tab-btn" data-tab="rekap_regional">
-                            <i class="fas fa-globe"></i> Rekap Seluruh Regional
+                        <button type="button" class="hris-tab-btn" data-tab="rekap_regional" id="tab-btn-rekap_regional">
+                            @if(!empty($scope) && !$scope['is_ho'])
+                                <i class="fas fa-seedling"></i> Rekap Seluruh Kebun
+                            @else
+                                <i class="fas fa-globe"></i> Rekap Seluruh Regional
+                            @endif
                         </button>
                     </div>
 
@@ -833,7 +895,7 @@
                                 <thead>
                                     <tr>
                                         <th style="width: 60px;">No</th>
-                                        <th style="text-align: left;">Divisi <span
+                                        <th style="text-align: left;"><span id="rekap-header-unit-label">{{ (!empty($scope) && !$scope['is_ho']) ? 'Bagian' : 'Divisi' }}</span> <span
                                                 style="font-weight:400;text-transform:none;">(klik untuk detail
                                                 karyawan)</span></th>
                                         <th style="width: 200px;">Jumlah Hari Kerja<br><span
@@ -852,9 +914,9 @@
                         <div class="filter-card-tab2">
                             <div class="filter-grid-tab2-harian">
                                 <div class="form-group">
-                                    <label class="form-label">Divisi</label>
+                                    <label class="form-label" id="harian-filter-unit-label">{{ (!empty($scope) && !$scope['is_ho']) ? 'Bagian' : 'Divisi' }}</label>
                                     <select id="harian_divisi_select" class="form-select">
-                                        <option value="">Semua Divisi</option>
+                                        <option value="">{{ (!empty($scope) && !$scope['is_ho']) ? 'Semua Bagian' : 'Semua Divisi' }}</option>
                                     </select>
                                 </div>
                                 <div class="form-group">
@@ -883,7 +945,7 @@
                                         <th style="width:40px;">No</th>
                                         <th style="text-align:left;">Nama Karyawan</th>
                                         <th style="width:100px;">NIK</th>
-                                        <th style="text-align:left;min-width:160px;">Divisi</th>
+                                        <th style="text-align:left;min-width:160px;" id="harian-th-unit-label">{{ (!empty($scope) && !$scope['is_ho']) ? 'Bagian' : 'Divisi' }}</th>
                                         <th style="width:120px;">Status Absen</th>
                                         <th style="width:90px;">Hari Kerja</th>
                                         <th style="width:100px;">Check In</th>
@@ -1133,6 +1195,8 @@
             let _harianData = [];
             let _perkaryawanData = [];
             let _rekapRegionalData = [];
+            const hrisScope = {!! json_encode($scope ?? ['is_ho' => true, 'display_label' => 'SuppCo HO', 'regional_name' => 'SuppCo HO', 'code' => 'HO']) !!};
+            let _isRegionalMode = !hrisScope.is_ho;
 
             const monthNames = [
                 "Januari", "Februari", "Maret", "April", "Mei", "Juni",
@@ -1443,7 +1507,8 @@
                     .then(data => {
                         if (data.status !== 'success') throw new Error(data.message);
                         const prev = harianDivisiSelect.value;
-                        harianDivisiSelect.innerHTML = '<option value="">Semua Divisi</option>';
+                        const defaultOptLabel = (hrisScope && !hrisScope.is_ho) ? 'Semua Bagian' : 'Semua Divisi';
+                        harianDivisiSelect.innerHTML = `<option value="">${defaultOptLabel}</option>`;
                         data.data.forEach(row => {
                             const opt = document.createElement('option');
                             opt.value = row.divisi;
@@ -1543,8 +1608,9 @@
                 const workbook = new ExcelJS.Workbook();
                 const ws = workbook.addWorksheet('Detail Harian');
 
+                const unitHeaderName = (hrisScope && !hrisScope.is_ho) ? 'Bagian' : 'Divisi';
                 const headers = [
-                    'No', 'Nama Karyawan', 'NIK', 'Divisi', 'Status Absen', 'Hari Kerja',
+                    'No', 'Nama Karyawan', 'NIK', unitHeaderName, 'Status Absen', 'Hari Kerja',
                     'Check In', 'Mood Check In', 'Check Out', 'Mood Check Out', 'Lokasi', 'Jenis Absen'
                 ];
 
@@ -1574,7 +1640,7 @@
                 // Title Row
                 ws.mergeCells(1, 1, 1, 12);
                 const titleCell = ws.getCell(1, 1);
-                titleCell.value = 'DETAIL ABSENSI HARIAN KARYAWAN';
+                titleCell.value = 'DETAIL ABSENSI HARIAN KARYAWAN — ' + (hrisScope.display_label || 'SUPPCO HO').toUpperCase();
                 titleCell.font = { bold: true, size: 14, color: { argb: 'FF166534' } };
                 titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
                 ws.getRow(1).height = 28;
@@ -1582,7 +1648,7 @@
                 // Subtitle / Filters Row
                 ws.mergeCells(2, 1, 2, 12);
                 const subTitleCell = ws.getCell(2, 1);
-                subTitleCell.value = `Divisi: ${divisi}   |   Tanggal: ${formattedDate}   |   Status: ${statusLabel}`;
+                subTitleCell.value = `${unitHeaderName}: ${divisi}   |   Tanggal: ${formattedDate}   |   Status: ${statusLabel}`;
                 subTitleCell.font = { italic: true, size: 10, color: { argb: 'FF4B5563' } };
                 subTitleCell.alignment = { horizontal: 'center', vertical: 'middle' };
                 ws.getRow(2).height = 20;
@@ -1783,15 +1849,22 @@
                     .then(data => {
                         if (data.status !== 'success') throw new Error(data.message);
                         const regionalValue = data.data;
+                        const scopeData = data.scope || hrisScope;
+
                         // Populate regional select for per-karyawan tab
-                        const currentOption = perkaryawanRegionalSelect.querySelector(`option[value="${regionalValue}"]`);
-                        if (!currentOption) {
-                            const option = document.createElement('option');
-                            option.value = regionalValue;
-                            option.textContent = regionalValue;
-                            perkaryawanRegionalSelect.appendChild(option);
-                        }
+                        perkaryawanRegionalSelect.innerHTML = '';
+                        const option = document.createElement('option');
+                        option.value = regionalValue;
+                        option.textContent = regionalValue;
+                        perkaryawanRegionalSelect.appendChild(option);
                         perkaryawanRegionalSelect.value = regionalValue;
+
+                        // Lock regional select if user is in regional mode (restricted to their region)
+                        if (scopeData && !scopeData.is_ho) {
+                            perkaryawanRegionalSelect.disabled = true;
+                            perkaryawanRegionalSelect.style.backgroundColor = '#f1f5f9';
+                            perkaryawanRegionalSelect.style.cursor = 'not-allowed';
+                        }
                     })
                     .catch(err => {
                         console.error('Error loading regional list:', err);
@@ -1873,9 +1946,26 @@
                     currentPeriode = periodVal;
                     activeDivisi = null;
                     regionalBadge.style.display = 'inline-block';
+                    regionalBadge.textContent = hrisScope.display_label || 'SuppCo HO';
                     hrisTabsWrap.style.display = 'block';
                     nonHrisWrapper.style.display = 'none';
                     placeholderState.style.display = 'none';
+
+                    // Update UI labels according to scope
+                    const unitHeaderLabel = document.getElementById('rekap-header-unit-label');
+                    if (unitHeaderLabel) unitHeaderLabel.textContent = hrisScope.is_ho ? 'Divisi' : 'Bagian';
+                    const harianFilterLabel = document.getElementById('harian-filter-unit-label');
+                    if (harianFilterLabel) harianFilterLabel.textContent = hrisScope.is_ho ? 'Divisi' : 'Bagian';
+                    const harianThLabel = document.getElementById('harian-th-unit-label');
+                    if (harianThLabel) harianThLabel.textContent = hrisScope.is_ho ? 'Divisi' : 'Bagian';
+                    const tabBtnRekapRegional = document.getElementById('tab-btn-rekap_regional');
+                    if (tabBtnRekapRegional) {
+                        if (!hrisScope.is_ho) {
+                            tabBtnRekapRegional.innerHTML = `<i class="fas fa-seedling"></i> Rekap Seluruh Kebun (${escapeHtml(hrisScope.display_label)})`;
+                        } else {
+                            tabBtnRekapRegional.innerHTML = `<i class="fas fa-globe"></i> Rekap Seluruh Regional`;
+                        }
+                    }
 
                     if (!harianTanggalSelect.value) {
                         const today = new Date();
@@ -1897,12 +1987,18 @@
                     fetchHrisData(periodVal)
                         .then(data => {
                             _rekapData = data;
+                            if (data.scope) {
+                                Object.assign(hrisScope, data.scope);
+                            }
+                            regionalBadge.textContent = data.regional || hrisScope.display_label;
                             hrisError.style.display = 'none';
                             hrisTbody.innerHTML = '';
 
+                            const unitNoun = (hrisScope && !hrisScope.is_ho) ? 'Bagian' : 'Divisi';
+
                             if (!data.data || data.data.length === 0) {
-                                hrisTbody.innerHTML = '<tr class="loading-row"><td colspan="4">Tidak ada data SuppCo HO untuk periode ini.</td></tr>';
-                                dataCountBadge.textContent = '0 Divisi';
+                                hrisTbody.innerHTML = `<tr class="loading-row"><td colspan="4">Tidak ada data ${escapeHtml(hrisScope.display_label)} untuk periode ini.</td></tr>`;
+                                dataCountBadge.textContent = `0 ${unitNoun}`;
                                 return;
                             }
 
@@ -1913,7 +2009,7 @@
                             data.data.forEach((row, index) => {
                                 hrisTbody.appendChild(renderHrisRow(row, index));
                             });
-                            dataCountBadge.textContent = `${data.total} Divisi`;
+                            dataCountBadge.textContent = `${data.total} ${unitNoun}`;
                         })
                         .catch(err => {
                             hrisTbody.innerHTML = '';
@@ -1924,6 +2020,9 @@
 
                     if (activeHrisTab === 'harian' && harianDivisiSelect.value && harianTanggalSelect.value) {
                         loadHarianData();
+                    }
+                    if (activeHrisTab === 'rekap_regional' && rekapRegionalPeriodeSelect.value) {
+                        loadRekapRegionalData();
                     }
                     return;
                 }
@@ -2270,11 +2369,163 @@
             }
 
 
+            function renderRekapHoRegionalView(data) {
+                const chartArea = document.createElement('div');
+                chartArea.style.cssText = 'position: relative; height: 350px; margin-bottom: 50px; margin-left: 30px; margin-top: 20px;';
+
+                for (let i = 0; i <= 100; i += 20) {
+                    const line = document.createElement('div');
+                    const borderStyle = i === 0 ? 'solid #94a3b8' : 'dashed #cbd5e1';
+                    line.style.cssText = `position: absolute; left: 0; right: 0; bottom: ${i}%; height: 1px; border-bottom: 1px ${borderStyle}; z-index: 0;`;
+
+                    const label = document.createElement('div');
+                    label.style.cssText = `position: absolute; left: -35px; bottom: calc(${i}% - 7px); width: 30px; text-align: right; font-size: 11px; color: #64748b; font-weight: 500;`;
+                    label.textContent = i;
+
+                    chartArea.appendChild(line);
+                    chartArea.appendChild(label);
+                }
+
+                const colsContainer = document.createElement('div');
+                colsContainer.style.cssText = 'position: absolute; top: 0; bottom: 0; left: 0; right: 0; display: flex; align-items: flex-end; justify-content: space-around; z-index: 1;';
+
+                data.data.forEach((row) => {
+                    colsContainer.appendChild(renderRekapRegionalColumn(row));
+                });
+
+                chartArea.appendChild(colsContainer);
+                rekapRegionalChartContainer.appendChild(chartArea);
+            }
+
+            function renderRekapKebunRegionalView(data) {
+                const rows = data.data || [];
+                const regionalLabel = data.display_label || hrisScope.display_label || 'Regional';
+
+                // Calculate summary KPIs
+                const totalUnits = rows.length;
+                let totalPegawai = 0;
+                let totalWeightedAtt = 0;
+                rows.forEach(r => {
+                    const p = parseInt(r.jumlah_pegawai) || 0;
+                    const att = parseFloat(r.persentase_kehadiran) || 0;
+                    totalPegawai += p;
+                    totalWeightedAtt += (p * att);
+                });
+                const avgAttendance = totalPegawai > 0 ? (totalWeightedAtt / totalPegawai).toFixed(1) : '0.0';
+
+                // Main container wrapper
+                const wrapper = document.createElement('div');
+                wrapper.className = 'kebun-view-wrapper';
+
+                // 1. KPI Summary Cards
+                const kpiHtml = `
+                    <div class="kebun-summary-grid">
+                        <div class="kebun-summary-card">
+                            <div class="kebun-summary-icon" style="background:#ecfdf5; color:#16a34a;">
+                                <i class="fas fa-seedling"></i>
+                            </div>
+                            <div>
+                                <div class="kebun-summary-value">${totalUnits}</div>
+                                <div class="kebun-summary-label">Total Kebun & Bagian</div>
+                            </div>
+                        </div>
+                        <div class="kebun-summary-card">
+                            <div class="kebun-summary-icon" style="background:#eff6ff; color:#2563eb;">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div>
+                                <div class="kebun-summary-value">${totalPegawai.toLocaleString('id-ID')}</div>
+                                <div class="kebun-summary-label">Total Karyawan</div>
+                            </div>
+                        </div>
+                        <div class="kebun-summary-card">
+                            <div class="kebun-summary-icon" style="background:#fef3c7; color:#d97706;">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div>
+                                <div class="kebun-summary-value">${avgAttendance}%</div>
+                                <div class="kebun-summary-label">Rata-rata Kehadiran (${escapeHtml(regionalLabel)})</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // 2. Search Bar & Title Row
+                const headerHtml = `
+                    <div class="kebun-header-row" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+                        <div style="font-size:14px; font-weight:700; color:#1e293b;">
+                            <i class="fas fa-list-ul" style="color:#16a34a; margin-right:6px;"></i>
+                            Daftar Kebun & Unit Kerja di bawah ${escapeHtml(regionalLabel)}
+                            <span style="font-size:12px; font-weight:500; color:#64748b; margin-left:6px;">(klik baris untuk melihat daftar karyawan)</span>
+                        </div>
+                        <div style="position:relative;">
+                            <i class="fas fa-search" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#94a3b8; font-size:12px;"></i>
+                            <input type="text" id="kebunSearchInput" class="form-input" placeholder="Cari kebun atau unit..." style="padding-left:32px; width:260px; height:34px; font-size:12px; border-radius:6px;">
+                        </div>
+                    </div>
+                `;
+
+                // 3. Unit Items List
+                let listHtml = `<div id="kebunUnitsList">`;
+                rows.forEach((row) => {
+                    const area = row.area_name || '-';
+                    const unit = row.unit_name || '-';
+                    const label = (unit && unit !== '-') ? unit : area;
+                    const attendance = parseFloat(row.persentase_kehadiran ?? 0).toFixed(1);
+                    const pegawai = row.jumlah_pegawai || 0;
+                    const hariKerja = row.hari_kerja || 0;
+                    const { badgeStyle, barColor } = getAttendanceStyle(attendance);
+
+                    listHtml += `
+                        <div class="kebun-unit-card" data-unit-name="${escapeHtml(label).toLowerCase()}" style="margin-bottom: 10px; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.03); transition: border-color 0.2s;">
+                            <div class="area-unit-row" style="display: flex; align-items: center; padding: 10px 14px; cursor: pointer; transition: background 0.15s ease;" onclick="togglePegawaiDetail(this, '${escapeHtml(area)}', '${escapeHtml(unit)}', '${barColor}')">
+                                <div style="width: 280px; font-weight: 600; font-size: 13px; color: #1f2937; display: flex; align-items: center; gap: 8px;">
+                                    <i class="fas fa-chevron-right chevron-icon" style="font-size: 10px; color: #94a3b8; transition: transform 0.2s ease;"></i>
+                                    <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(label)}">${escapeHtml(label)}</span>
+                                </div>
+                                <div style="flex-grow: 1; margin: 0 16px; background: #f1f5f9; height: 26px; border-radius: 6px; overflow: hidden; position: relative; box-shadow: inset 0 1px 2px rgba(0,0,0,0.06);">
+                                    <div style="width: ${attendance}%; background: ${barColor}; height: 100%; transition: width 0.5s ease; border-radius: 6px 0 0 6px;"></div>
+                                    <div style="position: absolute; left: 10px; top: 0; bottom: 0; display: flex; align-items: center; font-size: 11px; color: ${attendance > 25 ? '#fff' : '#1f2937'}; font-weight: 700; text-shadow: ${attendance > 25 ? '0px 1px 2px rgba(0,0,0,0.4)' : 'none'}; z-index: 2;">
+                                        ${attendance}% &nbsp;&bull;&nbsp; <span style="font-weight: 500; opacity: 0.95;">${pegawai} Karyawan</span> &nbsp;&bull;&nbsp; <span style="font-weight: 500; opacity: 0.95;">${hariKerja} Hari Kerja</span>
+                                    </div>
+                                </div>
+                                <span style="font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 4px; min-width: 65px; text-align: center; ${badgeStyle}">
+                                    ${attendance}%
+                                </span>
+                            </div>
+                            <div class="pegawai-detail-container" style="display: none; padding: 14px; background: #f8fafc; border-top: 1px dashed #e2e8f0;"></div>
+                        </div>
+                    `;
+                });
+                listHtml += `</div>`;
+
+                wrapper.innerHTML = kpiHtml + headerHtml + listHtml;
+                rekapRegionalChartContainer.appendChild(wrapper);
+
+                // Add real-time filter search
+                const searchInput = wrapper.querySelector('#kebunSearchInput');
+                if (searchInput) {
+                    searchInput.addEventListener('input', (e) => {
+                        const q = e.target.value.toLowerCase().trim();
+                        const cards = wrapper.querySelectorAll('.kebun-unit-card');
+                        cards.forEach(card => {
+                            const name = card.dataset.unitName || '';
+                            if (!q || name.includes(q)) {
+                                card.style.display = 'block';
+                            } else {
+                                card.style.display = 'none';
+                            }
+                        });
+                    });
+                }
+            }
+
             function loadRekapRegionalData() {
                 const periode = rekapRegionalPeriodeSelect.value;
                 if (!periode) return;
 
-                rekapRegionalChartContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#6b7280;"><i class="fas fa-spinner fa-spin"></i> Memuat rekap seluruh regional...</div>';
+                const loadingText = _isRegionalMode ? 'Memuat rekap seluruh kebun...' : 'Memuat rekap seluruh regional...';
+                rekapRegionalChartContainer.innerHTML = `<div style="text-align:center; padding:20px; color:#6b7280;"><i class="fas fa-spinner fa-spin"></i> ${loadingText}</div>`;
                 document.getElementById('rekap-regional-periode-info').textContent = formatPeriodLabel(periode);
 
                 const params = new URLSearchParams({ periode });
@@ -2283,6 +2534,7 @@
                     .then(data => {
                         if (data.status !== 'success') throw new Error(data.message);
                         _rekapRegionalData = data.data || [];
+                        _isRegionalMode = !!data.is_regional_mode;
 
                         rekapRegionalChartContainer.innerHTML = '';
                         if (!data.data || !data.data.length) {
@@ -2290,31 +2542,13 @@
                             return;
                         }
 
-                        const chartArea = document.createElement('div');
-                        chartArea.style.cssText = 'position: relative; height: 350px; margin-bottom: 50px; margin-left: 30px; margin-top: 20px;';
-
-                        for (let i = 0; i <= 100; i += 20) {
-                            const line = document.createElement('div');
-                            const borderStyle = i === 0 ? 'solid #94a3b8' : 'dashed #cbd5e1';
-                            line.style.cssText = `position: absolute; left: 0; right: 0; bottom: ${i}%; height: 1px; border-bottom: 1px ${borderStyle}; z-index: 0;`;
-
-                            const label = document.createElement('div');
-                            label.style.cssText = `position: absolute; left: -35px; bottom: calc(${i}% - 7px); width: 30px; text-align: right; font-size: 11px; color: #64748b; font-weight: 500;`;
-                            label.textContent = i;
-
-                            chartArea.appendChild(line);
-                            chartArea.appendChild(label);
+                        if (_isRegionalMode) {
+                            renderRekapKebunRegionalView(data);
+                            const detailContainer = document.getElementById('rekap-regional-detail-container');
+                            if (detailContainer) detailContainer.style.display = 'none';
+                        } else {
+                            renderRekapHoRegionalView(data);
                         }
-
-                        const colsContainer = document.createElement('div');
-                        colsContainer.style.cssText = 'position: absolute; top: 0; bottom: 0; left: 0; right: 0; display: flex; align-items: flex-end; justify-content: space-around; z-index: 1;';
-
-                        data.data.forEach((row) => {
-                            colsContainer.appendChild(renderRekapRegionalColumn(row));
-                        });
-
-                        chartArea.appendChild(colsContainer);
-                        rekapRegionalChartContainer.appendChild(chartArea);
                     })
                     .catch(err => {
                         rekapRegionalChartContainer.innerHTML = `<div style="text-align:center; padding:20px; color:#991b1b;">⚠️ ${escapeHtml(err.message)}</div>`;
@@ -2351,6 +2585,7 @@
                 const workbook = new ExcelJS.Workbook();
                 const ws = workbook.addWorksheet('Rekap Kehadiran');
 
+                const unitColumnLabel = (hrisScope && !hrisScope.is_ho) ? 'Bagian' : 'Divisi';
                 ws.columns = [
                     { key: 'no', width: 6 },
                     { key: 'divisi', width: 35 },
@@ -2372,7 +2607,7 @@
                 // Title Row
                 ws.mergeCells(1, 1, 1, 6);
                 const titleCell = ws.getCell(1, 1);
-                titleCell.value = 'REKAP KEHADIRAN KARYAWAN SUPPCO HO';
+                titleCell.value = 'REKAP KEHADIRAN KARYAWAN ' + (hrisScope.display_label || 'SUPPCO HO').toUpperCase();
                 titleCell.font = { bold: true, size: 14, color: { argb: 'FF166534' } };
                 titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
                 ws.getRow(1).height = 28;
@@ -2388,7 +2623,7 @@
                 ws.addRow([]);
 
                 // Header Row (Row 4)
-                const headers = ['No', 'Divisi', 'Jumlah Karyawan', 'Jumlah Hari Kerja', 'Total Absensi', 'Persentase Kehadiran'];
+                const headers = ['No', unitColumnLabel, 'Jumlah Karyawan', 'Jumlah Hari Kerja', 'Total Absensi', 'Persentase Kehadiran'];
                 const hRow = ws.addRow(headers);
                 hRow.height = 24;
                 hRow.eachCell(cell => {
@@ -2398,12 +2633,12 @@
                     cell.border = borderStyle;
                 });
 
-                // Summary Row (SuppCo HO Total)
+                // Summary Row
                 if (_rekapData.summary) {
                     const s = _rekapData.summary;
                     const sumRow = ws.addRow([
                         '-',
-                        'REKAP ALL SUPPCO HO',
+                        'REKAP ALL ' + (hrisScope.display_label || 'SUPPCO HO').toUpperCase(),
                         s.jumlah_pegawai ?? 0,
                         s.hari_kerja ?? 0,
                         s.absensi ?? 0,
@@ -2449,7 +2684,7 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `Rekap_Kehadiran_HRIS_${periodVal}.xlsx`;
+                a.download = `Rekap_Kehadiran_${(hrisScope.display_label || 'HRIS').replace(/[^a-zA-Z0-9]/g, '_')}_${periodVal}.xlsx`;
                 a.click();
                 URL.revokeObjectURL(url);
             }
@@ -2565,29 +2800,104 @@
 
             async function exportRekapRegionalExcel() {
                 if (!_rekapRegionalData || !_rekapRegionalData.length) {
-                    alert('Tidak ada data rekap regional untuk diekspor.');
+                    alert(_isRegionalMode ? 'Tidak ada data rekap kebun untuk diekspor.' : 'Tidak ada data rekap regional untuk diekspor.');
                     return;
                 }
 
                 const periodVal = rekapRegionalPeriodeSelect.value || '';
                 const formattedPeriod = formatPeriodLabel(periodVal);
-
                 const workbook = new ExcelJS.Workbook();
-                const ws = workbook.addWorksheet('Rekap Regional');
-
-                ws.columns = [
-                    { key: 'no', width: 6 },
-                    { key: 'regional', width: 35 },
-                    { key: 'persentase', width: 22 }
-                ];
-
+                const fillGreenHeader = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF166534' } };
                 const borderStyle = {
                     top: { style: 'thin', color: { argb: 'FFE5E7EB' } },
                     left: { style: 'thin', color: { argb: 'FFE5E7EB' } },
                     bottom: { style: 'thin', color: { argb: 'FFE5E7EB' } },
                     right: { style: 'thin', color: { argb: 'FFE5E7EB' } }
                 };
-                const fillGreenHeader = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF166534' } };
+
+                if (_isRegionalMode) {
+                    const ws = workbook.addWorksheet('Rekap Kebun');
+                    ws.columns = [
+                        { key: 'no', width: 6 },
+                        { key: 'unit', width: 35 },
+                        { key: 'area', width: 20 },
+                        { key: 'pegawai', width: 16 },
+                        { key: 'hari_kerja', width: 14 },
+                        { key: 'persentase', width: 22 }
+                    ];
+
+                    // Title
+                    ws.mergeCells(1, 1, 1, 6);
+                    const titleCell = ws.getCell(1, 1);
+                    titleCell.value = `REKAP KEHADIRAN SELURUH KEBUN / UNIT — ${(hrisScope.display_label || 'REGIONAL').toUpperCase()}`;
+                    titleCell.font = { bold: true, size: 14, color: { argb: 'FF166534' } };
+                    titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+                    ws.getRow(1).height = 28;
+
+                    // Subtitle
+                    ws.mergeCells(2, 1, 2, 6);
+                    const subTitleCell = ws.getCell(2, 1);
+                    subTitleCell.value = `Regional: ${hrisScope.display_label || '-'}   |   Periode: ${formattedPeriod}`;
+                    subTitleCell.font = { italic: true, size: 10, color: { argb: 'FF4B5563' } };
+                    subTitleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+                    ws.getRow(2).height = 20;
+
+                    ws.addRow([]);
+
+                    const headers = ['No', 'Kebun / Unit', 'Area', 'Jumlah Karyawan', 'Hari Kerja', 'Persentase Kehadiran'];
+                    const hRow = ws.addRow(headers);
+                    hRow.height = 22;
+                    hRow.eachCell(cell => {
+                        cell.fill = fillGreenHeader;
+                        cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 10 };
+                        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                        cell.border = borderStyle;
+                    });
+
+                    _rekapRegionalData.forEach((row, i) => {
+                        const unitName = row.unit_name || row.area_name || '-';
+                        const areaName = row.area_name || '-';
+                        const pct = parseFloat(row.persentase_kehadiran ?? 0).toFixed(1);
+                        const rRow = ws.addRow([
+                            i + 1,
+                            unitName,
+                            areaName,
+                            row.jumlah_pegawai || 0,
+                            row.hari_kerja || 0,
+                            `${pct}%`
+                        ]);
+                        rRow.height = 20;
+                        const bg = i % 2 === 0 ? 'FFFFFFFF' : 'FFF9FAFB';
+
+                        rRow.eachCell({ includeEmpty: true }, (cell, colNum) => {
+                            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } };
+                            cell.font = { size: 9.5 };
+                            cell.border = borderStyle;
+                            cell.alignment = { horizontal: (colNum === 2 || colNum === 3) ? 'left' : 'center', vertical: 'middle' };
+                            if (colNum === 6) {
+                                cell.font = { bold: true, size: 9.5, color: { argb: pct >= 98 ? 'FF166534' : (pct >= 95 ? 'FF1D4ED8' : 'FF92400E') } };
+                            }
+                        });
+                    });
+
+                    const buffer = await workbook.xlsx.writeBuffer();
+                    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `Rekap_Kebun_${(hrisScope.display_label || 'Regional').replace(/[^a-zA-Z0-9]/g, '_')}_${periodVal}.xlsx`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    return;
+                }
+
+                // HO MODE: Rekap Regional
+                const ws = workbook.addWorksheet('Rekap Regional');
+                ws.columns = [
+                    { key: 'no', width: 6 },
+                    { key: 'regional', width: 35 },
+                    { key: 'persentase', width: 22 }
+                ];
 
                 // Title Row
                 ws.mergeCells(1, 1, 1, 3);

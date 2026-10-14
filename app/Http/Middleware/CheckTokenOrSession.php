@@ -32,6 +32,12 @@ class CheckTokenOrSession
 
     public function handle(Request $request, Closure $next)
     {
+        // Tangkap parameter regional dari URL jika ada (misal: ?regional=Suppco Reg02 atau ?scope=REG02)
+        $regionalParam = $request->get('regional', $request->get('scope', $request->get('reg')));
+        if ($regionalParam !== null && trim((string) $regionalParam) !== '') {
+            session(['hris_user_regional' => trim((string) $regionalParam)]);
+        }
+
         // --- 1. Cek apakah ada ?token= di URL ---
         if ($request->has('token')) {
             $token = $request->get('token');
