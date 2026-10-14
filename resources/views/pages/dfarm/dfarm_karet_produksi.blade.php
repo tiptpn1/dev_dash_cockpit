@@ -456,16 +456,18 @@
               <span id="data-count-badge" class="table-count">Dfarm PTPN I</span>
             </div>
 
-            <div id="tabs-wrap" style="display: block;">
               <div class="hris-tabs">
-                <button type="button" class="hris-tab-btn active" data-tab="rekap">
-                  <i class="fas fa-chart-bar"></i>  Produksi Karet
+                <button type="button" class="hris-tab-btn active" data-tab="summary">
+                  <i class="fas fa-chart-line"></i> Summary
+                </button>
+                <button type="button" class="hris-tab-btn" data-tab="rekap">
+                  <i class="fas fa-chart-bar"></i> Produksi Karet
                 </button>
                 <button type="button" class="hris-tab-btn" data-tab="detail-teh">
-                  <i class="fas fa-calendar-day"></i>  Produksi Teh
+                  <i class="fas fa-calendar-day"></i> Produksi Teh
                 </button>
                 <button type="button" class="hris-tab-btn" data-tab="detail-kopi">
-                  <i class="fas fa-calendar-day"></i>  Produksi Kopi
+                  <i class="fas fa-calendar-day"></i> Produksi Kopi
                 </button>
                 <button type="button" class="hris-tab-btn" data-tab="detail-pemeliharaan">
                   <i class="fas fa-calendar-day"></i> Prestasi Pemeliharaan
@@ -474,8 +476,279 @@
 
               <div id="error-banner" class="error-banner" style="display: none;"></div>
 
-              <!-- Tab 1: Rekap -->
-              <div id="tab-rekap" class="hris-tab-panel active">
+              <!-- Tab 1: Summary (Level 1: Executive Multi-Commodity Portfolio Gabungan) -->
+              <div id="tab-summary" class="hris-tab-panel active">
+                <!-- Filter Card in Summary -->
+                <div class="filter-card" style="margin: 16px;">
+                  <div class="filter-title">
+                    <i class="fas fa-sliders-h"></i> Filter Parameter Gabungan
+                  </div>
+                  <div class="filter-grid">
+                    <div class="form-group">
+                      <label class="form-label">Tahun Periode (Januari s.d. Bulan Berjalan)</label>
+                      <select id="selectTahunSummary" class="form-select">
+                        @php
+                          $currentYr = (int)date('Y');
+                        @endphp
+                        @for($y = $currentYr; $y >= $currentYr - 3; $y--)
+                          <option value="{{ $y }}" {{ ($tahun ?? $currentYr) == $y ? 'selected' : '' }}>Tahun {{ $y }} (Jan - {{ end($monthlySummary['months']) }} {{ $y }})</option>
+                        @endfor
+                      </select>
+                    </div>
+
+                    <div class="form-group">
+                      <label class="form-label">Regional</label>
+                      <select class="form-select bg-gray-100 cursor-not-allowed opacity-75" disabled title="Summary mencakup semua regional">
+                        <option selected>Semua Regional (Gabungan)</option>
+                      </select>
+                    </div>
+
+                    <div class="form-group">
+                      <label class="form-label">Nama Kebun</label>
+                      <select class="form-select bg-gray-100 cursor-not-allowed opacity-75" disabled title="Summary di level gabungan">
+                        <option selected>Semua Kebun</option>
+                      </select>
+                    </div>
+
+                    <div class="form-group">
+                      <label class="form-label">Komoditas Portfolio</label>
+                      <select class="form-select bg-gray-100 cursor-not-allowed opacity-75" disabled title="Summary mencakup seluruh komoditas">
+                        <option selected>Multi-Komoditas (Karet, Teh, Kopi)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Action Buttons in Summary -->
+                <div style="margin: 0 16px 16px; display: flex; gap: 10px;">
+                  <button id="btnFilterSummary" class="inline-flex align-items-center justify-content-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-all box-shadow" style="background-color: #16a34a; border: 1px solid #15803d; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); height: 36px; cursor: pointer;">
+                    <i class="fas fa-filter"></i> Filter
+                  </button>
+                  <button id="btnResetSummary" class="inline-flex align-items-center justify-content-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-all box-shadow" style="background-color: #16a34a; border: 1px solid #15803d; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); height: 36px; cursor: pointer;">
+                    <i class="fas fa-rotate-right"></i> Reset
+                  </button>
+                </div>
+
+                <!-- Executive Multi-Commodity KPI Cards -->
+                @php
+                  $latestMonth = $monthlySummary['endMonth'];
+                  $ytd = $monthlySummary['ytd'];
+
+                  $avgInputPercent = 0;
+                  if (!empty($prestasiDataLite)) {
+                    $sumPct = 0;
+                    foreach($prestasiDataLite as $p) {
+                      $sumPct += min(100, $p->persen_input_produksi ?? 0);
+                    }
+                    $avgInputPercent = round($sumPct / max(1, count($prestasiDataLite)), 1);
+                  }
+                @endphp
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6" style="margin: 0 16px 20px;">
+                  <!-- Card 1: Karet -->
+                  <div style="background: #fff; border: 1px solid #d1fae5; border-top: 4px solid #166534; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08); transition: transform 0.2s;" class="hover:shadow-md">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                      <span style="font-size: 11px; font-weight: 700; color: #166534; text-transform: uppercase; letter-spacing: 0.5px;">Produksi Karet (Kering)</span>
+                      <div style="width: 34px; height: 34px; border-radius: 8px; background: #f0fdf4; display: flex; align-items: center; justify-content: center; color: #166534; font-size: 16px;">
+                        <i class="fas fa-tree"></i>
+                      </div>
+                    </div>
+                    <div style="font-size: 26px; font-weight: 800; color: #1f2937; line-height: 1.2;">
+                      {{ number_format(($ytd['karet_total_kering'] ?? 0) / 1000, 1, ',', '.') }} <span style="font-size: 14px; font-weight: 600; color: #6b7280;">Ton</span>
+                    </div>
+                    <div style="margin-top: 10px; font-size: 12px; color: #4b5563; display: flex; flex-direction: column; gap: 3px; border-top: 1px solid #f3f4f6; padding-top: 8px;">
+                      <div style="display: flex; justify-content: space-between;">
+                        <span>Lateks Basah:</span>
+                        <strong style="color: #166534;">{{ number_format(($ytd['karet_total_basah'] ?? 0) / 1000, 1, ',', '.') }} Ton</strong>
+                      </div>
+                      <div style="display: flex; justify-content: space-between;">
+                        <span>High Grade (Sheet):</span>
+                        <strong style="color: #166534;">{{ ($ytd['karet_total_kering'] ?? 0) > 0 ? round((($ytd['karet_sheet'] ?? 0) / $ytd['karet_total_kering']) * 100, 1) : 0 }}%</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Card 2: Teh -->
+                  <div style="background: #fff; border: 1px solid #ccfbf1; border-top: 4px solid #0d9488; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(13, 148, 136, 0.08); transition: transform 0.2s;" class="hover:shadow-md">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                      <span style="font-size: 11px; font-weight: 700; color: #0f766e; text-transform: uppercase; letter-spacing: 0.5px;">Produksi Teh (Pucuk Basah)</span>
+                      <div style="width: 34px; height: 34px; border-radius: 8px; background: #f0fdfa; display: flex; align-items: center; justify-content: center; color: #0d9488; font-size: 16px;">
+                        <i class="fas fa-leaf"></i>
+                      </div>
+                    </div>
+                    <div style="font-size: 26px; font-weight: 800; color: #1f2937; line-height: 1.2;">
+                      {{ number_format(($ytd['teh_total_pucuk_basah'] ?? 0) / 1000, 1, ',', '.') }} <span style="font-size: 14px; font-weight: 600; color: #6b7280;">Ton</span>
+                    </div>
+                    <div style="margin-top: 10px; font-size: 12px; color: #4b5563; display: flex; flex-direction: column; gap: 3px; border-top: 1px solid #f3f4f6; padding-top: 8px;">
+                      <div style="display: flex; justify-content: space-between;">
+                        <span>Panen Mesin:</span>
+                        <strong style="color: #0d9488;">{{ number_format(($ytd['teh_panen_mesin'] ?? 0) / 1000, 1, ',', '.') }} Ton ({{ ($ytd['teh_total_pucuk_basah'] ?? 0) > 0 ? round((($ytd['teh_panen_mesin'] ?? 0) / $ytd['teh_total_pucuk_basah']) * 100) : 0 }}%)</strong>
+                      </div>
+                      <div style="display: flex; justify-content: space-between;">
+                        <span>Panen Manual:</span>
+                        <strong style="color: #0d9488;">{{ number_format(($ytd['teh_panen_manual'] ?? 0) / 1000, 1, ',', '.') }} Ton</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Card 3: Kopi -->
+                  <div style="background: #fff; border: 1px solid #fef3c7; border-top: 4px solid #d97706; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(217, 119, 6, 0.08); transition: transform 0.2s;" class="hover:shadow-md">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                      <span style="font-size: 11px; font-weight: 700; color: #b45309; text-transform: uppercase; letter-spacing: 0.5px;">Produksi Kopi (Petik Basah)</span>
+                      <div style="width: 34px; height: 34px; border-radius: 8px; background: #fffbeb; display: flex; align-items: center; justify-content: center; color: #d97706; font-size: 16px;">
+                        <i class="fas fa-seedling"></i>
+                      </div>
+                    </div>
+                    <div style="font-size: 26px; font-weight: 800; color: #1f2937; line-height: 1.2;">
+                      {{ number_format(($ytd['kopi_total_basah'] ?? 0) / 1000, 1, ',', '.') }} <span style="font-size: 14px; font-weight: 600; color: #6b7280;">Ton</span>
+                    </div>
+                    <div style="margin-top: 10px; font-size: 12px; color: #4b5563; display: flex; flex-direction: column; gap: 3px; border-top: 1px solid #f3f4f6; padding-top: 8px;">
+                      <div style="display: flex; justify-content: space-between;">
+                        <span>Petik Merah Prima:</span>
+                        <strong style="color: #d97706;">{{ number_format(($ytd['kopi_basah_merah'] ?? 0) / 1000, 1, ',', '.') }} Ton ({{ ($ytd['kopi_total_basah'] ?? 0) > 0 ? round((($ytd['kopi_basah_merah'] ?? 0) / $ytd['kopi_total_basah']) * 100) : 0 }}%)</strong>
+                      </div>
+                      <div style="display: flex; justify-content: space-between;">
+                        <span>Kopi Kering:</span>
+                        <strong style="color: #d97706;">{{ number_format(($ytd['kopi_total_kering'] ?? 0) / 1000, 1, ',', '.') }} Ton</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Card 4: Kepatuhan Input -->
+                  <div style="background: #fff; border: 1px solid #dbeafe; border-top: 4px solid #2563eb; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08); transition: transform 0.2s;" class="hover:shadow-md">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                      <span style="font-size: 11px; font-weight: 700; color: #1e40af; text-transform: uppercase; letter-spacing: 0.5px;">Kepatuhan Input Produksi</span>
+                      <div style="width: 34px; height: 34px; border-radius: 8px; background: #eff6ff; display: flex; align-items: center; justify-content: center; color: #2563eb; font-size: 16px;">
+                        <i class="fas fa-clipboard-check"></i>
+                      </div>
+                    </div>
+                    <div style="font-size: 26px; font-weight: 800; color: #1f2937; line-height: 1.2;">
+                      {{ $avgInputPercent }}%
+                    </div>
+                    <div style="margin-top: 10px; font-size: 12px; color: #4b5563; display: flex; flex-direction: column; gap: 3px; border-top: 1px solid #f3f4f6; padding-top: 8px;">
+                      <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>Status Input:</span>
+                        <span style="background: #ecfdf5; color: #047857; font-weight: 700; padding: 1px 8px; border-radius: 12px; font-size: 11px;">Tercatat D-Farm</span>
+                      </div>
+                      <div style="display: flex; justify-content: space-between;">
+                        <span>Cakupan:</span>
+                        <strong>Seluruh Kebun Regional</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Interactive Multi-Commodity Line Chart -->
+                <div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 0 16px 24px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);">
+                  <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid #f3f4f6;">
+                    <div>
+                      <h3 id="summaryChartTitle" style="font-size: 15px; font-weight: 700; color: #111827; margin: 0; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-tree" style="color: #166534;"></i> Tren Produksi Karet Bulanan per Regional & Gabungan (Tahun {{ $tahun }})
+                      </h3>
+                      <p id="summaryChartSubtitle" style="font-size: 12px; color: #6b7280; margin: 4px 0 0 0;">
+                        Satuan: Ton Karet Kering | Garis putus-putus hijau mewakili Total Gabungan
+                      </p>
+                    </div>
+
+                    <!-- Commodity Switcher Pills -->
+                    <div style="display: inline-flex; background: #f3f4f6; border-radius: 8px; padding: 3px; gap: 4px;">
+                      <button type="button" class="btn-commodity-tab active" data-commodity="karet" style="border: none; background: #166534; color: #fff; padding: 7px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px;">
+                        <i class="fas fa-tree"></i> Karet (Kering)
+                      </button>
+                      <button type="button" class="btn-commodity-tab" data-commodity="teh" style="border: none; background: transparent; color: #4b5563; padding: 7px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px;">
+                        <i class="fas fa-leaf"></i> Teh (Pucuk Basah)
+                      </button>
+                      <button type="button" class="btn-commodity-tab" data-commodity="kopi" style="border: none; background: transparent; color: #4b5563; padding: 7px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px;">
+                        <i class="fas fa-seedling"></i> Kopi (Petik Basah)
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style="position: relative; height: 380px; width: 100%;">
+                    <canvas id="summaryProductionLineChart"></canvas>
+                  </div>
+                </div>
+
+                <!-- Monthly Matrix Table Section -->
+                <div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; margin: 0 16px 24px; overflow: hidden; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);">
+                  <div style="padding: 14px 20px; background: #f9fafb; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+                    <h3 id="summaryMatrixTitle" style="font-size: 14px; font-weight: 700; color: #111827; margin: 0; display: flex; align-items: center; gap: 8px;">
+                      <i class="fas fa-table" style="color: #166534;"></i> Matriks Akumulasi Bulanan per Regional (Ton Karet Kering)
+                    </h3>
+                    <span style="font-size: 11px; color: #6b7280; font-weight: 500;">Januari s.d. {{ end($monthlySummary['months']) }} {{ $tahun }}</span>
+                  </div>
+
+                  <div class="table-wrapper">
+                    <table class="report-table" id="summaryMatrixTable">
+                      <thead>
+                        <tr style="background: #166534; color: #fff;">
+                          <th style="padding: 10px 14px; text-align: left; position: sticky; left: 0; background: #166534; z-index: 2;">Regional</th>
+                          @foreach($monthlySummary['months'] as $mNum => $mName)
+                            <th style="padding: 10px 12px; text-align: right;">{{ $mName }}</th>
+                          @endforeach
+                          <th style="padding: 10px 14px; text-align: right; background: #14532d;">Total YTD (Ton)</th>
+                          <th style="padding: 10px 14px; text-align: right; background: #14532d;">Share (%)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @php
+                          $grandTotalKaret = ($monthlySummary['ytd']['karet_total_kering'] ?? 0) / 1000;
+                        @endphp
+                        @foreach($monthlySummary['regionals'] as $rId => $rName)
+                          @php
+                            $rData = $monthlySummary['dataByRegional'][$rId] ?? null;
+                            $rTotalKaret = 0;
+                            if ($rData) {
+                              foreach($monthlySummary['months'] as $mNum => $mName) {
+                                $rTotalKaret += ($rData['months'][$mNum]['karet_total_kering'] ?? 0) / 1000;
+                              }
+                            }
+                            $sharePct = $grandTotalKaret > 0 ? round(($rTotalKaret / $grandTotalKaret) * 100, 1) : 0;
+                          @endphp
+                          <tr style="border-bottom: 1px solid #f3f4f6;">
+                            <td style="padding: 10px 14px; font-weight: 600; color: #1f2937; position: sticky; left: 0; background: #fff;">{{ $rName }}</td>
+                            @foreach($monthlySummary['months'] as $mNum => $mName)
+                              @php
+                                $val = (($rData['months'][$mNum]['karet_total_kering'] ?? 0) / 1000);
+                              @endphp
+                              <td style="padding: 10px 12px; text-align: right; color: {{ $val > 0 ? '#1f2937' : '#9ca3af' }}; font-variant-numeric: tabular-nums;">
+                                {{ $val > 0 ? number_format($val, 1, ',', '.') : '-' }}
+                              </td>
+                            @endforeach
+                            <td style="padding: 10px 14px; text-align: right; font-weight: 700; color: #166534; background: #f0fdf4; font-variant-numeric: tabular-nums;">
+                              {{ number_format($rTotalKaret, 1, ',', '.') }}
+                            </td>
+                            <td style="padding: 10px 14px; text-align: right; font-weight: 600; color: #374151; background: #f9fafb;">
+                              {{ $sharePct }}%
+                            </td>
+                          </tr>
+                        @endforeach
+                      </tbody>
+                      <tfoot>
+                        <tr style="background: #dcfce7; font-weight: 800; border-top: 2px solid #166534;">
+                          <td style="padding: 12px 14px; color: #14532d; position: sticky; left: 0; background: #dcfce7;">Total Gabungan</td>
+                          @foreach($monthlySummary['months'] as $mNum => $mName)
+                            @php
+                              $mCorp = (($monthlySummary['corporateByMonth'][$mNum]['karet_total_kering'] ?? 0) / 1000);
+                            @endphp
+                            <td style="padding: 12px 12px; text-align: right; color: #14532d; font-variant-numeric: tabular-nums;">
+                              {{ number_format($mCorp, 1, ',', '.') }}
+                            </td>
+                          @endforeach
+                          <td style="padding: 12px 14px; text-align: right; color: #14532d; background: #bbf7d0; font-variant-numeric: tabular-nums;">
+                            {{ number_format($grandTotalKaret, 1, ',', '.') }}
+                          </td>
+                          <td style="padding: 12px 14px; text-align: right; color: #14532d; background: #bbf7d0;">
+                            100.0%
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tab 2: Rekap Produksi Karet -->
+              <div id="tab-rekap" class="hris-tab-panel">
                 <!-- Filter Card in Tab -->
                 <div class="filter-card" style="margin: 16px;">
                   <div class="filter-title">
@@ -508,12 +781,16 @@
                     <div class="form-group">
                       <label class="form-label">Regional</label>
                       <select id="selectRegional" class="form-select">
-                        <option value="">Pilih</option>
-                        <option value="2" <?php if ($selectedRegional == '2') echo 'selected'; ?>>REGIONAL 2</option>
-                        <option value="3" <?php if ($selectedRegional == '3') echo 'selected'; ?>>REGIONAL 3</option>
-                        <option value="5" <?php if ($selectedRegional == '5') echo 'selected'; ?>>REGIONAL 5</option>
-                        <option value="7" <?php if ($selectedRegional == '7') echo 'selected'; ?>>REGIONAL 7</option>
-                        <option value="8" <?php if ($selectedRegional == '8') echo 'selected'; ?>>REGIONAL 8</option>
+                        <option value="">{{ $userRegionalId ? 'Semua Regional (Posisi Komparasi)' : 'Pilih' }}</option>
+                        @if($userRegionalId)
+                          <option value="{{ $userRegionalId }}" {{ $selectedRegional == $userRegionalId ? 'selected' : '' }}>REGIONAL {{ $userRegionalId }}</option>
+                        @else
+                          <option value="2" <?php if ($selectedRegional == '2') echo 'selected'; ?>>REGIONAL 2</option>
+                          <option value="3" <?php if ($selectedRegional == '3') echo 'selected'; ?>>REGIONAL 3</option>
+                          <option value="5" <?php if ($selectedRegional == '5') echo 'selected'; ?>>REGIONAL 5</option>
+                          <option value="7" <?php if ($selectedRegional == '7') echo 'selected'; ?>>REGIONAL 7</option>
+                          <option value="8" <?php if ($selectedRegional == '8') echo 'selected'; ?>>REGIONAL 8</option>
+                        @endif
                       </select>
                     </div>
 
@@ -685,12 +962,16 @@
                     <div class="form-group">
                       <label class="form-label">Regional</label>
                       <select id="selectTehRegional" class="form-select">
-                        <option value="">Pilih</option>
-                        <option value="2">REGIONAL 2</option>
-                        <option value="3">REGIONAL 3</option>
-                        <option value="5">REGIONAL 5</option>
-                        <option value="7">REGIONAL 7</option>
-                        <option value="8">REGIONAL 8</option>
+                        <option value="">{{ $userRegionalId ? 'Semua Regional (Posisi Komparasi)' : 'Pilih' }}</option>
+                        @if($userRegionalId)
+                          <option value="{{ $userRegionalId }}">REGIONAL {{ $userRegionalId }}</option>
+                        @else
+                          <option value="2">REGIONAL 2</option>
+                          <option value="3">REGIONAL 3</option>
+                          <option value="5">REGIONAL 5</option>
+                          <option value="7">REGIONAL 7</option>
+                          <option value="8">REGIONAL 8</option>
+                        @endif
                       </select>
                     </div>
 
@@ -826,12 +1107,16 @@
                     <div class="form-group">
                       <label class="form-label">Regional</label>
                       <select id="selectKopiRegional" class="form-select">
-                        <option value="">Pilih</option>
-                        <option value="2">REGIONAL 2</option>
-                        <option value="3">REGIONAL 3</option>
-                        <option value="5">REGIONAL 5</option>
-                        <option value="7">REGIONAL 7</option>
-                        <option value="8">REGIONAL 8</option>
+                        <option value="">{{ $userRegionalId ? 'Semua Regional (Posisi Komparasi)' : 'Pilih' }}</option>
+                        @if($userRegionalId)
+                          <option value="{{ $userRegionalId }}">REGIONAL {{ $userRegionalId }}</option>
+                        @else
+                          <option value="2">REGIONAL 2</option>
+                          <option value="3">REGIONAL 3</option>
+                          <option value="5">REGIONAL 5</option>
+                          <option value="7">REGIONAL 7</option>
+                          <option value="8">REGIONAL 8</option>
+                        @endif
                       </select>
                     </div>
 
@@ -976,7 +1261,16 @@
                     <div class="form-group">
                       <label class="form-label">Regional</label>
                       <select id="selectPemeliharaanRegional" class="form-select">
-                        <option value="">Pilih</option>
+                        <option value="">{{ $userRegionalId ? 'Semua Regional (Posisi Komparasi)' : 'Pilih' }}</option>
+                        @if($userRegionalId)
+                          <option value="{{ $userRegionalId }}">REGIONAL {{ $userRegionalId }}</option>
+                        @else
+                          <option value="2">REGIONAL 2</option>
+                          <option value="3">REGIONAL 3</option>
+                          <option value="5">REGIONAL 5</option>
+                          <option value="7">REGIONAL 7</option>
+                          <option value="8">REGIONAL 8</option>
+                        @endif
                       </select>
                     </div>
 
@@ -1091,7 +1385,7 @@
   });
 
   // Check untuk error dari session
-  @if($errors->has('msg'))
+  @if(isset($errors) && $errors->has('msg'))
     showErrorPopup('{{ $errors->first('msg') }}');
   @endif
 
@@ -1112,10 +1406,19 @@
       if (tabPanel) {
         tabPanel.classList.add('active');
         
-        // Trigger chart resize for rekap tab
-        if (tabName === 'rekap' && window.charts && window.charts.length > 0) {
+        // Trigger chart resize for summary tab
+        if (tabName === 'summary' && window.summaryLineChart) {
           setTimeout(() => {
-            window.charts.forEach(chart => chart.resize());
+            window.summaryLineChart.resize();
+          }, 100);
+        }
+
+        // Trigger chart resize for rekap tab
+        if (tabName === 'rekap') {
+          setTimeout(() => {
+            if (window.karetCharts && window.karetCharts.length > 0) {
+              window.karetCharts.forEach(chart => chart && chart.resize && chart.resize());
+            }
           }, 100);
         }
 
@@ -1399,6 +1702,324 @@
     },
   };
 
+  // ============================================
+  // SUMMARY TAB: MULTI-COMMODITY CHARTS & MATRIX
+  // ============================================
+  const summaryMonths = @json(array_values($monthlySummary['months']));
+  const summaryData = {
+    karet: {
+      title: 'Tren Produksi Karet Bulanan per Regional & Gabungan (Tahun {{ $tahun }})',
+      subtitle: 'Satuan: Ton Karet Kering | Garis putus-putus hijau mewakili Total Gabungan',
+      matrixTitle: 'Matriks Akumulasi Bulanan per Regional (Ton Karet Kering)',
+      unit: 'Ton',
+      decimals: 1,
+      ytdGrandTotal: {{ round(($monthlySummary['ytd']['karet_total_kering'] ?? 0) / 1000, 1) }},
+      regionals: [
+        @foreach($monthlySummary['regionals'] as $rId => $rName)
+        {
+          id: {{ $rId }},
+          name: '{{ $rName }}',
+          monthly: [
+            @foreach($monthlySummary['months'] as $mNum => $mName)
+              {{ round((($monthlySummary['dataByRegional'][$rId]['months'][$mNum]['karet_total_kering'] ?? 0) / 1000), 2) }},
+            @endforeach
+          ],
+          ytd: {{ round(array_sum(array_map(function($m) use ($monthlySummary, $rId) { return ($monthlySummary['dataByRegional'][$rId]['months'][$m]['karet_total_kering'] ?? 0) / 1000; }, array_keys($monthlySummary['months']))), 1) }}
+        },
+        @endforeach
+      ],
+      corporate: [
+        @foreach($monthlySummary['months'] as $mNum => $mName)
+          {{ round((($monthlySummary['corporateByMonth'][$mNum]['karet_total_kering'] ?? 0) / 1000), 2) }},
+        @endforeach
+      ]
+    },
+    teh: {
+      title: 'Tren Produksi Teh Bulanan per Regional & Gabungan (Tahun {{ $tahun }})',
+      subtitle: 'Satuan: Ton Pucuk Basah | Garis putus-putus hijau mewakili Total Gabungan',
+      matrixTitle: 'Matriks Akumulasi Bulanan per Regional (Ton Pucuk Basah)',
+      unit: 'Ton',
+      decimals: 1,
+      ytdGrandTotal: {{ round(($monthlySummary['ytd']['teh_total_pucuk_basah'] ?? 0) / 1000, 1) }},
+      regionals: [
+        @foreach($monthlySummary['regionals'] as $rId => $rName)
+        {
+          id: {{ $rId }},
+          name: '{{ $rName }}',
+          monthly: [
+            @foreach($monthlySummary['months'] as $mNum => $mName)
+              {{ round((($monthlySummary['dataByRegional'][$rId]['months'][$mNum]['teh_total_pucuk_basah'] ?? 0) / 1000), 2) }},
+            @endforeach
+          ],
+          ytd: {{ round(array_sum(array_map(function($m) use ($monthlySummary, $rId) { return ($monthlySummary['dataByRegional'][$rId]['months'][$m]['teh_total_pucuk_basah'] ?? 0) / 1000; }, array_keys($monthlySummary['months']))), 1) }}
+        },
+        @endforeach
+      ],
+      corporate: [
+        @foreach($monthlySummary['months'] as $mNum => $mName)
+          {{ round((($monthlySummary['corporateByMonth'][$mNum]['teh_total_pucuk_basah'] ?? 0) / 1000), 2) }},
+        @endforeach
+      ]
+    },
+    kopi: {
+      title: 'Tren Produksi Kopi Bulanan per Regional & Gabungan (Tahun {{ $tahun }})',
+      subtitle: 'Satuan: Ton Petik Basah | Garis putus-putus hijau mewakili Total Gabungan',
+      matrixTitle: 'Matriks Akumulasi Bulanan per Regional (Ton Petik Basah)',
+      unit: 'Ton',
+      decimals: 1,
+      ytdGrandTotal: {{ round(($monthlySummary['ytd']['kopi_total_basah'] ?? 0) / 1000, 1) }},
+      regionals: [
+        @foreach($monthlySummary['regionals'] as $rId => $rName)
+        {
+          id: {{ $rId }},
+          name: '{{ $rName }}',
+          monthly: [
+            @foreach($monthlySummary['months'] as $mNum => $mName)
+              {{ round((($monthlySummary['dataByRegional'][$rId]['months'][$mNum]['kopi_total_basah'] ?? 0) / 1000), 2) }},
+            @endforeach
+          ],
+          ytd: {{ round(array_sum(array_map(function($m) use ($monthlySummary, $rId) { return ($monthlySummary['dataByRegional'][$rId]['months'][$m]['kopi_total_basah'] ?? 0) / 1000; }, array_keys($monthlySummary['months']))), 1) }}
+        },
+        @endforeach
+      ],
+      corporate: [
+        @foreach($monthlySummary['months'] as $mNum => $mName)
+          {{ round((($monthlySummary['corporateByMonth'][$mNum]['kopi_total_basah'] ?? 0) / 1000), 2) }},
+        @endforeach
+      ]
+    }
+  };
+
+  const regionalLineColors = {
+    2: { border: '#2563eb', bg: 'rgba(37, 99, 235, 0.1)' }, // Blue
+    3: { border: '#d97706', bg: 'rgba(217, 119, 6, 0.1)' }, // Amber
+    5: { border: '#9333ea', bg: 'rgba(147, 51, 234, 0.1)' }, // Purple
+    7: { border: '#0891b2', bg: 'rgba(8, 145, 178, 0.1)' }, // Cyan
+    8: { border: '#e11d48', bg: 'rgba(225, 29, 72, 0.1)' }, // Rose
+  };
+
+  function buildCommodityChartDatasets(commodityKey) {
+    const dataObj = summaryData[commodityKey];
+    if (!dataObj) return [];
+
+    const datasets = [];
+
+    // Regionals datasets
+    dataObj.regionals.forEach(reg => {
+      const colors = regionalLineColors[reg.id] || { border: '#64748b', bg: 'rgba(100, 116, 139, 0.1)' };
+      datasets.push({
+        label: reg.name,
+        data: reg.monthly,
+        borderColor: colors.border,
+        backgroundColor: colors.bg,
+        borderWidth: 2.5,
+        tension: 0.3,
+        pointRadius: 4,
+        pointHoverRadius: 7,
+        pointBackgroundColor: colors.border,
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        fill: false
+      });
+    });
+
+    // Gabungan (Total)
+    datasets.push({
+      label: 'Gabungan (Total)',
+      data: dataObj.corporate,
+      borderColor: '#166534',
+      backgroundColor: 'rgba(22, 101, 52, 0.1)',
+      borderWidth: 3,
+      borderDash: [6, 4],
+      tension: 0.3,
+      pointRadius: 5,
+      pointHoverRadius: 8,
+      pointBackgroundColor: '#166534',
+      pointBorderColor: '#ffffff',
+      pointBorderWidth: 2,
+      fill: false
+    });
+
+    return datasets;
+  }
+
+  function updateSummaryMatrixTable(commodityKey) {
+    const dataObj = summaryData[commodityKey];
+    if (!dataObj) return;
+
+    const tbody = document.querySelector('#summaryMatrixTable tbody');
+    const tfoot = document.querySelector('#summaryMatrixTable tfoot');
+    if (!tbody || !tfoot) return;
+
+    const grandTotal = dataObj.ytdGrandTotal;
+
+    let tbodyHtml = '';
+    dataObj.regionals.forEach(reg => {
+      const sharePct = grandTotal > 0 ? ((reg.ytd / grandTotal) * 100).toFixed(1) : '0.0';
+      tbodyHtml += `
+        <tr style="border-bottom: 1px solid #f3f4f6;">
+          <td style="padding: 10px 14px; font-weight: 600; color: #1f2937; position: sticky; left: 0; background: #fff;">${reg.name}</td>
+          ${reg.monthly.map(val => `
+            <td style="padding: 10px 12px; text-align: right; color: ${val > 0 ? '#1f2937' : '#9ca3af'}; font-variant-numeric: tabular-nums;">
+              ${val > 0 ? new Intl.NumberFormat('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(val) : '-'}
+            </td>
+          `).join('')}
+          <td style="padding: 10px 14px; text-align: right; font-weight: 700; color: #166534; background: #f0fdf4; font-variant-numeric: tabular-nums;">
+            ${new Intl.NumberFormat('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(reg.ytd)}
+          </td>
+          <td style="padding: 10px 14px; text-align: right; font-weight: 600; color: #374151; background: #f9fafb;">
+            ${sharePct}%
+          </td>
+        </tr>
+      `;
+    });
+    tbody.innerHTML = tbodyHtml;
+
+    let tfootHtml = `
+      <tr style="background: #dcfce7; font-weight: 800; border-top: 2px solid #166534;">
+        <td style="padding: 12px 14px; color: #14532d; position: sticky; left: 0; background: #dcfce7;">Total Gabungan</td>
+        ${dataObj.corporate.map(val => `
+          <td style="padding: 12px 12px; text-align: right; color: #14532d; font-variant-numeric: tabular-nums;">
+            ${new Intl.NumberFormat('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(val)}
+          </td>
+        `).join('')}
+        <td style="padding: 12px 14px; text-align: right; color: #14532d; background: #bbf7d0; font-variant-numeric: tabular-nums;">
+          ${new Intl.NumberFormat('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(grandTotal)}
+        </td>
+        <td style="padding: 12px 14px; text-align: right; color: #14532d; background: #bbf7d0;">
+          100.0%
+        </td>
+      </tr>
+    `;
+    tfoot.innerHTML = tfootHtml;
+  }
+
+  function switchSummaryCommodity(commodityKey) {
+    const dataObj = summaryData[commodityKey];
+    if (!dataObj) return;
+
+    document.getElementById('summaryChartTitle').innerHTML = `
+      <i class="fas ${commodityKey === 'karet' ? 'fa-tree' : (commodityKey === 'teh' ? 'fa-leaf' : 'fa-seedling')}" style="color: #166534;"></i> 
+      ${dataObj.title}
+    `;
+    document.getElementById('summaryChartSubtitle').textContent = dataObj.subtitle;
+    document.getElementById('summaryMatrixTitle').innerHTML = `
+      <i class="fas fa-table" style="color: #166534;"></i> 
+      ${dataObj.matrixTitle}
+    `;
+
+    if (window.summaryLineChart) {
+      window.summaryLineChart.data.datasets = buildCommodityChartDatasets(commodityKey);
+      if (window.summaryLineChart.options && window.summaryLineChart.options.scales && window.summaryLineChart.options.scales.y) {
+        window.summaryLineChart.options.scales.y.title = {
+          display: true,
+          text: `Produksi (${dataObj.unit})`,
+          color: '#6b7280',
+          font: { size: 11, weight: '600' }
+        };
+      }
+      window.summaryLineChart.update();
+    }
+
+    updateSummaryMatrixTable(commodityKey);
+  }
+
+  // Initialize Summary Line Chart
+  const summaryChartCanvas = document.getElementById('summaryProductionLineChart');
+  if (summaryChartCanvas) {
+    window.summaryLineChart = new Chart(summaryChartCanvas.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: summaryMonths,
+        datasets: buildCommodityChartDatasets('karet')
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false,
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            labels: {
+              boxWidth: 14,
+              usePointStyle: true,
+              padding: 16,
+              font: { size: 12, weight: '600' },
+              color: '#374151'
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(17, 24, 39, 0.95)',
+            titleFont: { size: 13, weight: '700' },
+            bodyFont: { size: 12 },
+            padding: 12,
+            boxPadding: 6,
+            usePointStyle: true,
+            callbacks: {
+              label: function(context) {
+                const val = context.parsed.y;
+                return ` ${context.dataset.label}: ${new Intl.NumberFormat('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(val)} Ton`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(0, 0, 0, 0.05)', drawBorder: false },
+            ticks: { color: '#374151', font: { size: 12, weight: '600' } }
+          },
+          y: {
+            grid: { color: 'rgba(0, 0, 0, 0.05)', drawBorder: false },
+            ticks: {
+              color: '#374151',
+              font: { size: 11 },
+              callback: function(val) {
+                return new Intl.NumberFormat('id-ID').format(val);
+              }
+            },
+            title: {
+              display: true,
+              text: 'Produksi (Ton)',
+              color: '#6b7280',
+              font: { size: 11, weight: '600' }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Commodity Switcher Buttons Event Listeners
+  document.querySelectorAll('.btn-commodity-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const comm = btn.getAttribute('data-commodity');
+      document.querySelectorAll('.btn-commodity-tab').forEach(b => {
+        b.classList.remove('active');
+        b.style.background = 'transparent';
+        b.style.color = '#4b5563';
+      });
+      btn.classList.add('active');
+      btn.style.background = '#166534';
+      btn.style.color = '#fff';
+
+      switchSummaryCommodity(comm);
+    });
+  });
+
+  // Filter & Reset Summary Button Handlers
+  document.getElementById('btnFilterSummary')?.addEventListener('click', () => {
+    const tahun = document.getElementById('selectTahunSummary').value;
+    window.location.href = window.location.pathname + '?tahun=' + tahun;
+  });
+
+  document.getElementById('btnResetSummary')?.addEventListener('click', () => {
+    window.location.href = window.location.pathname;
+  });
+
   // Initialize Teh Charts Function
   function initTehCharts(prestasiData, prestasiDataLite) {
     // Chart 1: Produksi Kebun (Panen Manual/Gunting/Mesin)
@@ -1529,259 +2150,278 @@
     }
   }
 
+    window.karetCharts = [];
+
     // 1. Presensi Chart (Grouped Bar)
-    const presensiCtx = document.getElementById('presensiChart').getContext('2d');
-    new Chart(presensiCtx, {
-      type: 'bar',
-      data: {
-        labels: [
-          @for ($i = 0; $i < count($prestasiData); $i++) 
-            '{{ $prestasiData[$i]->nama }}',
-          @endfor
-        ],
-        datasets: [
-          {
-            label: '% High Grade',
-            data: [
-              @for ($i = 0; $i < count($prestasiData); $i++)
-                {{ ($prestasiData[$i]->basah_latek + $prestasiData[$i]->basah_lump + $prestasiData[$i]->basah_scrab) != 0 ? min(100, ($prestasiData[$i]->basah_latek)/($prestasiData[$i]->basah_latek + $prestasiData[$i]->basah_lump + $prestasiData[$i]->basah_scrab) * 100) : 0 }},
-              @endfor
-            ],
-            backgroundColor: chartColors.blue,
-            borderRadius: 6,
-            borderSkipped: false,
-          },
-          {
-            label: '% Low Grade',
-            data: [
-              @for ($i = 0; $i < count($prestasiData); $i++)
-                {{ ($prestasiData[$i]->basah_latek + $prestasiData[$i]->basah_lump + $prestasiData[$i]->basah_scrab) != 0 ? max(0, 100 - min(100, ($prestasiData[$i]->basah_latek)/($prestasiData[$i]->basah_latek + $prestasiData[$i]->basah_lump + $prestasiData[$i]->basah_scrab) * 100)) : 0 }},
-              @endfor
-            ],
-            backgroundColor: chartColors.red,
-            borderRadius: 6,
-            borderSkipped: false,
-          },
-        ],
-      },
-      options: {
-        ...commonOptions,
-        scales: {
-          ...commonOptions.scales,
-          x: {
-            ...commonOptions.scales.x,
-            stacked: true,
-          },
-          y: {
-            ...commonOptions.scales.y,
-            stacked: true,
+    const presensiCanvas = document.getElementById('presensiChart');
+    if (presensiCanvas) {
+      const presensiChart = new Chart(presensiCanvas.getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: [
+            @for ($i = 0; $i < count($prestasiData); $i++) 
+              '{{ $prestasiData[$i]->nama }}',
+            @endfor
+          ],
+          datasets: [
+            {
+              label: '% High Grade',
+              data: [
+                @for ($i = 0; $i < count($prestasiData); $i++)
+                  {{ ($prestasiData[$i]->basah_latek + $prestasiData[$i]->basah_lump + $prestasiData[$i]->basah_scrab) != 0 ? min(100, ($prestasiData[$i]->basah_latek)/($prestasiData[$i]->basah_latek + $prestasiData[$i]->basah_lump + $prestasiData[$i]->basah_scrab) * 100) : 0 }},
+                @endfor
+              ],
+              backgroundColor: chartColors.blue,
+              borderRadius: 6,
+              borderSkipped: false,
+            },
+            {
+              label: '% Low Grade',
+              data: [
+                @for ($i = 0; $i < count($prestasiData); $i++)
+                  {{ ($prestasiData[$i]->basah_latek + $prestasiData[$i]->basah_lump + $prestasiData[$i]->basah_scrab) != 0 ? max(0, 100 - min(100, ($prestasiData[$i]->basah_latek)/($prestasiData[$i]->basah_latek + $prestasiData[$i]->basah_lump + $prestasiData[$i]->basah_scrab) * 100)) : 0 }},
+                @endfor
+              ],
+              backgroundColor: chartColors.red,
+              borderRadius: 6,
+              borderSkipped: false,
+            },
+          ],
+        },
+        options: {
+          ...commonOptions,
+          scales: {
+            ...commonOptions.scales,
+            x: {
+              ...commonOptions.scales.x,
+              stacked: true,
+            },
+            y: {
+              ...commonOptions.scales.y,
+              stacked: true,
+            },
           },
         },
-      },
-    });
+      });
+      window.karetCharts.push(presensiChart);
+    }
 
     // 2. Presentase Hadir Chart (Stacked Bar)
-    const presentaseHadirCtx = document.getElementById('presentaseHadirChart').getContext('2d');
-    new Chart(presentaseHadirCtx, {
-      type: 'bar',
-      data: {
-        labels: [
-          @for ($i = 0; $i < count($prestasiData); $i++) 
-            '{{ $prestasiData[$i]->nama }}',
-          @endfor
-        ],
-        datasets: [
-          {
-            label: '% High Grade',
-            data: [
-              @for ($i = 0; $i < count($prestasiData); $i++)
-                {{ $prestasiData[$i]->total_kering != 0 ? min(100, $prestasiData[$i]->sheet/($prestasiData[$i]->total_kering) * 100) : 0 }},
-              @endfor
-            ],
-            backgroundColor: chartColors.blue,
-            borderRadius: 6,
-            borderSkipped: false,
-          },
-          {
-            label: '% Low Grade',
-            data: [
-              @for ($i = 0; $i < count($prestasiData); $i++)
-                {{ $prestasiData[$i]->total_kering != 0 ? max(0, 100 - min(100, $prestasiData[$i]->sheet/($prestasiData[$i]->total_kering) * 100)) : 0 }},
-              @endfor
-            ],
-            backgroundColor: chartColors.red,
-            borderRadius: 6,
-            borderSkipped: false,
-          },
-        ],
-      },
-      options: {
-        ...commonOptions,
-        scales: {
-          ...commonOptions.scales,
-          x: {
-            ...commonOptions.scales.x,
-            stacked: true,
-          },
-          y: {
-            ...commonOptions.scales.y,
-            stacked: true,
-            max: 100,
+    const presentaseHadirCanvas = document.getElementById('presentaseHadirChart');
+    if (presentaseHadirCanvas) {
+      const presentaseHadirChart = new Chart(presentaseHadirCanvas.getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: [
+            @for ($i = 0; $i < count($prestasiData); $i++) 
+              '{{ $prestasiData[$i]->nama }}',
+            @endfor
+          ],
+          datasets: [
+            {
+              label: '% High Grade',
+              data: [
+                @for ($i = 0; $i < count($prestasiData); $i++)
+                  {{ $prestasiData[$i]->total_kering != 0 ? min(100, $prestasiData[$i]->sheet/($prestasiData[$i]->total_kering) * 100) : 0 }},
+                @endfor
+              ],
+              backgroundColor: chartColors.blue,
+              borderRadius: 6,
+              borderSkipped: false,
+            },
+            {
+              label: '% Low Grade',
+              data: [
+                @for ($i = 0; $i < count($prestasiData); $i++)
+                  {{ $prestasiData[$i]->total_kering != 0 ? max(0, 100 - min(100, $prestasiData[$i]->sheet/($prestasiData[$i]->total_kering) * 100)) : 0 }},
+                @endfor
+              ],
+              backgroundColor: chartColors.red,
+              borderRadius: 6,
+              borderSkipped: false,
+            },
+          ],
+        },
+        options: {
+          ...commonOptions,
+          scales: {
+            ...commonOptions.scales,
+            x: {
+              ...commonOptions.scales.x,
+              stacked: true,
+            },
+            y: {
+              ...commonOptions.scales.y,
+              stacked: true,
+              max: 100,
+            },
           },
         },
-      },
-    });
+      });
+      window.karetCharts.push(presentaseHadirChart);
+    }
 
     // 3. Presentase Input Chart (Grouped Bar)
-    const presentaseInputCtx = document.getElementById('presentaseInputChart').getContext('2d');
-    new Chart(presentaseInputCtx, {
-      type: 'bar',
-      data: {
-        labels: [
-          @for ($i = 0; $i < count($prestasiData); $i++) 
-            '{{ $prestasiData[$i]->nama }}',
-          @endfor
-        ],
-        datasets: [
-          {
-            label: 'Kering Hg (Kg)',
-            data: [
-              @for ($i = 0; $i < count($prestasiData); $i++)
-                {{ $prestasiData[$i]->sheet }},
-              @endfor
-            ],
-            backgroundColor: chartColors.blue,
-            borderRadius: 6,
-            borderSkipped: false,
-          },
-          {
-            label: 'Kering Lg (Kg)',
-            data: [
-              @for ($i = 0; $i < count($prestasiData); $i++)
-                {{ $prestasiData[$i]->compo+$prestasiData[$i]->scrap }},
-              @endfor
-            ],
-            backgroundColor: chartColors.red,
-            borderRadius: 6,
-            borderSkipped: false,
-          },
-        ],
-      },
-      options: {
-        ...commonOptions,
-        scales: {
-          ...commonOptions.scales,
-          x: {
-            ...commonOptions.scales.x,
-            stacked: false,
-          },
-          y: {
-            ...commonOptions.scales.y,
-            stacked: false,
+    const presentaseInputCanvas = document.getElementById('presentaseInputChart');
+    if (presentaseInputCanvas) {
+      const presentaseInputChart = new Chart(presentaseInputCanvas.getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: [
+            @for ($i = 0; $i < count($prestasiData); $i++) 
+              '{{ $prestasiData[$i]->nama }}',
+            @endfor
+          ],
+          datasets: [
+            {
+              label: 'Kering Hg (Kg)',
+              data: [
+                @for ($i = 0; $i < count($prestasiData); $i++)
+                  {{ $prestasiData[$i]->sheet }},
+                @endfor
+              ],
+              backgroundColor: chartColors.blue,
+              borderRadius: 6,
+              borderSkipped: false,
+            },
+            {
+              label: 'Kering Lg (Kg)',
+              data: [
+                @for ($i = 0; $i < count($prestasiData); $i++)
+                  {{ $prestasiData[$i]->compo+$prestasiData[$i]->scrap }},
+                @endfor
+              ],
+              backgroundColor: chartColors.red,
+              borderRadius: 6,
+              borderSkipped: false,
+            },
+          ],
+        },
+        options: {
+          ...commonOptions,
+          scales: {
+            ...commonOptions.scales,
+            x: {
+              ...commonOptions.scales.x,
+              stacked: false,
+            },
+            y: {
+              ...commonOptions.scales.y,
+              stacked: false,
+            },
           },
         },
-      },
-    });
-    // 5. Presentase Input Chart (Grouped Bar)
-    const presentaseInputBasahCtx = document.getElementById('presentaseInputChartBasah').getContext('2d');
-    new Chart(presentaseInputBasahCtx, {
-      type: 'bar',
-      data: {
-        labels: [
-          @for ($i = 0; $i < count($prestasiData); $i++) 
-            '{{ $prestasiData[$i]->nama }}',
-          @endfor
-        ],
-        datasets: [
-          {
-            label: 'Basah Hg (Kg)',
-            data: [
-              @for ($i = 0; $i < count($prestasiData); $i++)
-                {{ $prestasiData[$i]->basah_latek }},
-              @endfor
-            ],
-            backgroundColor: chartColors.blue,
-            borderRadius: 6,
-            borderSkipped: false,
-          },
-          {
-            label: 'Basah Lg (Kg)',
-            data: [
-              @for ($i = 0; $i < count($prestasiData); $i++)
-                {{ $prestasiData[$i]->basah_lump+$prestasiData[$i]->basah_scrab }},
-              @endfor
-            ],
-            backgroundColor: chartColors.red,
-            borderRadius: 6,
-            borderSkipped: false,
-          },
-        ],
-      },
-      options: {
-        ...commonOptions,
-        scales: {
-          ...commonOptions.scales,
-          x: {
-            ...commonOptions.scales.x,
-            stacked: false,
-          },
-          y: {
-            ...commonOptions.scales.y,
-            stacked: false,
+      });
+      window.karetCharts.push(presentaseInputChart);
+    }
+
+    // 4. Presentase Input Chart Basah (Grouped Bar)
+    const presentaseInputBasahCanvas = document.getElementById('presentaseInputChartBasah');
+    if (presentaseInputBasahCanvas) {
+      const presentaseInputBasahChart = new Chart(presentaseInputBasahCanvas.getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: [
+            @for ($i = 0; $i < count($prestasiData); $i++) 
+              '{{ $prestasiData[$i]->nama }}',
+            @endfor
+          ],
+          datasets: [
+            {
+              label: 'Basah Hg (Kg)',
+              data: [
+                @for ($i = 0; $i < count($prestasiData); $i++)
+                  {{ $prestasiData[$i]->basah_latek }},
+                @endfor
+              ],
+              backgroundColor: chartColors.blue,
+              borderRadius: 6,
+              borderSkipped: false,
+            },
+            {
+              label: 'Basah Lg (Kg)',
+              data: [
+                @for ($i = 0; $i < count($prestasiData); $i++)
+                  {{ $prestasiData[$i]->basah_lump+$prestasiData[$i]->basah_scrab }},
+                @endfor
+              ],
+              backgroundColor: chartColors.red,
+              borderRadius: 6,
+              borderSkipped: false,
+            },
+          ],
+        },
+        options: {
+          ...commonOptions,
+          scales: {
+            ...commonOptions.scales,
+            x: {
+              ...commonOptions.scales.x,
+              stacked: false,
+            },
+            y: {
+              ...commonOptions.scales.y,
+              stacked: false,
+            },
           },
         },
-      },
-    });
-    // 5. Presentase Input Chart (Grouped Bar)
-    const presentaseInputProduksiCtx = document.getElementById('presentaseInputProduksiChart').getContext('2d');
-    new Chart(presentaseInputProduksiCtx, {
-      type: 'bar',
-      data: {
-        labels: [
-          @for ($i = 0; $i < count($prestasiDataLite); $i++) 
-            '{{ $prestasiDataLite[$i]->nama }}',
-          @endfor
-        ],
-        datasets: [
-          {
-            label: '% Input',
-            data: [
-              @for ($i = 0; $i < count($prestasiDataLite); $i++)
-                {{ min(100, $prestasiDataLite[$i]->persen_input_produksi) }},
-              @endfor
-            ],
-            backgroundColor: chartColors.blue,
-            borderRadius: 6,
-            borderSkipped: false,
-          },
-          {
-            label: '% Tidak Input',
-            data: [
-              @for ($i = 0; $i < count($prestasiDataLite); $i++)
-                {{ max(0, 100 - min(100, $prestasiDataLite[$i]->persen_input_produksi)) }},
-              @endfor
-            ],
-            backgroundColor: chartColors.red,
-            borderRadius: 6,
-            borderSkipped: false,
-          },
-        ],
-      },
-      options: {
-        ...commonOptions,
-        scales: {
-          ...commonOptions.scales,
-          x: {
-            ...commonOptions.scales.x,
-            stacked: true,
-          },
-          y: {
-            ...commonOptions.scales.y,
-            stacked: true,
+      });
+      window.karetCharts.push(presentaseInputBasahChart);
+    }
+
+    // 5. Presentase Input Produksi Chart
+    const presentaseInputProduksiCanvas = document.getElementById('presentaseInputProduksiChart');
+    if (presentaseInputProduksiCanvas) {
+      const presentaseInputProduksiChart = new Chart(presentaseInputProduksiCanvas.getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: [
+            @for ($i = 0; $i < count($prestasiDataLite); $i++) 
+              '{{ $prestasiDataLite[$i]->nama }}',
+            @endfor
+          ],
+          datasets: [
+            {
+              label: '% Input',
+              data: [
+                @for ($i = 0; $i < count($prestasiDataLite); $i++)
+                  {{ min(100, $prestasiDataLite[$i]->persen_input_produksi) }},
+                @endfor
+              ],
+              backgroundColor: chartColors.blue,
+              borderRadius: 6,
+              borderSkipped: false,
+            },
+            {
+              label: '% Tidak Input',
+              data: [
+                @for ($i = 0; $i < count($prestasiDataLite); $i++)
+                  {{ max(0, 100 - min(100, $prestasiDataLite[$i]->persen_input_produksi)) }},
+                @endfor
+              ],
+              backgroundColor: chartColors.red,
+              borderRadius: 6,
+              borderSkipped: false,
+            },
+          ],
+        },
+        options: {
+          ...commonOptions,
+          scales: {
+            ...commonOptions.scales,
+            x: {
+              ...commonOptions.scales.x,
+              stacked: true,
+            },
+            y: {
+              ...commonOptions.scales.y,
+              stacked: true,
+            },
           },
         },
-      },
-    });
+      });
+      window.karetCharts.push(presentaseInputProduksiChart);
+    }
 
     // NOTE: Teh tab charts are initialized dynamically by initTehCharts() when tab is clicked
     // This prevents null reference errors from trying to access hidden canvas elements on page load
@@ -2537,7 +3177,7 @@
 
     // Reset dependent selects
     selectAktivitas.innerHTML = '<option value="">Loading...</option>';
-    selectRegional.innerHTML = '<option value="">Pilih</option>';
+    document.getElementById('selectPemeliharaanKebun').innerHTML = '<option value="">Pilih</option>';
 
     if (!komoditas) {
       selectAktivitas.innerHTML = '<option value="">Pilih</option>';

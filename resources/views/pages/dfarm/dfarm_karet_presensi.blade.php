@@ -353,18 +353,226 @@
 
             <div id="tabs-wrap" style="display: block;">
               <div class="hris-tabs">
-                <button type="button" class="hris-tab-btn active" data-tab="rekap">
-                <i class="fas fa-chart-bar"></i> Rekap Presensi
+                <button type="button" class="hris-tab-btn active" data-tab="summary">
+                  <i class="fas fa-chart-line"></i> Summary
+                </button>
+                <button type="button" class="hris-tab-btn" data-tab="rekap">
+                  <i class="fas fa-chart-bar"></i> Rekap Presensi
                 </button>
                 <button type="button" class="hris-tab-btn" data-tab="detail">
-                <i class="fas fa-calendar-day"></i> Detail Presensi
+                  <i class="fas fa-calendar-day"></i> Detail Presensi
                 </button>
               </div>
 
               <div id="error-banner" class="error-banner" style="display: none;"></div>
 
-                <!-- Tab 1: Rekap -->
-                <div id="tab-rekap" class="hris-tab-panel active">
+                <!-- Tab 1: Summary (Level 1: Corporate) -->
+                <div id="tab-summary" class="hris-tab-panel active">
+                  <!-- Filter Card in Summary -->
+                  <div class="filter-card" style="margin: 16px;">
+                    <div class="filter-title">
+                      <i class="fas fa-sliders-h"></i> Filter Parameter Gabungan
+                    </div>
+                    <div class="filter-grid">
+                      <div class="form-group">
+                        <label class="form-label">Job Desc</label>
+                        <select id="selectJobDescSummary" class="form-select">
+                          <option value="PENYADAP" {{ $jobdesc == 'PENYADAP' ? 'selected' : '' }}>PENYADAP</option>
+                          <option value="PEMETIK" {{ $jobdesc == 'PEMETIK' ? 'selected' : '' }}>PEMETIK</option>
+                          <option value="PANEN KOPI" {{ $jobdesc == 'PANEN KOPI' ? 'selected' : '' }}>PANEN KOPI</option>
+                          <option value="PEMELIHARAAN" {{ $jobdesc == 'PEMELIHARAAN' ? 'selected' : '' }}>PEMELIHARAAN</option>
+                        </select>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="form-label">Tahun Periode (Januari s.d. Bulan Berjalan)</label>
+                        <select id="selectTahunSummary" class="form-select">
+                          @php
+                            $currentYr = (int)date('Y');
+                          @endphp
+                          @for($y = $currentYr; $y >= $currentYr - 3; $y--)
+                            <option value="{{ $y }}" {{ ($tahun ?? $currentYr) == $y ? 'selected' : '' }}>Tahun {{ $y }} (Jan - {{ end($monthlySummary['months']) }} {{ $y }})</option>
+                          @endfor
+                        </select>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="form-label">Regional</label>
+                        <select class="form-select bg-gray-100 cursor-not-allowed opacity-75" disabled title="Summary mencakup semua regional">
+                          <option selected>Semua Regional (Gabungan)</option>
+                        </select>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="form-label">Nama Kebun</label>
+                        <select class="form-select bg-gray-100 cursor-not-allowed opacity-75" disabled title="Summary di level gabungan">
+                          <option selected>Semua Kebun</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Action Buttons in Summary -->
+                  <div style="margin: 0 16px 16px; display: flex; gap: 10px;">
+                    <button id="btnFilterSummary" class="inline-flex align-items-center justify-content-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-all box-shadow" style="background-color: #16a34a; border: 1px solid #15803d; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); height: 36px; cursor: pointer;">
+                      <i class="fas fa-filter"></i> Filter
+                    </button>
+                    <button id="btnResetSummary" class="inline-flex align-items-center justify-content-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-all box-shadow" style="background-color: #16a34a; border: 1px solid #15803d; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); height: 36px; cursor: pointer;">
+                      <i class="fas fa-rotate-right"></i> Reset
+                    </button>
+                  </div>
+
+                  <!-- KPI Cards Section (Summary Gabungan) -->
+                  @php
+                    $latestMonth = $monthlySummary['endMonth'];
+                    $latestCorp = $monthlySummary['corporateByMonth'][$latestMonth] ?? null;
+                    $totalTenagaKerja = 0;
+                    if (!empty($monthlySummary['dataByRegional'])) {
+                      foreach($monthlySummary['dataByRegional'] as $r) {
+                        $totalTenagaKerja += $r['total_karyawan'] ?? 0;
+                      }
+                    }
+                    
+                    $bestRegName = '-';
+                    $bestRegPercent = -1;
+                    if (!empty($monthlySummary['dataByRegional'])) {
+                      foreach($monthlySummary['dataByRegional'] as $r) {
+                        $pct = $r['months'][$latestMonth]['prosentase_kehadiran'] ?? 0;
+                        if ($pct > $bestRegPercent) {
+                          $bestRegPercent = $pct;
+                          $bestRegName = $r['name'];
+                        }
+                      }
+                    }
+                  @endphp
+                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6" style="margin: 0 16px 20px;">
+                    <!-- Card 1: Rata-rata % Kehadiran Bulan Berjalan -->
+                    <div style="background: #fff; border: 1px solid #d1fae5; border-top: 4px solid #166534; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08);">
+                      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                        <h3 style="color: #166534; font-size: 11px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">% Kehadiran Gabungan</h3>
+                        <i class="fas fa-percent" style="color: #16a34a; font-size: 18px;"></i>
+                      </div>
+                      <p style="color: #166534; font-size: 26px; font-weight: 800; margin: 0; line-height: 1;">{{ $latestCorp['prosentase_kehadiran'] ?? 0 }}%</p>
+                      <p style="color: #6b7280; font-size: 11px; margin: 4px 0 0 0;">Bulan {{ $monthlySummary['months'][$latestMonth] ?? '' }} {{ $monthlySummary['tahun'] }} (Akumulasi)</p>
+                    </div>
+
+                    <!-- Card 2: Rata-rata % Input Presensi Bulan Berjalan -->
+                    <div style="background: #fff; border: 1px solid #d1fae5; border-top: 4px solid #166534; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08);">
+                      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                        <h3 style="color: #166534; font-size: 11px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">% Input Presensi Gabungan</h3>
+                        <i class="fas fa-clipboard-check" style="color: #16a34a; font-size: 18px;"></i>
+                      </div>
+                      <p style="color: #166534; font-size: 26px; font-weight: 800; margin: 0; line-height: 1;">{{ $latestCorp['prosentase_input'] ?? 0 }}%</p>
+                      <p style="color: #6b7280; font-size: 11px; margin: 4px 0 0 0;">Kepatuhan Input Presensi</p>
+                    </div>
+
+                    <!-- Card 3: Total Tenaga Kerja Terdaftar -->
+                    <div style="background: #fff; border: 1px solid #d1fae5; border-top: 4px solid #166534; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08);">
+                      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                        <h3 style="color: #166534; font-size: 11px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Total Tenaga Kerja</h3>
+                        <i class="fas fa-users" style="color: #16a34a; font-size: 18px;"></i>
+                      </div>
+                      <p style="color: #166534; font-size: 26px; font-weight: 800; margin: 0; line-height: 1;">{{ number_format($totalTenagaKerja, 0, ',', '.') }}</p>
+                      <p style="color: #6b7280; font-size: 11px; margin: 4px 0 0 0;">Orang Terdaftar di Gabungan</p>
+                    </div>
+
+                    <!-- Card 4: Top Regional Performer -->
+                    <div style="background: #fff; border: 1px solid #d1fae5; border-top: 4px solid #166534; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08);">
+                      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                        <h3 style="color: #166534; font-size: 11px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Best Performer Bulan Ini</h3>
+                        <i class="fas fa-trophy" style="color: #eab308; font-size: 18px;"></i>
+                      </div>
+                      <p style="color: #166534; font-size: 20px; font-weight: 800; margin: 0; line-height: 1.2;">{{ $bestRegName }}</p>
+                      <p style="color: #16a34a; font-size: 12px; font-weight: 700; margin: 4px 0 0 0;">{{ $bestRegPercent >= 0 ? $bestRegPercent . '% Kehadiran' : '-' }}</p>
+                    </div>
+                  </div>
+
+                  <!-- Line Chart Card -->
+                  <div style="margin: 0 16px 24px; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                    <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #f3f4f6;">
+                      <div>
+                        <h2 style="font-size: 15px; font-weight: 700; color: #166534; margin: 0;">
+                          <i class="fas fa-chart-line" style="margin-right: 6px;"></i> Tren Perbandingan Persentase Presensi Tiap Regional (Jan - {{ end($monthlySummary['months']) }} {{ $monthlySummary['tahun'] }})
+                        </h2>
+                        <p style="font-size: 12px; color: #6b7280; margin: 4px 0 0 0;">
+                          Menampilkan perbandingan akumulasi bulanan persentase presensi tiap regional di tahun berjalan.
+                        </p>
+                      </div>
+                      <!-- Metric Selector Buttons -->
+                      <div style="display: flex; background: #f3f4f6; border-radius: 8px; padding: 3px; gap: 4px;">
+                        <button id="btnMetricKehadiran" type="button" class="px-3 py-1.5 text-xs font-semibold rounded-md transition-all" style="background: #166534; color: #fff; border: none; cursor: pointer;">
+                          % Kehadiran
+                        </button>
+                        <button id="btnMetricInput" type="button" class="px-3 py-1.5 text-xs font-semibold rounded-md transition-all" style="background: transparent; color: #4b5563; border: none; cursor: pointer;">
+                          % Input Presensi
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Canvas for Chart.js -->
+                    <div style="position: relative; height: 380px; width: 100%;">
+                      <canvas id="summaryLineChart"></canvas>
+                    </div>
+                  </div>
+
+                  <!-- Table Card: Matriks Bulanan Per Regional -->
+                  <div style="margin: 0 16px 24px; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                    <h3 style="font-size: 14px; font-weight: 700; color: #1f2937; margin: 0 0 14px 0; display: flex; align-items: center; gap: 6px;">
+                      <i class="fas fa-table" style="color: #166534;"></i> Matriks Akumulasi Bulanan % Kehadiran per Regional
+                    </h3>
+                    <div style="overflow-x: auto;">
+                      <table class="report-table" style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                        <thead>
+                          <tr>
+                            <th style="padding: 10px 14px; text-align: left; background: #166534; color: #fff;">Regional</th>
+                            <th style="padding: 10px 14px; text-align: right; background: #166534; color: #fff;">Total SDM</th>
+                            @foreach($monthlySummary['months'] as $mNo => $mName)
+                              <th style="padding: 10px 12px; text-align: center; background: #166534; color: #fff;">{{ $mName }}</th>
+                            @endforeach
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @if(!empty($monthlySummary['dataByRegional']))
+                            @foreach($monthlySummary['dataByRegional'] as $regId => $regData)
+                              <tr style="border-bottom: 1px solid #e5e7eb;">
+                                <td style="padding: 9px 14px; font-weight: 600; color: #111827;">{{ $regData['name'] }}</td>
+                                <td style="padding: 9px 14px; text-align: right; color: #4b5563;">{{ number_format($regData['total_karyawan'], 0, ',', '.') }}</td>
+                                @foreach($monthlySummary['months'] as $mNo => $mName)
+                                  @php
+                                    $val = $regData['months'][$mNo]['prosentase_kehadiran'] ?? 0;
+                                    $colorBg = $val >= 75 ? '#dcfce7' : ($val >= 50 ? '#fef9c3' : '#fee2e2');
+                                    $colorText = $val >= 75 ? '#15803d' : ($val >= 50 ? '#854d0e' : '#b91c1c');
+                                  @endphp
+                                  <td style="padding: 9px 12px; text-align: center;">
+                                    <span style="background: {{ $colorBg }}; color: {{ $colorText }}; font-weight: 700; padding: 2px 8px; border-radius: 4px; font-size: 11px;">
+                                      {{ $val }}%
+                                    </span>
+                                  </td>
+                                @endforeach
+                              </tr>
+                            @endforeach
+                          @endif
+                          <!-- Gabungan Average Row -->
+                          <tr style="background: #f8fafc; font-weight: 700; border-top: 2px solid #cbd5e1;">
+                            <td style="padding: 10px 14px; color: #166534;">Gabungan (Rata-rata)</td>
+                            <td style="padding: 10px 14px; text-align: right; color: #166534;">{{ number_format($totalTenagaKerja, 0, ',', '.') }}</td>
+                            @foreach($monthlySummary['months'] as $mNo => $mName)
+                              @php
+                                $valCorp = $monthlySummary['corporateByMonth'][$mNo]['prosentase_kehadiran'] ?? 0;
+                              @endphp
+                              <td style="padding: 10px 12px; text-align: center; color: #166534;">
+                                {{ $valCorp }}%
+                              </td>
+                            @endforeach
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tab 2: Rekap (Level 2: Regional) -->
+                <div id="tab-rekap" class="hris-tab-panel">
                   <!-- Filter Card in Tab -->
                   <div class="filter-card" style="margin: 16px;">
                     <div class="filter-title">
@@ -407,12 +615,16 @@
                       <div class="form-group">
                         <label class="form-label">Regional</label>
                         <select id="selectRegional" class="form-select">
-                          <option value="">Pilih</option>
-                          <option value="2" <?php if ($selectedRegional == '2') echo 'selected'; ?>>REGIONAL 2</option>
-                          <option value="3" <?php if ($selectedRegional == '3') echo 'selected'; ?>>REGIONAL 3</option>
-                          <option value="5" <?php if ($selectedRegional == '5') echo 'selected'; ?>>REGIONAL 5</option>
-                          <option value="7" <?php if ($selectedRegional == '7') echo 'selected'; ?>>REGIONAL 7</option>
-                          <option value="8" <?php if ($selectedRegional == '8') echo 'selected'; ?>>REGIONAL 8</option>
+                          <option value="">{{ $userRegionalId ? 'Semua Regional (Posisi Komparasi)' : 'Pilih' }}</option>
+                          @if($userRegionalId)
+                            <option value="{{ $userRegionalId }}" {{ $selectedRegional == $userRegionalId ? 'selected' : '' }}>REGIONAL {{ $userRegionalId }}</option>
+                          @else
+                            <option value="2" {{ $selectedRegional == '2' ? 'selected' : '' }}>REGIONAL 2</option>
+                            <option value="3" {{ $selectedRegional == '3' ? 'selected' : '' }}>REGIONAL 3</option>
+                            <option value="5" {{ $selectedRegional == '5' ? 'selected' : '' }}>REGIONAL 5</option>
+                            <option value="7" {{ $selectedRegional == '7' ? 'selected' : '' }}>REGIONAL 7</option>
+                            <option value="8" {{ $selectedRegional == '8' ? 'selected' : '' }}>REGIONAL 8</option>
+                          @endif
                         </select>
                       </div>
 
@@ -636,12 +848,16 @@
                       <div class="form-group">
                         <label class="form-label">Regional</label>
                         <select id="selectRegionalDetail" class="form-select">
-                          <option value="">Pilih</option>
-                          <option value="2" <?php if ($selectedRegional == '2') echo 'selected'; ?>>REGIONAL 2</option>
-                          <option value="3" <?php if ($selectedRegional == '3') echo 'selected'; ?>>REGIONAL 3</option>
-                          <option value="5" <?php if ($selectedRegional == '5') echo 'selected'; ?>>REGIONAL 5</option>
-                          <option value="7" <?php if ($selectedRegional == '7') echo 'selected'; ?>>REGIONAL 7</option>
-                          <option value="8" <?php if ($selectedRegional == '8') echo 'selected'; ?>>REGIONAL 8</option>
+                          <option value="">{{ $userRegionalId ? 'Semua Regional (Posisi Komparasi)' : 'Pilih' }}</option>
+                          @if($userRegionalId)
+                            <option value="{{ $userRegionalId }}" {{ $selectedRegional == $userRegionalId ? 'selected' : '' }}>REGIONAL {{ $userRegionalId }}</option>
+                          @else
+                            <option value="2" {{ $selectedRegional == '2' ? 'selected' : '' }}>REGIONAL 2</option>
+                            <option value="3" {{ $selectedRegional == '3' ? 'selected' : '' }}>REGIONAL 3</option>
+                            <option value="5" {{ $selectedRegional == '5' ? 'selected' : '' }}>REGIONAL 5</option>
+                            <option value="7" {{ $selectedRegional == '7' ? 'selected' : '' }}>REGIONAL 7</option>
+                            <option value="8" {{ $selectedRegional == '8' ? 'selected' : '' }}>REGIONAL 8</option>
+                          @endif
                         </select>
                       </div>
 
@@ -951,6 +1167,170 @@
         },
         },
         };
+
+        // ============================================
+        // INITIALIZE SUMMARY LINE CHART (Corporate Level)
+        // ============================================
+        const summaryChartCanvas = document.getElementById('summaryLineChart');
+        if (summaryChartCanvas) {
+          const monthlySummaryData = @json($monthlySummary ?? []);
+          const monthLabels = Object.values(monthlySummaryData.months || {});
+          const monthKeys = Object.keys(monthlySummaryData.months || {});
+
+          const regColorMap = {
+            2: { border: '#10b981', bg: 'rgba(16, 185, 129, 0.15)' }, // Emerald
+            3: { border: '#3b82f6', bg: 'rgba(59, 130, 246, 0.15)' }, // Blue
+            5: { border: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.15)' }, // Purple
+            7: { border: '#f97316', bg: 'rgba(249, 115, 22, 0.15)' }, // Orange
+            8: { border: '#eab308', bg: 'rgba(234, 179, 8, 0.15)' },  // Yellow
+            default: { border: '#06b6d4', bg: 'rgba(6, 182, 212, 0.15)' }
+          };
+
+          function buildSummaryDatasets(metric) {
+            const datasets = [];
+            const dataByReg = monthlySummaryData.dataByRegional || {};
+
+            Object.values(dataByReg).forEach(reg => {
+              const regId = reg.id;
+              const colors = regColorMap[regId] || regColorMap.default;
+              const points = monthKeys.map(m => {
+                return (reg.months && reg.months[m]) ? reg.months[m][metric] : 0;
+              });
+
+              datasets.push({
+                label: reg.name,
+                data: points,
+                borderColor: colors.border,
+                backgroundColor: colors.bg,
+                borderWidth: 2.5,
+                tension: 0.3,
+                pointRadius: 4,
+                pointHoverRadius: 7,
+                pointBackgroundColor: colors.border,
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                fill: false
+              });
+            });
+
+            // Gabungan (Rata-rata)
+            const corpPoints = monthKeys.map(m => {
+              return (monthlySummaryData.corporateByMonth && monthlySummaryData.corporateByMonth[m]) 
+                ? monthlySummaryData.corporateByMonth[m][metric] 
+                : 0;
+            });
+
+            datasets.push({
+              label: 'Gabungan (Rata-rata)',
+              data: corpPoints,
+              borderColor: '#e11d48',
+              backgroundColor: 'rgba(225, 29, 72, 0.1)',
+              borderWidth: 3,
+              borderDash: [6, 4],
+              tension: 0.3,
+              pointRadius: 5,
+              pointHoverRadius: 8,
+              pointBackgroundColor: '#e11d48',
+              pointBorderColor: '#ffffff',
+              pointBorderWidth: 2,
+              fill: false
+            });
+
+            return datasets;
+          }
+
+          let currentMetric = 'prosentase_kehadiran';
+          const summaryCtx = summaryChartCanvas.getContext('2d');
+
+          window.summaryLineChart = new Chart(summaryCtx, {
+            type: 'line',
+            data: {
+              labels: monthLabels,
+              datasets: buildSummaryDatasets(currentMetric)
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              interaction: {
+                mode: 'index',
+                intersect: false
+              },
+              plugins: {
+                legend: {
+                  display: true,
+                  position: 'top',
+                  labels: {
+                    boxWidth: 14,
+                    usePointStyle: true,
+                    padding: 16,
+                    font: { size: 12, weight: '600' },
+                    color: '#374151'
+                  }
+                },
+                tooltip: {
+                  backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                  titleFont: { size: 13, weight: 'bold' },
+                  bodyFont: { size: 12 },
+                  padding: 12,
+                  cornerRadius: 8,
+                  callbacks: {
+                    label: function(context) {
+                      const label = context.dataset.label || '';
+                      const value = context.parsed.y !== null ? context.parsed.y : 0;
+                      return `${label}: ${value}%`;
+                    }
+                  }
+                }
+              },
+              scales: {
+                x: {
+                  grid: { display: false },
+                  ticks: { font: { size: 12, weight: '600' }, color: '#4b5563' }
+                },
+                y: {
+                  min: 0,
+                  max: 100,
+                  grid: { color: 'rgba(229, 231, 235, 0.8)', drawBorder: false },
+                  ticks: {
+                    font: { size: 11 },
+                    color: '#6b7280',
+                    callback: function(val) { return val + '%'; }
+                  }
+                }
+              }
+            }
+          });
+
+          // Metric Toggle Buttons
+          const btnMetricKehadiran = document.getElementById('btnMetricKehadiran');
+          const btnMetricInput = document.getElementById('btnMetricInput');
+
+          if (btnMetricKehadiran && btnMetricInput) {
+            btnMetricKehadiran.addEventListener('click', () => {
+              if (currentMetric === 'prosentase_kehadiran') return;
+              currentMetric = 'prosentase_kehadiran';
+              btnMetricKehadiran.style.background = '#166534';
+              btnMetricKehadiran.style.color = '#fff';
+              btnMetricInput.style.background = 'transparent';
+              btnMetricInput.style.color = '#4b5563';
+
+              window.summaryLineChart.data.datasets = buildSummaryDatasets('prosentase_kehadiran');
+              window.summaryLineChart.update();
+            });
+
+            btnMetricInput.addEventListener('click', () => {
+              if (currentMetric === 'prosentase_input') return;
+              currentMetric = 'prosentase_input';
+              btnMetricInput.style.background = '#166534';
+              btnMetricInput.style.color = '#fff';
+              btnMetricKehadiran.style.background = 'transparent';
+              btnMetricKehadiran.style.color = '#4b5563';
+
+              window.summaryLineChart.data.datasets = buildSummaryDatasets('prosentase_input');
+              window.summaryLineChart.update();
+            });
+          }
+        }
 
         // ============================================
         // INITIALIZE CHARTS - CONDITIONAL BY FILTER STATE
@@ -1654,15 +2034,19 @@
             const url = new URL(window.location);
             url.searchParams.set('tab', tab);
             window.history.replaceState({}, '', url);
+
+            // Trigger chart resize if summary tab is opened
+            if (tab === 'summary' && window.summaryLineChart) {
+              window.summaryLineChart.resize();
+            }
           });
         });
 
-        // Activate tab from URL param if present
-        if (tabParam === 'detail') {
-          const detailTabBtn = document.querySelector('.hris-tab-btn[data-tab="detail"]');
-          if (detailTabBtn) {
-            detailTabBtn.click();
-          }
+        // Activate tab from URL param if present, default to summary
+        const currentTab = tabParam || 'summary';
+        const targetTabBtn = document.querySelector(`.hris-tab-btn[data-tab="${currentTab}"]`);
+        if (targetTabBtn) {
+          targetTabBtn.click();
         }
 
         // Initialize table with presensi data
@@ -1798,6 +2182,28 @@
 
           url += params.join('&');
           window.location.href = url;
+        }
+
+        // Filter Button Handler Summary
+        const btnFilterSummary = document.getElementById('btnFilterSummary');
+        if (btnFilterSummary) {
+          btnFilterSummary.addEventListener('click', () => {
+            const jobDesc = document.getElementById('selectJobDescSummary') ? document.getElementById('selectJobDescSummary').value : 'PENYADAP';
+            const tahun = document.getElementById('selectTahunSummary') ? document.getElementById('selectTahunSummary').value : '';
+            const url = new URL(window.location.origin + window.location.pathname);
+            url.searchParams.set('jobdesc', jobDesc);
+            if (tahun) url.searchParams.set('tahun', tahun);
+            url.searchParams.set('tab', 'summary');
+            window.location.href = url.toString();
+          });
+        }
+
+        // Reset Button Handler Summary
+        const btnResetSummary = document.getElementById('btnResetSummary');
+        if (btnResetSummary) {
+          btnResetSummary.addEventListener('click', () => {
+            window.location.href = window.location.pathname + '?tab=summary';
+          });
         }
 
         // Filter Button Handler Rekap

@@ -125,12 +125,16 @@
         <div>
           <label class="block text-white text-xs md:text-sm font-medium mb-1">Regional</label>
           <select id="selectRegional" class="w-full px-3 py-2 text-sm rounded-lg bg-slate-700 bg-opacity-50 text-black border border-slate-600 focus:outline-none focus:border-blue-400 font-medium">
-            <option value="">Pilih</option>
-            <option value="2" <?php if ($selectedRegional == '2') echo 'selected'; ?>>REGIONAL 2</option>
-            <option value="3" <?php if ($selectedRegional == '3') echo 'selected'; ?>>REGIONAL 3</option>
-            <option value="5" <?php if ($selectedRegional == '5') echo 'selected'; ?>>REGIONAL 5</option>
-            <option value="7" <?php if ($selectedRegional == '7') echo 'selected'; ?>>REGIONAL 7</option>
-            <option value="8" <?php if ($selectedRegional == '8') echo 'selected'; ?>>REGIONAL 8</option>
+            <option value="">{{ ($userRegionalId ?? null) ? 'Semua Regional (Posisi Komparasi)' : 'Pilih' }}</option>
+            @if($userRegionalId ?? null)
+              <option value="{{ $userRegionalId }}" {{ $selectedRegional == $userRegionalId ? 'selected' : '' }}>REGIONAL {{ $userRegionalId }}</option>
+            @else
+              <option value="2" <?php if ($selectedRegional == '2') echo 'selected'; ?>>REGIONAL 2</option>
+              <option value="3" <?php if ($selectedRegional == '3') echo 'selected'; ?>>REGIONAL 3</option>
+              <option value="5" <?php if ($selectedRegional == '5') echo 'selected'; ?>>REGIONAL 5</option>
+              <option value="7" <?php if ($selectedRegional == '7') echo 'selected'; ?>>REGIONAL 7</option>
+              <option value="8" <?php if ($selectedRegional == '8') echo 'selected'; ?>>REGIONAL 8</option>
+            @endif
           </select>
         </div>
 

@@ -88,6 +88,7 @@ Route::middleware('auth:custom')->group(function () {
     Route::get('/dfarmkaret', [PageController::class, 'dfarmkaretpresensi'])->name('dfarmkaretpresensi');
     Route::get('/dfarmpresensitabular', [PageController::class, 'dfarmkaretpresensitabular'])->name('dfarmkaretpresensitabular');
     Route::get('/dfarmkaretproduksi', [PageController::class, 'dfarmkaretproduksi'])->name('dfarmkaretproduksi');
+    Route::get('/dfarmproduksi', [PageController::class, 'dfarmkaretproduksi'])->name('dfarmproduksi');
     Route::get('/dfarmteh', [PageController::class, 'dfarmtehpresensi'])->name('dfarmtehpresensi');
     Route::get('/dfarmtehproduksi', [PageController::class, 'dfarmtehproduksi'])->name('dfarmtehproduksi');
     Route::post('/ajax_dfarmtehproduksi', [PageController::class, 'ajax_dfarmtehproduksi'])->name('ajax_dfarmtehproduksi');

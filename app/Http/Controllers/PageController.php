@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Cache;
 use App\Models\Plant;
 use App\Models\Employee;
 use BigQuery;
@@ -2137,11 +2138,24 @@ class PageController extends Controller
     public function dfarmkaretpresensi()
     {
         set_time_limit(120);
+        $user = Auth::guard('custom')->user();
+        $username = strtolower($user->username ?? '');
+        $userRegionalId = null;
+        if (preg_match('/^regional(\d+)$/', $username, $matches)) {
+            $userRegionalId = $matches[1];
+        }
+
         $regional = $_GET['id_reg'] ?? '';
+        // Jika user regional dan mencoba filter regional lain, batasi hanya ke regional miliknya
+        if ($userRegionalId && $regional != '' && $regional != $userRegionalId) {
+            $regional = $userRegionalId;
+        }
+
         $tglAwal = $_GET['tgl_awal'] ?? date('Y-m-d');
         $tglAkhir = $_GET['tgl_akhir'] ?? date('Y-m-d');
         $kebun = $_GET['kode_kebun'] ?? '';
         $jobdesc = $_GET['jobdesc'] ?? 'PENYADAP';
+        $tahun = (int)($_GET['tahun'] ?? date('Y'));
         $komoditas = 2;
         if ($jobdesc == 'PEMETIK') {
             $komoditas = 1;
@@ -2180,7 +2194,9 @@ class PageController extends Controller
                     ->orWhere('positionsdesc', 'like', '%panen kopi%');
             });
         }
-        if ($regional) {
+        if ($userRegionalId) {
+            $data->where('person_data.regional_id', $userRegionalId);
+        } elseif ($regional) {
             $data->where('person_data.regional_id', $regional);
         }
         // Gunakan pagination untuk data besar
@@ -2271,7 +2287,9 @@ class PageController extends Controller
         }
 
 
-        return view('pages/dfarm/dfarm_karet_presensi', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'presensiData', 'totalData', 'tglAwal', 'tglAkhir', 'jobdesc'));
+        $monthlySummary = $this->getMonthlySummaryPresensi($jobdesc, $tahun);
+
+        return view('pages/dfarm/dfarm_karet_presensi', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'presensiData', 'totalData', 'tglAwal', 'tglAkhir', 'jobdesc', 'monthlySummary', 'tahun', 'userRegionalId'));
     }
     public function sapaEvaluasi()
     {
@@ -2928,6 +2946,211 @@ class PageController extends Controller
 
         return $totals;
     }
+
+    private function getMonthlySummaryPresensi($jobdesc = 'PENYADAP', $tahun = null)
+    {
+        if (!$tahun) {
+            $tahun = (int) date('Y');
+        }
+        $currentYear = (int) date('Y');
+        $currentMonth = (int) date('n');
+        
+        $jobdescClean = preg_replace('/[^a-zA-Z0-9_\s]/', '', $jobdesc);
+        $endMonth = ($tahun == $currentYear) ? $currentMonth : 12;
+        $tglAwal = "$tahun-01-01";
+        $tglAkhir = ($tahun == $currentYear) ? date('Y-m-d') : "$tahun-12-31";
+        
+        $cacheKey = "dfarm_presensi_monthly_{$jobdescClean}_{$tahun}_" . date('Ymd_H');
+        
+        return Cache::remember($cacheKey, 1800, function () use ($jobdescClean, $tahun, $tglAwal, $tglAkhir, $endMonth) {
+            $sql = "
+            WITH months AS (
+                SELECT 
+                    date_trunc('month', d)::date AS bulan_awal,
+                    (date_trunc('month', d) + interval '1 month - 1 day')::date AS bulan_akhir,
+                    to_char(d, 'Mon') AS nama_bulan,
+                    extract(month from d)::int AS no_bulan,
+                    CASE 
+                        WHEN date_trunc('month', d)::date = date_trunc('month', '$tglAkhir'::date)::date
+                        THEN (('$tglAkhir'::date - date_trunc('month', d)::date + 1)::bigint)
+                        ELSE ((date_trunc('month', d) + interval '1 month - 1 day')::date - date_trunc('month', d)::date + 1)::bigint
+                    END AS jumlah_hari
+                FROM generate_series('$tglAwal'::date, '$tglAkhir'::date, interval '1 month') AS d
+            ),
+            filtered_person AS (
+                SELECT 
+                    p.id AS karyawan_id, 
+                    p.regional_id, 
+                    r.nama AS regional,
+                    (p.positionsdesc ILIKE '%Penyadap%' OR p.positionsdesc ILIKE '%Penderes%') AS is_shift_malam
+                FROM person_data p
+                JOIN m_regional r ON r.id = p.regional_id
+                JOIN m_afdeling f ON f.id = p.afdeling_id AND f.is_deleted IS NOT TRUE
+                WHERE p.person_type IS NULL 
+                  AND p.is_deleted IS NOT TRUE
+                  AND (
+                    '$jobdescClean' = '' 
+                    OR '$jobdescClean' IS NULL 
+                    OR p.positionsdesc ILIKE '%$jobdescClean%'
+                  )
+            ),
+            regional_person_count AS (
+                SELECT 
+                    regional_id, 
+                    regional, 
+                    COUNT(*)::bigint AS total_karyawan
+                FROM filtered_person
+                GROUP BY regional_id, regional
+            ),
+            absen_deduplicated AS (
+                SELECT DISTINCT ON (
+                    r.karyawan_id, 
+                    CASE 
+                        WHEN p.is_shift_malam AND EXTRACT(HOUR FROM r.tgl_mulai) >= 18
+                        THEN (r.tgl_mulai + INTERVAL '1 day')::date
+                        ELSE r.tgl_mulai::date 
+                    END
+                )
+                    p.regional_id,
+                    s.kode,
+                    CASE 
+                        WHEN p.is_shift_malam AND EXTRACT(HOUR FROM r.tgl_mulai) >= 18
+                        THEN (r.tgl_mulai + INTERVAL '1 day')::date
+                        ELSE r.tgl_mulai::date 
+                    END AS tgl_absen
+                FROM p_rekap_absen r
+                JOIN filtered_person p ON p.karyawan_id = r.karyawan_id
+                JOIN p_status_absen s ON s.id = r.status_absen_id
+                WHERE r.tgl_mulai >= ('$tglAwal'::date - INTERVAL '1 day')
+                  AND r.tgl_mulai <  ('$tglAkhir'::date + INTERVAL '2 day')
+                  AND CASE 
+                        WHEN p.is_shift_malam AND EXTRACT(HOUR FROM r.tgl_mulai) >= 18
+                        THEN (r.tgl_mulai + INTERVAL '1 day')::date
+                        ELSE r.tgl_mulai::date 
+                      END BETWEEN '$tglAwal'::date AND '$tglAkhir'::date
+                ORDER BY 
+                    r.karyawan_id, 
+                    CASE 
+                        WHEN p.is_shift_malam AND EXTRACT(HOUR FROM r.tgl_mulai) >= 18
+                        THEN (r.tgl_mulai + INTERVAL '1 day')::date
+                        ELSE r.tgl_mulai::date 
+                    END,
+                    r.tgl_mulai DESC
+            ),
+            absen_monthly AS (
+                SELECT 
+                    date_trunc('month', ad.tgl_absen)::date AS bulan_awal,
+                    ad.regional_id,
+                    COUNT(*) FILTER (WHERE kode IN ('K','KL')) AS kehadiran,
+                    COUNT(*) FILTER (WHERE kode IN ('S1','S2')) AS sakit,
+                    COUNT(*) FILTER (WHERE kode IN ('CT','CP','H1','H2')) AS cuti,
+                    COUNT(*) FILTER (WHERE kode = 'L') AS libur,
+                    COUNT(*) FILTER (WHERE kode IN ('M','M2')) AS mangkir,
+                    COUNT(*) FILTER (WHERE kode NOT IN ('K','KL','S1','S2','CT','CP','H1','H2','L','M','M2') AND kode IS NOT NULL) AS dll
+                FROM absen_deduplicated ad
+                GROUP BY date_trunc('month', ad.tgl_absen)::date, ad.regional_id
+            )
+            SELECT 
+                m.no_bulan,
+                m.nama_bulan,
+                m.jumlah_hari,
+                rpc.regional_id,
+                rpc.regional,
+                rpc.total_karyawan,
+                COALESCE(am.kehadiran, 0) AS kehadiran,
+                COALESCE(am.sakit, 0) AS sakit,
+                COALESCE(am.cuti, 0) AS cuti,
+                COALESCE(am.libur, 0) AS libur,
+                COALESCE(am.mangkir, 0) AS mangkir,
+                COALESCE(am.dll, 0) AS dll,
+                (rpc.total_karyawan * m.jumlah_hari) AS total_pegawai,
+                LEAST(
+                    ROUND(
+                        (((COALESCE(am.kehadiran, 0) + COALESCE(am.sakit, 0) + COALESCE(am.cuti, 0) + 
+                           COALESCE(am.libur, 0) + COALESCE(am.mangkir, 0) + COALESCE(am.dll, 0))::numeric / 
+                          NULLIF(rpc.total_karyawan * m.jumlah_hari, 0)::numeric) * 100), 2
+                    ), 100
+                )::double precision AS prosentase_input,
+                LEAST(
+                    ROUND(
+                        ((COALESCE(am.kehadiran, 0)::numeric / NULLIF(rpc.total_karyawan * m.jumlah_hari, 0)::numeric) * 100), 2
+                    ), 100
+                )::double precision AS prosentase_kehadiran
+            FROM months m
+            CROSS JOIN regional_person_count rpc
+            LEFT JOIN absen_monthly am ON am.bulan_awal = m.bulan_awal AND am.regional_id = rpc.regional_id
+            ORDER BY m.no_bulan, rpc.regional_id;
+            ";
+            
+            $rawRows = DB::connection('pgsql_secondary')->select($sql);
+            
+            $monthNamesId = [
+                1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr', 5 => 'Mei', 6 => 'Jun',
+                7 => 'Jul', 8 => 'Agu', 9 => 'Sep', 10 => 'Okt', 11 => 'Nov', 12 => 'Des'
+            ];
+            
+            $months = [];
+            for ($m = 1; $m <= $endMonth; $m++) {
+                $months[$m] = $monthNamesId[$m];
+            }
+            
+            $regionals = [];
+            $dataByRegional = [];
+            $corporateByMonth = [];
+            
+            foreach ($rawRows as $row) {
+                $regId = $row->regional_id;
+                $regName = $row->regional;
+                $m = (int) $row->no_bulan;
+                
+                if (!isset($regionals[$regId])) {
+                    $regionals[$regId] = $regName;
+                    $dataByRegional[$regId] = [
+                        'id' => $regId,
+                        'name' => $regName,
+                        'total_karyawan' => $row->total_karyawan,
+                        'months' => []
+                    ];
+                }
+                
+                $dataByRegional[$regId]['months'][$m] = [
+                    'kehadiran' => (int) $row->kehadiran,
+                    'total_pegawai' => (int) $row->total_pegawai,
+                    'prosentase_kehadiran' => (float) $row->prosentase_kehadiran,
+                    'prosentase_input' => (float) $row->prosentase_input,
+                ];
+                
+                if (!isset($corporateByMonth[$m])) {
+                    $corporateByMonth[$m] = [
+                        'kehadiran' => 0,
+                        'total_input' => 0,
+                        'total_pegawai' => 0,
+                    ];
+                }
+                $corporateByMonth[$m]['kehadiran'] += (int) $row->kehadiran;
+                $corporateByMonth[$m]['total_input'] += ((int) $row->kehadiran + (int) $row->sakit + (int) $row->cuti + (int) $row->libur + (int) $row->mangkir + (int) $row->dll);
+                $corporateByMonth[$m]['total_pegawai'] += (int) $row->total_pegawai;
+            }
+            
+            foreach ($corporateByMonth as $m => &$cData) {
+                $cData['prosentase_kehadiran'] = $cData['total_pegawai'] > 0 
+                    ? round(($cData['kehadiran'] / $cData['total_pegawai']) * 100, 2) 
+                    : 0;
+                $cData['prosentase_input'] = $cData['total_pegawai'] > 0 
+                    ? round(($cData['total_input'] / $cData['total_pegawai']) * 100, 2) 
+                    : 0;
+            }
+            
+            return [
+                'tahun' => $tahun,
+                'endMonth' => $endMonth,
+                'months' => $months,
+                'regionals' => $regionals,
+                'dataByRegional' => $dataByRegional,
+                'corporateByMonth' => $corporateByMonth
+            ];
+        });
+    }
     private function calculateTotalPrestasi($data)
     {
         if (empty($data)) {
@@ -3079,13 +3302,232 @@ class PageController extends Controller
         return $totals;
     }
 
+    private function getMonthlySummaryProduksi($tahun = null)
+    {
+        if (!$tahun) {
+            $tahun = (int) date('Y');
+        }
+        $currentYear = (int) date('Y');
+        $currentMonth = (int) date('n');
+        $endMonth = ($tahun == $currentYear) ? $currentMonth : 12;
+        $tglAwal = "$tahun-01-01";
+        $tglAkhir = ($tahun == $currentYear) ? date('Y-m-d') : "$tahun-12-31";
+
+        $cacheKey = "dfarm_produksi_monthly_summary_{$tahun}_" . date('Ymd_H');
+
+        return Cache::remember($cacheKey, 1800, function () use ($tahun, $endMonth, $tglAwal, $tglAkhir) {
+            $sql = "
+                SELECT 
+                    k.regional_id,
+                    r.nama as regional,
+                    extract(month from pk.tanggal)::int as no_bulan,
+                    
+                    -- Karet (comodity 2)
+                    SUM(CASE WHEN pr.comodity_id = 2 AND pr.kode = 'L' THEN COALESCE(pkd.berat, 0) ELSE 0 END) AS karet_basah_latek,
+                    SUM(CASE WHEN pr.comodity_id = 2 AND pr.kode = 'LM' THEN COALESCE(pkd.berat, 0) ELSE 0 END) AS karet_basah_lump,
+                    SUM(CASE WHEN pr.comodity_id = 2 AND pr.kode = 'SC' THEN COALESCE(pkd.berat, 0) ELSE 0 END) AS karet_basah_scrab,
+                    SUM(CASE WHEN pr.comodity_id = 2 THEN COALESCE(pkd.berat, 0) ELSE 0 END) AS karet_total_basah,
+                    SUM(CASE WHEN pr.comodity_id = 2 AND pr.kode = 'L' THEN COALESCE(pkd.berat_kering, 0) ELSE 0 END) AS karet_sheet,
+                    SUM(CASE WHEN pr.comodity_id = 2 AND pr.kode = 'LM' THEN COALESCE(pkd.berat_kering, 0) ELSE 0 END) AS karet_compo,
+                    SUM(CASE WHEN pr.comodity_id = 2 AND pr.kode = 'SC' THEN COALESCE(pkd.berat_kering, 0) ELSE 0 END) AS karet_scrap,
+                    SUM(CASE WHEN pr.comodity_id = 2 THEN COALESCE(pkd.berat_kering, 0) ELSE 0 END) AS karet_total_kering,
+
+                    -- Teh (comodity 1)
+                    SUM(CASE WHEN ja.comodity_id = 1 AND ja.kode = '53501' THEN COALESCE(pkd.berat, 0) ELSE 0 END) AS teh_panen_manual,
+                    SUM(CASE WHEN ja.comodity_id = 1 AND ja.kode = '53502' THEN COALESCE(pkd.berat, 0) ELSE 0 END) AS teh_panen_gunting,
+                    SUM(CASE WHEN ja.comodity_id = 1 AND ja.kode = '53504' THEN COALESCE(pkd.berat, 0) ELSE 0 END) AS teh_panen_mesin_group,
+                    SUM(CASE WHEN ja.comodity_id = 1 AND ja.kode = '53503' THEN COALESCE(pkd.berat, 0) ELSE 0 END) AS teh_panen_mesin_individu,
+                    SUM(CASE WHEN ja.comodity_id = 1 THEN COALESCE(pkd.berat, 0) ELSE 0 END) AS teh_total_pucuk_basah,
+
+                    -- Kopi (comodity 3)
+                    SUM(CASE WHEN pr.comodity_id = 3 AND pr.kode = 'KPMR' THEN COALESCE(pkd.berat, 0) ELSE 0 END) AS kopi_basah_merah,
+                    SUM(CASE WHEN pr.comodity_id = 3 AND pr.kode = 'KPKN' THEN COALESCE(pkd.berat, 0) ELSE 0 END) AS kopi_basah_kuning,
+                    SUM(CASE WHEN pr.comodity_id = 3 AND pr.kode = 'KPHJ' THEN COALESCE(pkd.berat, 0) ELSE 0 END) AS kopi_basah_hijau,
+                    SUM(CASE WHEN pr.comodity_id = 3 AND pr.kode = 'KPHT' THEN COALESCE(pkd.berat, 0) ELSE 0 END) AS kopi_basah_hitam,
+                    SUM(CASE WHEN pr.comodity_id = 3 THEN COALESCE(pkd.berat, 0) ELSE 0 END) AS kopi_total_basah,
+                    SUM(CASE WHEN pr.comodity_id = 3 AND pr.kode = 'KPMR' THEN COALESCE(pkd.berat_kering, 0) ELSE 0 END) AS kopi_kering_merah,
+                    SUM(CASE WHEN pr.comodity_id = 3 THEN COALESCE(pkd.berat_kering, 0) ELSE 0 END) AS kopi_total_kering
+
+                FROM penerimaan_kebun pk
+                JOIN penerimaan_kebun_detail pkd ON pkd.penerimaan_id = pk.id AND pkd.is_deleted = false
+                LEFT JOIN produk pr ON pr.id = pkd.produk_id
+                LEFT JOIN m_jenis_aktivitas ja ON ja.id = pk.aktifitas_id
+                JOIN m_kebun k ON k.id = pk.kebun_id AND k.is_deleted = false
+                JOIN m_regional r ON r.id = k.regional_id AND r.is_deleted = false
+                WHERE pk.is_deleted = false
+                  AND pk.tanggal >= '$tglAwal'::date AND pk.tanggal < ('$tglAkhir'::date + INTERVAL '1 day')
+                GROUP BY k.regional_id, r.nama, extract(month from pk.tanggal)::int
+                ORDER BY k.regional_id, no_bulan
+            ";
+
+            $rawRows = DB::connection('pgsql_secondary')->select($sql);
+
+            $monthNamesId = [
+                1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr', 5 => 'Mei', 6 => 'Jun',
+                7 => 'Jul', 8 => 'Agu', 9 => 'Sep', 10 => 'Okt', 11 => 'Nov', 12 => 'Des'
+            ];
+
+            $months = [];
+            for ($m = 1; $m <= $endMonth; $m++) {
+                $months[$m] = $monthNamesId[$m];
+            }
+
+            $regionals = [];
+            $dataByRegional = [];
+            $corporateByMonth = [];
+
+            for ($m = 1; $m <= $endMonth; $m++) {
+                $corporateByMonth[$m] = [
+                    'karet_total_kering' => 0,
+                    'karet_total_basah' => 0,
+                    'karet_sheet' => 0,
+                    'teh_total_pucuk_basah' => 0,
+                    'teh_panen_mesin' => 0,
+                    'teh_panen_manual' => 0,
+                    'kopi_total_basah' => 0,
+                    'kopi_total_kering' => 0,
+                    'kopi_basah_merah' => 0,
+                ];
+            }
+
+            foreach ($rawRows as $row) {
+                $regId = $row->regional_id;
+                $regName = $row->regional;
+                $m = (int) $row->no_bulan;
+
+                if ($m > $endMonth) continue;
+
+                if (!isset($regionals[$regId])) {
+                    $regionals[$regId] = $regName;
+                    $dataByRegional[$regId] = [
+                        'id' => $regId,
+                        'name' => $regName,
+                        'months' => []
+                    ];
+                    for ($im = 1; $im <= $endMonth; $im++) {
+                        $dataByRegional[$regId]['months'][$im] = [
+                            'karet_total_kering' => 0,
+                            'karet_total_basah' => 0,
+                            'karet_sheet' => 0,
+                            'teh_total_pucuk_basah' => 0,
+                            'teh_panen_mesin' => 0,
+                            'teh_panen_manual' => 0,
+                            'kopi_total_basah' => 0,
+                            'kopi_total_kering' => 0,
+                            'kopi_basah_merah' => 0,
+                        ];
+                    }
+                }
+
+                $mesin = (float)$row->teh_panen_mesin_group + (float)$row->teh_panen_mesin_individu;
+                $manual = (float)$row->teh_panen_manual + (float)$row->teh_panen_gunting;
+
+                $dataByRegional[$regId]['months'][$m] = [
+                    'karet_total_kering' => (float)$row->karet_total_kering,
+                    'karet_total_basah' => (float)$row->karet_total_basah,
+                    'karet_sheet' => (float)$row->karet_sheet,
+                    'teh_total_pucuk_basah' => (float)$row->teh_total_pucuk_basah,
+                    'teh_panen_mesin' => $mesin,
+                    'teh_panen_manual' => $manual,
+                    'kopi_total_basah' => (float)$row->kopi_total_basah,
+                    'kopi_total_kering' => (float)$row->kopi_total_kering,
+                    'kopi_basah_merah' => (float)$row->kopi_basah_merah,
+                ];
+
+                $corporateByMonth[$m]['karet_total_kering'] += (float)$row->karet_total_kering;
+                $corporateByMonth[$m]['karet_total_basah'] += (float)$row->karet_total_basah;
+                $corporateByMonth[$m]['karet_sheet'] += (float)$row->karet_sheet;
+                $corporateByMonth[$m]['teh_total_pucuk_basah'] += (float)$row->teh_total_pucuk_basah;
+                $corporateByMonth[$m]['teh_panen_mesin'] += $mesin;
+                $corporateByMonth[$m]['teh_panen_manual'] += $manual;
+                $corporateByMonth[$m]['kopi_total_basah'] += (float)$row->kopi_total_basah;
+                $corporateByMonth[$m]['kopi_total_kering'] += (float)$row->kopi_total_kering;
+                $corporateByMonth[$m]['kopi_basah_merah'] += (float)$row->kopi_basah_merah;
+            }
+
+            $standardRegs = [
+                2 => 'Regional 2',
+                3 => 'Regional 3',
+                5 => 'Regional 5',
+                7 => 'Regional 7',
+                8 => 'Regional 8',
+            ];
+            foreach ($standardRegs as $sId => $sName) {
+                if (!isset($regionals[$sId])) {
+                    $regionals[$sId] = $sName;
+                    $dataByRegional[$sId] = [
+                        'id' => $sId,
+                        'name' => $sName,
+                        'months' => []
+                    ];
+                    for ($im = 1; $im <= $endMonth; $im++) {
+                        $dataByRegional[$sId]['months'][$im] = [
+                            'karet_total_kering' => 0,
+                            'karet_total_basah' => 0,
+                            'karet_sheet' => 0,
+                            'teh_total_pucuk_basah' => 0,
+                            'teh_panen_mesin' => 0,
+                            'teh_panen_manual' => 0,
+                            'kopi_total_basah' => 0,
+                            'kopi_total_kering' => 0,
+                            'kopi_basah_merah' => 0,
+                        ];
+                    }
+                }
+            }
+            ksort($regionals);
+            ksort($dataByRegional);
+
+            $ytd = [
+                'karet_total_kering' => 0,
+                'karet_total_basah' => 0,
+                'karet_sheet' => 0,
+                'teh_total_pucuk_basah' => 0,
+                'teh_panen_mesin' => 0,
+                'teh_panen_manual' => 0,
+                'kopi_total_basah' => 0,
+                'kopi_total_kering' => 0,
+                'kopi_basah_merah' => 0,
+            ];
+            foreach ($corporateByMonth as $m => $c) {
+                foreach ($ytd as $k => $v) {
+                    $ytd[$k] += $c[$k] ?? 0;
+                }
+            }
+
+            return [
+                'tahun' => $tahun,
+                'endMonth' => $endMonth,
+                'months' => $months,
+                'regionals' => $regionals,
+                'dataByRegional' => $dataByRegional,
+                'corporateByMonth' => $corporateByMonth,
+                'ytd' => $ytd,
+            ];
+        });
+    }
+
     public function dfarmkaretproduksi()
     {
+        set_time_limit(120);
+        $user = Auth::guard('custom')->user();
+        $username = strtolower($user->username ?? '');
+        $userRegionalId = null;
+        if (preg_match('/^regional(\d+)$/', $username, $matches)) {
+            $userRegionalId = $matches[1];
+        }
+
         $regional = $_GET['id_reg'] ?? '';
+        // Jika user regional dan mencoba filter regional lain, batasi hanya ke regional miliknya
+        if ($userRegionalId && $regional != '' && $regional != $userRegionalId) {
+            $regional = $userRegionalId;
+        }
+
         $tglAwal = $_GET['tgl_awal'] ?? date('Y-m-d');
         $tglAkhir = $_GET['tgl_akhir'] ?? date('Y-m-d');
         $kebun = $_GET['kode_kebun'] ?? '';
         $jobdesc = $_GET['jobdesc'] ?? 'PENYADAP';
+        $tahun = (int)($_GET['tahun'] ?? date('Y'));
         $komoditas = 2;
 
         if ($tglAwal > $tglAkhir) {
@@ -3107,7 +3549,9 @@ class PageController extends Controller
             });
         }
 
-        if ($regional) {
+        if ($userRegionalId) {
+            $data->where('person_data.regional_id', $userRegionalId);
+        } elseif ($regional) {
             $data->where('person_data.regional_id', $regional);
         }
         // Gunakan pagination untuk data besar
@@ -3194,12 +3638,24 @@ class PageController extends Controller
             return Redirect::back()->withErrors(['msg' => 'Data tidak ditemukan untuk filter yang dipilih']);
         }
 
+        $monthlySummary = $this->getMonthlySummaryProduksi($tahun);
 
-        return view('pages/dfarm/dfarm_karet_produksi', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'prestasiData', 'prestasiDataLite', 'totalData', 'tglAwal', 'tglAkhir', 'jobdesc'));
+        return view('pages/dfarm/dfarm_karet_produksi', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'prestasiData', 'prestasiDataLite', 'totalData', 'tglAwal', 'tglAkhir', 'jobdesc', 'monthlySummary', 'tahun', 'userRegionalId'));
     }
     public function dfarmtehproduksi()
     {
+        $user = Auth::guard('custom')->user();
+        $username = strtolower($user->username ?? '');
+        $userRegionalId = null;
+        if (preg_match('/^regional(\d+)$/', $username, $matches)) {
+            $userRegionalId = $matches[1];
+        }
+
         $regional = $_GET['id_reg'] ?? '';
+        if ($userRegionalId && $regional != '' && $regional != $userRegionalId) {
+            $regional = $userRegionalId;
+        }
+
         $tglAwal = $_GET['tgl_awal'] ?? date('Y-m-d');
         $tglAkhir = $_GET['tgl_akhir'] ?? date('Y-m-d');
         $kebun = $_GET['kode_kebun'] ?? '';
@@ -3225,7 +3681,9 @@ class PageController extends Controller
             });
         }
 
-        if ($regional) {
+        if ($userRegionalId) {
+            $data->where('person_data.regional_id', $userRegionalId);
+        } elseif ($regional) {
             $data->where('person_data.regional_id', $regional);
         }
         // Gunakan pagination untuk data besar
@@ -3304,7 +3762,7 @@ class PageController extends Controller
         }
 
 
-        return view('pages/dfarm/dfarm_teh_produksi', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'prestasiData', 'prestasiDataLite', 'totalData', 'tglAwal', 'tglAkhir', 'jobdesc'));
+        return view('pages/dfarm/dfarm_teh_produksi', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'prestasiData', 'prestasiDataLite', 'totalData', 'tglAwal', 'tglAkhir', 'jobdesc', 'userRegionalId'));
     }
     public function ajax_dfarmtehproduksi(Request $request)
     {
@@ -3318,6 +3776,15 @@ class PageController extends Controller
         ]);
 
         $regional = $request->input('id_reg', '');
+        $user = Auth::guard('custom')->user();
+        $username = strtolower($user->username ?? '');
+        $userRegionalId = null;
+        if (preg_match('/^regional(\d+)$/', $username, $matches)) {
+            $userRegionalId = $matches[1];
+        }
+        if ($userRegionalId && $regional != '' && $regional != $userRegionalId) {
+            $regional = $userRegionalId;
+        }
         $tglAwal = $request->input('tgl_awal', date('Y-m-d'));
         $tglAkhir = $request->input('tgl_akhir', date('Y-m-d'));
         $kebun = $request->input('kode_kebun', '');
@@ -3449,7 +3916,18 @@ class PageController extends Controller
     }
     public function dfarmkopiproduksi()
     {
+        $user = Auth::guard('custom')->user();
+        $username = strtolower($user->username ?? '');
+        $userRegionalId = null;
+        if (preg_match('/^regional(\d+)$/', $username, $matches)) {
+            $userRegionalId = $matches[1];
+        }
+
         $regional = $_GET['id_reg'] ?? '';
+        if ($userRegionalId && $regional != '' && $regional != $userRegionalId) {
+            $regional = $userRegionalId;
+        }
+
         $tglAwal = $_GET['tgl_awal'] ?? date('Y-m-d');
         $tglAkhir = $_GET['tgl_akhir'] ?? date('Y-m-d');
         $kebun = $_GET['kode_kebun'] ?? '';
@@ -3475,7 +3953,9 @@ class PageController extends Controller
             });
         }
 
-        if ($regional) {
+        if ($userRegionalId) {
+            $data->where('person_data.regional_id', $userRegionalId);
+        } elseif ($regional) {
             $data->where('person_data.regional_id', $regional);
         }
         // Gunakan pagination untuk data besar
@@ -3569,7 +4049,7 @@ class PageController extends Controller
         }
 
 
-        return view('pages/dfarm/dfarm_kopi_produksi', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'prestasiData', 'prestasiDataLite', 'totalData', 'tglAwal', 'tglAkhir', 'jobdesc'));
+        return view('pages/dfarm/dfarm_kopi_produksi', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'prestasiData', 'prestasiDataLite', 'totalData', 'tglAwal', 'tglAkhir', 'jobdesc', 'userRegionalId'));
     }
     public function ajax_dfarmkopiproduksi(Request $request)
     {
@@ -3583,6 +4063,15 @@ class PageController extends Controller
         ]);
 
         $regional = $request->input('id_reg', '');
+        $user = Auth::guard('custom')->user();
+        $username = strtolower($user->username ?? '');
+        $userRegionalId = null;
+        if (preg_match('/^regional(\d+)$/', $username, $matches)) {
+            $userRegionalId = $matches[1];
+        }
+        if ($userRegionalId && $regional != '' && $regional != $userRegionalId) {
+            $regional = $userRegionalId;
+        }
         $tglAwal = $request->input('tgl_awal', date('Y-m-d'));
         $tglAkhir = $request->input('tgl_akhir', date('Y-m-d'));
         $kebun = $request->input('kode_kebun', '');
@@ -3729,7 +4218,18 @@ class PageController extends Controller
     }
     public function dfarmpemeliharaan()
     {
+        $user = Auth::guard('custom')->user();
+        $username = strtolower($user->username ?? '');
+        $userRegionalId = null;
+        if (preg_match('/^regional(\d+)$/', $username, $matches)) {
+            $userRegionalId = $matches[1];
+        }
+
         $regional = $_GET['id_reg'] ?? '';
+        if ($userRegionalId && $regional != '' && $regional != $userRegionalId) {
+            $regional = $userRegionalId;
+        }
+
         $tglAwal = $_GET['tgl_awal'] ?? date('Y-m-d');
         $tglAkhir = $_GET['tgl_akhir'] ?? date('Y-m-d');
         $kebun = $_GET['kode_kebun'] ?? '';
@@ -3782,7 +4282,9 @@ class PageController extends Controller
             });
         }
 
-        if ($regional) {
+        if ($userRegionalId) {
+            $data->where('person_data.regional_id', $userRegionalId);
+        } elseif ($regional) {
             $data->where('person_data.regional_id', $regional);
         }
         // Gunakan pagination untuk data besar
@@ -3849,7 +4351,7 @@ class PageController extends Controller
         }
 
 
-        return view('pages/dfarm/dfarm_pemeliharaan', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'selectedaktivitas', 'prestasiData', 'prestasiDataLite', 'totalData', 'tglAwal', 'tglAkhir', 'jobdesc', 'detaildatapemeliharaan', 'alldatapemeliharaan'));
+        return view('pages/dfarm/dfarm_pemeliharaan', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'selectedaktivitas', 'prestasiData', 'prestasiDataLite', 'totalData', 'tglAwal', 'tglAkhir', 'jobdesc', 'detaildatapemeliharaan', 'alldatapemeliharaan', 'userRegionalId'));
     }
     public function ajax_dfarmpemeliharaan(Request $request)
     {
@@ -3864,6 +4366,15 @@ class PageController extends Controller
         ]);
 
         $regional = $request->input('id_reg', '');
+        $user = Auth::guard('custom')->user();
+        $username = strtolower($user->username ?? '');
+        $userRegionalId = null;
+        if (preg_match('/^regional(\d+)$/', $username, $matches)) {
+            $userRegionalId = $matches[1];
+        }
+        if ($userRegionalId && $regional != '' && $regional != $userRegionalId) {
+            $regional = $userRegionalId;
+        }
         $tglAwal = $request->input('tgl_awal', date('Y-m-d'));
         $tglAkhir = $request->input('tgl_akhir', date('Y-m-d'));
         $kebun = $request->input('kode_kebun', '');

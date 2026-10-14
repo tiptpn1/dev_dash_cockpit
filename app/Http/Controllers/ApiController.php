@@ -15,7 +15,17 @@ class ApiController extends Controller
 {
     public static function get_data_kebun()
     {
+        $user = Auth::guard('custom')->user();
+        $username = strtolower($user->username ?? '');
+        $userRegionalId = null;
+        if (preg_match('/^regional(\d+)$/', $username, $matches)) {
+            $userRegionalId = $matches[1];
+        }
+
         $regional = $_GET['id_reg'] ?? null;
+        if ($userRegionalId) {
+            $regional = $userRegionalId;
+        }
         $komoditas = $_GET['komoditas'] ?? 2;
         
         // Gunakan INNER JOIN (lebih cepat) dan tambahkan filter regional
