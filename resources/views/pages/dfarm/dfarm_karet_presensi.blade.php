@@ -330,6 +330,11 @@
             .animate-slide-out {
             animation: slide-out 0.3s ease-out;
             }
+
+            @keyframes spinSummary {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
           </style>
 
           <!-- Filters Section -->
@@ -391,7 +396,10 @@
                             $currentYr = (int)date('Y');
                           @endphp
                           @for($y = $currentYr; $y >= $currentYr - 3; $y--)
-                            <option value="{{ $y }}" {{ ($tahun ?? $currentYr) == $y ? 'selected' : '' }}>Tahun {{ $y }} (Jan - {{ end($monthlySummary['months']) }} {{ $y }})</option>
+                            @php
+                              $labelBulan = ($y == $currentYr) ? date('M') : 'Des';
+                            @endphp
+                            <option value="{{ $y }}" {{ ($tahun ?? $currentYr) == $y ? 'selected' : '' }}>Tahun {{ $y }} (Jan - {{ $labelBulan }} {{ $y }})</option>
                           @endfor
                         </select>
                       </div>
@@ -422,151 +430,12 @@
                     </button>
                   </div>
 
-                  <!-- KPI Cards Section (Summary Gabungan) -->
-                  @php
-                    $latestMonth = $monthlySummary['endMonth'];
-                    $latestCorp = $monthlySummary['corporateByMonth'][$latestMonth] ?? null;
-                    $totalTenagaKerja = 0;
-                    if (!empty($monthlySummary['dataByRegional'])) {
-                      foreach($monthlySummary['dataByRegional'] as $r) {
-                        $totalTenagaKerja += $r['total_karyawan'] ?? 0;
-                      }
-                    }
-                    
-                    $bestRegName = '-';
-                    $bestRegPercent = -1;
-                    if (!empty($monthlySummary['dataByRegional'])) {
-                      foreach($monthlySummary['dataByRegional'] as $r) {
-                        $pct = $r['months'][$latestMonth]['prosentase_kehadiran'] ?? 0;
-                        if ($pct > $bestRegPercent) {
-                          $bestRegPercent = $pct;
-                          $bestRegName = $r['name'];
-                        }
-                      }
-                    }
-                  @endphp
-                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6" style="margin: 0 16px 20px;">
-                    <!-- Card 1: Rata-rata % Kehadiran Bulan Berjalan -->
-                    <div style="background: #fff; border: 1px solid #d1fae5; border-top: 4px solid #166534; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08);">
-                      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                        <h3 style="color: #166534; font-size: 11px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">% Kehadiran Gabungan</h3>
-                        <i class="fas fa-percent" style="color: #16a34a; font-size: 18px;"></i>
-                      </div>
-                      <p style="color: #166534; font-size: 26px; font-weight: 800; margin: 0; line-height: 1;">{{ $latestCorp['prosentase_kehadiran'] ?? 0 }}%</p>
-                      <p style="color: #6b7280; font-size: 11px; margin: 4px 0 0 0;">Bulan {{ $monthlySummary['months'][$latestMonth] ?? '' }} {{ $monthlySummary['tahun'] }} (Akumulasi)</p>
-                    </div>
-
-                    <!-- Card 2: Rata-rata % Input Presensi Bulan Berjalan -->
-                    <div style="background: #fff; border: 1px solid #d1fae5; border-top: 4px solid #166534; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08);">
-                      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                        <h3 style="color: #166534; font-size: 11px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">% Input Presensi Gabungan</h3>
-                        <i class="fas fa-clipboard-check" style="color: #16a34a; font-size: 18px;"></i>
-                      </div>
-                      <p style="color: #166534; font-size: 26px; font-weight: 800; margin: 0; line-height: 1;">{{ $latestCorp['prosentase_input'] ?? 0 }}%</p>
-                      <p style="color: #6b7280; font-size: 11px; margin: 4px 0 0 0;">Kepatuhan Input Presensi</p>
-                    </div>
-
-                    <!-- Card 3: Total Tenaga Kerja Terdaftar -->
-                    <div style="background: #fff; border: 1px solid #d1fae5; border-top: 4px solid #166534; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08);">
-                      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                        <h3 style="color: #166534; font-size: 11px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Total Tenaga Kerja</h3>
-                        <i class="fas fa-users" style="color: #16a34a; font-size: 18px;"></i>
-                      </div>
-                      <p style="color: #166534; font-size: 26px; font-weight: 800; margin: 0; line-height: 1;">{{ number_format($totalTenagaKerja, 0, ',', '.') }}</p>
-                      <p style="color: #6b7280; font-size: 11px; margin: 4px 0 0 0;">Orang Terdaftar di Gabungan</p>
-                    </div>
-
-                    <!-- Card 4: Top Regional Performer -->
-                    <div style="background: #fff; border: 1px solid #d1fae5; border-top: 4px solid #166534; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08);">
-                      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                        <h3 style="color: #166534; font-size: 11px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Best Performer Bulan Ini</h3>
-                        <i class="fas fa-trophy" style="color: #eab308; font-size: 18px;"></i>
-                      </div>
-                      <p style="color: #166534; font-size: 20px; font-weight: 800; margin: 0; line-height: 1.2;">{{ $bestRegName }}</p>
-                      <p style="color: #16a34a; font-size: 12px; font-weight: 700; margin: 4px 0 0 0;">{{ $bestRegPercent >= 0 ? $bestRegPercent . '% Kehadiran' : '-' }}</p>
-                    </div>
-                  </div>
-
-                  <!-- Line Chart Card -->
-                  <div style="margin: 0 16px 24px; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                    <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #f3f4f6;">
-                      <div>
-                        <h2 style="font-size: 15px; font-weight: 700; color: #166534; margin: 0;">
-                          <i class="fas fa-chart-line" style="margin-right: 6px;"></i> Tren Perbandingan Persentase Presensi Tiap Regional (Jan - {{ end($monthlySummary['months']) }} {{ $monthlySummary['tahun'] }})
-                        </h2>
-                        <p style="font-size: 12px; color: #6b7280; margin: 4px 0 0 0;">
-                          Menampilkan perbandingan akumulasi bulanan persentase presensi tiap regional di tahun berjalan.
-                        </p>
-                      </div>
-                      <!-- Metric Selector Buttons -->
-                      <div style="display: flex; background: #f3f4f6; border-radius: 8px; padding: 3px; gap: 4px;">
-                        <button id="btnMetricKehadiran" type="button" class="px-3 py-1.5 text-xs font-semibold rounded-md transition-all" style="background: #166534; color: #fff; border: none; cursor: pointer;">
-                          % Kehadiran
-                        </button>
-                        <button id="btnMetricInput" type="button" class="px-3 py-1.5 text-xs font-semibold rounded-md transition-all" style="background: transparent; color: #4b5563; border: none; cursor: pointer;">
-                          % Input Presensi
-                        </button>
-                      </div>
-                    </div>
-
-                    <!-- Canvas for Chart.js -->
-                    <div style="position: relative; height: 380px; width: 100%;">
-                      <canvas id="summaryLineChart"></canvas>
-                    </div>
-                  </div>
-
-                  <!-- Table Card: Matriks Bulanan Per Regional -->
-                  <div style="margin: 0 16px 24px; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                    <h3 style="font-size: 14px; font-weight: 700; color: #1f2937; margin: 0 0 14px 0; display: flex; align-items: center; gap: 6px;">
-                      <i class="fas fa-table" style="color: #166534;"></i> Matriks Akumulasi Bulanan % Kehadiran per Regional
-                    </h3>
-                    <div style="overflow-x: auto;">
-                      <table class="report-table" style="width: 100%; border-collapse: collapse; font-size: 12px;">
-                        <thead>
-                          <tr>
-                            <th style="padding: 10px 14px; text-align: left; background: #166534; color: #fff;">Regional</th>
-                            <th style="padding: 10px 14px; text-align: right; background: #166534; color: #fff;">Total SDM</th>
-                            @foreach($monthlySummary['months'] as $mNo => $mName)
-                              <th style="padding: 10px 12px; text-align: center; background: #166534; color: #fff;">{{ $mName }}</th>
-                            @endforeach
-                          </tr>
-                        </thead>
-                        <tbody>
-                          @if(!empty($monthlySummary['dataByRegional']))
-                            @foreach($monthlySummary['dataByRegional'] as $regId => $regData)
-                              <tr style="border-bottom: 1px solid #e5e7eb;">
-                                <td style="padding: 9px 14px; font-weight: 600; color: #111827;">{{ $regData['name'] }}</td>
-                                <td style="padding: 9px 14px; text-align: right; color: #4b5563;">{{ number_format($regData['total_karyawan'], 0, ',', '.') }}</td>
-                                @foreach($monthlySummary['months'] as $mNo => $mName)
-                                  @php
-                                    $val = $regData['months'][$mNo]['prosentase_kehadiran'] ?? 0;
-                                    $colorBg = $val >= 75 ? '#dcfce7' : ($val >= 50 ? '#fef9c3' : '#fee2e2');
-                                    $colorText = $val >= 75 ? '#15803d' : ($val >= 50 ? '#854d0e' : '#b91c1c');
-                                  @endphp
-                                  <td style="padding: 9px 12px; text-align: center;">
-                                    <span style="background: {{ $colorBg }}; color: {{ $colorText }}; font-weight: 700; padding: 2px 8px; border-radius: 4px; font-size: 11px;">
-                                      {{ $val }}%
-                                    </span>
-                                  </td>
-                                @endforeach
-                              </tr>
-                            @endforeach
-                          @endif
-                          <!-- Gabungan Average Row -->
-                          <tr style="background: #f8fafc; font-weight: 700; border-top: 2px solid #cbd5e1;">
-                            <td style="padding: 10px 14px; color: #166534;">Gabungan (Rata-rata)</td>
-                            <td style="padding: 10px 14px; text-align: right; color: #166534;">{{ number_format($totalTenagaKerja, 0, ',', '.') }}</td>
-                            @foreach($monthlySummary['months'] as $mNo => $mName)
-                              @php
-                                $valCorp = $monthlySummary['corporateByMonth'][$mNo]['prosentase_kehadiran'] ?? 0;
-                              @endphp
-                              <td style="padding: 10px 12px; text-align: center; color: #166534;">
-                                {{ $valCorp }}%
-                              </td>
-                            @endforeach
-                          </tr>
-                        </tbody>
-                      </table>
+                  <!-- Summary Content Wrapper (Loaded asynchronously via AJAX for instant page speed) -->
+                  <div id="summaryContentWrapper">
+                    <div id="summaryLoadingSpinner" style="padding: 60px 20px; text-align: center; background: #fff; border-radius: 12px; margin: 0 16px 24px; border: 1px solid #e5e7eb; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                      <div style="width: 44px; height: 44px; border: 4px solid #d1fae5; border-top-color: #166534; border-radius: 50%; display: inline-block; animation: spinSummary 0.8s linear infinite;"></div>
+                      <h4 style="margin-top: 18px; font-size: 16px; font-weight: 700; color: #166534;">Memuat Ringkasan Tren Presensi Gabungan...</h4>
+                      <p style="margin-top: 4px; font-size: 13px; color: #6b7280;">Mengambil data akumulasi multi-bulan dari server di latar belakang.</p>
                     </div>
                   </div>
                 </div>
@@ -1169,11 +1038,39 @@
         };
 
         // ============================================
-        // INITIALIZE SUMMARY LINE CHART (Corporate Level)
+        // INITIALIZE SUMMARY LINE CHART & ASYNC LOADER
         // ============================================
-        const summaryChartCanvas = document.getElementById('summaryLineChart');
-        if (summaryChartCanvas) {
-          const monthlySummaryData = @json($monthlySummary ?? []);
+        let chartRetryCount = 0;
+        function initSummaryLineChart(monthlySummaryData) {
+          const summaryChartCanvas = document.getElementById('summaryLineChart');
+          if (!summaryChartCanvas) {
+            console.warn('[initSummaryLineChart] Canvas #summaryLineChart belum tersedia di DOM.');
+            return;
+          }
+          if (!monthlySummaryData) return;
+
+          // Jika Chart library CDN belum ter-load, retry hingga 10x
+          if (typeof Chart === 'undefined') {
+            if (chartRetryCount < 10) {
+              chartRetryCount++;
+              setTimeout(() => initSummaryLineChart(monthlySummaryData), 200);
+            } else {
+              console.error('[initSummaryLineChart] Chart.js library tidak tersedia.');
+            }
+            return;
+          }
+          chartRetryCount = 0;
+
+          // Hancurkan instance chart lama jika terdaftar di canvas ini
+          const oldChart = (typeof Chart.getChart === 'function') ? Chart.getChart(summaryChartCanvas) : window.summaryLineChart;
+          if (oldChart) {
+            try { oldChart.destroy(); } catch (e) {}
+          }
+          if (window.summaryLineChart && window.summaryLineChart !== oldChart) {
+            try { window.summaryLineChart.destroy(); } catch (e) {}
+            window.summaryLineChart = null;
+          }
+
           const monthLabels = Object.values(monthlySummaryData.months || {});
           const monthKeys = Object.keys(monthlySummaryData.months || {});
 
@@ -1240,73 +1137,96 @@
           }
 
           let currentMetric = 'prosentase_kehadiran';
-          const summaryCtx = summaryChartCanvas.getContext('2d');
 
-          window.summaryLineChart = new Chart(summaryCtx, {
-            type: 'line',
-            data: {
-              labels: monthLabels,
-              datasets: buildSummaryDatasets(currentMetric)
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              interaction: {
-                mode: 'index',
-                intersect: false
+          try {
+            window.summaryLineChart = new Chart(summaryChartCanvas, {
+              type: 'line',
+              data: {
+                labels: monthLabels,
+                datasets: buildSummaryDatasets(currentMetric)
               },
-              plugins: {
-                legend: {
-                  display: true,
-                  position: 'top',
-                  labels: {
-                    boxWidth: 14,
-                    usePointStyle: true,
-                    padding: 16,
-                    font: { size: 12, weight: '600' },
-                    color: '#374151'
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                resizeDelay: 50,
+                interaction: {
+                  mode: 'index',
+                  intersect: false
+                },
+                plugins: {
+                  legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                      boxWidth: 14,
+                      usePointStyle: true,
+                      padding: 16,
+                      font: { size: 12, weight: '600' },
+                      color: '#374151'
+                    }
+                  },
+                  tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    titleFont: { size: 13, weight: 'bold' },
+                    bodyFont: { size: 12 },
+                    padding: 12,
+                    cornerRadius: 8,
+                    callbacks: {
+                      label: function(context) {
+                        const label = context.dataset.label || '';
+                        const val = context.parsed ? context.parsed.y : (context.yLabel !== undefined ? context.yLabel : context.raw);
+                        const safeVal = val !== null && val !== undefined ? val : 0;
+                        return `${label}: ${safeVal}%`;
+                      }
+                    }
                   }
                 },
-                tooltip: {
-                  backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                  titleFont: { size: 13, weight: 'bold' },
-                  bodyFont: { size: 12 },
-                  padding: 12,
-                  cornerRadius: 8,
-                  callbacks: {
-                    label: function(context) {
-                      const label = context.dataset.label || '';
-                      const value = context.parsed.y !== null ? context.parsed.y : 0;
-                      return `${label}: ${value}%`;
+                scales: {
+                  x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 12, weight: '600' }, color: '#4b5563' }
+                  },
+                  y: {
+                    min: 0,
+                    max: 100,
+                    grid: { color: 'rgba(229, 231, 235, 0.8)', drawBorder: false },
+                    ticks: {
+                      font: { size: 11 },
+                      color: '#6b7280',
+                      callback: function(val) { return val + '%'; }
                     }
                   }
                 }
-              },
-              scales: {
-                x: {
-                  grid: { display: false },
-                  ticks: { font: { size: 12, weight: '600' }, color: '#4b5563' }
-                },
-                y: {
-                  min: 0,
-                  max: 100,
-                  grid: { color: 'rgba(229, 231, 235, 0.8)', drawBorder: false },
-                  ticks: {
-                    font: { size: 11 },
-                    color: '#6b7280',
-                    callback: function(val) { return val + '%'; }
-                  }
-                }
               }
+            });
+
+            // Trigger resize setelah render pertama untuk memastikan ukuran 100% pas
+            setTimeout(() => {
+              if (window.summaryLineChart) {
+                window.summaryLineChart.resize();
+              }
+            }, 100);
+
+          } catch (chartErr) {
+            console.error('Error in initSummaryLineChart instansiasi:', chartErr);
+            const chartWrap = document.getElementById('summaryLineChartWrap');
+            if (chartWrap) {
+              chartWrap.innerHTML = `
+                <div style="padding: 24px; text-align: center; color: #dc2626; background: #fee2e2; border-radius: 8px;">
+                  <i class="fas fa-exclamation-triangle" style="font-size: 24px; margin-bottom: 8px;"></i>
+                  <p style="font-weight: 700; margin: 0;">Gagal Merender Grafik Tren</p>
+                  <p style="font-size: 12px; margin: 4px 0 0; font-family: monospace;">${chartErr.message || chartErr}</p>
+                </div>
+              `;
             }
-          });
+          }
 
           // Metric Toggle Buttons
           const btnMetricKehadiran = document.getElementById('btnMetricKehadiran');
           const btnMetricInput = document.getElementById('btnMetricInput');
 
           if (btnMetricKehadiran && btnMetricInput) {
-            btnMetricKehadiran.addEventListener('click', () => {
+            btnMetricKehadiran.onclick = () => {
               if (currentMetric === 'prosentase_kehadiran') return;
               currentMetric = 'prosentase_kehadiran';
               btnMetricKehadiran.style.background = '#166534';
@@ -1314,11 +1234,13 @@
               btnMetricInput.style.background = 'transparent';
               btnMetricInput.style.color = '#4b5563';
 
-              window.summaryLineChart.data.datasets = buildSummaryDatasets('prosentase_kehadiran');
-              window.summaryLineChart.update();
-            });
+              if (window.summaryLineChart) {
+                window.summaryLineChart.data.datasets = buildSummaryDatasets('prosentase_kehadiran');
+                window.summaryLineChart.update();
+              }
+            };
 
-            btnMetricInput.addEventListener('click', () => {
+            btnMetricInput.onclick = () => {
               if (currentMetric === 'prosentase_input') return;
               currentMetric = 'prosentase_input';
               btnMetricInput.style.background = '#166534';
@@ -1326,11 +1248,86 @@
               btnMetricKehadiran.style.background = 'transparent';
               btnMetricKehadiran.style.color = '#4b5563';
 
-              window.summaryLineChart.data.datasets = buildSummaryDatasets('prosentase_input');
-              window.summaryLineChart.update();
-            });
+              if (window.summaryLineChart) {
+                window.summaryLineChart.data.datasets = buildSummaryDatasets('prosentase_input');
+                window.summaryLineChart.update();
+              }
+            };
           }
         }
+
+        /**
+         * Load ringkasan bulanan via AJAX asinkron
+         */
+        function loadMonthlySummaryPresensi(jobdesc, tahun) {
+          const wrapper = document.getElementById('summaryContentWrapper');
+          if (!wrapper) return;
+
+          const currentJobDesc = jobdesc || (document.getElementById('selectJobDescSummary') ? document.getElementById('selectJobDescSummary').value : 'PENYADAP');
+          const currentTahun = tahun || (document.getElementById('selectTahunSummary') ? document.getElementById('selectTahunSummary').value : '{{ date('Y') }}');
+
+          // Tampilkan spinner loading
+          wrapper.innerHTML = `
+            <div style="padding: 60px 20px; text-align: center; background: #fff; border-radius: 12px; margin: 0 16px 24px; border: 1px solid #e5e7eb; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+              <div style="width: 44px; height: 44px; border: 4px solid #d1fae5; border-top-color: #166534; border-radius: 50%; display: inline-block; animation: spinSummary 0.8s linear infinite;"></div>
+              <h4 style="margin-top: 18px; font-size: 16px; font-weight: 700; color: #166534;">Memuat Ringkasan Tren Presensi Gabungan...</h4>
+              <p style="margin-top: 4px; font-size: 13px; color: #6b7280;">Mengambil data akumulasi multi-bulan dari server di latar belakang.</p>
+            </div>
+          `;
+
+          // Generate URL aman (mendukung reverse proxy HTTPS dan relative path)
+          const baseRoute = '{{ route('dfarmkaret.ajax_monthly_summary') }}';
+          const secureBase = baseRoute.replace(/^http:\/\//i, window.location.protocol === 'https:' ? 'https://' : 'http://');
+          const url = `${secureBase}?jobdesc=${encodeURIComponent(currentJobDesc)}&tahun=${encodeURIComponent(currentTahun)}`;
+
+          fetch(url, {
+            headers: {
+              'Accept': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            }
+          })
+          .then(async res => {
+            const json = await res.json().catch(() => null);
+            if (!res.ok) {
+              const errMsg = (json && json.error) ? json.error : `HTTP ${res.status} ${res.statusText}`;
+              throw new Error(errMsg);
+            }
+            if (!json || !json.success || !json.html) {
+              throw new Error((json && json.error) || 'Format data respon tidak valid');
+            }
+            return json;
+          })
+          .then(json => {
+            wrapper.innerHTML = json.html;
+            // Berikan jeda sejenak (reflow delay) agar canvas ter-mount sempurna dengan dimensi yang benar
+            setTimeout(() => {
+              initSummaryLineChart(json.data);
+            }, 60);
+          })
+          .catch(err => {
+            console.error('Error loadMonthlySummaryPresensi:', err);
+            wrapper.innerHTML = `
+              <div style="padding: 40px 20px; text-align: center; background: #fff; border-radius: 12px; margin: 0 16px 24px; border: 1px solid #fecaca; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                <i class="fas fa-triangle-exclamation" style="font-size: 32px; color: #dc2626;"></i>
+                <h4 style="margin-top: 14px; font-size: 15px; font-weight: 700; color: #991b1b;">Gagal Memuat Ringkasan Bulanan</h4>
+                <p style="margin-top: 4px; font-size: 13px; color: #6b7280;">Terjadi kendala saat mengambil data agregasi presensi dari server.</p>
+                <div style="margin-top: 8px;">
+                  <span style="font-size: 11px; color: #b91c1c; background: #fee2e2; border: 1px solid #fca5a5; padding: 4px 10px; border-radius: 6px; font-family: monospace; display: inline-block;">
+                    Detail: ${err.message || err}
+                  </span>
+                </div>
+                <div style="margin-top: 14px;">
+                  <button type="button" onclick="loadMonthlySummaryPresensi('${currentJobDesc}', '${currentTahun}')" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-lg" style="background: #166534; color: #fff; border: none; cursor: pointer; padding: 8px 16px; border-radius: 6px;">
+                    <i class="fas fa-rotate-right" style="margin-right: 6px;"></i> Coba Lagi
+                  </button>
+                </div>
+              </div>
+            `;
+          });
+        }
+
+        // Panggil saat pertama kali halaman terbuka
+        loadMonthlySummaryPresensi();
 
         // ============================================
         // INITIALIZE CHARTS - CONDITIONAL BY FILTER STATE
@@ -2184,25 +2181,38 @@
           window.location.href = url;
         }
 
-        // Filter Button Handler Summary
+        // Filter Button Handler Summary (AJAX Lazy Loading)
         const btnFilterSummary = document.getElementById('btnFilterSummary');
         if (btnFilterSummary) {
           btnFilterSummary.addEventListener('click', () => {
             const jobDesc = document.getElementById('selectJobDescSummary') ? document.getElementById('selectJobDescSummary').value : 'PENYADAP';
-            const tahun = document.getElementById('selectTahunSummary') ? document.getElementById('selectTahunSummary').value : '';
-            const url = new URL(window.location.origin + window.location.pathname);
+            const tahun = document.getElementById('selectTahunSummary') ? document.getElementById('selectTahunSummary').value : '{{ date('Y') }}';
+            
+            // Update URL query string tanpa reload halaman penuh
+            const url = new URL(window.location.href);
             url.searchParams.set('jobdesc', jobDesc);
-            if (tahun) url.searchParams.set('tahun', tahun);
+            url.searchParams.set('tahun', tahun);
             url.searchParams.set('tab', 'summary');
-            window.location.href = url.toString();
+            window.history.replaceState({}, '', url);
+
+            loadMonthlySummaryPresensi(jobDesc, tahun);
           });
         }
 
-        // Reset Button Handler Summary
+        // Reset Button Handler Summary (AJAX Lazy Loading)
         const btnResetSummary = document.getElementById('btnResetSummary');
         if (btnResetSummary) {
           btnResetSummary.addEventListener('click', () => {
-            window.location.href = window.location.pathname + '?tab=summary';
+            if (document.getElementById('selectJobDescSummary')) document.getElementById('selectJobDescSummary').value = 'PENYADAP';
+            if (document.getElementById('selectTahunSummary')) document.getElementById('selectTahunSummary').value = '{{ date('Y') }}';
+            
+            const url = new URL(window.location.href);
+            url.searchParams.delete('jobdesc');
+            url.searchParams.delete('tahun');
+            url.searchParams.set('tab', 'summary');
+            window.history.replaceState({}, '', url);
+
+            loadMonthlySummaryPresensi('PENYADAP', '{{ date('Y') }}');
           });
         }
 

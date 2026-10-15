@@ -1,0 +1,3498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta content="width=device-width, initial-scale=1" name="viewport"/>
+    <meta content="" name="description"/>
+    <meta content="" name="author"/>
+    <meta name="csrf-token" content="">
+    <link rel="shortcut icon" href="http://localhost/ptpn1.png" type="image/png">
+    <title>AGRINAV</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Droid+Sans:wght@400;700&display=swap">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="http://localhost/css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">    
+    <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+        <style>
+        /* Step 2: CSS to Style the Sidebar and Main Content */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            /* font-family: Arial, sans-serif; */
+            font-family: 'Droid Sans', sans-serif;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 100%;
+            height: 100vh;
+            height: 100dvh;
+            background-color: #202124;
+            overflow-x: hidden;
+            overflow-y: auto;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.3s;
+            z-index: 99999;
+            visibility: hidden;
+            box-sizing: border-box;
+            box-shadow: none;
+        }
+
+        .sidebar.open {
+            width: 250px;
+            padding: 1rem;
+            visibility: visible;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .sidebar-header {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 10px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 6px;
+        }
+        .sidebar.open .sidebar-header {
+            display: flex;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-close-btn {
+            background: none;
+            border: none;
+            color: #9aa0a6;
+            font-size: 1.75rem;
+            line-height: 1;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: color 0.2s, background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-close-btn:hover {
+            color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-title {
+            font-size: 1.35rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: #e8eaed;
+        }
+        .sidebar-logo {
+            height: 32px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .sidebar .menu {
+            display: none;
+            padding-top: 12px;
+        }
+
+        .sidebar.open .menu {
+            display: block;
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            text-decoration: none;
+            color: #e8e8e8;
+            text-align: left;
+            transition: background-color 0.3s;
+            font-size: 1em;
+            min-height: 40px;
+        }
+
+        .sidebar a:hover {
+            background-color: #575757;
+        }
+
+        .sidebar .menu-icon {
+            flex-shrink: 0;
+            width: 1.15em;
+            margin-right: 10px;
+            text-align: center;
+            color: #e8e8e8;
+        }
+
+        .sidebar a .toggle-icon {
+            margin-left: auto;
+            flex-shrink: 0;
+            font-size: 0.78em;
+        }
+
+        .sidebar .menu-item-desc {
+            font-size: 0.85em;
+            color: #9aa0a6;
+            margin-left: 4px;
+        }
+
+        .main-content {
+            margin-left: 0;
+            padding: 20px 0 20px 20px;
+            transition: margin-left 0.3s;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .iframe-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .iframe-container.main-content {
+            padding: 0;
+        }
+
+        .iframe-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .sidebar.open ~ .main-content {
+            margin-left: 250px;
+        }
+
+        .icon {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            cursor: pointer;
+            z-index: 10002;
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.35);
+            border-radius: 8px;
+            backdrop-filter: blur(4px);
+            transition: background-color 0.2s;
+        }
+
+        .icon:hover {
+            background: rgba(0, 0, 0, 0.55);
+        }
+
+        .icon img {
+            width: 26px;
+            height: 26px;
+        }
+
+        .sidebar-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(2px);
+            z-index: 99998;
+            transition: opacity 0.3s;
+        }
+
+        .sidebar-backdrop.active {
+            display: block;
+        }
+
+        /* Custom scrollbar */
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .sidebar::-webkit-scrollbar-track {
+            background: #1e1f22;
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #4e5058;
+            border-radius: 3px;
+        }
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: #6d6f78;
+        }
+
+        /* Responsive Mobile Rules */
+        @media (max-width: 768px) {
+            .sidebar {
+                display: block !important;
+                z-index: 99999 !important;
+            }
+
+            .sidebar.open {
+                display: block !important;
+                width: 280px !important;
+                max-width: 82vw !important;
+                box-shadow: 6px 0 25px rgba(0, 0, 0, 0.6) !important;
+            }
+
+            /* Di HP, jangan pernah dorong .main-content agar dashboard/iframe tidak terpotong */
+            .sidebar.open ~ .main-content {
+                margin-left: 0 !important;
+            }
+
+            .sidebar a {
+                padding: 12px 14px;
+                font-size: 0.95rem;
+            }
+        }
+        .submenu {
+            display: none;
+            background-color: #3c4043;
+        }
+
+        .submenu a {
+            padding-left: 36px;
+        }
+
+        .sidebar a.active + .submenu {
+            display: block!important;
+        }
+        .sidebar .parents.a.active + .submenu {
+            display: block!important;
+        }
+        .toggle-icon {
+            float: right;
+            transition: transform 0.3s;
+        }
+
+        .toggle-icon.open {
+            transform: rotate(90deg);
+        }
+        .subsub {
+            padding-left:10px;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body class="h-screen bg-gray-100">
+    <!-- Step 3: Icon Outside Sidebar -->
+    <div class="icon" id="menuIcon" title="Toggle Menu">
+        <img src="http://localhost/asset/images/menu.png" alt="Menu Icon">
+    </div>
+
+    <!-- Backdrop Overlay for Mobile -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <!-- Step 4: Sidebar Menu -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+        <div class="sidebar-brand">
+            <img src="http://localhost/ptpn1.png" alt="PTPN 1" class="sidebar-logo">
+            <span class="sidebar-title">AGRINAV</span>
+        </div>
+        <button type="button" class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup Menu">&times;</button>
+    </div>
+    <div class="menu">
+        <!-- <a href="#home">Home</a> -->
+
+                            <a href="http://localhost" class="menu-item" id="overview"><i class="fa-solid fa-house menu-icon"></i>Overview</a>
+                
+    <a href="http://localhost/ubah-password" class="menu-item" id="change-password"><i
+            class="fa-solid fa-key menu-icon"></i>Ubah Password</a>
+    <a href="http://localhost/logout" class="menu-item" id="logout"><i
+            class="fa-solid fa-right-from-bracket menu-icon"></i>Logout</a>
+    </div>
+</div>    <!-- Step 5: Main Content -->
+      <link rel="stylesheet" href="http://localhost/css/dfarm.css">
+
+  <style>
+    html, body {
+    height: auto !important;
+    min-height: 100vh;
+    overflow-y: auto !important;
+    background-color: #f8fafc !important;
+    color: #1f2937;
+    font-family: 'Google Sans', 'Inter', sans-serif;
+    }
+    /* ===== PAGE HEADER ===== */
+    .lm-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 50px;
+    background: #fff;
+    border-bottom: 1px solid #e5e7eb;
+    min-height: 56px;
+    }
+
+    .lm-header-logo {
+    width: 130px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    }
+
+    .lm-header-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    }
+
+    .lm-header-center {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    }
+
+    .lm-header-center h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #166534;
+    margin: 0;
+    }
+
+    .lm-header-right {
+    display: flex;
+    align-items: center;
+    }
+
+    .lm-header-right img {
+    height: 44px;
+    width: auto;
+    object-fit: contain;
+    }
+
+    /* ===== FILTER CARD ===== */
+    .filter-card {
+    background: #fff;
+    border: 1px solid #d1fae5;
+    border-left: 4px solid #166534;
+    border-radius: 8px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 4px rgba(22, 101, 52, 0.08);
+    position: relative;
+    z-index: 20;
+    }
+
+    .filter-title {
+    color: #166534;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    }
+
+    .filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    }
+
+    .form-group {
+    display: flex;
+    flex-direction: column;
+    }
+
+    .form-label {
+    color: #374151;
+    font-size: 11px;
+    font-weight: 700;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    }
+
+    .form-select, .form-input {
+    width: 100%;
+    padding: 8px 10px;
+    background-color: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    color: #1f2937;
+    font-size: 13px;
+    transition: border-color 0.2s;
+    }
+
+    .form-select:focus, .form-input:focus {
+    outline: none;
+    border-color: #166534;
+    box-shadow: 0 0 0 2px rgba(22, 101, 52, 0.12);
+    }
+
+    .content-section {
+    max-width: 100%;
+    margin: 0;
+    padding: 18px 50px 32px;
+    }
+
+    /* ===== TABLE CARD ===== */
+    .table-card {
+    background: #fff;
+    border: 2px solid #166534;
+    border-radius: 8px;
+    overflow: visible;
+    box-shadow: 0 2px 8px rgba(22, 101, 52, 0.10);
+    }
+
+    .table-header {
+    background: #166534;
+    padding: 12px 20px;
+    border-bottom: 2px solid #14532d;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    }
+
+    .table-title {
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: 0.02em;
+    }
+
+    .table-count {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    }
+
+    .table-wrapper {
+    overflow-x: auto;
+    width: 100%;
+    }
+
+    .report-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    color: #1f2937;
+    }
+
+    .report-table thead th {
+    background: #15803d;
+    color: #fff;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 9px 12px;
+    border: 1px solid #166534;
+    text-align: center;
+    white-space: nowrap;
+    }
+
+    .report-table tbody td {
+    padding: 8px 12px;
+    border: 1px solid #e5e7eb;
+    vertical-align: middle;
+    color: #1f2937;
+    }
+
+    .report-table tbody tr:hover td {
+    background-color: #f0fdf4;
+    }
+
+    .loading-row td {
+    text-align: center;
+    padding: 32px;
+    color: #6b7280;
+    font-size: 13px;
+    }
+
+    .error-banner {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    padding: 12px 16px;
+    margin: 12px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    }
+
+    .regional-badge {
+    display: inline-block;
+    background: #ecfdf5;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 8px;
+    }
+
+    .hris-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid #e5e7eb;
+    padding: 0 16px;
+    background: #f9fafb;
+    }
+
+    .hris-tab-btn {
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+    }
+
+    .hris-tab-btn.active {
+    color: #166534;
+    border-bottom-color: #166534;
+    background: #fff;
+    }
+
+    .hris-tab-panel {
+    display: none;
+    }
+
+    .hris-tab-panel.active {
+    display: block;
+    }
+  </style>
+
+  <div class="gradient-container">
+    <!-- Page Header -->
+    <header class="lm-page-header">
+    <div class="lm-header-logo">
+      <img src="http://localhost/danantara.png" alt="Danantara">
+    </div>
+    <div class="lm-header-center">
+      <svg style="width:28px;height:28px;color:#22c55e;flex-shrink:0;" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3A5 5 0 008 22c12 0 15-17 15-17-1 2-8 2-13 3-5 1-6 7-6 7s5.5-2 8.5-2 5 2 5 2-3-5-3-5 3 5 3 5-5 3-5 3 2 3 2 6-2 6-2 6 3-3 3-6-2-6-2-6z" />
+      </svg>
+      <h1>Evaluasi Kinerja Aplikasi</h1>
+    </div>
+    <div class="lm-header-right">
+      <img src="http://localhost/ptpn1.png" alt="PTPN 1">
+    </div>
+    </header>
+
+    <!-- Main Content Section -->
+    <div class="content-section">
+      <div class="flex-1 overflow-y-auto">
+        <div class="mx-auto">
+
+          <!-- Error Notification Popup -->
+          <div id="errorPopup" class="hidden fixed top-20 right-4 bg-red-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 z-50 animate-slide-in">
+            <div class="flex-1">
+              <p id="errorMessage" class="text-sm font-medium"></p>
+            </div>
+            <button id="closeErrorBtn" class="text-white hover:text-gray-200 transition-colors">
+            <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+
+          <style>
+            @keyframes slide-in {
+            from {
+            transform: translateX(400px);
+            opacity: 0;
+            }
+            to {
+            transform: translateX(0);
+            opacity: 1;
+            }
+            }
+
+            @keyframes slide-out {
+            from {
+            transform: translateX(0);
+            opacity: 1;
+            }
+            to {
+            transform: translateX(400px);
+            opacity: 0;
+            }
+            }
+
+            .animate-slide-in {
+            animation: slide-in 0.3s ease-out;
+            }
+
+            .animate-slide-out {
+            animation: slide-out 0.3s ease-out;
+            }
+
+            @keyframes spinSummary {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          </style>
+
+          <!-- Filters Section -->
+          <div class="filter-card">
+            <div class="filter-title">
+              <i class="fas fa-sliders-h"></i> Filter Parameter
+            </div>
+            <div class="filter-grid">
+  <div class="form-group">
+    <label class="form-label">Aplikasi</label>
+    <select id="selectedApp" class="form-select">
+      <option value="Digital Farming" selected>DFarm Presensi</option>
+      <option value="Digital Farming Produksi" >DFarm Prestasi</option>
+      <option value="Digital Farming BKM" >DFarm & BKM SAP</option>
+      <option value="HRIS" >HRIS</option>
+      <option value="MAIA" >MAIA</option>
+      <option value="MONIKA" >MONIKA</option>
+      <option value="BPD" >Aplikasi BPD</option>
+      <option value="SAPA-Amanah" >SAPA-Amanah</option>
+    </select>
+  </div>
+</div>
+          </div>
+
+          <!-- Table Card -->
+          <div class="table-card">
+            <div class="table-header">
+              <div class="table-title">
+                <i class="fas fa-table"></i>
+                <span id="table-title">Data Presensi DFARM</span>
+                <span id="regional-badge" class="regional-badge" style="display:none;"></span>
+              </div>
+              <span id="data-count-badge" class="table-count">Dfarm PTPN I</span>
+            </div>
+
+            <div id="tabs-wrap" style="display: block;">
+              <div class="hris-tabs">
+                <button type="button" class="hris-tab-btn active" data-tab="summary">
+                  <i class="fas fa-chart-line"></i> Summary
+                </button>
+                <button type="button" class="hris-tab-btn" data-tab="rekap">
+                  <i class="fas fa-chart-bar"></i> Rekap Presensi
+                </button>
+                <button type="button" class="hris-tab-btn" data-tab="detail">
+                  <i class="fas fa-calendar-day"></i> Detail Presensi
+                </button>
+              </div>
+
+              <div id="error-banner" class="error-banner" style="display: none;"></div>
+
+                <!-- Tab 1: Summary (Level 1: Corporate) -->
+                <div id="tab-summary" class="hris-tab-panel active">
+                  <!-- Filter Card in Summary -->
+                  <div class="filter-card" style="margin: 16px;">
+                    <div class="filter-title">
+                      <i class="fas fa-sliders-h"></i> Filter Parameter Gabungan
+                    </div>
+                    <div class="filter-grid">
+                      <div class="form-group">
+                        <label class="form-label">Job Desc</label>
+                        <select id="selectJobDescSummary" class="form-select">
+                          <option value="PENYADAP" selected>PENYADAP</option>
+                          <option value="PEMETIK" >PEMETIK</option>
+                          <option value="PANEN KOPI" >PANEN KOPI</option>
+                          <option value="PEMELIHARAAN" >PEMELIHARAAN</option>
+                        </select>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="form-label">Tahun Periode (Januari s.d. Bulan Berjalan)</label>
+                        <select id="selectTahunSummary" class="form-select">
+                                                                                                            <option value="2026" selected>Tahun 2026 (Jan - Oct 2026)</option>
+                                                                                  <option value="2025" >Tahun 2025 (Jan - Des 2025)</option>
+                                                                                  <option value="2024" >Tahun 2024 (Jan - Des 2024)</option>
+                                                                                  <option value="2023" >Tahun 2023 (Jan - Des 2023)</option>
+                                                  </select>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="form-label">Regional</label>
+                        <select class="form-select bg-gray-100 cursor-not-allowed opacity-75" disabled title="Summary mencakup semua regional">
+                          <option selected>Semua Regional (Gabungan)</option>
+                        </select>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="form-label">Nama Kebun</label>
+                        <select class="form-select bg-gray-100 cursor-not-allowed opacity-75" disabled title="Summary di level gabungan">
+                          <option selected>Semua Kebun</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Action Buttons in Summary -->
+                  <div style="margin: 0 16px 16px; display: flex; gap: 10px;">
+                    <button id="btnFilterSummary" class="inline-flex align-items-center justify-content-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-all box-shadow" style="background-color: #16a34a; border: 1px solid #15803d; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); height: 36px; cursor: pointer;">
+                      <i class="fas fa-filter"></i> Filter
+                    </button>
+                    <button id="btnResetSummary" class="inline-flex align-items-center justify-content-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-all box-shadow" style="background-color: #16a34a; border: 1px solid #15803d; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); height: 36px; cursor: pointer;">
+                      <i class="fas fa-rotate-right"></i> Reset
+                    </button>
+                  </div>
+
+                  <!-- Summary Content Wrapper (Loaded asynchronously via AJAX for instant page speed) -->
+                  <div id="summaryContentWrapper">
+                    <div id="summaryLoadingSpinner" style="padding: 60px 20px; text-align: center; background: #fff; border-radius: 12px; margin: 0 16px 24px; border: 1px solid #e5e7eb; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                      <div style="width: 44px; height: 44px; border: 4px solid #d1fae5; border-top-color: #166534; border-radius: 50%; display: inline-block; animation: spinSummary 0.8s linear infinite;"></div>
+                      <h4 style="margin-top: 18px; font-size: 16px; font-weight: 700; color: #166534;">Memuat Ringkasan Tren Presensi Gabungan...</h4>
+                      <p style="margin-top: 4px; font-size: 13px; color: #6b7280;">Mengambil data akumulasi multi-bulan dari server di latar belakang.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tab 2: Rekap (Level 2: Regional) -->
+                <div id="tab-rekap" class="hris-tab-panel">
+                  <!-- Filter Card in Tab -->
+                  <div class="filter-card" style="margin: 16px;">
+                    <div class="filter-title">
+                      <i class="fas fa-sliders-h"></i> Filter Parameter
+                    </div>
+                    <div class="filter-grid">
+                      <div class="form-group">
+                        <label class="form-label">Job Desc</label>
+                        <select id="selectJobDesc" class="form-select">
+                          <option value="PENYADAP" selected>PENYADAP</option>
+                          <option value="PEMETIK" >PEMETIK</option>
+                          <option value="PANEN KOPI" >PANEN KOPI</option>
+                          <option value="PEMELIHARAAN" >PEMELIHARAAN</option>
+                        </select>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="form-label">Periode</label>
+                        <div style="position: relative;">
+                          <input type="text" id="dateRange" placeholder="Nov 5, 2024 - Nov 6, 2024" readonly class="form-input" style="cursor: pointer; width: 100%;">
+                          <div id="datePickerPopup" class="hidden" style="position: absolute; top: 100%; left: 0; margin-top: 8px; background: white; border: 1px solid #d1d5db; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); padding: 16px; z-index: 50; min-width: 320px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                              <div>
+                                <label class="form-label" style="color: #374151;">Dari Tanggal</label>
+                                <input type="date" id="datePickerStart" class="form-input">
+                              </div>
+                              <div>
+                                <label class="form-label" style="color: #374151;">Sampai Tanggal</label>
+                                <input type="date" id="datePickerEnd" class="form-input">
+                              </div>
+                            </div>
+                            <div style="display: flex; gap: 8px; margin-top: 12px;">
+                              <button id="datePickerApply" class="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-xs rounded transition-colors font-medium" style="background-color: #166534; border: none; cursor: pointer; flex: 1; padding: 8px 12px;">Terapkan</button>
+                              <button id="datePickerCancel" class="flex-1 px-3 py-2 bg-gray-400 hover:bg-gray-500 text-white text-xs rounded transition-colors font-medium" style="background-color: #9ca3af; border: none; cursor: pointer; flex: 1; padding: 8px 12px;">Batal</button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="form-label">Regional</label>
+                        <select id="selectRegional" class="form-select">
+                          <option value="">Pilih</option>
+                                                      <option value="2" >REGIONAL 2</option>
+                            <option value="3" >REGIONAL 3</option>
+                            <option value="5" >REGIONAL 5</option>
+                            <option value="7" >REGIONAL 7</option>
+                            <option value="8" >REGIONAL 8</option>
+                                                  </select>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="form-label">Nama Kebun</label>
+                        <select id="selectKebun" class="form-select">
+                          <option value="">Pilih</option>
+                          <option value="5">KEBUN CIKUMPAY</option><option value="7">KEBUN CIKASO</option><option value="10">KEBUN CIBUNGUR</option><option value="12">KEBUN JALUPANG</option><option value="13">KEBUN BATULAWANG</option><option value="14">KEBUN PASIRBADAK</option><option value="16">KEBUN BAGJANAGARA</option><option value="18">KEBUN BUNISARILENDRA</option><option value="23">KEBUN MIRAMARE</option><option value="25">KEBUN NGOBO</option><option value="30">KEBUN WARNASARI</option><option value="31">KEBUN BATUJAMUS</option><option value="35">KEBUN SUKAMANGLI</option><option value="36">KEBUN BALONG</option><option value="43">KEBUN KRUMPUT</option><option value="54">KEBUN BLIMBING</option><option value="55">KEBUN MERBUH</option><option value="57">KEBUN KAWUNG</option><option value="61">KEBUN SILUWOK</option><option value="64">KEBUN GETAS</option><option value="65">KEBUN GUNUNG GAMBIR</option><option value="66">KEBUN SUNGAILEMBU</option><option value="68">KEBUN BANJARSARI</option><option value="69">KEBUN SILOSANEN</option><option value="75">KEBUN KENDENG LEMBU</option><option value="78">KEBUN SUMBERJAMBE</option><option value="79">KEBUN KALIKEMPIT</option><option value="80">KEBUN MALANGSARI</option><option value="81">KEBUN ZEELANDIA</option><option value="82">KEBUN PANCURSARI</option><option value="84">KEBUN GLANTANGAN</option><option value="85">KEBUN TRETES</option><option value="86">KEBUN NGRANGKAH PAWON</option><option value="87">KEBUN KALISANEN</option><option value="88">KEBUN PASEWARAN</option><option value="91">KEBUN PADANG PELAWI</option><option value="92">KEBUN WAY BERULU</option><option value="96">KEBUN TEBENAN</option><option value="97">KEBUN MUSILANDAS</option><option value="99">KEBUN TULUNG BUYUT</option><option value="101">KEBUN SENABING</option><option value="102">KEBUN WAY LIMA</option><option value="107">KEBUN KETAHUN</option><option value="109">KEBUN KEDATON</option><option value="110">KEBUN BERGEN</option><option value="111">KEBUN BERINGIN</option><option value="117">KEBUN BETELEME</option><option value="118">KEBUN AWAYA-TELPAPUTIH</option>                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Action Buttons in Tab -->
+                  <div style="margin: 0 16px 16px; display: flex; gap: 10px;">
+                    <button id="btnFilter" class="inline-flex align-items-center justify-content-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-all box-shadow" style="background-color: #16a34a; border: 1px solid #15803d; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); height: 36px;">
+                    <i class="fas fa-filter"></i> Filter
+                    </button>
+                    <button id="btnReset" class="inline-flex align-items-center justify-content-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-all box-shadow" style="background-color: #16a34a; border: 1px solid #15803d; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); height: 36px;">
+                    <i class="fas fa-rotate-right"></i> Reset
+                    </button>
+                  </div>
+
+                  <!-- KPI Cards Section -->
+                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                    <!-- Presensi Hadir -->
+                    <div style="background: #fff; border: 1px solid #d1fae5; border-top: 4px solid #166534; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08); transition: transform 0.2s, box-shadow 0.2s;" class="hover:shadow-lg hover:scale-105">
+                      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                        <h3 style="color: #166534; font-size: 12px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Presensi Hadir</h3>
+                        <i class="fas fa-check-circle" style="color: #16a34a; font-size: 18px;"></i>
+                      </div>
+                      <p style="color: #166534; font-size: 28px; font-weight: 800; margin: 0; line-height: 1;">7.510</p>
+                      <p style="color: #6b7280; font-size: 11px; margin: 4px 0 0 0;">Orang</p>
+                    </div>
+
+                    <!-- Jumlah Input Presensi -->
+                    <div style="background: #fff; border: 1px solid #d1fae5; border-top: 4px solid #166534; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08); transition: transform 0.2s, box-shadow 0.2s;" class="hover:shadow-lg hover:scale-105">
+                      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                        <h3 style="color: #166534; font-size: 12px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Input Presensi</h3>
+                        <i class="fas fa-user-check" style="color: #16a34a; font-size: 18px;"></i>
+                      </div>
+                      <p style="color: #166534; font-size: 28px; font-weight: 800; margin: 0; line-height: 1;">9.913</p>
+                      <p style="color: #6b7280; font-size: 11px; margin: 4px 0 0 0;">Orang</p>
+                    </div>
+
+                    <!-- Jumlah Karyawan -->
+                    <div style="background: #fff; border: 1px solid #d1fae5; border-top: 4px solid #166534; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08); transition: transform 0.2s, box-shadow 0.2s;" class="hover:shadow-lg hover:scale-105">
+                      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                        <h3 style="color: #166534; font-size: 12px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Total Karyawan</h3>
+                        <i class="fas fa-users" style="color: #16a34a; font-size: 18px;"></i>
+                      </div>
+                      <p style="color: #166534; font-size: 28px; font-weight: 800; margin: 0; line-height: 1;">16.550</p>
+                      <p style="color: #6b7280; font-size: 11px; margin: 4px 0 0 0;">Orang</p>
+                    </div>
+
+                    <!-- Persentase Kehadiran -->
+                    <div style="background: #fff; border: 1px solid #d1fae5; border-top: 4px solid #166534; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08); transition: transform 0.2s, box-shadow 0.2s;" class="hover:shadow-lg hover:scale-105">
+                      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                        <h3 style="color: #166534; font-size: 12px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">% Kehadiran</h3>
+                        <i class="fas fa-percent" style="color: #16a34a; font-size: 18px;"></i>
+                      </div>
+                      <p style="color: #166534; font-size: 28px; font-weight: 800; margin: 0; line-height: 1;">43.91%</p>
+                      <p style="color: #6b7280; font-size: 11px; margin: 4px 0 0 0;">Tingkat Kehadiran</p>
+                    </div>
+
+                    <!-- Presentase Input Presensi -->
+                    <div style="background: #fff; border: 1px solid #d1fae5; border-top: 4px solid #166534; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08); transition: transform 0.2s, box-shadow 0.2s;" class="hover:shadow-lg hover:scale-105">
+                      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                        <h3 style="color: #166534; font-size: 12px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">% Input</h3>
+                        <i class="fas fa-clipboard-check" style="color: #16a34a; font-size: 18px;"></i>
+                      </div>
+                      <p style="color: #166534; font-size: 28px; font-weight: 800; margin: 0; line-height: 1;">57.62%</p>
+                      <p style="color: #6b7280; font-size: 11px; margin: 4px 0 0 0;">Tingkat Input</p>
+                    </div>
+
+                    <!-- Presentase Tidak Input -->
+                    <div style="background: #fff; border: 1px solid #fee2e2; border-top: 4px solid #dc2626; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(220, 38, 38, 0.08); transition: transform 0.2s, box-shadow 0.2s;" class="hover:shadow-lg hover:scale-105">
+                      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                        <h3 style="color: #991b1b; font-size: 12px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">% Belum Input</h3>
+                        <i class="fas fa-exclamation-circle" style="color: #dc2626; font-size: 18px;"></i>
+                      </div>
+                      <p style="color: #991b1b; font-size: 28px; font-weight: 800; margin: 0; line-height: 1;">42.38%</p>
+                      <p style="color: #6b7280; font-size: 11px; margin: 4px 0 0 0;">Belum Input Presensi</p>
+                    </div>
+                  </div>
+                                      <!-- Charts Section - By Regional -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+                      <!-- Presensi Chart -->
+                      <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
+                        <h2 class="text-white text-xs md:text-sm font-bold mb-3 text-center">Presentase Input Presensi</h2>
+                        <div class="relative h-56 md:h-64">
+                          <canvas id="presensiChart"></canvas>
+                        </div>
+                      </div>
+
+                      <!-- Presentase Hadir Chart -->
+                      <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm">
+                        <h2 class="text-white text-xs md:text-sm font-bold mb-3 text-center">Presentase Hadir</h2>
+                        <div class="relative h-56 md:h-64">
+                          <canvas id="presentaseHadirChart"></canvas>
+                        </div>
+                      </div>
+
+                      <!-- Presentase Input Chart -->
+                      <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm lg:col-span-2">
+                        <h2 class="text-white text-xs md:text-sm font-bold mb-3 text-center">Perbandingan Input Presensi & Jumlah Pemanen</h2>
+                        <div class="relative h-56 md:h-64">
+                          <canvas id="presentaseInputChart"></canvas>
+                        </div>
+                      </div>
+                    </div>
+                                                      
+
+                </div>
+
+                <!-- Tab 2: Detail -->
+                <div id="tab-detail" class="hris-tab-panel">
+                  <!-- Filter Card in Tab -->
+                  <div class="filter-card" style="margin: 16px;">
+                    <div class="filter-title">
+                      <i class="fas fa-sliders-h"></i> Filter Parameter
+                    </div>
+                    <div class="filter-grid">
+                      <div class="form-group">
+                        <label class="form-label">Job Desc</label>
+                        <select id="selectJobDescDetail" class="form-select">
+                          <option value="PENYADAP" selected>PENYADAP</option>
+                          <option value="PEMETIK" >PEMETIK</option>
+                          <option value="PANEN KOPI" >PANEN KOPI</option>
+                          <option value="PEMELIHARAAN" >PEMELIHARAAN</option>
+                        </select>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="form-label">Periode</label>
+                        <div style="position: relative;">
+                          <input type="text" id="dateRangeDetail" placeholder="Nov 5, 2024 - Nov 6, 2024" readonly class="form-input" style="cursor: pointer; width: 100%;">
+                          <div id="datePickerPopupDetail" class="hidden" style="position: absolute; top: 100%; left: 0; margin-top: 8px; background: white; border: 1px solid #d1d5db; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); padding: 16px; z-index: 50; min-width: 320px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                              <div>
+                                <label class="form-label" style="color: #374151;">Dari Tanggal</label>
+                                <input type="date" id="datePickerStartDetail" class="form-input">
+                              </div>
+                              <div>
+                                <label class="form-label" style="color: #374151;">Sampai Tanggal</label>
+                                <input type="date" id="datePickerEndDetail" class="form-input">
+                              </div>
+                            </div>
+                            <div style="display: flex; gap: 8px; margin-top: 12px;">
+                              <button id="datePickerApplyDetail" class="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-xs rounded transition-colors font-medium" style="background-color: #166534; border: none; cursor: pointer; flex: 1; padding: 8px 12px;">Terapkan</button>
+                              <button id="datePickerCancelDetail" class="flex-1 px-3 py-2 bg-gray-400 hover:bg-gray-500 text-white text-xs rounded transition-colors font-medium" style="background-color: #9ca3af; border: none; cursor: pointer; flex: 1; padding: 8px 12px;">Batal</button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="form-label">Regional</label>
+                        <select id="selectRegionalDetail" class="form-select">
+                          <option value="">Pilih</option>
+                                                      <option value="2" >REGIONAL 2</option>
+                            <option value="3" >REGIONAL 3</option>
+                            <option value="5" >REGIONAL 5</option>
+                            <option value="7" >REGIONAL 7</option>
+                            <option value="8" >REGIONAL 8</option>
+                                                  </select>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="form-label">Nama Kebun</label>
+                        <select id="selectKebunDetail" class="form-select">
+                          <option value="">Pilih</option>
+                          <option value="5">KEBUN CIKUMPAY</option><option value="7">KEBUN CIKASO</option><option value="10">KEBUN CIBUNGUR</option><option value="12">KEBUN JALUPANG</option><option value="13">KEBUN BATULAWANG</option><option value="14">KEBUN PASIRBADAK</option><option value="16">KEBUN BAGJANAGARA</option><option value="18">KEBUN BUNISARILENDRA</option><option value="23">KEBUN MIRAMARE</option><option value="25">KEBUN NGOBO</option><option value="30">KEBUN WARNASARI</option><option value="31">KEBUN BATUJAMUS</option><option value="35">KEBUN SUKAMANGLI</option><option value="36">KEBUN BALONG</option><option value="43">KEBUN KRUMPUT</option><option value="54">KEBUN BLIMBING</option><option value="55">KEBUN MERBUH</option><option value="57">KEBUN KAWUNG</option><option value="61">KEBUN SILUWOK</option><option value="64">KEBUN GETAS</option><option value="65">KEBUN GUNUNG GAMBIR</option><option value="66">KEBUN SUNGAILEMBU</option><option value="68">KEBUN BANJARSARI</option><option value="69">KEBUN SILOSANEN</option><option value="75">KEBUN KENDENG LEMBU</option><option value="78">KEBUN SUMBERJAMBE</option><option value="79">KEBUN KALIKEMPIT</option><option value="80">KEBUN MALANGSARI</option><option value="81">KEBUN ZEELANDIA</option><option value="82">KEBUN PANCURSARI</option><option value="84">KEBUN GLANTANGAN</option><option value="85">KEBUN TRETES</option><option value="86">KEBUN NGRANGKAH PAWON</option><option value="87">KEBUN KALISANEN</option><option value="88">KEBUN PASEWARAN</option><option value="91">KEBUN PADANG PELAWI</option><option value="92">KEBUN WAY BERULU</option><option value="96">KEBUN TEBENAN</option><option value="97">KEBUN MUSILANDAS</option><option value="99">KEBUN TULUNG BUYUT</option><option value="101">KEBUN SENABING</option><option value="102">KEBUN WAY LIMA</option><option value="107">KEBUN KETAHUN</option><option value="109">KEBUN KEDATON</option><option value="110">KEBUN BERGEN</option><option value="111">KEBUN BERINGIN</option><option value="117">KEBUN BETELEME</option><option value="118">KEBUN AWAYA-TELPAPUTIH</option>                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Action Buttons in Tab -->
+                  <div style="margin: 0 16px 16px; display: flex; gap: 10px;">
+                    <button id="btnFilterDetail" class="inline-flex align-items-center justify-content-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-all box-shadow" style="background-color: #16a34a; border: 1px solid #15803d; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); height: 36px;">
+                    <i class="fas fa-filter"></i> Filter
+                    </button>
+                    <button id="btnResetDetail" class="inline-flex align-items-center justify-content-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-all box-shadow" style="background-color: #16a34a; border: 1px solid #15803d; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); height: 36px;">
+                    <i class="fas fa-rotate-right"></i> Reset
+                    </button>
+                  </div>
+
+                  <div class="table-wrapper">
+                                          <!-- Table Section - By Regional -->
+                      <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm mb-6">
+                        <h2 class=" text-xs md:text-sm font-bold mb-4 text-center">Data Presensi Berdasarkan Regional</h2>
+                        <div class="overflow-x-auto">
+                          <table class="w-full text-xs md:text-sm">
+                            <thead>
+                              <tr class="bg-slate-600 sticky top-0">
+                              <th class="px-3 py-2 text-left font-semibold">No</th>
+                              <th class="px-3 py-2 text-left font-semibold">Regional</th>
+                              <th class="px-3 py-2 text-center font-semibold">Kehadiran</th>
+                              <th class="px-3 py-2 text-center font-semibold">Sakit</th>
+                              <th class="px-3 py-2 text-center font-semibold">Cuti</th>
+                              <th class="px-3 py-2 text-center font-semibold">Libur</th>
+                              <th class="px-3 py-2 text-center font-semibold">Mangkir</th>
+                              <th class="px-3 py-2 text-center font-semibold">DLL</th>
+                              <th class="px-3 py-2 text-center font-semibold">Belum Hadir</th>
+                              <th class="px-3 py-2 text-center font-semibold">% Input</th>
+                              <th class="px-3 py-2 text-center font-semibold">% Kehadiran</th>
+                              <th class="px-3 py-2 text-center font-semibold">Total Karyawan</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                                                              <tr class="border-b border-slate-600 hover:bg-slate-600 transition-colors">
+                                <td class="px-3 py-2 ">1</td>
+                                <td class="px-3 py-2  font-medium">Regional 2</td>
+                                <td class="px-3 py-2  text-right">1.661</td>
+                                <td class="px-3 py-2  text-right">46</td>
+                                <td class="px-3 py-2  text-right">33</td>
+                                <td class="px-3 py-2  text-right">248</td>
+                                <td class="px-3 py-2  text-right">97</td>
+                                <td class="px-3 py-2  text-right">0</td>
+                                <td class="px-3 py-2  text-right">329</td>
+                                <td class="px-3 py-2  text-right font-semibold text-blue-300">86.37%</td>
+                                <td class="px-3 py-2  text-right font-semibold text-green-300">68.81%</td>
+                                <td class="px-3 py-2  text-right font-semibold">2.414</td>
+                                </tr>
+                                                                <tr class="border-b border-slate-600 hover:bg-slate-600 transition-colors">
+                                <td class="px-3 py-2 ">2</td>
+                                <td class="px-3 py-2  font-medium">Regional 3</td>
+                                <td class="px-3 py-2  text-right">1.646</td>
+                                <td class="px-3 py-2  text-right">36</td>
+                                <td class="px-3 py-2  text-right">13</td>
+                                <td class="px-3 py-2  text-right">416</td>
+                                <td class="px-3 py-2  text-right">55</td>
+                                <td class="px-3 py-2  text-right">30</td>
+                                <td class="px-3 py-2  text-right">3.057</td>
+                                <td class="px-3 py-2  text-right font-semibold text-blue-300">41.8%</td>
+                                <td class="px-3 py-2  text-right font-semibold text-green-300">31.33%</td>
+                                <td class="px-3 py-2  text-right font-semibold">5.253</td>
+                                </tr>
+                                                                <tr class="border-b border-slate-600 hover:bg-slate-600 transition-colors">
+                                <td class="px-3 py-2 ">3</td>
+                                <td class="px-3 py-2  font-medium">Regional 5</td>
+                                <td class="px-3 py-2  text-right">2.708</td>
+                                <td class="px-3 py-2  text-right">132</td>
+                                <td class="px-3 py-2  text-right">0</td>
+                                <td class="px-3 py-2  text-right">755</td>
+                                <td class="px-3 py-2  text-right">0</td>
+                                <td class="px-3 py-2  text-right">13</td>
+                                <td class="px-3 py-2  text-right">579</td>
+                                <td class="px-3 py-2  text-right font-semibold text-blue-300">86.17%</td>
+                                <td class="px-3 py-2  text-right font-semibold text-green-300">64.68%</td>
+                                <td class="px-3 py-2  text-right font-semibold">4.187</td>
+                                </tr>
+                                                                <tr class="border-b border-slate-600 hover:bg-slate-600 transition-colors">
+                                <td class="px-3 py-2 ">4</td>
+                                <td class="px-3 py-2  font-medium">Regional 7</td>
+                                <td class="px-3 py-2  text-right">1.424</td>
+                                <td class="px-3 py-2  text-right">50</td>
+                                <td class="px-3 py-2  text-right">23</td>
+                                <td class="px-3 py-2  text-right">142</td>
+                                <td class="px-3 py-2  text-right">153</td>
+                                <td class="px-3 py-2  text-right">137</td>
+                                <td class="px-3 py-2  text-right">2.447</td>
+                                <td class="px-3 py-2  text-right font-semibold text-blue-300">44.08%</td>
+                                <td class="px-3 py-2  text-right font-semibold text-green-300">32.54%</td>
+                                <td class="px-3 py-2  text-right font-semibold">4.376</td>
+                                </tr>
+                                                                <tr class="border-b border-slate-600 hover:bg-slate-600 transition-colors">
+                                <td class="px-3 py-2 ">5</td>
+                                <td class="px-3 py-2  font-medium">Regional 8</td>
+                                <td class="px-3 py-2  text-right">71</td>
+                                <td class="px-3 py-2  text-right">3</td>
+                                <td class="px-3 py-2  text-right">0</td>
+                                <td class="px-3 py-2  text-right">0</td>
+                                <td class="px-3 py-2  text-right">19</td>
+                                <td class="px-3 py-2  text-right">2</td>
+                                <td class="px-3 py-2  text-right">225</td>
+                                <td class="px-3 py-2  text-right font-semibold text-blue-300">29.69%</td>
+                                <td class="px-3 py-2  text-right font-semibold text-green-300">22.19%</td>
+                                <td class="px-3 py-2  text-right font-semibold">320</td>
+                                </tr>
+                                                              <tr class="border-b border-slate-600 hover:bg-slate-600 transition-colors">
+                              <td class="px-3 py-2 "></td>
+                              <td class="px-3 py-2  font-medium">Total</td>
+                              <td class="px-3 py-2  text-right">7.510</td>
+                              <td class="px-3 py-2  text-right">267</td>
+                              <td class="px-3 py-2  text-right">69</td>
+                              <td class="px-3 py-2  text-right">1.561</td>
+                              <td class="px-3 py-2  text-right">324</td>
+                              <td class="px-3 py-2  text-right">182</td>
+                              <td class="px-3 py-2  text-right">6.637</td>
+                              <td class="px-3 py-2  text-right font-semibold text-blue-300">57.62%</td>
+                              <td class="px-3 py-2  text-right font-semibold text-green-300">43.91%</td>
+                              <td class="px-3 py-2  text-right font-semibold">16.550</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                                                                              </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+      <script>
+        // ============================================
+        // ERROR NOTIFICATION HANDLER
+        // ============================================
+        function showErrorPopup(message) {
+        const errorPopup = document.getElementById('errorPopup');
+        const errorMessage = document.getElementById('errorMessage');
+
+        errorMessage.textContent = message;
+        errorPopup.classList.remove('hidden', 'animate-slide-out');
+        errorPopup.classList.add('animate-slide-in');
+
+        // Auto-hide setelah 3 detik
+        setTimeout(() => {
+        errorPopup.classList.remove('animate-slide-in');
+        errorPopup.classList.add('animate-slide-out');
+        setTimeout(() => {
+        errorPopup.classList.add('hidden');
+        }, 300);
+        }, 3000);
+        }
+
+        // Close button handler
+        document.getElementById('closeErrorBtn').addEventListener('click', () => {
+        const errorPopup = document.getElementById('errorPopup');
+        errorPopup.classList.remove('animate-slide-in');
+        errorPopup.classList.add('animate-slide-out');
+        setTimeout(() => {
+        errorPopup.classList.add('hidden');
+        }, 300);
+        });
+
+        // Check untuk error dari session
+        
+        // Chart Colors
+        const chartColors = {
+        blue: '#0EA5E9',
+        cyan: '#06B6D4',
+        red: '#EF4444',
+        purple: '#8B5CF6',
+        primary: '#1E40AF',
+        gridColor: 'rgba(22, 101, 52, 0.08)',
+        textColor: '#1f2937',
+        };
+
+        // Chart Options Template
+        const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+        legend: {
+        display: true,
+        labels: {
+        color: chartColors.textColor,
+        font: { size: 11, family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" },
+        padding: 12,
+        usePointStyle: true,
+        },
+        },
+        },
+        scales: {
+        x: {
+        grid: { color: chartColors.gridColor, drawBorder: false },
+        ticks: { color: chartColors.textColor, font: { size: 10 } },
+        },
+        y: {
+        grid: { color: chartColors.gridColor, drawBorder: false },
+        ticks: { color: chartColors.textColor, font: { size: 10 } },
+        },
+        },
+        };
+
+        // ============================================
+        // INITIALIZE SUMMARY LINE CHART & ASYNC LOADER
+        // ============================================
+        let chartRetryCount = 0;
+        function initSummaryLineChart(monthlySummaryData) {
+          const summaryChartCanvas = document.getElementById('summaryLineChart');
+          if (!summaryChartCanvas) {
+            console.warn('[initSummaryLineChart] Canvas #summaryLineChart belum tersedia di DOM.');
+            return;
+          }
+          if (!monthlySummaryData) return;
+
+          // Jika Chart library CDN belum ter-load, retry hingga 10x
+          if (typeof Chart === 'undefined') {
+            if (chartRetryCount < 10) {
+              chartRetryCount++;
+              setTimeout(() => initSummaryLineChart(monthlySummaryData), 200);
+            } else {
+              console.error('[initSummaryLineChart] Chart.js library tidak tersedia.');
+            }
+            return;
+          }
+          chartRetryCount = 0;
+
+          // Hancurkan instance chart lama jika terdaftar di canvas ini
+          const oldChart = (typeof Chart.getChart === 'function') ? Chart.getChart(summaryChartCanvas) : window.summaryLineChart;
+          if (oldChart) {
+            try { oldChart.destroy(); } catch (e) {}
+          }
+          if (window.summaryLineChart && window.summaryLineChart !== oldChart) {
+            try { window.summaryLineChart.destroy(); } catch (e) {}
+            window.summaryLineChart = null;
+          }
+
+          const monthLabels = Object.values(monthlySummaryData.months || {});
+          const monthKeys = Object.keys(monthlySummaryData.months || {});
+
+          const regColorMap = {
+            2: { border: '#10b981', bg: 'rgba(16, 185, 129, 0.15)' }, // Emerald
+            3: { border: '#3b82f6', bg: 'rgba(59, 130, 246, 0.15)' }, // Blue
+            5: { border: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.15)' }, // Purple
+            7: { border: '#f97316', bg: 'rgba(249, 115, 22, 0.15)' }, // Orange
+            8: { border: '#eab308', bg: 'rgba(234, 179, 8, 0.15)' },  // Yellow
+            default: { border: '#06b6d4', bg: 'rgba(6, 182, 212, 0.15)' }
+          };
+
+          function buildSummaryDatasets(metric) {
+            const datasets = [];
+            const dataByReg = monthlySummaryData.dataByRegional || {};
+
+            Object.values(dataByReg).forEach(reg => {
+              const regId = reg.id;
+              const colors = regColorMap[regId] || regColorMap.default;
+              const points = monthKeys.map(m => {
+                return (reg.months && reg.months[m]) ? reg.months[m][metric] : 0;
+              });
+
+              datasets.push({
+                label: reg.name,
+                data: points,
+                borderColor: colors.border,
+                backgroundColor: colors.bg,
+                borderWidth: 2.5,
+                tension: 0.3,
+                pointRadius: 4,
+                pointHoverRadius: 7,
+                pointBackgroundColor: colors.border,
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                fill: false
+              });
+            });
+
+            // Gabungan (Rata-rata)
+            const corpPoints = monthKeys.map(m => {
+              return (monthlySummaryData.corporateByMonth && monthlySummaryData.corporateByMonth[m]) 
+                ? monthlySummaryData.corporateByMonth[m][metric] 
+                : 0;
+            });
+
+            datasets.push({
+              label: 'Gabungan (Rata-rata)',
+              data: corpPoints,
+              borderColor: '#e11d48',
+              backgroundColor: 'rgba(225, 29, 72, 0.1)',
+              borderWidth: 3,
+              borderDash: [6, 4],
+              tension: 0.3,
+              pointRadius: 5,
+              pointHoverRadius: 8,
+              pointBackgroundColor: '#e11d48',
+              pointBorderColor: '#ffffff',
+              pointBorderWidth: 2,
+              fill: false
+            });
+
+            return datasets;
+          }
+
+          let currentMetric = 'prosentase_kehadiran';
+
+          try {
+            window.summaryLineChart = new Chart(summaryChartCanvas, {
+              type: 'line',
+              data: {
+                labels: monthLabels,
+                datasets: buildSummaryDatasets(currentMetric)
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                resizeDelay: 50,
+                interaction: {
+                  mode: 'index',
+                  intersect: false
+                },
+                plugins: {
+                  legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                      boxWidth: 14,
+                      usePointStyle: true,
+                      padding: 16,
+                      font: { size: 12, weight: '600' },
+                      color: '#374151'
+                    }
+                  },
+                  tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    titleFont: { size: 13, weight: 'bold' },
+                    bodyFont: { size: 12 },
+                    padding: 12,
+                    cornerRadius: 8,
+                    callbacks: {
+                      label: function(context) {
+                        const label = context.dataset.label || '';
+                        const val = context.parsed ? context.parsed.y : (context.yLabel !== undefined ? context.yLabel : context.raw);
+                        const safeVal = val !== null && val !== undefined ? val : 0;
+                        return `${label}: ${safeVal}%`;
+                      }
+                    }
+                  }
+                },
+                scales: {
+                  x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 12, weight: '600' }, color: '#4b5563' }
+                  },
+                  y: {
+                    min: 0,
+                    max: 100,
+                    grid: { color: 'rgba(229, 231, 235, 0.8)', drawBorder: false },
+                    ticks: {
+                      font: { size: 11 },
+                      color: '#6b7280',
+                      callback: function(val) { return val + '%'; }
+                    }
+                  }
+                }
+              }
+            });
+
+            // Trigger resize setelah render pertama untuk memastikan ukuran 100% pas
+            setTimeout(() => {
+              if (window.summaryLineChart) {
+                window.summaryLineChart.resize();
+              }
+            }, 100);
+
+          } catch (chartErr) {
+            console.error('Error in initSummaryLineChart instansiasi:', chartErr);
+            const chartWrap = document.getElementById('summaryLineChartWrap');
+            if (chartWrap) {
+              chartWrap.innerHTML = `
+                <div style="padding: 24px; text-align: center; color: #dc2626; background: #fee2e2; border-radius: 8px;">
+                  <i class="fas fa-exclamation-triangle" style="font-size: 24px; margin-bottom: 8px;"></i>
+                  <p style="font-weight: 700; margin: 0;">Gagal Merender Grafik Tren</p>
+                  <p style="font-size: 12px; margin: 4px 0 0; font-family: monospace;">${chartErr.message || chartErr}</p>
+                </div>
+              `;
+            }
+          }
+
+          // Metric Toggle Buttons
+          const btnMetricKehadiran = document.getElementById('btnMetricKehadiran');
+          const btnMetricInput = document.getElementById('btnMetricInput');
+
+          if (btnMetricKehadiran && btnMetricInput) {
+            btnMetricKehadiran.onclick = () => {
+              if (currentMetric === 'prosentase_kehadiran') return;
+              currentMetric = 'prosentase_kehadiran';
+              btnMetricKehadiran.style.background = '#166534';
+              btnMetricKehadiran.style.color = '#fff';
+              btnMetricInput.style.background = 'transparent';
+              btnMetricInput.style.color = '#4b5563';
+
+              if (window.summaryLineChart) {
+                window.summaryLineChart.data.datasets = buildSummaryDatasets('prosentase_kehadiran');
+                window.summaryLineChart.update();
+              }
+            };
+
+            btnMetricInput.onclick = () => {
+              if (currentMetric === 'prosentase_input') return;
+              currentMetric = 'prosentase_input';
+              btnMetricInput.style.background = '#166534';
+              btnMetricInput.style.color = '#fff';
+              btnMetricKehadiran.style.background = 'transparent';
+              btnMetricKehadiran.style.color = '#4b5563';
+
+              if (window.summaryLineChart) {
+                window.summaryLineChart.data.datasets = buildSummaryDatasets('prosentase_input');
+                window.summaryLineChart.update();
+              }
+            };
+          }
+        }
+
+        /**
+         * Load ringkasan bulanan via AJAX asinkron
+         */
+        function loadMonthlySummaryPresensi(jobdesc, tahun) {
+          const wrapper = document.getElementById('summaryContentWrapper');
+          if (!wrapper) return;
+
+          const currentJobDesc = jobdesc || (document.getElementById('selectJobDescSummary') ? document.getElementById('selectJobDescSummary').value : 'PENYADAP');
+          const currentTahun = tahun || (document.getElementById('selectTahunSummary') ? document.getElementById('selectTahunSummary').value : '2026');
+
+          // Tampilkan spinner loading
+          wrapper.innerHTML = `
+            <div style="padding: 60px 20px; text-align: center; background: #fff; border-radius: 12px; margin: 0 16px 24px; border: 1px solid #e5e7eb; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+              <div style="width: 44px; height: 44px; border: 4px solid #d1fae5; border-top-color: #166534; border-radius: 50%; display: inline-block; animation: spinSummary 0.8s linear infinite;"></div>
+              <h4 style="margin-top: 18px; font-size: 16px; font-weight: 700; color: #166534;">Memuat Ringkasan Tren Presensi Gabungan...</h4>
+              <p style="margin-top: 4px; font-size: 13px; color: #6b7280;">Mengambil data akumulasi multi-bulan dari server di latar belakang.</p>
+            </div>
+          `;
+
+          // Generate URL aman (mendukung reverse proxy HTTPS dan relative path)
+          const baseRoute = 'http://localhost/ajax/dfarmkaret/monthly-summary';
+          const secureBase = baseRoute.replace(/^http:\/\//i, window.location.protocol === 'https:' ? 'https://' : 'http://');
+          const url = `${secureBase}?jobdesc=${encodeURIComponent(currentJobDesc)}&tahun=${encodeURIComponent(currentTahun)}`;
+
+          fetch(url, {
+            headers: {
+              'Accept': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            }
+          })
+          .then(async res => {
+            const json = await res.json().catch(() => null);
+            if (!res.ok) {
+              const errMsg = (json && json.error) ? json.error : `HTTP ${res.status} ${res.statusText}`;
+              throw new Error(errMsg);
+            }
+            if (!json || !json.success || !json.html) {
+              throw new Error((json && json.error) || 'Format data respon tidak valid');
+            }
+            return json;
+          })
+          .then(json => {
+            wrapper.innerHTML = json.html;
+            // Berikan jeda sejenak (reflow delay) agar canvas ter-mount sempurna dengan dimensi yang benar
+            setTimeout(() => {
+              initSummaryLineChart(json.data);
+            }, 60);
+          })
+          .catch(err => {
+            console.error('Error loadMonthlySummaryPresensi:', err);
+            wrapper.innerHTML = `
+              <div style="padding: 40px 20px; text-align: center; background: #fff; border-radius: 12px; margin: 0 16px 24px; border: 1px solid #fecaca; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                <i class="fas fa-triangle-exclamation" style="font-size: 32px; color: #dc2626;"></i>
+                <h4 style="margin-top: 14px; font-size: 15px; font-weight: 700; color: #991b1b;">Gagal Memuat Ringkasan Bulanan</h4>
+                <p style="margin-top: 4px; font-size: 13px; color: #6b7280;">Terjadi kendala saat mengambil data agregasi presensi dari server.</p>
+                <div style="margin-top: 8px;">
+                  <span style="font-size: 11px; color: #b91c1c; background: #fee2e2; border: 1px solid #fca5a5; padding: 4px 10px; border-radius: 6px; font-family: monospace; display: inline-block;">
+                    Detail: ${err.message || err}
+                  </span>
+                </div>
+                <div style="margin-top: 14px;">
+                  <button type="button" onclick="loadMonthlySummaryPresensi('${currentJobDesc}', '${currentTahun}')" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-lg" style="background: #166534; color: #fff; border: none; cursor: pointer; padding: 8px 16px; border-radius: 6px;">
+                    <i class="fas fa-rotate-right" style="margin-right: 6px;"></i> Coba Lagi
+                  </button>
+                </div>
+              </div>
+            `;
+          });
+        }
+
+        // Panggil saat pertama kali halaman terbuka
+        loadMonthlySummaryPresensi();
+
+        // ============================================
+        // INITIALIZE CHARTS - CONDITIONAL BY FILTER STATE
+        // ============================================
+
+                  // 1. Presensi Chart (Stacked Bar - By Regional)
+          const presensiCtx = document.getElementById('presensiChart');
+          if (presensiCtx) {
+          new Chart(presensiCtx, {
+          type: 'bar',
+          data: {
+          labels: [
+                    'Regional 2',
+                    'Regional 3',
+                    'Regional 5',
+                    'Regional 7',
+                    'Regional 8',
+                    ],
+          datasets: [
+          {
+          label: '% Input Presensi',
+          data: [
+                    86.37,
+                    41.8,
+                    86.17,
+                    44.08,
+                    29.69,
+                    ],
+          backgroundColor: chartColors.blue,
+          borderRadius: 6,
+          borderSkipped: false,
+          },
+          {
+          label: '% Belum Input Presensi',
+          data: [
+                    13.63,
+                    58.2,
+                    13.83,
+                    55.92,
+                    70.31,
+                    ],
+          backgroundColor: chartColors.red,
+          borderRadius: 6,
+          borderSkipped: false,
+          },
+          ],
+          },
+          options: {
+          ...commonOptions,
+          scales: {
+          ...commonOptions.scales,
+          x: {
+          ...commonOptions.scales.x,
+          stacked: true,
+          },
+          y: {
+          ...commonOptions.scales.y,
+          stacked: true,
+          },
+          },
+          },
+          });
+          }
+
+          // 2. Presentase Hadir Chart (Stacked Bar - By Regional)
+          const presentaseHadirCtx = document.getElementById('presentaseHadirChart');
+          if (presentaseHadirCtx) {
+          new Chart(presentaseHadirCtx, {
+          type: 'bar',
+          data: {
+          labels: [
+                    'Regional 2',
+                    'Regional 3',
+                    'Regional 5',
+                    'Regional 7',
+                    'Regional 8',
+                    ],
+          datasets: [
+          {
+          label: '% Hadir',
+          data: [
+                    68.81,
+                    31.33,
+                    64.68,
+                    32.54,
+                    22.19,
+                    ],
+          backgroundColor: chartColors.blue,
+          borderRadius: 6,
+          borderSkipped: false,
+          },
+          {
+          label: '% Tidak Hadir',
+          data: [
+                    31.19,
+                    68.67,
+                    35.32,
+                    67.46,
+                    77.81,
+                    ],
+          backgroundColor: chartColors.red,
+          borderRadius: 6,
+          borderSkipped: false,
+          },
+          ],
+          },
+          options: {
+          ...commonOptions,
+          scales: {
+          ...commonOptions.scales,
+          x: {
+          ...commonOptions.scales.x,
+          stacked: true,
+          },
+          y: {
+          ...commonOptions.scales.y,
+          stacked: true,
+          max: 100,
+          },
+          },
+          },
+          });
+          }
+
+          // 3. Presentase Input Chart (Grouped Bar - By Regional)
+          const presentaseInputCtx = document.getElementById('presentaseInputChart');
+          if (presentaseInputCtx) {
+          new Chart(presentaseInputCtx, {
+          type: 'bar',
+          data: {
+          labels: [
+                    'Regional 2',
+                    'Regional 3',
+                    'Regional 5',
+                    'Regional 7',
+                    'Regional 8',
+                    ],
+          datasets: [
+          {
+          label: 'Jumlah Input Presensi',
+          data: [
+                    2085,
+                    2196,
+                    3608,
+                    1929,
+                    95,
+                    ],
+          backgroundColor: chartColors.blue,
+          borderRadius: 6,
+          borderSkipped: false,
+          },
+          {
+          label: 'Jumlah Karyawan',
+          data: [
+                    2414,
+                    5253,
+                    4187,
+                    4376,
+                    320,
+                    ],
+          backgroundColor: chartColors.cyan,
+          borderRadius: 6,
+          borderSkipped: false,
+          },
+          ],
+          },
+          options: {
+          ...commonOptions,
+          scales: {
+          ...commonOptions.scales,
+          x: {
+          ...commonOptions.scales.x,
+          stacked: false,
+          },
+          y: {
+          ...commonOptions.scales.y,
+          stacked: false,
+          },
+          },
+          },
+          });
+          }
+        
+        // ============================================
+        // DETAIL CHARTS BY KEBUN
+        // ============================================
+
+        
+        
+
+      </script>
+
+      <!-- Date Range Picker Script -->
+      <script>
+        // Format tanggal ke "MMM D, YYYY" format
+        function formatDate(date) {
+          return new Date(date).toLocaleDateString('id-ID', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+          });
+        }
+
+        // Elements for Tab Rekap
+        const dateRangeInput = document.getElementById('dateRange');
+        const datePickerPopup = document.getElementById('datePickerPopup');
+        const datePickerStart = document.getElementById('datePickerStart');
+        const datePickerEnd = document.getElementById('datePickerEnd');
+        const datePickerApply = document.getElementById('datePickerApply');
+        const datePickerCancel = document.getElementById('datePickerCancel');
+
+        // Elements for Tab Detail
+        const dateRangeInputDetail = document.getElementById('dateRangeDetail');
+        const datePickerPopupDetail = document.getElementById('datePickerPopupDetail');
+        const datePickerStartDetail = document.getElementById('datePickerStartDetail');
+        const datePickerEndDetail = document.getElementById('datePickerEndDetail');
+        const datePickerApplyDetail = document.getElementById('datePickerApplyDetail');
+        const datePickerCancelDetail = document.getElementById('datePickerCancelDetail');
+
+        // Get default dates dari controller
+        const tglAwalDefault = '2026-10-15';
+        const tglAkhirDefault = '2026-10-15';
+
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const tglAwalParam = urlParams.get('tgl_awal');
+        const tglAkhirParam = urlParams.get('tgl_akhir');
+        const idRegParam = urlParams.get('id_reg');
+        const kodeKebunParam = urlParams.get('kode_kebun');
+        const jobDescParam = urlParams.get('jobdesc');
+        const tabParam = urlParams.get('tab');
+
+        const activeTglAwal = tglAwalParam || tglAwalDefault;
+        const activeTglAkhir = tglAkhirParam || tglAkhirDefault;
+
+        // Set date values Rekap
+        if (datePickerStart) datePickerStart.value = activeTglAwal;
+        if (datePickerEnd) datePickerEnd.value = activeTglAkhir;
+
+        // Set date values Detail
+        if (datePickerStartDetail) datePickerStartDetail.value = activeTglAwal;
+        if (datePickerEndDetail) datePickerEndDetail.value = activeTglAkhir;
+
+        // Set select values dari parameter
+        if (jobDescParam) {
+          const sJob = document.getElementById('selectJobDesc');
+          const sJobDetail = document.getElementById('selectJobDescDetail');
+          if (sJob) sJob.value = jobDescParam;
+          if (sJobDetail) sJobDetail.value = jobDescParam;
+        }
+        if (idRegParam) {
+          const sReg = document.getElementById('selectRegional');
+          const sRegDetail = document.getElementById('selectRegionalDetail');
+          if (sReg) sReg.value = idRegParam;
+          if (sRegDetail) sRegDetail.value = idRegParam;
+        }
+        if (kodeKebunParam) {
+          const sKebun = document.getElementById('selectKebun');
+          const sKebunDetail = document.getElementById('selectKebunDetail');
+          if (sKebun) sKebun.value = kodeKebunParam;
+          if (sKebunDetail) sKebunDetail.value = kodeKebunParam;
+        }
+
+        // Update display functions
+        function updateDateDisplay() {
+          if (dateRangeInput && datePickerStart && datePickerEnd && datePickerStart.value && datePickerEnd.value) {
+            dateRangeInput.value = `${formatDate(datePickerStart.value)} - ${formatDate(datePickerEnd.value)}`;
+          }
+        }
+        function updateDateDisplayDetail() {
+          if (dateRangeInputDetail && datePickerStartDetail && datePickerEndDetail && datePickerStartDetail.value && datePickerEndDetail.value) {
+            dateRangeInputDetail.value = `${formatDate(datePickerStartDetail.value)} - ${formatDate(datePickerEndDetail.value)}`;
+          }
+        }
+        updateDateDisplay();
+        updateDateDisplayDetail();
+
+        // Toggle popup Rekap
+        if (dateRangeInput && datePickerPopup) {
+          dateRangeInput.addEventListener('click', (e) => {
+            e.stopPropagation();
+            datePickerPopup.classList.toggle('hidden');
+            if (datePickerPopupDetail) datePickerPopupDetail.classList.add('hidden');
+          });
+          datePickerPopup.addEventListener('click', (e) => {
+            e.stopPropagation();
+          });
+        }
+
+        // Toggle popup Detail
+        if (dateRangeInputDetail && datePickerPopupDetail) {
+          dateRangeInputDetail.addEventListener('click', (e) => {
+            e.stopPropagation();
+            datePickerPopupDetail.classList.toggle('hidden');
+            if (datePickerPopup) datePickerPopup.classList.add('hidden');
+          });
+          datePickerPopupDetail.addEventListener('click', (e) => {
+            e.stopPropagation();
+          });
+        }
+
+        // Apply button Rekap
+        if (datePickerApply) {
+          datePickerApply.addEventListener('click', () => {
+            if (datePickerStart && datePickerEnd && datePickerStart.value && datePickerEnd.value) {
+              if (new Date(datePickerStart.value) <= new Date(datePickerEnd.value)) {
+                updateDateDisplay();
+                if (datePickerPopup) datePickerPopup.classList.add('hidden');
+                // Sync to Detail picker
+                if (datePickerStartDetail) datePickerStartDetail.value = datePickerStart.value;
+                if (datePickerEndDetail) datePickerEndDetail.value = datePickerEnd.value;
+                updateDateDisplayDetail();
+              } else {
+                alert('Tanggal awal harus lebih kecil dari tanggal akhir');
+              }
+            }
+          });
+        }
+
+        // Apply button Detail
+        if (datePickerApplyDetail) {
+          datePickerApplyDetail.addEventListener('click', () => {
+            if (datePickerStartDetail && datePickerEndDetail && datePickerStartDetail.value && datePickerEndDetail.value) {
+              if (new Date(datePickerStartDetail.value) <= new Date(datePickerEndDetail.value)) {
+                updateDateDisplayDetail();
+                if (datePickerPopupDetail) datePickerPopupDetail.classList.add('hidden');
+                // Sync to Rekap picker
+                if (datePickerStart) datePickerStart.value = datePickerStartDetail.value;
+                if (datePickerEnd) datePickerEnd.value = datePickerEndDetail.value;
+                updateDateDisplay();
+              } else {
+                alert('Tanggal awal harus lebih kecil dari tanggal akhir');
+              }
+            }
+          });
+        }
+
+        // Cancel button Rekap
+        if (datePickerCancel && datePickerPopup) {
+          datePickerCancel.addEventListener('click', () => {
+            datePickerPopup.classList.add('hidden');
+          });
+        }
+
+        // Cancel button Detail
+        if (datePickerCancelDetail && datePickerPopupDetail) {
+          datePickerCancelDetail.addEventListener('click', () => {
+            datePickerPopupDetail.classList.add('hidden');
+          });
+        }
+
+        // Close popup when clicking outside
+        document.addEventListener('click', (e) => {
+          if (datePickerPopup && !datePickerPopup.classList.contains('hidden')) {
+            datePickerPopup.classList.add('hidden');
+          }
+          if (datePickerPopupDetail && !datePickerPopupDetail.classList.contains('hidden')) {
+            datePickerPopupDetail.classList.add('hidden');
+          }
+        });
+
+        // Allow Enter key to apply
+        document.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            if (datePickerPopup && !datePickerPopup.classList.contains('hidden')) {
+              datePickerApply.click();
+            }
+            if (datePickerPopupDetail && !datePickerPopupDetail.classList.contains('hidden')) {
+              datePickerApplyDetail.click();
+            }
+          }
+        });
+
+        // Tab handling
+        document.querySelectorAll('.hris-tab-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const tab = btn.dataset.tab;
+
+            // Update active button
+            document.querySelectorAll('.hris-tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Update active panel
+            document.querySelectorAll('.hris-tab-panel').forEach(panel => panel.classList.remove('active'));
+            const activePanel = document.getElementById(`tab-${tab}`);
+            if (activePanel) activePanel.classList.add('active');
+
+            // Update URL search param 'tab' without reloading
+            const url = new URL(window.location);
+            url.searchParams.set('tab', tab);
+            window.history.replaceState({}, '', url);
+
+            // Trigger chart resize if summary tab is opened
+            if (tab === 'summary' && window.summaryLineChart) {
+              window.summaryLineChart.resize();
+            }
+          });
+        });
+
+        // Activate tab from URL param if present, default to summary
+        const currentTab = tabParam || 'summary';
+        const targetTabBtn = document.querySelector(`.hris-tab-btn[data-tab="${currentTab}"]`);
+        if (targetTabBtn) {
+          targetTabBtn.click();
+        }
+
+        // Initialize table with presensi data
+        function initializeTable() {
+          const presensiData = [{"regional_id":2,"regional":"Regional 2","kehadiran":1661,"sakit":46,"cuti":33,"libur":248,"mangkir":97,"dll":0,"belum_hadir":329,"prosentase":"86.37","prosentase_kehadiran":"68.81","total_pegawai":2414},{"regional_id":3,"regional":"Regional 3","kehadiran":1646,"sakit":36,"cuti":13,"libur":416,"mangkir":55,"dll":30,"belum_hadir":3057,"prosentase":"41.8","prosentase_kehadiran":"31.33","total_pegawai":5253},{"regional_id":5,"regional":"Regional 5","kehadiran":2708,"sakit":132,"cuti":0,"libur":755,"mangkir":0,"dll":13,"belum_hadir":579,"prosentase":"86.17","prosentase_kehadiran":"64.68","total_pegawai":4187},{"regional_id":7,"regional":"Regional 7","kehadiran":1424,"sakit":50,"cuti":23,"libur":142,"mangkir":153,"dll":137,"belum_hadir":2447,"prosentase":"44.08","prosentase_kehadiran":"32.54","total_pegawai":4376},{"regional_id":8,"regional":"Regional 8","kehadiran":71,"sakit":3,"cuti":0,"libur":0,"mangkir":19,"dll":2,"belum_hadir":225,"prosentase":"29.69","prosentase_kehadiran":"22.19","total_pegawai":320}];
+          const jobdesc = 'PENYADAP';
+          const selectedRegional = '';
+          const selectedKebun = '';
+
+          const dataTbody = document.getElementById('detail-tbody');
+          const tableTitle = document.getElementById('table-title');
+          const dataCountBadge = document.getElementById('data-count-badge');
+
+          // Update title
+          let titleText = 'Data Presensi DFARM';
+          if (jobdesc) titleText += ` - ${jobdesc}`;
+          if (selectedRegional) titleText += ` - Regional ${selectedRegional}`;
+          if (selectedKebun) titleText += ` - Kebun ${selectedKebun}`;
+          if (tableTitle) tableTitle.textContent = titleText;
+
+          // Group data by job desc
+          if (dataTbody) {
+            const groupedData = {};
+            presensiData.forEach(item => {
+              const key = item.jobdesc || 'Unknown';
+              if (!groupedData[key]) {
+                groupedData[key] = [];
+              }
+              groupedData[key].push(item);
+            });
+
+            // Render table rows
+            dataTbody.innerHTML = '';
+            let index = 1;
+            let totalRows = 0;
+
+            Object.entries(groupedData).forEach(([jobdesc, items]) => {
+              const totalHadir = items.reduce((sum, item) => sum + (item.total_pegawai - item.belum_hadir), 0);
+              const totalPegawai = items.reduce((sum, item) => sum + item.total_pegawai, 0);
+              const percentage = totalPegawai > 0 ? ((totalHadir / totalPegawai) * 100).toFixed(1) : 0;
+
+              const tr = document.createElement('tr');
+              tr.innerHTML = `
+                <td style="text-align: center; font-weight: 700; color: #94a3b8;">${index}</td>
+                <td style="text-align: left; font-weight: 600; color: #1f2937;">${jobdesc}</td>
+                <td style="text-align: center; color: #4b5563;">${totalPegawai}</td>
+                <td style="text-align: center; color: #4b5563;">${totalHadir}</td>
+                <td style="text-align: center; color: #4b5563;"><strong>${percentage}%</strong></td>
+              `;
+              dataTbody.appendChild(tr);
+              index++;
+              totalRows++;
+            });
+
+            if (totalRows === 0) {
+              dataTbody.innerHTML = '<tr class="loading-row"><td colspan="5">Tidak ada data presensi.</td></tr>';
+            }
+
+            if (dataCountBadge) dataCountBadge.textContent = `${totalRows} Job Desc`;
+          }
+        }
+
+        // Initialize on load
+        window.addEventListener('load', initializeTable);
+
+        // Regional Select Change - Load Kebun Data via AJAX helper
+        function setupRegionalHandler(regSelectId, kebunSelectId) {
+          const regSelect = document.getElementById(regSelectId);
+          const kebunSelect = document.getElementById(kebunSelectId);
+          if (!regSelect || !kebunSelect) return;
+
+          regSelect.addEventListener('change', function() {
+            const regionalId = this.value;
+            if (!regionalId) {
+              kebunSelect.innerHTML = '<option value="">Pilih</option>';
+              return;
+            }
+
+            kebunSelect.innerHTML = '<option value="">Loading...</option>';
+
+            fetch('http://localhost/get_data_kebun?id_reg=' + regionalId + '&komoditas=2', {
+              method: 'GET',
+              headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+              }
+            })
+            .then(response => response.json())
+            .then(data => {
+              kebunSelect.innerHTML = '<option value="">Pilih</option>';
+              if (data.data && data.data.length > 0) {
+                const uniqueKebun = new Map();
+                data.data.forEach(item => {
+                  if (!uniqueKebun.has(item.kebun_id)) {
+                    uniqueKebun.set(item.kebun_id, item.nama_kebun);
+                  }
+                });
+                uniqueKebun.forEach((nama, kebunId) => {
+                  const option = document.createElement('option');
+                  option.value = kebunId;
+                  option.textContent = nama;
+                  kebunSelect.appendChild(option);
+                });
+              } else {
+                kebunSelect.innerHTML = '<option value="">Tidak ada data kebun</option>';
+              }
+            })
+            .catch(error => {
+              console.error('Error:', error);
+              kebunSelect.innerHTML = '<option value="">Error loading data</option>';
+            });
+          });
+        }
+        setupRegionalHandler('selectRegional', 'selectKebun');
+        setupRegionalHandler('selectRegionalDetail', 'selectKebunDetail');
+
+        // Filter Function
+        function executeFilter(tglAwal, tglAkhir, jobDesc, idReg, kodeKebun, activeTab) {
+          if (!tglAwal || !tglAkhir) {
+            alert('Silakan pilih periode terlebih dahulu');
+            return;
+          }
+
+          let url = window.location.pathname + '?';
+          const params = [];
+
+          if (tglAwal) params.push('tgl_awal=' + tglAwal);
+          if (tglAkhir) params.push('tgl_akhir=' + tglAkhir);
+          if (jobDesc) params.push('jobdesc=' + jobDesc);
+          if (idReg) params.push('id_reg=' + idReg);
+          if (kodeKebun) params.push('kode_kebun=' + kodeKebun);
+          if (activeTab) params.push('tab=' + activeTab);
+
+          url += params.join('&');
+          window.location.href = url;
+        }
+
+        // Filter Button Handler Summary (AJAX Lazy Loading)
+        const btnFilterSummary = document.getElementById('btnFilterSummary');
+        if (btnFilterSummary) {
+          btnFilterSummary.addEventListener('click', () => {
+            const jobDesc = document.getElementById('selectJobDescSummary') ? document.getElementById('selectJobDescSummary').value : 'PENYADAP';
+            const tahun = document.getElementById('selectTahunSummary') ? document.getElementById('selectTahunSummary').value : '2026';
+            
+            // Update URL query string tanpa reload halaman penuh
+            const url = new URL(window.location.href);
+            url.searchParams.set('jobdesc', jobDesc);
+            url.searchParams.set('tahun', tahun);
+            url.searchParams.set('tab', 'summary');
+            window.history.replaceState({}, '', url);
+
+            loadMonthlySummaryPresensi(jobDesc, tahun);
+          });
+        }
+
+        // Reset Button Handler Summary (AJAX Lazy Loading)
+        const btnResetSummary = document.getElementById('btnResetSummary');
+        if (btnResetSummary) {
+          btnResetSummary.addEventListener('click', () => {
+            if (document.getElementById('selectJobDescSummary')) document.getElementById('selectJobDescSummary').value = 'PENYADAP';
+            if (document.getElementById('selectTahunSummary')) document.getElementById('selectTahunSummary').value = '2026';
+            
+            const url = new URL(window.location.href);
+            url.searchParams.delete('jobdesc');
+            url.searchParams.delete('tahun');
+            url.searchParams.set('tab', 'summary');
+            window.history.replaceState({}, '', url);
+
+            loadMonthlySummaryPresensi('PENYADAP', '2026');
+          });
+        }
+
+        // Filter Button Handler Rekap
+        const btnFilter = document.getElementById('btnFilter');
+        if (btnFilter) {
+          btnFilter.addEventListener('click', () => {
+            const tglAwal = datePickerStart ? datePickerStart.value : '';
+            const tglAkhir = datePickerEnd ? datePickerEnd.value : '';
+            const jobDesc = document.getElementById('selectJobDesc') ? document.getElementById('selectJobDesc').value : '';
+            const idReg = document.getElementById('selectRegional') ? document.getElementById('selectRegional').value : '';
+            const kodeKebun = document.getElementById('selectKebun') ? document.getElementById('selectKebun').value : '';
+            executeFilter(tglAwal, tglAkhir, jobDesc, idReg, kodeKebun, 'rekap');
+          });
+        }
+
+        // Filter Button Handler Detail
+        const btnFilterDetail = document.getElementById('btnFilterDetail');
+        if (btnFilterDetail) {
+          btnFilterDetail.addEventListener('click', () => {
+            const tglAwal = datePickerStartDetail ? datePickerStartDetail.value : '';
+            const tglAkhir = datePickerEndDetail ? datePickerEndDetail.value : '';
+            const jobDesc = document.getElementById('selectJobDescDetail') ? document.getElementById('selectJobDescDetail').value : '';
+            const idReg = document.getElementById('selectRegionalDetail') ? document.getElementById('selectRegionalDetail').value : '';
+            const kodeKebun = document.getElementById('selectKebunDetail') ? document.getElementById('selectKebunDetail').value : '';
+            executeFilter(tglAwal, tglAkhir, jobDesc, idReg, kodeKebun, 'detail');
+          });
+        }
+
+        // Reset Button Handler Rekap
+        const btnReset = document.getElementById('btnReset');
+        if (btnReset) {
+          btnReset.addEventListener('click', () => {
+            if (document.getElementById('selectJobDesc')) document.getElementById('selectJobDesc').value = '';
+            if (document.getElementById('selectRegional')) document.getElementById('selectRegional').value = '';
+            if (document.getElementById('selectKebun')) document.getElementById('selectKebun').value = '';
+            window.location.href = window.location.pathname + '?tab=rekap';
+          });
+        }
+
+        // Reset Button Handler Detail
+        const btnResetDetail = document.getElementById('btnResetDetail');
+        if (btnResetDetail) {
+          btnResetDetail.addEventListener('click', () => {
+            if (document.getElementById('selectJobDescDetail')) document.getElementById('selectJobDescDetail').value = '';
+            if (document.getElementById('selectRegionalDetail')) document.getElementById('selectRegionalDetail').value = '';
+            if (document.getElementById('selectKebunDetail')) document.getElementById('selectKebunDetail').value = '';
+            window.location.href = window.location.pathname + '?tab=detail';
+          });
+        }
+      </script>
+      <script src="http://localhost/js/components/application-select-handler.js"></script>
+
+      <!-- Header Menu Dropdown Script -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Get current route/page
+    const currentRoute = window.location.pathname;
+    
+    // Define menu routes mapping (order matters - check more specific routes first!)
+    const menuRoutesMap = {
+      // produksi: ['/dfarmkaretproduksi', '/dfarmtehproduksi'],
+      // prensensi: ['/dfarmkaret', '/dfarmteh']
+    };
+    
+    // Determine which menu should be active
+    let activeMenu = null;
+    for (const [menu, routes] of Object.entries(menuRoutesMap)) {
+      if (routes.some(route => currentRoute.includes(route))) {
+        activeMenu = menu;
+        break;
+      }
+    }
+    
+    // Set active menu
+    if (activeMenu) {
+      const activeBtn = document.querySelector(`[data-menu="${activeMenu}"]`);
+      const activeDropdown = document.getElementById(`${activeMenu}-dropdown`);
+      
+      if (activeBtn && activeDropdown) {
+        // Remove active from all buttons
+        document.querySelectorAll('.menu-item-btn').forEach(btn => {
+          btn.classList.remove('active');
+        });
+        
+        // Hide all dropdowns
+        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+          menu.classList.remove('show');
+        });
+        
+        // Set current menu as active
+        activeBtn.classList.add('active');
+        activeDropdown.classList.add('show');
+      }
+    }
+    
+    // Menu button click handler
+    const menuBtns = document.querySelectorAll('.menu-item-btn');
+    
+    menuBtns.forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        
+        const menuId = this.getAttribute('data-menu');
+        const dropdown = document.getElementById(menuId + '-dropdown');
+        
+        // Close all other dropdowns
+        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+          if (menu !== dropdown) {
+            menu.classList.remove('show');
+          }
+        });
+        
+        document.querySelectorAll('.menu-item-btn').forEach(button => {
+          if (button !== this) {
+            button.classList.remove('active');
+          }
+        });
+        
+        // Toggle current dropdown
+        dropdown.classList.toggle('show');
+        this.classList.toggle('active');
+      });
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.menu-item-dropdown')) {
+        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+          menu.classList.remove('show');
+        });
+        document.querySelectorAll('.menu-item-btn').forEach(btn => {
+          btn.classList.remove('active');
+        });
+      }
+    });
+  });
+</script>
+
+        <!-- Step 6: JavaScript to Toggle Sidebar -->
+    <script>
+        $(document).ready(function() {
+            function toggleSidebar(forceState) {
+                var $sidebar = $('.sidebar');
+                var $backdrop = $('#sidebarBackdrop');
+                var willOpen = forceState !== undefined ? forceState : !$sidebar.hasClass('open');
+
+                if (willOpen) {
+                    $sidebar.addClass('open');
+                    $backdrop.addClass('active');
+                } else {
+                    $sidebar.removeClass('open');
+                    $backdrop.removeClass('active');
+                }
+            }
+
+            // Click menu icon
+            $(document).on('click', '#menuIcon', function(e) {
+                e.stopPropagation();
+                toggleSidebar();
+            });
+
+            // Click close button inside sidebar header
+            $(document).on('click', '#sidebarCloseBtn', function(e) {
+                e.stopPropagation();
+                toggleSidebar(false);
+            });
+
+            // Click backdrop overlay to close sidebar on mobile
+            $(document).on('click', '#sidebarBackdrop', function() {
+                toggleSidebar(false);
+            });
+        });
+        $('.sidebar .parent').click(function(event) {
+            event.preventDefault();
+            var $this = $(this);
+            var $submenu = $this.next('.submenu');
+            var $icon = $this.find('.toggle-icon');
+
+            // Close all other submenus
+            $('.submenu').not($submenu).slideUp();
+            $('.sidebar .parent').not($this).removeClass('active');
+            $('.toggle-icon').not($icon).removeClass('open');
+            $('.parents').removeClass('active');
+            $('.parents .toggle-icon').removeClass('open');
+
+            // Toggle the clicked submenu and icon
+            $submenu.slideToggle();
+            $this.toggleClass('active');
+            $icon.toggleClass('open');
+        });
+        $('.sidebar .parents').click(function(event) {
+            event.preventDefault();
+            var $this = $(this);
+            var $submenu = $this.next('.parents .submenu');
+            var $icon = $this.find('.toggle-icon');
+
+            // Close all other submenus
+            $('.parents .submenu').not($submenu).slideUp();
+            $('.sidebar .parents').not($this).removeClass('active');
+            $('.toggle-icon').not($icon).removeClass('open');
+
+            // Toggle the clicked submenu and icon
+            $submenu.slideToggle();
+            $this.toggleClass('active');
+            $icon.toggleClass('open');
+        });
+    </script>
+                <div class="chat-icon-container">
+    <img src="http://localhost/evo.gif" alt="Chat Icon" class="chat-icon" id="chatIcon" style="width: 100px; height: 100px;">
+</div>
+
+<div class="chat-container" id="chatContainer">
+    <div class="chat-header">
+        <div class="chat-title">AIGR1 Assistant</div>
+        <div class="chat-controls">
+            <button class="expand-btn" id="expandChat" title="Expand/Collapse">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+                </svg>
+            </button>
+            <button class="close-btn" id="closeChat" title="Close">&times;</button>
+        </div>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+        <div class="message assistant">
+            <div class="message-content">
+                Halo Saya Evo! Ada yang bisa saya bantu hari ini?
+            </div>
+        </div>
+    </div>
+    <div class="chat-input-container">
+        <textarea class="chat-input" id="chatInput" placeholder="Type your message..." rows="1"></textarea>
+        <button class="mic-button" id="micButton" title="Voice Input">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="23"/>
+                <line x1="8" y1="23" x2="16" y2="23"/>
+            </svg>
+        </button>
+        <button class="send-button" id="sendMessage" title="Send Message">
+            <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+        </button>
+    </div>
+</div>
+
+<!-- Load external libraries for rich content -->
+<link rel="stylesheet" href="http://localhost/css/chat-rich-content.css">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="http://localhost/js/chat-content-renderer.js"></script>
+<script src="http://localhost/js/chat-page-context.js"></script>
+
+<style>
+.chat-icon-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    cursor: pointer;
+}
+
+.chat-icon {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease;
+}
+
+.chat-icon:hover {
+    transform: scale(1.1);
+}
+
+.chat-container {
+    display: none; /* Hidden by default */
+    position: fixed;
+    bottom: 100px;
+    right: 20px;
+    width: 400px;
+    height: 600px;
+    background: #0A1929;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    flex-direction: column;
+}
+
+.chat-container.show {
+    display: flex; /* Show when active */
+}
+
+.chat-header {
+    padding: 15px;
+    background: #202123;
+    color: white;
+    border-radius: 15px 15px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chat-title {
+    font-weight: bold;
+}
+
+.chat-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+}
+
+.chat-messages {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.message {
+    display: flex;
+    margin-bottom: 10px;
+}
+
+.message.user {
+    justify-content: flex-end;
+}
+
+.message-content {
+    max-width: 80%;
+    padding: 10px 15px;
+    border-radius: 15px;
+    background: #132F4C;
+    color: #ffffff;
+}
+
+.message.user .message-content {
+    background: #0084ff;
+    color: white;
+}
+
+.chat-input-container {
+    padding: 15px;
+    border-top: 1px solid #1E4976;
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+.chat-input {
+    flex-grow: 1;
+    border: 1px solid #1E4976;
+    border-radius: 8px;
+    padding: 8px 12px;
+    resize: none;
+    max-height: 200px;
+    font-family: inherit;
+    background: #132F4C;
+    color: #ffffff;
+}
+
+.mic-button, .send-button {
+    background: none;
+    border: none;
+    color: #0084ff;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+}
+
+.mic-button:hover, .send-button:hover {
+    background: #f0f0f0;
+    border-radius: 8px;
+}
+
+.mic-button.recording {
+    color: #ff0000;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.expand-btn {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+}
+
+.expand-btn:hover {
+    color: #0084ff;
+}
+
+.chat-container.fullscreen {
+    width: 90vw;
+    height: 90vh;
+    bottom: 5vh;
+    right: 5vw;
+    transition: all 0.3s ease;
+}
+
+.thread-id {
+    font-size: 12px;
+    color: #b0b0b0;
+    margin-top: 2px;
+    text-align: right;
+    display: none;
+}
+
+.message-content.streaming::after {
+    content: '▋';
+    animation: chatCursorBlink 1s infinite;
+    margin-left: 2px;
+}
+
+@keyframes chatCursorBlink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0; }
+}
+
+.chart-generating-hint {
+    font-size: 12px;
+    color: #90caf9;
+    margin-top: 6px;
+    opacity: 0.85;
+}
+
+.message-content code {
+    background: #1e1e1e;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+}
+
+.message-content pre {
+    background: #1e1e1e;
+    padding: 10px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 10px 0;
+}
+
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chatIcon = document.getElementById('chatIcon');
+    const chatContainer = document.getElementById('chatContainer');
+    const closeChat = document.getElementById('closeChat');
+    const chatInput = document.getElementById('chatInput');
+    const sendMessage = document.getElementById('sendMessage');
+    const chatMessages = document.getElementById('chatMessages');
+    const micButton = document.getElementById('micButton');
+    const expandChat = document.getElementById('expandChat');
+    let recognition = null;
+    let currentSessionId = ''; // sessionId untuk percakapan berkelanjutan (follow-up)
+    
+    // Initialize ChatContentRenderer
+    const contentRenderer = new ChatContentRenderer();
+    
+    // Initialize Page Context Manager (with error handling)
+    let pageContext = null;
+    try {
+        if (typeof ChatPageContext !== 'undefined') {
+            pageContext = new ChatPageContext();
+            
+            // Collect context on page load
+            setTimeout(() => {
+                pageContext.collectAll();
+                console.debug('📋 Initial page context collected:', pageContext.getContextSummary());
+            }, 1000);
+            
+            // Listen to context updates
+            pageContext.onContextUpdate((context) => {
+                console.debug('🔄 Page context updated:', pageContext.getContextSummary());
+            });
+        } else {
+            console.warn('⚠️ ChatPageContext not loaded, context features disabled');
+        }
+    } catch (error) {
+        console.error('❌ Error initializing ChatPageContext:', error);
+        pageContext = null;
+    }
+
+    // Initially hide the chat container
+    chatContainer.classList.remove('show');
+
+    // --- Drag and Drop for Chat Icon ---
+    const chatIconContainer = document.querySelector('.chat-icon-container');
+    let dragStartX, dragStartY;
+    let hasDragged = false;
+    let dragThreshold = 5; // pixels movement to consider as drag
+
+    chatIconContainer.addEventListener('mousedown', function(e) {
+        if (e.button !== 0) return; // only left click
+        
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+        hasDragged = false;
+
+        const startLeft = chatIconContainer.offsetLeft;
+        const startTop = chatIconContainer.offsetTop;
+        
+        // Get initial position
+        const rect = chatIconContainer.getBoundingClientRect();
+        const shiftX = e.clientX - rect.left;
+        const shiftY = e.clientY - rect.top;
+
+        function onMouseMove(moveEvent) {
+            const deltaX = Math.abs(moveEvent.clientX - dragStartX);
+            const deltaY = Math.abs(moveEvent.clientY - dragStartY);
+            
+            // Check if moved beyond threshold
+            if (deltaX > dragThreshold || deltaY > dragThreshold) {
+                hasDragged = true;
+                
+                // Switch to absolute positioning on first drag
+                if (chatIconContainer.style.position !== 'absolute') {
+                    chatIconContainer.style.position = 'fixed';
+                    chatIconContainer.style.bottom = 'auto';
+                    chatIconContainer.style.right = 'auto';
+                }
+                
+                // Calculate new position
+                let newLeft = moveEvent.clientX - shiftX;
+                let newTop = moveEvent.clientY - shiftY;
+
+                // Constrain within window bounds
+                const maxLeft = window.innerWidth - chatIconContainer.offsetWidth;
+                const maxTop = window.innerHeight - chatIconContainer.offsetHeight;
+
+                newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+                newTop = Math.max(0, Math.min(newTop, maxTop));
+
+                chatIconContainer.style.left = newLeft + 'px';
+                chatIconContainer.style.top = newTop + 'px';
+            }
+        }
+
+        function onMouseUp() {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+            
+            // If didn't drag, trigger click (open chat)
+            if (!hasDragged) {
+                chatContainer.classList.add('show');
+                console.log('📖 Chat opened');
+            } else {
+                console.log('🔄 Icon dragged to new position');
+            }
+            
+            // Reset for next interaction
+            setTimeout(() => {
+                hasDragged = false;
+            }, 100);
+        }
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+        
+        e.preventDefault();
+    });
+
+    // Prevent default drag behavior
+    chatIconContainer.ondragstart = function() {
+        return false;
+    };
+
+    // Close chat when clicking the close button
+    closeChat.addEventListener('click', function() {
+        chatContainer.classList.remove('show');
+        console.log('❌ Chat closed');
+    });
+    
+    // Catatan: handler expand/collapse didefinisikan sekali di bawah (yang juga
+    // memperbarui ikon). Jangan menambah listener kedua di sini karena dua listener
+    // sama-sama toggle .fullscreen → efeknya saling membatalkan (toggle 2x = tetap).
+
+    // Check if browser supports speech recognition
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        recognition = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'id-ID'; // Set to Indonesian language
+
+        recognition.onstart = function() {
+            micButton.classList.add('recording');
+            chatInput.placeholder = 'Listening...';
+        };
+
+        recognition.onend = function() {
+            micButton.classList.remove('recording');
+            chatInput.placeholder = 'Type your message...';
+        };
+
+        recognition.onresult = function(event) {
+            const transcript = event.results[0][0].transcript;
+            chatInput.value = transcript;
+            // Auto send message after speech recognition
+            sendUserMessage();
+        };
+
+        recognition.onerror = function(event) {
+            console.error('Speech recognition error:', event.error);
+            micButton.classList.remove('recording');
+            chatInput.placeholder = 'Type your message...';
+        };
+
+        // Toggle speech recognition on mic button click
+        micButton.addEventListener('click', function() {
+            if (micButton.classList.contains('recording')) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        });
+    } else {
+        micButton.style.display = 'none';
+        console.log('Speech recognition not supported');
+    }
+
+    // Get CSRF token from meta tag
+    function getCsrfToken() {
+        const metaTag = document.querySelector('meta[name="csrf-token"]');
+        if (!metaTag) {
+            console.error('CSRF token meta tag not found!');
+            return null;
+        }
+        return metaTag.getAttribute('content');
+    }
+
+    /**
+     * Ekstraksi teks jawaban final dari event 'done' secara ROBUST.
+     * Backend bisa mengirim struktur berbeda-beda, jadi coba semua kemungkinan:
+     *   - data.response.message.content   (format utama)
+     *   - data.response.content
+     *   - data.response.message           (jika message langsung berupa string)
+     *   - data.response                   (jika response langsung berupa string)
+     *   - data.message.content / data.content / data.message / data.text
+     * Mengembalikan string kosong jika benar-benar tidak ditemukan.
+     */
+    function extractResponseText(data) {
+        if (!data) return '';
+        const r = data.response;
+        let text = '';
+
+        // 1) Struktur berbasis response object
+        if (r && typeof r === 'object') {
+            if (r.message && typeof r.message === 'object' && typeof r.message.content === 'string') {
+                text = r.message.content;
+            } else if (typeof r.content === 'string') {
+                text = r.content;
+            } else if (typeof r.message === 'string') {
+                text = r.message;
+            } else if (typeof r.text === 'string') {
+                text = r.text;
+            }
+        }
+        // 2) response langsung berupa string
+        if (!text && typeof r === 'string') text = r;
+
+        // 3) Struktur di level atas (tanpa wrapper response)
+        if (!text && data.message && typeof data.message === 'object' && typeof data.message.content === 'string') {
+            text = data.message.content;
+        }
+        if (!text && typeof data.content === 'string') text = data.content;
+        if (!text && typeof data.message === 'string') text = data.message;
+        if (!text && typeof data.text === 'string') text = data.text;
+
+        // Bersihkan: kadang model mengembalikan JSON "planning" mentah sebagai content
+        // (mis. {"dataSourcesToFetch":...,"answer":null}). Ambil field answer bila ada.
+        return unwrapPlanningJson(text);
+    }
+
+    /**
+     * Jika content ternyata JSON planning internal model (punya field "answer"),
+     * ambil isi "answer". Kalau answer null/kosong → kembalikan '' agar UI tidak
+     * menampilkan JSON mentah (biar safety-net memberi pesan yang ramah).
+     */
+    function unwrapPlanningJson(text) {
+        if (typeof text !== 'string') return '';
+        const trimmed = text.trim();
+        if (!trimmed.startsWith('{') || !trimmed.includes('"answer"')) {
+            return text;
+        }
+        try {
+            const obj = JSON.parse(trimmed);
+            if (obj && Object.prototype.hasOwnProperty.call(obj, 'answer')) {
+                if (typeof obj.answer === 'string' && obj.answer.trim()) {
+                    return obj.answer;
+                }
+                // answer null/kosong → dianggap belum ada jawaban final
+                return '';
+            }
+        } catch (_) {
+            // bukan JSON valid → biarkan apa adanya
+        }
+        return text;
+    }
+
+    async function sendUserMessage() {
+        const message = chatInput.value.trim();
+        if (message) {
+            // Get CSRF token
+            const csrfToken = getCsrfToken();
+            if (!csrfToken) {
+                alert('CSRF token not found. Please refresh the page.');
+                return;
+            }
+            
+            // Collect latest page context (if available)
+            let contextSummary = null;
+            let fullContext = null;
+            
+            if (pageContext) {
+                try {
+                    pageContext.collectAll();
+                    contextSummary = pageContext.getContextSummary();
+                    fullContext = pageContext.getFullContext();
+                } catch (error) {
+                    console.warn('⚠️ Error collecting context:', error);
+                }
+            }
+
+            // Add user message to chat
+            const userMessageDiv = document.createElement('div');
+            userMessageDiv.className = 'message user';
+            userMessageDiv.innerHTML = `
+                <div class="message-content">${message}</div>
+            `;
+            chatMessages.appendChild(userMessageDiv);
+
+            // Clear input and scroll to bottom
+            chatInput.value = '';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // Create assistant message container for streaming
+            const assistantMessageDiv = document.createElement('div');
+            assistantMessageDiv.className = 'message assistant';
+            assistantMessageDiv.innerHTML = `
+                <div class="message-content">🧠 Thinking...</div>
+            `;
+            chatMessages.appendChild(assistantMessageDiv);
+
+            const messageContent = assistantMessageDiv.querySelector('.message-content');
+            let fullResponse = '';
+            let isThinking = true;
+            let lastRenderPromise = Promise.resolve(); // lacak render async terakhir agar tidak race dengan gambar/chart
+
+            // OPTIMASI: throttle update teks saat streaming. Token dikumpulkan ke
+            // `fullResponse`, lalu ditampilkan sebagai teks polos maksimal sekali per
+            // frame (requestAnimationFrame). Menghindari re-parse markdown O(n^2) tiap token.
+            let streamRenderScheduled = false;
+            const scheduleStreamingTextUpdate = () => {
+                if (streamRenderScheduled) return;
+                streamRenderScheduled = true;
+                requestAnimationFrame(() => {
+                    streamRenderScheduled = false;
+                    // textContent otomatis meng-escape → aman dari HTML/script parsial dari token AI
+                    messageContent.textContent = fullResponse;
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                });
+            };
+
+            try {
+                const requestBody = { 
+                    message: message,
+                    stream: true,
+                    sessionId: currentSessionId,
+                    agent: { name: 'agrinav_agent' }
+                };
+                
+                // Add page context if available
+                if (contextSummary && fullContext) {
+                    requestBody.pageContext = {
+                        summary: contextSummary,
+                        full: fullContext
+                    };
+                }
+                
+                const response = await fetch('/ai/response', {
+                    method: 'POST', 
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'text/event-stream',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                // Stream response using ReadableStream
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                let currentEvent = null;
+                let rawAll = '';          // simpan raw untuk fallback bila tidak ada konten
+                let anyContentRendered = false; // apakah ada konten final yang tampil
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    
+                    // Decode chunk (jika ada). Saat done, flush decoder juga.
+                    if (value) {
+                        const decoded = decoder.decode(value, { stream: !done });
+                        buffer += decoded;
+                        rawAll += decoded;
+                    }
+                    
+                    // PENTING: saat stream selesai (done), JANGAN langsung break sebelum
+                    // memproses sisa buffer. Backend kadang menutup koneksi tepat setelah
+                    // event 'done' tanpa newline penutup, sehingga baris "data: {...}"
+                    // terakhir tersangkut di buffer dan tidak pernah diproses → UI stuck
+                    // di "🧠 Thinking...". Di sini kita proses seluruh isi buffer saat done.
+                    let lines;
+                    if (done) {
+                        lines = buffer.split('\n');
+                        buffer = '';
+                    } else {
+                        lines = buffer.split('\n');
+                        buffer = lines.pop() || '';
+                    }
+                    
+                    for (const line of lines) {
+                        // Normalisasi carriage return (backend bisa pakai \r\n)
+                        const cleanLine = line.replace(/\r$/, '');
+                        
+                        // Handle SSE event type
+                        if (cleanLine.startsWith('event:')) {
+                            currentEvent = cleanLine.substring(6).trim();
+                            console.log('🎯 Event type:', currentEvent);
+                            continue;
+                        }
+                        
+                        if (cleanLine.startsWith('data:')) {
+                            try {
+                                const jsonStr = cleanLine.substring(5).trim();
+                                if (!jsonStr || jsonStr === '[DONE]') continue;
+                                
+                                const data = JSON.parse(jsonStr);
+                                
+                                // Tentukan tipe event secara ROBUST:
+                                // 1) dari baris SSE "event:" (currentEvent)
+                                // 2) dari field data.type / data.event
+                                // 3) INFER dari struktur data (fallback penting!) — karena event 'done'
+                                //    dari backend TIDAK punya field type, hanya baris "event: done".
+                                //    Kalau baris event: terpisah dari data: (beda chunk), currentEvent
+                                //    bisa null → tanpa fallback ini, done akan hilang & UI stuck.
+                                let eventType = currentEvent || data.type || data.event;
+                                if (!eventType) {
+                                    if (data.response && (data.response.message || data.response.success || data.response.contentBlocks)) {
+                                        eventType = 'done';
+                                    } else if (typeof data.token === 'string') {
+                                        eventType = 'token';
+                                    } else if (data.skill) {
+                                        eventType = 'skill_called';
+                                    } else if (data.error) {
+                                        eventType = 'error';
+                                    } else if (typeof data.message === 'string') {
+                                        eventType = 'thinking';
+                                    }
+                                }
+                                
+                                console.log('📦 Processing event:', eventType, data);
+                                
+                                switch (eventType) {
+                                    case 'thinking':
+                                        // Hanya timpa bubble dengan indikator "berpikir" SEBELUM ada teks jawaban.
+                                        // Setelah token/partial_response tampil, event thinking lanjutan (mis. saat
+                                        // proses pembuatan chart) TIDAK BOLEH menimpa jawaban yang sudah ditampilkan.
+                                        if (isThinking) {
+                                            messageContent.textContent = `🧠 ${data.message}`;
+                                        }
+                                        break;
+                                        
+                                    case 'skill_called': {
+                                        // Backend sekarang mengirim field 'label' yang sudah user-friendly
+                                        // (mis. "mengambil data", "membuat visualisasi"). JANGAN tampilkan
+                                        // data.skill mentah (nama teknis seperti "trigger_n8n") ke user.
+                                        // Fallback ke mapping manual hanya untuk kompatibilitas mundur jika
+                                        // backend lama belum mengirim field 'label'.
+                                        const skillLabelFallback = {
+                                            generate_chart_image: 'membuat visualisasi',
+                                            trigger_n8n: 'mengambil data',
+                                        };
+                                        const friendlyLabel = data.label || skillLabelFallback[data.skill] || 'memproses permintaan';
+                                        const isChartSkill = data.skill === 'generate_chart_image';
+                                        
+                                        if (isThinking) {
+                                            messageContent.textContent = `${isChartSkill ? '📊' : '⚙️'} ${friendlyLabel}...`;
+                                        } else if (isChartSkill) {
+                                            // Teks jawaban sudah tampil (dari partial_response) — tampilkan
+                                            // indikator kecil terpisah tanpa mengganggu teks yang sudah ada.
+                                            if (!assistantMessageDiv.querySelector('.chart-generating-hint')) {
+                                                const hint = document.createElement('div');
+                                                hint.className = 'chart-generating-hint';
+                                                hint.textContent = `📊 ${friendlyLabel}...`;
+                                                assistantMessageDiv.appendChild(hint);
+                                            }
+                                        }
+                                        break;
+                                    }
+                                        
+                                    case 'skill_result': {
+                                        // Sama seperti skill_called: gunakan label user-friendly, bukan
+                                        // data.skill mentah. Event ini opsional untuk UI (progress "selesai").
+                                        const resultLabel = data.label || data.skill || 'proses';
+                                        console.log(`✔️ Skill selesai: ${resultLabel}`);
+                                        break;
+                                    }
+                                        
+                                    case 'partial_response': {
+                                        // Backend: teks jawaban sudah final (chart, jika ada, masih diproses
+                                        // dan menyusul di event 'done'). Tampilkan teks SEKARANG, jangan tunggu done.
+                                        // Strategi B (sesuai panduan): render dari partial_response, idempotent
+                                        // terhadap isi 'token' yang identik (set, bukan append, ke fullResponse).
+                                        const partialContent = data.response && data.response.message && data.response.message.content;
+                                        if (partialContent) {
+                                            isThinking = false;
+                                            messageContent.classList.remove('streaming');
+                                            fullResponse = partialContent;
+                                            lastRenderPromise = contentRenderer.renderContent(fullResponse).then(rendered => {
+                                                const cleaned = rendered.replace(/【\d+:\d+†source】/g, '');
+                                                messageContent.innerHTML = cleaned;
+                                                chatMessages.scrollTop = chatMessages.scrollHeight;
+                                            });
+                                        }
+                                        
+                                        const partialSessionId = data.sessionId || (data.response && data.response.sessionId);
+                                        if (partialSessionId) {
+                                            currentSessionId = partialSessionId;
+                                        }
+                                        
+                                        // PENTING: jangan tutup/cancel stream di sini — tunggu event 'done' (bisa
+                                        // membawa chart) atau 'error'. Loop pembaca di bawah tetap berjalan normal.
+                                        break;
+                                    }
+                                        
+                                    case 'token':
+                                        // Remove thinking indicator on first token
+                                        if (isThinking) {
+                                            isThinking = false;
+                                            messageContent.textContent = '';
+                                            fullResponse = '';
+                                        }
+                                        
+                                        // Add streaming class for cursor effect
+                                        messageContent.classList.add('streaming');
+                                        
+                                        // Append token to response
+                                        fullResponse += data.token;
+                                        
+                                        // OPTIMASI PERFORMA + KEAMANAN:
+                                        // Saat streaming tampilkan sebagai TEKS POLOS (di-throttle per frame).
+                                        // Parsing markdown/chart yang mahal TIDAK lagi dijalankan tiap token
+                                        // (dulu O(n^2) karena seluruh teks di-parse ulang tiap token).
+                                        // Render penuh dilakukan sekali di event 'done'.
+                                        scheduleStreamingTextUpdate();
+                                        
+                                        break;
+                                        
+                                    case 'done': {
+                                        console.log('✅ Response completed', data);
+                                        
+                                        // Remove streaming cursor AND thinking flag (agar tidak stuck "Thinking...")
+                                        isThinking = false;
+                                        messageContent.classList.remove('streaming');
+                                        
+                                        // Bersihkan hint "Membuat grafik..." (chart final akan tampil sebagai gambar)
+                                        const chartHint = assistantMessageDiv.querySelector('.chart-generating-hint');
+                                        if (chartHint) chartHint.remove();
+                                        
+                                        // Simpan sessionId untuk follow-up (percakapan berkelanjutan)
+                                        const sessionId = data.sessionId || (data.response && data.response.sessionId);
+                                        if (sessionId) {
+                                            currentSessionId = sessionId;
+                                            
+                                            // Tampilkan Session ID di bawah pesan user
+                                            const existingSessionId = userMessageDiv.querySelector('.thread-id');
+                                            if (!existingSessionId) {
+                                                const sessionIdDiv = document.createElement('div');
+                                                sessionIdDiv.className = 'thread-id';
+                                                sessionIdDiv.textContent = `Session ID: ${sessionId}`;
+                                                userMessageDiv.appendChild(sessionIdDiv);
+                                            }
+                                        }
+                                        
+                                        const contentBlocks = data.response && data.response.contentBlocks;
+                                        
+                                        if (Array.isArray(contentBlocks) && contentBlocks.length > 0) {
+                                            // Kontrak A (disarankan): render urutan teks+chart apa adanya dari backend,
+                                            // mendukung BANYAK chart tersisip di posisi yang tepat (bukan hanya yang terakhir).
+                                            lastRenderPromise.then(() => {
+                                                return contentRenderer.renderContentBlocks(contentBlocks);
+                                            }).then(html => {
+                                                messageContent.innerHTML = html;
+                                                chatMessages.scrollTop = chatMessages.scrollHeight;
+                                            });
+                                            
+                                            // Untuk TTS, tetap pakai teks lengkap dari message.content (bukan gabungan
+                                            // per-block) supaya narasi tidak terpotong-potong.
+                                            const blocksSpeechText = extractResponseText(data) || '';
+                                            if (blocksSpeechText) {
+                                                speakText(blocksSpeechText);
+                                            }
+                                        } else {
+                                            // Kontrak B (fallback lama, backward compatible)
+                                            // Ekstraksi konten robust: coba SEMUA kemungkinan struktur backend.
+                                            const finalResponse = extractResponseText(data);
+                                            console.log('[done] extracted finalResponse:', finalResponse ? finalResponse.substring(0, 120) : '(none)');
+                                            
+                                            if (finalResponse) {
+                                                fullResponse = finalResponse;
+                                                anyContentRendered = true;
+                                                
+                                                // LANGKAH 1 (SINKRON): tampilkan teks jawaban SEGERA sebagai teks polos.
+                                                // Ini menjamin bubble tidak pernah stuck di "🧠 Thinking..." walau
+                                                // renderer async (markdown/chart) lambat, hang, atau error.
+                                                messageContent.textContent = finalResponse;
+                                                chatMessages.scrollTop = chatMessages.scrollHeight;
+                                                
+                                                // LANGKAH 2 (ASINKRON): tingkatkan tampilan dengan markdown/chart.
+                                                // Kalau gagal, teks polos dari langkah 1 tetap tampil.
+                                                lastRenderPromise = contentRenderer.renderContent(finalResponse).then(rendered => {
+                                                    const cleaned = rendered.replace(/【\d+:\d+†source】/g, '');
+                                                    messageContent.innerHTML = cleaned;
+                                                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                                                }).catch(err => {
+                                                    console.error('[done] renderContent gagal, tetap pakai teks polos:', err);
+                                                });
+                                            } else if (fullResponse) {
+                                                // Event 'done' tidak membawa konten, tapi teks sudah terkumpul
+                                                // dari stream token. Karena saat streaming hanya teks polos yang
+                                                // ditampilkan (demi performa & keamanan), lakukan render
+                                                // markdown/chart PENUH sekali di sini agar formatting muncul.
+                                                anyContentRendered = true;
+                                                lastRenderPromise = contentRenderer.renderContent(fullResponse).then(rendered => {
+                                                    const cleaned = rendered.replace(/【\d+:\d+†source】/g, '');
+                                                    messageContent.innerHTML = cleaned;
+                                                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                                                }).catch(err => {
+                                                    console.error('[done] renderContent gagal, tetap pakai teks polos:', err);
+                                                    messageContent.textContent = fullResponse;
+                                                });
+                                            } else {
+                                                // Tidak ada konten sama sekali & belum ada teks streamed → jangan
+                                                // biarkan stuck "Thinking...". Tampilkan pesan netral.
+                                                console.warn('[done] No content found in done event. data=', data);
+                                                messageContent.textContent = 'Maaf, respons kosong diterima dari server.';
+                                            }
+                                            
+                                            // Render gambar/chart hasil skill backend (chart PNG dari generate_chart_image,
+                                            // atau hasil vision). Format: response.images = { output: url, input: url }.
+                                            const images = data.response && data.response.images;
+                                            if (images && images.output) {
+                                                lastRenderPromise.then(() => {
+                                                    const imgWrap = document.createElement('div');
+                                                    imgWrap.className = 'ai-generated-image';
+                                                    imgWrap.innerHTML = `<img src="${images.output}" alt="Chart/Visualisasi dari AI" loading="lazy">`;
+                                                    messageContent.appendChild(imgWrap);
+                                                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                                                });
+                                            }
+                                            
+                                            // Automatically speak the complete response using speakable text extraction
+                                            if (fullResponse) {
+                                                speakText(fullResponse);
+                                            }
+                                        }
+                                        break;
+                                    }
+                                        
+                                    case 'error':
+                                        console.error('❌ Error:', data.error);
+                                        messageContent.innerHTML = `<span style="color: #ff6b6b;">Error: ${data.error}</span>`;
+                                        break;
+                                }
+                                
+                                // Reset current event after processing
+                                currentEvent = null;
+                                
+                            } catch (parseError) {
+                                console.error('Failed to parse SSE data:', parseError, 'Line:', cleanLine);
+                            }
+                        }
+                    }
+                    
+                    // Setelah memproses sisa buffer pada akhir stream, barulah keluar loop.
+                    if (done) break;
+                }
+                
+                // Safety net: kalau stream selesai tapi tidak ada konten final yang tampil
+                // (mis. backend mengirim error), jangan biarkan bubble stuck di "Thinking...".
+                if (!anyContentRendered && isThinking) {
+                    isThinking = false;
+                    messageContent.classList.remove('streaming');
+                    
+                    // Coba pulihkan konten / pesan error dari data mentah sebagai upaya terakhir.
+                    let recovered = '';
+                    let backendError = '';
+                    rawAll.split('\n').forEach(l => {
+                        const cl = l.replace(/\r$/, '');
+                        if (!cl.startsWith('data:')) return;
+                        try {
+                            const obj = JSON.parse(cl.substring(5).trim());
+                            const t = extractResponseText(obj);
+                            if (t) recovered = t;
+                            if (obj.error) backendError = obj.error;
+                            if (obj.success === false && obj.message) backendError = obj.message;
+                        } catch (_) {}
+                    });
+                    
+                    // Deteksi kasus khusus: model mengembalikan JSON planning dengan answer:null
+                    // (butuh ambil data tapi belum menghasilkan jawaban final).
+                    const looksLikePlanningJson = rawAll.includes('"answer"') && rawAll.includes('"dataSourcesToFetch"');
+                    
+                    if (recovered) {
+                        messageContent.textContent = recovered;
+                    } else if (looksLikePlanningJson) {
+                        console.warn('[chatbot] Model mengembalikan planning JSON tanpa answer. Raw:', rawAll);
+                        messageContent.innerHTML = '<span style="color:#ffb74d;">Maaf, aku belum berhasil mengambil datanya untuk pertanyaan itu. Coba ulangi atau perjelas pertanyaannya ya. 🙏</span>';
+                    } else if (backendError) {
+                        console.error('[chatbot] Backend error:', backendError, '\nRaw:', rawAll);
+                        messageContent.innerHTML = `<span style="color:#ff6b6b;">Maaf, terjadi kesalahan: ${backendError}</span>`;
+                    } else if (rawAll.trim().length === 0) {
+                        messageContent.innerHTML = '<span style="color:#ff6b6b;">Stream kosong dari server. Coba lagi.</span>';
+                    } else {
+                        console.warn('[chatbot] Tidak ada konten. Raw:', rawAll);
+                        messageContent.innerHTML = '<span style="color:#ff6b6b;">Maaf, respons tidak dapat diproses.</span>';
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Streaming Error:', error);
+                
+                // Show error message
+                messageContent.innerHTML = `<span style="color: #ff6b6b;">Maaf, terjadi kesalahan saat memproses permintaan Anda. Silakan coba lagi.</span>`;
+            }
+
+            // Scroll to bottom after completion
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    }
+
+    // Modified speak text function - uses ChatContentRenderer to extract speakable text
+    function speakText(text) {
+        // Cancel any ongoing speech
+        window.speechSynthesis.cancel();
+        
+        // Extract speakable text using ChatContentRenderer (removes code, charts, maps, etc.)
+        const cleanText = contentRenderer.extractSpeakableText(text);
+        
+        // Skip if nothing to speak
+        if (!cleanText.trim()) {
+            console.log('No speakable text found');
+            return;
+        }
+        
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.lang = 'id-ID'; // Set to Indonesian language
+        utterance.rate = 1.3;  // Slightly slower rate for better clarity
+        utterance.pitch = 1.0; // Speech pitch
+        
+        // Resume speaking if browser pauses it
+        let isPlaying = true;
+        
+        utterance.onend = () => {
+            isPlaying = false;
+        };
+        
+        utterance.onerror = (event) => {
+            console.error('SpeechSynthesis Error:', event);
+            isPlaying = false;
+        };
+        
+        // Keep checking and resume if needed
+        const resumeInfinity = setInterval(() => {
+            if (!isPlaying) {
+                clearInterval(resumeInfinity);
+                return;
+            }
+            
+            if (speechSynthesis.paused) {
+                speechSynthesis.resume();
+            }
+        }, 100);
+        
+        // Speak the text
+        window.speechSynthesis.speak(utterance);
+    }
+
+    // Send message on button click
+    sendMessage.addEventListener('click', sendUserMessage);
+
+    // Send message on Enter key (Shift+Enter for new line)
+    chatInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendUserMessage();
+        }
+    });
+
+    // Auto-resize textarea
+    chatInput.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+    });
+
+    // Add expand/collapse functionality
+    expandChat.addEventListener('click', function() {
+        chatContainer.classList.toggle('fullscreen');
+        const isFullscreen = chatContainer.classList.contains('fullscreen');
+        
+        // Update expand button icon based on state
+        expandChat.innerHTML = isFullscreen 
+            ? '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>'
+            : '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>';
+    });
+});
+
+// --- WEBSOCKET CHAT FEATURE (DISABLED) ---
+/*
+// Ganti ws://localhost:6001 dengan endpoint WebSocket server Anda
+const ws = new WebSocket('ws://localhost:6001');
+
+ws.onopen = function() {
+    console.log('WebSocket connected');
+};
+
+ws.onmessage = function(event) {
+    try {
+        const wsData = JSON.parse(event.data);
+        if (wsData.type === 'chat-message') {
+            // Tampilkan pesan baru dari server
+            const assistantMessageDiv = document.createElement('div');
+            assistantMessageDiv.className = 'message assistant';
+            assistantMessageDiv.innerHTML = `
+                <div class="message-content">${wsData.message}</div>
+            `;
+            chatMessages.appendChild(assistantMessageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            speakText(wsData.message);
+        }
+    } catch (e) {
+        console.error('WebSocket message error:', e);
+    }
+};
+
+ws.onerror = function(error) {
+    console.error('WebSocket error:', error);
+};
+
+// Kirim pesan ke server via WebSocket (opsional, jika backend support)
+function sendUserMessageWS(message) {
+    if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'chat-message', message: message, thread_id: currentThreadId }));
+    }
+}
+*/
+</script>
+        <style>
+    .log-viewer-trigger {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        width: 36px;
+        height: 36px;
+        background: rgba(26, 31, 58, 0.7);
+        border: 1px solid rgba(42, 53, 85, 0.5);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 999;
+        opacity: 0.4;
+        backdrop-filter: blur(10px);
+    }
+
+    .log-viewer-trigger:hover {
+        opacity: 1;
+        background: rgba(26, 31, 58, 0.95);
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .log-viewer-trigger svg {
+        width: 18px;
+        height: 18px;
+        fill: #90caf9;
+    }
+
+    .log-viewer-trigger:hover svg {
+        fill: #64b5f6;
+    }
+
+    .log-viewer-tooltip {
+        position: absolute;
+        right: 45px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(26, 31, 58, 0.95);
+        color: #e0e0e0;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s;
+        border: 1px solid rgba(42, 53, 85, 0.5);
+    }
+
+    .log-viewer-trigger:hover .log-viewer-tooltip {
+        opacity: 1;
+    }
+
+    /* Badge untuk error count (optional) */
+    .log-error-badge {
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        background: #f44336;
+        color: white;
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        font-size: 10px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        border: 2px solid #0a0e27;
+    }
+
+    .log-error-badge.has-errors {
+        display: flex;
+    }
+</style>
+
+<div class="log-viewer-trigger" onclick="openLogViewer()" title="View Logs">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6zm2-8h8v2H8v-2zm0 4h8v2H8v-2z"/>
+    </svg>
+    <span class="log-viewer-tooltip">View Logs (Dev)</span>
+    <span class="log-error-badge" id="logErrorBadge">!</span>
+</div>
+
+<script>
+function openLogViewer() {
+    // Open in new window/tab
+    const width = Math.min(1400, window.screen.width * 0.9);
+    const height = Math.min(900, window.screen.height * 0.9);
+    const left = (window.screen.width - width) / 2;
+    const top = (window.screen.height - height) / 2;
+    
+    window.open(
+        'http://localhost/admin/logs',
+        'LogViewer',
+        `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+    );
+}
+
+// Optional: Check for recent errors and show badge
+async function checkRecentErrors() {
+    try {
+        const response = await fetch('/admin/logs/get', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+                path: "D:\\laragon\\www\\dev_dash_cockpit\\storage\\logs\/laravel.log",
+                lines: 50,
+                level: 'ERROR'
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.total > 0) {
+            // Show error badge
+            const badge = document.getElementById('logErrorBadge');
+            if (badge) {
+                badge.classList.add('has-errors');
+                badge.textContent = Math.min(data.total, 9);
+                if (data.total > 9) badge.textContent = '9+';
+            }
+        }
+    } catch (error) {
+        console.log('Could not check log errors:', error);
+    }
+}
+
+// Check on page load (only if logged in and in development)
+    setTimeout(checkRecentErrors, 2000);
+</script>
+    </body>
+</html>

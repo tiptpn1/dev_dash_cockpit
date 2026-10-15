@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Test Chart Presensi</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 p-8">
+  <div id="wrapper" class="max-w-6xl mx-auto">
+    <!-- Konten dari summary_presensi_content -->
+    <div id="summaryContentWrapper"></div>
+  </div>
+
+  <script>
+    // Ambil html dan data dari endpoint
+    async function runTest() {
+      console.log('Starting chart test...');
+      const response = await fetch('chart_data_payload.json');
+      const payload = await response.json();
+
+      const wrapper = document.getElementById('summaryContentWrapper');
+      wrapper.innerHTML = payload.html;
+
+      console.log('HTML inserted into DOM. Canvas element:', document.getElementById('summaryLineChart'));
+
+      // Panggil initSummaryLineChart
+      setTimeout(() => {
+        try {
+          initSummaryLineChart(payload.data);
+          console.log('initSummaryLineChart executed successfully.');
+        } catch (e) {
+          console.error('Error during initSummaryLineChart:', e);
+        }
+      }, 60);
+    }
+
+    let chartRetryCount = 0;
+    function initSummaryLineChart(monthlySummaryData) {
+      console.log('[initSummaryLineChart] called with data:', monthlySummaryData);
+      const summaryChartCanvas = document.getElementById('summaryLineChart');
+      if (!summaryChartCanvas) {
+        console.warn('[initSummaryLineChart] Canvas #summaryLineChart belum tersedia di DOM.');
+        return;
+      }
+      if (!monthlySummaryData) return;
+
+      if (typeof Chart === 'undefined') {
+        if (chartRetryCount < 10) {
+          chartRetryCount++;
+          setTimeout(() => initSummaryLineChart(monthlySummaryData), 200);
+        } else {
+          console.error('[initSummaryLineChart] Chart.js library tidak tersedia.');
+        }
+        return;
+      }
+      chartRetryCount = 0;
+
+      const oldChart = (typeof Chart.getChart === 'function') ? Chart.getChart(summaryChartCanvas) : window.summaryLineChart;
+      if (oldChart) {
+        try { oldChart.destroy(); } catch (e) {}
+      }
+      if (window.summaryLineChart && window.summaryLineChart !== oldChart) {
+        try { window.summaryLineChart.destroy(); } catch (e) {}
+        window.summaryLineChart = null;
+      }
+
+      const monthLabels = Object.values(monthlySummaryData.months || {});
+      const monthKeys = Object.keys(monthlySummaryData.months || {});
+
+      const regColorMap = {
+        2: { border: '#10b981', bg: 'rgba(16, 185, 129, 0.15)' },
+        3: { border: '#3b82f6', bg: 'rgba(59, 130, 246, 0.15)' },
+        5: { border: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.15)' },
+        7: { border: '#f97316', bg: 'rgba(249, 115, 22, 0.15)' },
+        8: { border: '#eab308', bg: 'rgba(234, 179, 8, 0.15)' },
+        default: { border: '#06b6d4', bg: 'rgba(6, 182, 212, 0.15)' }
+      };
+
+      function buildSummaryDatasets(metric) {
+        const datasets = [];
+        const dataByReg = monthlySummaryData.dataByRegional || {};
+
+        Object.values(dataByReg).forEach(reg => {
+          const regId = reg.id;
+          const colors = regColorMap[regId] || regColorMap.default;
+          const points = monthKeys.map(m => {
+            return (reg.months && reg.months[m]) ? reg.months[m][metric] : 0;
+          });
+
+          datasets.push({
+            label: reg.name,
+            data: points,
+            borderColor: colors.border,
+            backgroundColor: colors.bg,
+            borderWidth: 2.5,
+            tension: 0.3,
+            pointRadius: 4,
+            pointHoverRadius: 7,
+            pointBackgroundColor: colors.border,
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 2,
+            fill: false
+          });
+        });
+
+        const corpPoints = monthKeys.map(m => {
+          return (monthlySummaryData.corporateByMonth && monthlySummaryData.corporateByMonth[m]) 
+            ? monthlySummaryData.corporateByMonth[m][metric] 
+            : 0;
+        });
+
+        datasets.push({
+          label: 'Gabungan (Rata-rata)',
+          data: corpPoints,
+          borderColor: '#e11d48',
+          backgroundColor: 'rgba(225, 29, 72, 0.1)',
+          borderWidth: 3,
+          borderDash: [6, 4],
+          tension: 0.3,
+          pointRadius: 5,
+          pointHoverRadius: 8,
+          pointBackgroundColor: '#e11d48',
+          pointBorderColor: '#ffffff',
+          pointBorderWidth: 2,
+          fill: false
+        });
+
+        return datasets;
+      }
+
+      let currentMetric = 'prosentase_kehadiran';
+
+      try {
+        console.log('[initSummaryLineChart] Instantiating Chart.js on canvas:', summaryChartCanvas);
+        window.summaryLineChart = new Chart(summaryChartCanvas, {
+          type: 'line',
+          data: {
+            labels: monthLabels,
+            datasets: buildSummaryDatasets(currentMetric)
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            resizeDelay: 50,
+            interaction: {
+              mode: 'index',
+              intersect: false
+            },
+            plugins: {
+              legend: {
+                display: true,
+                position: 'top',
+                labels: {
+                  boxWidth: 14,
+                  usePointStyle: true,
+                  padding: 16,
+                  font: { size: 12, weight: '600' },
+                  color: '#374151'
+                }
+              },
+              tooltip: {
+                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                titleFont: { size: 13, weight: 'bold' },
+                bodyFont: { size: 12 },
+                padding: 12,
+                cornerRadius: 8,
+                callbacks: {
+                  label: function(context) {
+                    const label = context.dataset.label || '';
+                    const val = context.parsed ? context.parsed.y : (context.yLabel !== undefined ? context.yLabel : context.raw);
+                    const safeVal = val !== null && val !== undefined ? val : 0;
+                    return `${label}: ${safeVal}%`;
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                grid: { display: false },
+                ticks: { font: { size: 12, weight: '600' }, color: '#4b5563' }
+              },
+              y: {
+                min: 0,
+                max: 100,
+                grid: { color: 'rgba(229, 231, 235, 0.8)', drawBorder: false },
+                ticks: {
+                  font: { size: 11 },
+                  color: '#6b7280',
+                  callback: function(val) { return val + '%'; }
+                }
+              }
+            }
+          }
+        });
+
+        console.log('[initSummaryLineChart] Chart instantiated successfully:', window.summaryLineChart);
+
+        setTimeout(() => {
+          if (window.summaryLineChart) {
+            window.summaryLineChart.resize();
+            console.log('[initSummaryLineChart] Chart resized. Canvas dimensions:', summaryChartCanvas.width, 'x', summaryChartCanvas.height);
+          }
+        }, 100);
+
+      } catch (chartErr) {
+        console.error('Error in initSummaryLineChart instansiasi:', chartErr);
+        const chartWrap = document.getElementById('summaryLineChartWrap');
+        if (chartWrap) {
+          chartWrap.innerHTML = `
+            <div style="padding: 24px; text-align: center; color: #dc2626; background: #fee2e2; border-radius: 8px;">
+              <i class="fas fa-exclamation-triangle" style="font-size: 24px; margin-bottom: 8px;"></i>
+              <p style="font-weight: 700; margin: 0;">Gagal Merender Grafik Tren</p>
+              <p style="font-size: 12px; margin: 4px 0 0; font-family: monospace;">${chartErr.message || chartErr}</p>
+            </div>
+          `;
+        }
+      }
+
+      // Metric Toggle Buttons
+      const btnMetricKehadiran = document.getElementById('btnMetricKehadiran');
+      const btnMetricInput = document.getElementById('btnMetricInput');
+
+      if (btnMetricKehadiran && btnMetricInput) {
+        btnMetricKehadiran.onclick = () => {
+          if (currentMetric === 'prosentase_kehadiran') return;
+          currentMetric = 'prosentase_kehadiran';
+          btnMetricKehadiran.style.background = '#166534';
+          btnMetricKehadiran.style.color = '#fff';
+          btnMetricInput.style.background = 'transparent';
+          btnMetricInput.style.color = '#4b5563';
+
+          if (window.summaryLineChart) {
+            window.summaryLineChart.data.datasets = buildSummaryDatasets('prosentase_kehadiran');
+            window.summaryLineChart.update();
+          }
+        };
+
+        btnMetricInput.onclick = () => {
+          if (currentMetric === 'prosentase_input') return;
+          currentMetric = 'prosentase_input';
+          btnMetricInput.style.background = '#166534';
+          btnMetricInput.style.color = '#fff';
+          btnMetricKehadiran.style.background = 'transparent';
+          btnMetricKehadiran.style.color = '#4b5563';
+
+          if (window.summaryLineChart) {
+            window.summaryLineChart.data.datasets = buildSummaryDatasets('prosentase_input');
+            window.summaryLineChart.update();
+          }
+        };
+      }
+    }
+
+    runTest();
+  </script>
+</body>
+</html>

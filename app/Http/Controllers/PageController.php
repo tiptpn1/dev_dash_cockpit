@@ -2287,9 +2287,39 @@ class PageController extends Controller
         }
 
 
-        $monthlySummary = $this->getMonthlySummaryPresensi($jobdesc, $tahun);
+        // Solusi 1: Defer monthlySummary via AJAX agar initial page load cepat (< 1-2 detik)
+        $monthlySummary = null;
 
         return view('pages/dfarm/dfarm_karet_presensi', compact('allDatakebun', 'selectedRegional', 'selectedKebun', 'selectedKomoditas', 'presensiData', 'totalData', 'tglAwal', 'tglAkhir', 'jobdesc', 'monthlySummary', 'tahun', 'userRegionalId'));
+    }
+
+    /**
+     * Endpoint AJAX untuk memuat ringkasan tren bulanan presensi secara asinkron
+     */
+    public function ajaxMonthlySummaryPresensi(Request $request)
+    {
+        set_time_limit(300);
+        ini_set('max_execution_time', 300);
+
+        $jobdesc = $request->get('jobdesc', 'PENYADAP');
+        $tahun = (int)($request->get('tahun', date('Y')));
+
+        try {
+            $monthlySummary = $this->getMonthlySummaryPresensi($jobdesc, $tahun);
+            $html = view('pages.dfarm.components.summary_presensi_content', compact('monthlySummary', 'jobdesc', 'tahun'))->render();
+
+            return response()->json([
+                'success' => true,
+                'data' => $monthlySummary,
+                'html' => $html
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('Error ajaxMonthlySummaryPresensi: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
     public function sapaEvaluasi()
     {
@@ -2949,6 +2979,9 @@ class PageController extends Controller
 
     private function getMonthlySummaryPresensi($jobdesc = 'PENYADAP', $tahun = null)
     {
+        set_time_limit(300);
+        ini_set('max_execution_time', 300);
+
         if (!$tahun) {
             $tahun = (int) date('Y');
         }
@@ -2960,9 +2993,10 @@ class PageController extends Controller
         $tglAwal = "$tahun-01-01";
         $tglAkhir = ($tahun == $currentYear) ? date('Y-m-d') : "$tahun-12-31";
         
-        $cacheKey = "dfarm_presensi_monthly_{$jobdescClean}_{$tahun}_" . date('Ymd_H');
+        // Cache harian (8 jam) agar query 80 detik tidak dijalankan berulang kali setiap jam
+        $cacheKey = "dfarm_presensi_monthly_{$jobdescClean}_{$tahun}_" . date('Ymd');
         
-        return Cache::remember($cacheKey, 1800, function () use ($jobdescClean, $tahun, $tglAwal, $tglAkhir, $endMonth) {
+        return Cache::remember($cacheKey, 28800, function () use ($jobdescClean, $tahun, $tglAwal, $tglAkhir, $endMonth) {
             $sql = "
             WITH months AS (
                 SELECT 

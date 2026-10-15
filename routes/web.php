@@ -86,6 +86,7 @@ Route::middleware('auth:custom')->group(function () {
     Route::get('/pica/list-corrective-actions', [PageController::class, 'picaListCorrectiveActions'])->name('pica.list_corrective_actions');
 
     Route::get('/dfarmkaret', [PageController::class, 'dfarmkaretpresensi'])->name('dfarmkaretpresensi');
+    Route::get('/ajax/dfarmkaret/monthly-summary', [PageController::class, 'ajaxMonthlySummaryPresensi'])->name('dfarmkaret.ajax_monthly_summary');
     Route::get('/dfarmpresensitabular', [PageController::class, 'dfarmkaretpresensitabular'])->name('dfarmkaretpresensitabular');
     Route::get('/dfarmkaretproduksi', [PageController::class, 'dfarmkaretproduksi'])->name('dfarmkaretproduksi');
     Route::get('/dfarmproduksi', [PageController::class, 'dfarmkaretproduksi'])->name('dfarmproduksi');
