@@ -827,16 +827,26 @@
                             </select>
                             <input type="hidden" id="app_select_hidden" value="HRIS">
                         @else
+                            @php
+                                $evalUser = Auth::guard('custom')->user() ?? Auth::user();
+                                $evalUsername = strtolower($evalUser->username ?? '');
+                                $isRegionalUser = in_array($evalUsername, ['regional1', 'regional2', 'regional3', 'regional5', 'regional7', 'regional8'])
+                                    || str_starts_with($evalUsername, 'regional')
+                                    || !empty($evalUser->regional)
+                                    || (isset($scope) && !empty($scope) && !($scope['is_ho'] ?? true));
+                            @endphp
                             <select id="app_select" class="form-select">
                                 <option value="Digital Farming">DFarm Presensi</option>
                                 <option value="Digital Farming Produksi">DFarm Prestasi</option>
-                                <option value="Digital Farming BKM">DFarm & BKM SAP</option>
-                                <option value="HRIS" selected>HRIS</option>
-                                <option value="MAIA">MAIA</option>
-                                <option value="MONIKA">MONIKA</option>
-                                <option value="BPD">Aplikasi BPD</option>
-                                <option value="SAPA-Amanah">SAPA-Amanah</option>
-                                <option value="AGHRIS">AGHRIS</option>
+                                @if(!$isRegionalUser)
+                                    <option value="Digital Farming BKM">DFarm & BKM SAP</option>
+                                    <option value="HRIS" selected>HRIS</option>
+                                    <option value="MAIA">MAIA</option>
+                                    <option value="MONIKA">MONIKA</option>
+                                    <option value="BPD">Aplikasi BPD</option>
+                                    <option value="SAPA-Amanah">SAPA-Amanah</option>
+                                    <option value="AGHRIS">AGHRIS</option>
+                                @endif
                             </select>
                         @endif
                     </div>
@@ -848,7 +858,7 @@
                 <div class="table-header">
                     <div class="table-title">
                         <i class="fas fa-table"></i> <span id="table-title">Data Evaluasi Aplikasi</span>
-                        <span id="regional-badge" class="regional-badge" style="display:none;">{{ !empty($scope) ? $scope['display_label'] : 'SuppCo HO' }}</span>
+                        <span id="regional-badge" class="regional-badge" style="display:none;">{{ !empty($scope['display_label']) ? $scope['display_label'] : 'SuppCo HO' }}</span>
                     </div>
                     <span id="data-count-badge" class="table-count">-- Data</span>
                 </div>

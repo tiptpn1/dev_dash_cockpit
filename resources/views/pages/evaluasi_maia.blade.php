@@ -133,12 +133,21 @@
             </div>
             <div class="flex items-center gap-4">
                 <label class="text-sm font-medium text-gray-700">Nama Aplikasi:</label>
+                @php
+                    $maiaUser = Auth::guard('custom')->user() ?? Auth::user();
+                    $maiaUsername = strtolower($maiaUser->username ?? '');
+                    $isRegionalUser = in_array($maiaUsername, ['regional1', 'regional2', 'regional3', 'regional5', 'regional7', 'regional8'])
+                        || str_starts_with($maiaUsername, 'regional')
+                        || !empty($maiaUser->regional);
+                @endphp
                 <select id="appName" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" style="min-width: 200px;">
                     <option value="digital_farming">Digital Farming</option>
-                    <option value="hris">HRIS</option>
-                    <option value="maia" selected>MAIA</option>
-                    <option value="monika">MONIKA</option>
-                    <option value="sapa_amanah">SAPA-Amanah</option>
+                    @if(!$isRegionalUser)
+                        <option value="hris">HRIS</option>
+                        <option value="maia" selected>MAIA</option>
+                        <option value="monika">MONIKA</option>
+                        <option value="sapa_amanah">SAPA-Amanah</option>
+                    @endif
                 </select>
             </div>
         </div>

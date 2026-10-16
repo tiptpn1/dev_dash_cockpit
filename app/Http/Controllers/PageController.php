@@ -2138,11 +2138,18 @@ class PageController extends Controller
     public function dfarmkaretpresensi()
     {
         set_time_limit(120);
-        $user = Auth::guard('custom')->user();
+        $user = Auth::guard('custom')->user() ?? Auth::user();
         $username = strtolower($user->username ?? '');
         $userRegionalId = null;
         if (preg_match('/^regional(\d+)$/', $username, $matches)) {
             $userRegionalId = $matches[1];
+        } elseif (!empty($user->regional) && is_numeric($user->regional)) {
+            $userRegionalId = $user->regional;
+        }
+
+        // Jika user regional mengakses URL langsung tanpa parameter apa pun, default ke regional miliknya
+        if ($userRegionalId && !isset($_GET['id_reg']) && !request()->hasAny(['tgl_awal', 'tab', 'jobdesc', 'tahun', 'kode_kebun'])) {
+            return redirect()->route('dfarmkaretpresensi', ['id_reg' => $userRegionalId]);
         }
 
         $regional = $_GET['id_reg'] ?? '';
@@ -3544,11 +3551,18 @@ class PageController extends Controller
     public function dfarmkaretproduksi()
     {
         set_time_limit(120);
-        $user = Auth::guard('custom')->user();
+        $user = Auth::guard('custom')->user() ?? Auth::user();
         $username = strtolower($user->username ?? '');
         $userRegionalId = null;
         if (preg_match('/^regional(\d+)$/', $username, $matches)) {
             $userRegionalId = $matches[1];
+        } elseif (!empty($user->regional) && is_numeric($user->regional)) {
+            $userRegionalId = $user->regional;
+        }
+
+        // Jika user regional mengakses URL langsung tanpa parameter apa pun, default ke regional miliknya
+        if ($userRegionalId && !isset($_GET['id_reg']) && !request()->hasAny(['tgl_awal', 'tab', 'jobdesc', 'tahun', 'kode_kebun'])) {
+            return redirect()->route('dfarmkaretproduksi', ['id_reg' => $userRegionalId]);
         }
 
         $regional = $_GET['id_reg'] ?? '';
@@ -5054,6 +5068,20 @@ class PageController extends Controller
 
     public function evaluasi_aplikasi(Request $request)
     {
+        $user = Auth::guard('custom')->user() ?? Auth::user();
+        $username = strtolower($user->username ?? '');
+        $userRegionalId = null;
+        if (preg_match('/^regional(\d+)$/', $username, $matches)) {
+            $userRegionalId = $matches[1];
+        } elseif (!empty($user->regional) && is_numeric($user->regional)) {
+            $userRegionalId = $user->regional;
+        }
+
+        // Ketika username/user adalah regional, langsung alihkan ke /dfarmkaret sesuai regionalnya
+        if ($userRegionalId) {
+            return redirect()->route('dfarmkaretpresensi', ['id_reg' => $userRegionalId]);
+        }
+
         $regParam = $request->get('regional', $request->get('scope', $request->get('reg')));
         if ($regParam !== null && trim((string) $regParam) !== '') {
             session(['hris_user_regional' => trim((string) $regParam)]);
@@ -5068,12 +5096,36 @@ class PageController extends Controller
 
     public function evaluasi_monika()
     {
+        $user = Auth::guard('custom')->user() ?? Auth::user();
+        $username = strtolower($user->username ?? '');
+        $userRegionalId = null;
+        if (preg_match('/^regional(\d+)$/', $username, $matches)) {
+            $userRegionalId = $matches[1];
+        } elseif (!empty($user->regional) && is_numeric($user->regional)) {
+            $userRegionalId = $user->regional;
+        }
+        if ($userRegionalId) {
+            return redirect()->route('dfarmkaretpresensi', ['id_reg' => $userRegionalId]);
+        }
+
         $tokenMode = session('url_token_valid') === true;
         return view('pages/evaluasi_monika', compact('tokenMode'));
     }
 
     public function evaluasi_maia()
     {
+        $user = Auth::guard('custom')->user() ?? Auth::user();
+        $username = strtolower($user->username ?? '');
+        $userRegionalId = null;
+        if (preg_match('/^regional(\d+)$/', $username, $matches)) {
+            $userRegionalId = $matches[1];
+        } elseif (!empty($user->regional) && is_numeric($user->regional)) {
+            $userRegionalId = $user->regional;
+        }
+        if ($userRegionalId) {
+            return redirect()->route('dfarmkaretpresensi', ['id_reg' => $userRegionalId]);
+        }
+
         $tokenMode = session('url_token_valid') === true;
         return view('pages/evaluasi_maia', compact('tokenMode'));
     }

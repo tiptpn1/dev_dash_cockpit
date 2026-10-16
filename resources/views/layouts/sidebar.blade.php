@@ -18,6 +18,12 @@ if (isset($user)) {
 
         @php
             $isRegional = in_array(strtolower($username), ['regional1', 'regional2', 'regional3', 'regional5', 'regional7', 'regional8']) || str_starts_with(strtolower($username), 'regional');
+            $userRegId = null;
+            if (preg_match('/^regional(\d+)$/i', strtolower($username), $regMatches)) {
+                $userRegId = $regMatches[1];
+            } elseif (!empty($user->regional) && is_numeric($user->regional)) {
+                $userRegId = $user->regional;
+            }
         @endphp
         @if(!$isRegional)
             <a href="{{url('')}}" class="menu-item" id="overview"><i class="fa-solid fa-house menu-icon"></i>Overview</a>
@@ -37,6 +43,9 @@ if (isset($user)) {
                             @if($user && $user->hasFeature($child->slug))
                                 @php
                                     $rawUrl = $child->url;
+                                    if (($child->slug === 'evaluasi_aplikasi' || $rawUrl === '/evaluasi-aplikasi') && ($isRegional || $userRegId)) {
+                                        $rawUrl = $userRegId ? ('/dfarmkaret?id_reg=' . $userRegId) : '/dfarmkaret';
+                                    }
                                     if ($child->slug === 'sales_sonia') {
                                         $rawUrl = rtrim(config('services.sonia.url'), '/') . '/auth/agrinav?token=' . urlencode(config('services.sonia.sso_token'));
                                     } elseif ($child->slug === 'operasional_cctv') {
@@ -76,6 +85,9 @@ if (isset($user)) {
                 @else
                     @php
                         $rawUrl = $menu->url;
+                        if (($menu->slug === 'evaluasi_aplikasi' || $rawUrl === '/evaluasi-aplikasi') && ($isRegional || $userRegId)) {
+                            $rawUrl = $userRegId ? ('/dfarmkaret?id_reg=' . $userRegId) : '/dfarmkaret';
+                        }
                         $isExternalHttp = false;
                         if (empty($rawUrl)) {
                             $url = '#';

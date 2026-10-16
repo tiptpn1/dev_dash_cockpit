@@ -1,6 +1,9 @@
-{{-- Discrete Log Viewer Button - Add this to your main layout --}}
+@php
+    $logViewerUser = Auth::guard('custom')->user() ?? Auth::user();
+    $isSuperadmin = $logViewerUser && ($logViewerUser->username === 'superadmin' || $logViewerUser->role === 'superadmin');
+@endphp
 
-@if(app()->environment('local') || (auth()->check() && auth()->user()->role === 'superadmin'))
+@if($isSuperadmin)
 <style>
     .log-viewer-trigger {
         position: fixed;
@@ -137,9 +140,7 @@ async function checkRecentErrors() {
     }
 }
 
-// Check on page load (only if logged in and in development)
-@if(app()->environment('local'))
-    setTimeout(checkRecentErrors, 2000);
-@endif
+// Check on page load
+setTimeout(checkRecentErrors, 2000);
 </script>
 @endif

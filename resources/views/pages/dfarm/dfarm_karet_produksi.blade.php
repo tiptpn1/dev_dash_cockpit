@@ -2586,7 +2586,7 @@
     
     if (tglAwal) params.push('tgl_awal=' + tglAwal);
     if (tglAkhir) params.push('tgl_akhir=' + tglAkhir);
-    if (idReg) params.push('id_reg=' + idReg);
+    params.push('id_reg=' + (idReg || ''));
     if (kodeKebun) params.push('kode_kebun=' + kodeKebun);
 
     url += params.join('&');

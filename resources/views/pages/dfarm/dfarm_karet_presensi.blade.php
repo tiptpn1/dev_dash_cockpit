@@ -2173,7 +2173,7 @@
           if (tglAwal) params.push('tgl_awal=' + tglAwal);
           if (tglAkhir) params.push('tgl_akhir=' + tglAkhir);
           if (jobDesc) params.push('jobdesc=' + jobDesc);
-          if (idReg) params.push('id_reg=' + idReg);
+          params.push('id_reg=' + (idReg || ''));
           if (kodeKebun) params.push('kode_kebun=' + kodeKebun);
           if (activeTab) params.push('tab=' + activeTab);
 

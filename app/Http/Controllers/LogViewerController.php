@@ -8,6 +8,20 @@ use Illuminate\Support\Facades\Log;
 
 class LogViewerController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            $user = \Illuminate\Support\Facades\Auth::guard('custom')->user() ?? auth()->user();
+            if (!$user || ($user->username !== 'superadmin' && $user->role !== 'superadmin')) {
+                if ($request->expectsJson() || $request->isXmlHttpRequest()) {
+                    return response()->json(['error' => 'Unauthorized. Only superadmin is allowed.'], 403);
+                }
+                abort(403, 'Akses Ditolak: Hanya superadmin yang dapat mengakses Log Viewer.');
+            }
+            return $next($request);
+        });
+    }
+
     /**
      * Detect log file locations
      */

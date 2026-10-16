@@ -9,16 +9,19 @@ function initializeApplicationSelect() {
   if (appSelectElement) {
     appSelectElement.addEventListener('change', function() {
       const selectedApp = this.value;
+      const currentUrlParams = new URLSearchParams(window.location.search);
+      const currentIdReg = currentUrlParams.get('id_reg');
+      const regQuery = currentIdReg ? ('?id_reg=' + encodeURIComponent(currentIdReg)) : '';
 
       // Redirect to Digital Farming if selected
       if (selectedApp === 'Digital Farming') {
-        window.location.href = '/dfarmkaret';
+        window.location.href = '/dfarmkaret' + regQuery;
         return;
       }
 
       // Redirect to Digital Farming Produksi if selected
       if (selectedApp === 'Digital Farming Produksi') {
-        window.location.href = '/dfarmkaretproduksi';
+        window.location.href = '/dfarmkaretproduksi' + regQuery;
         return;
       }
 
@@ -66,16 +69,19 @@ function initializeApplicationSelect() {
   if (appSelectDropdown) {
     appSelectDropdown.addEventListener('change', function() {
       const selectedApp = this.value;
+      const currentUrlParams = new URLSearchParams(window.location.search);
+      const currentIdReg = currentUrlParams.get('id_reg');
+      const regQuery = currentIdReg ? ('?id_reg=' + encodeURIComponent(currentIdReg)) : '';
 
       // Redirect to Digital Farming if selected
       if (selectedApp === 'Digital Farming') {
-        window.location.href = '/dfarmkaret';
+        window.location.href = '/dfarmkaret' + regQuery;
         return;
       }
 
       // Redirect to Digital Farming Produksi if selected
       if (selectedApp === 'Digital Farming Produksi') {
-        window.location.href = '/dfarmkaretproduksi';
+        window.location.href = '/dfarmkaretproduksi' + regQuery;
         return;
       }
 
