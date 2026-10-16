@@ -836,11 +836,11 @@
                                     || (isset($scope) && !empty($scope) && !($scope['is_ho'] ?? true));
                             @endphp
                             <select id="app_select" class="form-select">
+                                <option value="HRIS" selected>HRIS</option>
                                 <option value="Digital Farming">DFarm Presensi</option>
                                 <option value="Digital Farming Produksi">DFarm Prestasi</option>
                                 @if(!$isRegionalUser)
                                     <option value="Digital Farming BKM">DFarm & BKM SAP</option>
-                                    <option value="HRIS" selected>HRIS</option>
                                     <option value="MAIA">MAIA</option>
                                     <option value="MONIKA">MONIKA</option>
                                     <option value="BPD">Aplikasi BPD</option>

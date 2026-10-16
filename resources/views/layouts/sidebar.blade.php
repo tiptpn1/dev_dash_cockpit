@@ -43,9 +43,6 @@ if (isset($user)) {
                             @if($user && $user->hasFeature($child->slug))
                                 @php
                                     $rawUrl = $child->url;
-                                    if (($child->slug === 'evaluasi_aplikasi' || $rawUrl === '/evaluasi-aplikasi') && ($isRegional || $userRegId)) {
-                                        $rawUrl = $userRegId ? ('/dfarmkaret?id_reg=' . $userRegId) : '/dfarmkaret';
-                                    }
                                     if ($child->slug === 'sales_sonia') {
                                         $rawUrl = rtrim(config('services.sonia.url'), '/') . '/auth/agrinav?token=' . urlencode(config('services.sonia.sso_token'));
                                     } elseif ($child->slug === 'operasional_cctv') {
@@ -85,9 +82,6 @@ if (isset($user)) {
                 @else
                     @php
                         $rawUrl = $menu->url;
-                        if (($menu->slug === 'evaluasi_aplikasi' || $rawUrl === '/evaluasi-aplikasi') && ($isRegional || $userRegId)) {
-                            $rawUrl = $userRegId ? ('/dfarmkaret?id_reg=' . $userRegId) : '/dfarmkaret';
-                        }
                         $isExternalHttp = false;
                         if (empty($rawUrl)) {
                             $url = '#';

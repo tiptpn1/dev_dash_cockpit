@@ -5068,20 +5068,6 @@ class PageController extends Controller
 
     public function evaluasi_aplikasi(Request $request)
     {
-        $user = Auth::guard('custom')->user() ?? Auth::user();
-        $username = strtolower($user->username ?? '');
-        $userRegionalId = null;
-        if (preg_match('/^regional(\d+)$/', $username, $matches)) {
-            $userRegionalId = $matches[1];
-        } elseif (!empty($user->regional) && is_numeric($user->regional)) {
-            $userRegionalId = $user->regional;
-        }
-
-        // Ketika username/user adalah regional, langsung alihkan ke /dfarmkaret sesuai regionalnya
-        if ($userRegionalId) {
-            return redirect()->route('dfarmkaretpresensi', ['id_reg' => $userRegionalId]);
-        }
-
         $regParam = $request->get('regional', $request->get('scope', $request->get('reg')));
         if ($regParam !== null && trim((string) $regParam) !== '') {
             session(['hris_user_regional' => trim((string) $regParam)]);
@@ -5105,7 +5091,7 @@ class PageController extends Controller
             $userRegionalId = $user->regional;
         }
         if ($userRegionalId) {
-            return redirect()->route('dfarmkaretpresensi', ['id_reg' => $userRegionalId]);
+            return redirect()->route('evaluasi_aplikasi');
         }
 
         $tokenMode = session('url_token_valid') === true;
@@ -5123,7 +5109,7 @@ class PageController extends Controller
             $userRegionalId = $user->regional;
         }
         if ($userRegionalId) {
-            return redirect()->route('dfarmkaretpresensi', ['id_reg' => $userRegionalId]);
+            return redirect()->route('evaluasi_aplikasi');
         }
 
         $tokenMode = session('url_token_valid') === true;
@@ -5534,6 +5520,23 @@ class PageController extends Controller
      */
     public function getHrisRegionalScope(?Request $request = null): array
     {
+        $customUser = \Illuminate\Support\Facades\Auth::guard('custom')->user() ?? auth()->user();
+        $userRegionalId = null;
+        if ($customUser) {
+            $username = strtolower($customUser->username ?? '');
+            if (preg_match('/^regional(\d+)$/i', $username, $matches)) {
+                $userRegionalId = $matches[1];
+            } elseif (!empty($customUser->regional) && is_numeric($customUser->regional)) {
+                $userRegionalId = $customUser->regional;
+            }
+        }
+
+        // Jika user adalah akun regional, SELALU kunci scope ke regional miliknya
+        if ($userRegionalId) {
+            $raw = 'Suppco Reg' . str_pad($userRegionalId, 2, '0', STR_PAD_LEFT);
+            return $this->parseHrisRegional($raw);
+        }
+
         $raw = null;
 
         if ($request) {
@@ -5542,13 +5545,6 @@ class PageController extends Controller
 
         if ($raw === null || trim((string) $raw) === '') {
             $raw = session('hris_user_regional');
-        }
-
-        if ($raw === null || trim((string) $raw) === '') {
-            $customUser = \Illuminate\Support\Facades\Auth::guard('custom')->user();
-            if ($customUser && !empty($customUser->regional)) {
-                $raw = $customUser->regional;
-            }
         }
 
         return $this->parseHrisRegional($raw);
