@@ -5823,6 +5823,7 @@ class PageController extends Controller
         $periode = $request->get('periode', date('Y-m'));
         $area = trim((string) $request->get('area', ''));
         $unit = trim((string) $request->get('unit', ''));
+        $regionalName = trim((string) $request->get('regional_name', ''));
 
         if (!preg_match('/^\d{4}-\d{2}$/', $periode)) {
             return response()->json([
@@ -5845,11 +5846,17 @@ class PageController extends Controller
         [$tahun, $bulan] = array_map('intval', explode('-', $periode));
 
         try {
-            $rows = $this->fetchRekapSeluruhRegionalPegawai($tahun, $bulan, $area, $unit);
+            $scope = $this->getHrisRegionalScope($request);
+            if (empty($regionalName) && !$scope['is_ho']) {
+                $regionalName = $scope['regional_name'];
+            }
+
+            $rows = $this->fetchRekapSeluruhRegionalPegawai($tahun, $bulan, $area, $unit, $regionalName);
 
             return response()->json([
                 'status' => 'success',
                 'periode' => $periode,
+                'regional_name' => $regionalName,
                 'area' => $area,
                 'unit' => $unit,
                 'total' => count($rows),
@@ -6420,18 +6427,18 @@ class PageController extends Controller
         return DB::connection('hris')->select($sql, [$periodeHris, $periodeHris, $regionalName]);
     }
 
-    private function fetchRekapSeluruhRegionalPegawai(int $tahun, int $bulan, string $area, string $unit): array
+    private function fetchRekapSeluruhRegionalPegawai(int $tahun, int $bulan, string $area, string $unit, string $regionalName = ''): array
     {
         $periodeHris = $this->periodeYmToHris($tahun, $bulan);
 
         if ($this->hrisUsesImportData($periodeHris)) {
-            return $this->fetchRekapSeluruhRegionalPegawaiFromImport($periodeHris, $area, $unit);
+            return $this->fetchRekapSeluruhRegionalPegawaiFromImport($periodeHris, $area, $unit, $regionalName);
         }
 
-        return $this->fetchRekapSeluruhRegionalPegawaiFromAbsensi($periodeHris, $area, $unit);
+        return $this->fetchRekapSeluruhRegionalPegawaiFromAbsensi($periodeHris, $area, $unit, $regionalName);
     }
 
-    private function fetchRekapSeluruhRegionalPegawaiFromImport(string $periodeHris, string $area, string $unit): array
+    private function fetchRekapSeluruhRegionalPegawaiFromImport(string $periodeHris, string $area, string $unit, string $regionalName = ''): array
     {
         $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris);
 
@@ -6439,6 +6446,26 @@ class PageController extends Controller
         $targetUnit = ($unit !== '' && $unit !== '-') ? $unit : $area;
         $unitCondition = ($targetUnit === '' || $targetUnit === '-') ? "AND ($unitExpr IS NULL OR TRIM($unitExpr) = '')" : "AND $unitExpr = ?";
         $bindings = [$periodeHris, $periodeHris];
+
+        $regionalCondition = '';
+        if ($regionalName !== '') {
+            $regionalCondition = "AND (
+                CASE 
+                    WHEN UPPER(p.regional) LIKE '%REG%01%' OR UPPER(p.regional) LIKE '%REGIONAL 1%' THEN 'Regional 1'
+                    WHEN UPPER(p.regional) LIKE '%REG%02%' OR UPPER(p.regional) LIKE '%REGIONAL 2%' THEN 'Regional 2'
+                    WHEN UPPER(p.regional) LIKE '%REG%03%' OR UPPER(p.regional) LIKE '%REGIONAL 3%' THEN 'Regional 3'
+                    WHEN UPPER(p.regional) LIKE '%REG%04%' OR UPPER(p.regional) LIKE '%REGIONAL 4%' THEN 'Regional 4'
+                    WHEN UPPER(p.regional) LIKE '%REG%05%' OR UPPER(p.regional) LIKE '%REGIONAL 5%' THEN 'Regional 5'
+                    WHEN UPPER(p.regional) LIKE '%REG%06%' OR UPPER(p.regional) LIKE '%REGIONAL 6%' THEN 'Regional 6'
+                    WHEN UPPER(p.regional) LIKE '%REG%07%' OR UPPER(p.regional) LIKE '%REGIONAL 7%' THEN 'Regional 7'
+                    WHEN UPPER(p.regional) LIKE '%REG%08%' OR UPPER(p.regional) LIKE '%REGIONAL 8%' THEN 'Regional 8'
+                    WHEN UPPER(p.regional) LIKE '%HO%' OR UPPER(p.regional) LIKE '%HEAD OFFICE%' THEN 'SuppCo HO'
+                    ELSE 'Lainnya'
+                END
+            ) = ?";
+            $bindings[] = $regionalName;
+        }
+
         if ($targetUnit !== '' && $targetUnit !== '-') {
             $bindings[] = $targetUnit;
         }
@@ -6473,6 +6500,7 @@ class PageController extends Controller
               /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
               AND LOWER(p.status_pegawai) IN ('aktif', 'active')
               AND (p.fungsi_jabatan IS NULL OR UPPER(TRIM(p.fungsi_jabatan)) NOT IN ('PRODUCTION PROCESS DIRECT ON FARM', 'PRODUCTION PROCESS DIRECT OFF FARM'))
+              $regionalCondition
               $unitCondition
             ORDER BY p.nama ASC
         ";
@@ -6480,7 +6508,7 @@ class PageController extends Controller
         return DB::connection('hris')->select($sql, $bindings);
     }
 
-    private function fetchRekapSeluruhRegionalPegawaiFromAbsensi(string $periodeHris, string $area, string $unit): array
+    private function fetchRekapSeluruhRegionalPegawaiFromAbsensi(string $periodeHris, string $area, string $unit, string $regionalName = ''): array
     {
         $dynamicHariKerja = $this->buildDynamicHariKerjaSql($periodeHris);
 
@@ -6488,6 +6516,26 @@ class PageController extends Controller
         $targetUnit = ($unit !== '' && $unit !== '-') ? $unit : $area;
         $unitCondition = ($targetUnit === '' || $targetUnit === '-') ? "AND ($unitExpr IS NULL OR TRIM($unitExpr) = '')" : "AND $unitExpr = ?";
         $bindings = [$periodeHris, $periodeHris];
+
+        $regionalCondition = '';
+        if ($regionalName !== '') {
+            $regionalCondition = "AND (
+                CASE 
+                    WHEN UPPER(p.regional) LIKE '%REG%01%' OR UPPER(p.regional) LIKE '%REGIONAL 1%' THEN 'Regional 1'
+                    WHEN UPPER(p.regional) LIKE '%REG%02%' OR UPPER(p.regional) LIKE '%REGIONAL 2%' THEN 'Regional 2'
+                    WHEN UPPER(p.regional) LIKE '%REG%03%' OR UPPER(p.regional) LIKE '%REGIONAL 3%' THEN 'Regional 3'
+                    WHEN UPPER(p.regional) LIKE '%REG%04%' OR UPPER(p.regional) LIKE '%REGIONAL 4%' THEN 'Regional 4'
+                    WHEN UPPER(p.regional) LIKE '%REG%05%' OR UPPER(p.regional) LIKE '%REGIONAL 5%' THEN 'Regional 5'
+                    WHEN UPPER(p.regional) LIKE '%REG%06%' OR UPPER(p.regional) LIKE '%REGIONAL 6%' THEN 'Regional 6'
+                    WHEN UPPER(p.regional) LIKE '%REG%07%' OR UPPER(p.regional) LIKE '%REGIONAL 7%' THEN 'Regional 7'
+                    WHEN UPPER(p.regional) LIKE '%REG%08%' OR UPPER(p.regional) LIKE '%REGIONAL 8%' THEN 'Regional 8'
+                    WHEN UPPER(p.regional) LIKE '%HO%' OR UPPER(p.regional) LIKE '%HEAD OFFICE%' THEN 'SuppCo HO'
+                    ELSE 'Lainnya'
+                END
+            ) = ?";
+            $bindings[] = $regionalName;
+        }
+
         if ($targetUnit !== '' && $targetUnit !== '-') {
             $bindings[] = $targetUnit;
         }
@@ -6522,6 +6570,7 @@ class PageController extends Controller
               /* AND (p.status_ckp IS NULL OR p.status_ckp != 'Ya') */
               AND LOWER(p.status_pegawai) IN ('aktif', 'active')
               AND (p.fungsi_jabatan IS NULL OR UPPER(TRIM(p.fungsi_jabatan)) NOT IN ('PRODUCTION PROCESS DIRECT ON FARM', 'PRODUCTION PROCESS DIRECT OFF FARM'))
+              $regionalCondition
               $unitCondition
             ORDER BY p.nama ASC
         ";
@@ -6895,6 +6944,7 @@ class PageController extends Controller
             LEFT JOIN (
                 SELECT
                     pegawai_id,
+                    COUNT(DISTINCT CASE WHEN UPPER(TRIM(jenis_absen)) IN ('WFO', 'WFH', 'IZIN', 'IJIN', 'DINAS') THEN DATE(jam) END) AS absensi,
                     COUNT(DISTINCT CASE WHEN UPPER(TRIM(jenis_absen)) IN ('WFO', 'WFH', 'IZIN', 'IJIN', 'DINAS') THEN DATE(jam) END) AS check_in,
                     COUNT(DISTINCT CASE WHEN UPPER(TRIM(jenis_absen)) = 'WFO' THEN DATE(jam) END) AS cnt_wfo,
                     COUNT(DISTINCT CASE WHEN UPPER(TRIM(jenis_absen)) = 'WFH' THEN DATE(jam) END) AS cnt_wfh,

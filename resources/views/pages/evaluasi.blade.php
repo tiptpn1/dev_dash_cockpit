@@ -1205,6 +1205,7 @@
             let _harianData = [];
             let _perkaryawanData = [];
             let _rekapRegionalData = [];
+            let _currentSelectedRegional = null;
             const hrisScope = {!! json_encode($scope ?? ['is_ho' => true, 'display_label' => 'SuppCo HO', 'regional_name' => 'SuppCo HO', 'code' => 'HO']) !!};
             let _isRegionalMode = !hrisScope.is_ho;
 
@@ -2174,6 +2175,7 @@
             }
 
             function loadRekapRegionalDetail(regionalName, barColor) {
+                _currentSelectedRegional = regionalName;
                 const periode = rekapRegionalPeriodeSelect.value;
                 const detailContainer = document.getElementById('rekap-regional-detail-container');
                 const detailTitle = document.getElementById('rekap-regional-detail-title');
@@ -2204,7 +2206,7 @@
 
                             html += `
                                         <div style="margin-bottom: 12px; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; background: #fff;">
-                                            <div class="area-unit-row" style="display: flex; align-items: center; padding: 8px 12px; cursor: pointer; transition: background 0.2s ease;" onclick="togglePegawaiDetail(this, '${escapeHtml(area)}', '${escapeHtml(unit)}', '${barColor}')">
+                                            <div class="area-unit-row" data-regional="${escapeHtml(regionalName)}" style="display: flex; align-items: center; padding: 8px 12px; cursor: pointer; transition: background 0.2s ease;" onclick="togglePegawaiDetail(this, '${escapeHtml(area)}', '${escapeHtml(unit)}', '${barColor}', '${escapeHtml(regionalName)}')">
                                                 <div style="width: 250px; font-weight: 600; font-size: 13px; color: #1f2937; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(label)}">
                                                     <i class="fas fa-chevron-right chevron-icon" style="margin-right: 6px; font-size: 10px; color: #94a3b8; transition: transform 0.2s ease;"></i>
                                                     ${escapeHtml(label)}
@@ -2227,7 +2229,7 @@
                     });
             }
 
-            window.togglePegawaiDetail = function (rowElement, area, unit, barColor) {
+            window.togglePegawaiDetail = function (rowElement, area, unit, barColor, regionalName) {
                 const container = rowElement.nextElementSibling;
                 const chevron = rowElement.querySelector('.chevron-icon');
 
@@ -2246,7 +2248,11 @@
                     container.innerHTML = '<div style="text-align:center; padding:10px; color:#6b7280; font-size: 12px;"><i class="fas fa-spinner fa-spin"></i> Memuat daftar pegawai...</div>';
 
                     const periode = document.getElementById('rekap_regional_periode_select').value;
+                    const finalRegional = regionalName || rowElement.dataset.regional || (typeof _currentSelectedRegional !== 'undefined' ? _currentSelectedRegional : '');
                     const params = new URLSearchParams({ periode, area, unit });
+                    if (finalRegional) {
+                        params.append('regional_name', finalRegional);
+                    }
 
                     fetch(`${hrisRekapRegionalPegawaiUrl}?${params}`)
                         .then(res => res.json())
@@ -2410,6 +2416,8 @@
             function renderRekapKebunRegionalView(data) {
                 const rows = data.data || [];
                 const regionalLabel = data.display_label || hrisScope.display_label || 'Regional';
+                const regionalName = data.regional_name || hrisScope.regional_name || regionalLabel;
+                _currentSelectedRegional = regionalName;
 
                 // Calculate summary KPIs
                 const totalUnits = rows.length;
@@ -2488,7 +2496,7 @@
 
                     listHtml += `
                         <div class="kebun-unit-card" data-unit-name="${escapeHtml(label).toLowerCase()}" style="margin-bottom: 10px; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.03); transition: border-color 0.2s;">
-                            <div class="area-unit-row" style="display: flex; align-items: center; padding: 10px 14px; cursor: pointer; transition: background 0.15s ease;" onclick="togglePegawaiDetail(this, '${escapeHtml(area)}', '${escapeHtml(unit)}', '${barColor}')">
+                            <div class="area-unit-row" data-regional="${escapeHtml(regionalName)}" style="display: flex; align-items: center; padding: 10px 14px; cursor: pointer; transition: background 0.15s ease;" onclick="togglePegawaiDetail(this, '${escapeHtml(area)}', '${escapeHtml(unit)}', '${barColor}', '${escapeHtml(regionalName)}')">
                                 <div style="width: 280px; font-weight: 600; font-size: 13px; color: #1f2937; display: flex; align-items: center; gap: 8px;">
                                     <i class="fas fa-chevron-right chevron-icon" style="font-size: 10px; color: #94a3b8; transition: transform 0.2s ease;"></i>
                                     <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(label)}">${escapeHtml(label)}</span>
