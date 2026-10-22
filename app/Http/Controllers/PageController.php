@@ -239,7 +239,11 @@ class PageController extends Controller
 
     public function getHrDemographicData(Request $request)
     {
+        @set_time_limit(180);
         $db = DB::connection('hris');
+
+        $allRegionalGrupKodes = ['HO', 'REG1', 'REG2', 'REG3', 'REG4', 'REG5', 'REG6', 'REG7', 'REG8'];
+        $validStatuses = ['Aktif', 'aktif', 'Active', 'active', 'MBT', 'mbt'];
 
         // Ambil list kode regional_grup yang bertindak sebagai Head Office dari tabel regional_grup
         $hoKodes = $db->table('regional_grup')
@@ -254,9 +258,7 @@ class PageController extends Controller
             ->toArray();
 
         $query = $db->table('pegawai')
-            ->whereIn('regional_grup_kode', function ($sub) {
-                $sub->select('kode')->from('regional_grup');
-            })
+            ->whereIn('regional_grup_kode', $allRegionalGrupKodes)
             ->where(function ($q) {
                 $q->whereNull('penugasan_mutasi_ke')
                     ->orWhere('penugasan_mutasi_ke', '');
@@ -264,14 +266,27 @@ class PageController extends Controller
 
         if ($request->input('only_filters') == 1) {
             $baseFilterQuery = $db->table('pegawai')
-                ->whereIn('regional_grup_kode', function ($sub) {
-                    $sub->select('kode')->from('regional_grup');
-                })
+                ->whereIn('regional_grup_kode', $allRegionalGrupKodes)
                 ->where(function ($q) {
                     $q->whereNull('penugasan_mutasi_ke')
                         ->orWhere('penugasan_mutasi_ke', '');
                 })
-                ->whereRaw("LOWER(status_pegawai) IN ('aktif', 'mbt')");
+                ->whereIn('status_pegawai', $validStatuses);
+
+            if ($request->filled('status_pegawai') && $request->status_pegawai !== 'ALL') {
+                $st = trim($request->status_pegawai);
+                if (in_array(strtolower($st), ['tetap', 'karyawan tetap'])) {
+                    $baseFilterQuery->where('kelompok_pegawai', 'LIKE', '%Tetap%')
+                        ->where('kelompok_pegawai', 'NOT LIKE', '%Tidak%');
+                } elseif (in_array(strtolower($st), ['tidak tetap', 'tidak_tetap', 'karyawan tidak tetap'])) {
+                    $baseFilterQuery->where(function ($q) {
+                        $q->where('kelompok_pegawai', 'LIKE', '%Tidak%')
+                            ->orWhere('kelompok_pegawai', 'NOT LIKE', '%Tetap%');
+                    });
+                } else {
+                    $baseFilterQuery->where('status_pegawai', $st);
+                }
+            }
 
             $pAreaQuery = clone $baseFilterQuery;
             if ($request->filled('regional') && $request->regional !== 'ALL') {
@@ -298,10 +313,21 @@ class PageController extends Controller
         }
 
         // Filter default: Hanya karyawan aktif dan MBT per hari ini
+        $query->whereIn('status_pegawai', $validStatuses);
+
         if ($request->filled('status_pegawai') && $request->status_pegawai !== 'ALL') {
-            $query->where('status_pegawai', $request->status_pegawai);
-        } else {
-            $query->whereRaw("LOWER(status_pegawai) IN ('aktif', 'mbt')");
+            $st = trim($request->status_pegawai);
+            if (in_array(strtolower($st), ['tetap', 'karyawan tetap'])) {
+                $query->where('kelompok_pegawai', 'LIKE', '%Tetap%')
+                    ->where('kelompok_pegawai', 'NOT LIKE', '%Tidak%');
+            } elseif (in_array(strtolower($st), ['tidak tetap', 'tidak_tetap', 'karyawan tidak tetap'])) {
+                $query->where(function ($q) {
+                    $q->where('kelompok_pegawai', 'LIKE', '%Tidak%')
+                        ->orWhere('kelompok_pegawai', 'NOT LIKE', '%Tetap%');
+                });
+            } else {
+                $query->where('status_pegawai', $st);
+            }
         }
 
         if ($request->filled('regional') && $request->regional !== 'ALL') {
@@ -332,10 +358,6 @@ class PageController extends Controller
         // Helper callback for Head Office matching strictly by regional_grup_kode
         $isHO = function ($q) {
             $q->where('regional_grup_kode', 'HO');
-        };
-
-        $isNotHO = function ($q) {
-            $q->where('regional_grup_kode', '!=', 'HO');
         };
 
         // Summary Cards
@@ -375,21 +397,20 @@ class PageController extends Controller
         $karpimData = [];
         $karpelData = [];
 
+        $c12Raw = (clone $query)->select(
+            'regional_grup_kode',
+            DB::raw("SUM(CASE WHEN kelompok_pegawai LIKE '%Tetap%' AND kelompok_pegawai NOT LIKE '%Tidak%' THEN 1 ELSE 0 END) as tetap_cnt"),
+            DB::raw("COUNT(*) as total_cnt"),
+            DB::raw("SUM(CASE WHEN kelompok_pegawai LIKE '%Karpim%' OR kelompok_pegawai LIKE '%SEVP%' OR kelompok_pegawai LIKE '%Direksi%' THEN 1 ELSE 0 END) as karpim_cnt")
+        )->groupBy('regional_grup_kode')->get()->keyBy('regional_grup_kode');
+
         foreach ($unitsDef as $u) {
             $unitCategories[] = $u['label'];
-            $qUnit = (clone $query)->where('regional_grup_kode', $u['code']);
-
-            $tetapCount = (clone $qUnit)->where('kelompok_pegawai', 'LIKE', '%Tetap%')
-                ->where('kelompok_pegawai', 'NOT LIKE', '%Tidak%')
-                ->count();
-            $totalCount = (clone $qUnit)->count();
+            $row = $c12Raw->get($u['code']);
+            $totalCount = (int) ($row->total_cnt ?? 0);
+            $tetapCount = (int) ($row->tetap_cnt ?? 0);
             $tidakTetapCount = $totalCount - $tetapCount;
-
-            $karpimCount = (clone $qUnit)->where(function ($q) {
-                $q->where('kelompok_pegawai', 'LIKE', '%Karpim%')
-                    ->orWhere('kelompok_pegawai', 'LIKE', '%SEVP%')
-                    ->orWhere('kelompok_pegawai', 'LIKE', '%Direksi%');
-            })->count();
+            $karpimCount = (int) ($row->karpim_cnt ?? 0);
             $karpelCount = $totalCount - $karpimCount;
 
             $tetapData[] = $tetapCount;
@@ -437,23 +458,23 @@ class PageController extends Controller
         $eduLevels = ['SD', 'SMP', 'SMA', 'D3', 'D4', 'S1', 'S2', 'S3'];
         $eduData = array_fill_keys($eduLevels, []);
 
-        foreach ($unitsDef as $u) {
-            $qUnit = (clone $query)->where('regional_grup_kode', $u['code']);
-            $unitEduRaw = (clone $qUnit)->select('pendidikan_terakhir', DB::raw('count(*) as total'))
-                ->groupBy('pendidikan_terakhir')->get();
+        $c4Raw = (clone $query)->select('regional_grup_kode', 'pendidikan_terakhir', DB::raw('count(*) as total'))
+            ->groupBy('regional_grup_kode', 'pendidikan_terakhir')->get();
 
-            $uMap = array_fill_keys($eduLevels, 0);
-            foreach ($unitEduRaw as $row) {
-                $val = trim($row->pendidikan_terakhir);
-                if ($val === 'SLTP')
-                    $val = 'SMP';
-                if ($val === 'SLTA')
-                    $val = 'SMA';
-                if (isset($uMap[$val])) {
-                    $uMap[$val] += $row->total;
-                }
+        $c4Map = [];
+        foreach ($c4Raw as $row) {
+            $rg = $row->regional_grup_kode;
+            $val = trim($row->pendidikan_terakhir);
+            if ($val === 'SLTP') $val = 'SMP';
+            if ($val === 'SLTA') $val = 'SMA';
+            if (!isset($c4Map[$rg])) $c4Map[$rg] = array_fill_keys($eduLevels, 0);
+            if (isset($c4Map[$rg][$val])) {
+                $c4Map[$rg][$val] += (int) $row->total;
             }
+        }
 
+        foreach ($unitsDef as $u) {
+            $uMap = $c4Map[$u['code']] ?? array_fill_keys($eduLevels, 0);
             foreach ($eduLevels as $lvl) {
                 $eduData[$lvl][] = $uMap[$lvl];
             }
@@ -482,12 +503,16 @@ class PageController extends Controller
         $genderLakiData = [];
         $genderPerempuanData = [];
 
+        $c5Raw = (clone $query)->select(
+            'regional_grup_kode',
+            DB::raw("SUM(CASE WHEN jenis_kelamin IN ('L', 'Laki-laki') THEN 1 ELSE 0 END) as laki_cnt"),
+            DB::raw("COUNT(*) as total_cnt")
+        )->groupBy('regional_grup_kode')->get()->keyBy('regional_grup_kode');
+
         foreach ($unitsDef as $u) {
-            $qUnit = (clone $query)->where('regional_grup_kode', $u['code']);
-            $lCount = (clone $qUnit)->where(function ($q) {
-                $q->where('jenis_kelamin', 'L')->orWhere('jenis_kelamin', 'Laki-laki');
-            })->count();
-            $totCount = (clone $qUnit)->count();
+            $row = $c5Raw->get($u['code']);
+            $totCount = (int) ($row->total_cnt ?? 0);
+            $lCount = (int) ($row->laki_cnt ?? 0);
             $pCount = $totCount - $lCount;
 
             $genderLakiData[] = $lCount;
@@ -504,34 +529,37 @@ class PageController extends Controller
             'total_perempuan' => array_sum($genderPerempuanData)
         ];
 
-        // 6. Dashboard 6: Agama per Regional (Stacked Bar Chart) - Islam, Kristen, Katolik, Hindu, Buddha, Konghucu, Lainnya
+        // 6. Dashboard 6: Agama per Regional (Stacked Bar Chart)
         $agamaList = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu', 'Lainnya'];
         $agamaData = array_fill_keys($agamaList, []);
 
+        $c6Raw = (clone $query)->select('regional_grup_kode', 'agama', DB::raw('count(*) as total'))
+            ->groupBy('regional_grup_kode', 'agama')->get();
+
+        $c6Map = [];
+        foreach ($c6Raw as $ag) {
+            $rg = $ag->regional_grup_kode;
+            if (!isset($c6Map[$rg])) $c6Map[$rg] = array_fill_keys($agamaList, 0);
+            $lbl = trim($ag->agama);
+            $tot = (int) $ag->total;
+            if (strcasecmp($lbl, 'Islam') === 0)
+                $c6Map[$rg]['Islam'] += $tot;
+            elseif (strcasecmp($lbl, 'Kristen') === 0 || strcasecmp($lbl, 'Protestan') === 0)
+                $c6Map[$rg]['Kristen'] += $tot;
+            elseif (strcasecmp($lbl, 'Katolik') === 0 || strcasecmp($lbl, 'Katholik') === 0)
+                $c6Map[$rg]['Katolik'] += $tot;
+            elseif (strcasecmp($lbl, 'Hindu') === 0)
+                $c6Map[$rg]['Hindu'] += $tot;
+            elseif (strcasecmp($lbl, 'Buddha') === 0 || strcasecmp($lbl, 'Budha') === 0)
+                $c6Map[$rg]['Buddha'] += $tot;
+            elseif (strcasecmp($lbl, 'Konghucu') === 0 || strcasecmp($lbl, 'Khonghucu') === 0)
+                $c6Map[$rg]['Konghucu'] += $tot;
+            else
+                $c6Map[$rg]['Lainnya'] += $tot;
+        }
+
         foreach ($unitsDef as $u) {
-            $qUnit = (clone $query)->where('regional_grup_kode', $u['code']);
-            $unitAgamaRaw = (clone $qUnit)->select('agama', DB::raw('count(*) as total'))
-                ->groupBy('agama')->get();
-
-            $uAgMap = array_fill_keys($agamaList, 0);
-            foreach ($unitAgamaRaw as $ag) {
-                $lbl = trim($ag->agama);
-                if (strcasecmp($lbl, 'Islam') === 0)
-                    $uAgMap['Islam'] += $ag->total;
-                elseif (strcasecmp($lbl, 'Kristen') === 0 || strcasecmp($lbl, 'Protestan') === 0)
-                    $uAgMap['Kristen'] += $ag->total;
-                elseif (strcasecmp($lbl, 'Katolik') === 0 || strcasecmp($lbl, 'Katholik') === 0)
-                    $uAgMap['Katolik'] += $ag->total;
-                elseif (strcasecmp($lbl, 'Hindu') === 0)
-                    $uAgMap['Hindu'] += $ag->total;
-                elseif (strcasecmp($lbl, 'Buddha') === 0 || strcasecmp($lbl, 'Budha') === 0)
-                    $uAgMap['Buddha'] += $ag->total;
-                elseif (strcasecmp($lbl, 'Konghucu') === 0 || strcasecmp($lbl, 'Khonghucu') === 0)
-                    $uAgMap['Konghucu'] += $ag->total;
-                else
-                    $uAgMap['Lainnya'] += $ag->total;
-            }
-
+            $uAgMap = $c6Map[$u['code']] ?? array_fill_keys($agamaList, 0);
             foreach ($agamaList as $agName) {
                 $agamaData[$agName][] = $uAgMap[$agName];
             }
@@ -566,39 +594,40 @@ class PageController extends Controller
         }
         $chart7 = ['series' => $sukuSeries];
 
-        // 8. Dashboard 8: Level Organisasi per Regional (Stacked Bar Chart) - BOD, BOD-1, BOD-2, BOD-3, BOD-4, BOD-5, BOD-6, Lainnya
+        // 8. Dashboard 8: Level Organisasi per Regional (Stacked Bar Chart)
         $bodList = ['BOD', 'BOD-1', 'BOD-2', 'BOD-3', 'BOD-4', 'BOD-5', 'BOD-6', 'Lainnya'];
         $bodData = array_fill_keys($bodList, []);
 
+        $bodRaw = (clone $query)->select('regional_grup_kode', 'kategori_jabatan_kode', DB::raw('count(*) as total'))
+            ->groupBy('regional_grup_kode', 'kategori_jabatan_kode')->get();
+
+        $c8Map = [];
+        foreach ($bodRaw as $r) {
+            $rg = $r->regional_grup_kode;
+            if (!isset($c8Map[$rg])) $c8Map[$rg] = array_fill_keys($bodList, 0);
+            $code = strtoupper(trim($r->kategori_jabatan_kode));
+            $cnt = (int) $r->total;
+
+            if ($code === 'BOD-1')
+                $c8Map[$rg]['BOD-1'] += $cnt;
+            elseif ($code === 'BOD-2')
+                $c8Map[$rg]['BOD-2'] += $cnt;
+            elseif ($code === 'BOD-3')
+                $c8Map[$rg]['BOD-3'] += $cnt;
+            elseif ($code === 'BOD-4')
+                $c8Map[$rg]['BOD-4'] += $cnt;
+            elseif ($code === 'BOD-5')
+                $c8Map[$rg]['BOD-5'] += $cnt;
+            elseif ($code === 'BOD-6')
+                $c8Map[$rg]['BOD-6'] += $cnt;
+            elseif (in_array($code, ['BOD', 'BOM', 'BOC']))
+                $c8Map[$rg]['BOD'] += $cnt;
+            else
+                $c8Map[$rg]['Lainnya'] += $cnt;
+        }
+
         foreach ($unitsDef as $u) {
-            $qUnit = (clone $query)->where('regional_grup_kode', $u['code']);
-
-            $katRaw = (clone $qUnit)->select('kategori_jabatan_kode', DB::raw('count(*) as total'))
-                ->groupBy('kategori_jabatan_kode')->get();
-
-            $uMap = array_fill_keys($bodList, 0);
-            foreach ($katRaw as $r) {
-                $code = strtoupper(trim($r->kategori_jabatan_kode));
-                $cnt = (int) $r->total;
-
-                if ($code === 'BOD-1')
-                    $uMap['BOD-1'] += $cnt;
-                elseif ($code === 'BOD-2')
-                    $uMap['BOD-2'] += $cnt;
-                elseif ($code === 'BOD-3')
-                    $uMap['BOD-3'] += $cnt;
-                elseif ($code === 'BOD-4')
-                    $uMap['BOD-4'] += $cnt;
-                elseif ($code === 'BOD-5')
-                    $uMap['BOD-5'] += $cnt;
-                elseif ($code === 'BOD-6')
-                    $uMap['BOD-6'] += $cnt;
-                elseif (in_array($code, ['BOD', 'BOM', 'BOC']))
-                    $uMap['BOD'] += $cnt;
-                else
-                    $uMap['Lainnya'] += $cnt;
-            }
-
+            $uMap = $c8Map[$u['code']] ?? array_fill_keys($bodList, 0);
             foreach ($bodList as $bLabel) {
                 $bodData[$bLabel][] = $uMap[$bLabel];
             }
@@ -627,48 +656,49 @@ class PageController extends Controller
         $pgList = ['PG-06', 'PG-07', 'PG-08', 'PG-09', 'PG-10', 'PG-11', 'PG-12', 'PG-13', 'PG-14', 'PG-15', 'PG-16', 'PG-17', 'PG-18', 'PG-19', 'Non-Grade'];
         $pgData = array_fill_keys($pgList, []);
 
+        $pgRaw = (clone $query)->select('regional_grup_kode', 'kelompok_grade', DB::raw('count(*) as total'))
+            ->groupBy('regional_grup_kode', 'kelompok_grade')->get();
+
+        $c9Map = [];
+        foreach ($pgRaw as $r) {
+            $rg = $r->regional_grup_kode;
+            if (!isset($c9Map[$rg])) $c9Map[$rg] = array_fill_keys($pgList, 0);
+            $g = trim($r->kelompok_grade);
+            $cnt = (int) $r->total;
+            if ($g === '06' || $g === '6')
+                $c9Map[$rg]['PG-06'] += $cnt;
+            elseif ($g === '07' || $g === '7')
+                $c9Map[$rg]['PG-07'] += $cnt;
+            elseif ($g === '08' || $g === '8')
+                $c9Map[$rg]['PG-08'] += $cnt;
+            elseif ($g === '09' || $g === '9')
+                $c9Map[$rg]['PG-09'] += $cnt;
+            elseif ($g === '10')
+                $c9Map[$rg]['PG-10'] += $cnt;
+            elseif ($g === '11')
+                $c9Map[$rg]['PG-11'] += $cnt;
+            elseif ($g === '12')
+                $c9Map[$rg]['PG-12'] += $cnt;
+            elseif ($g === '13')
+                $c9Map[$rg]['PG-13'] += $cnt;
+            elseif ($g === '14')
+                $c9Map[$rg]['PG-14'] += $cnt;
+            elseif ($g === '15')
+                $c9Map[$rg]['PG-15'] += $cnt;
+            elseif ($g === '16')
+                $c9Map[$rg]['PG-16'] += $cnt;
+            elseif ($g === '17')
+                $c9Map[$rg]['PG-17'] += $cnt;
+            elseif ($g === '18')
+                $c9Map[$rg]['PG-18'] += $cnt;
+            elseif ($g === '19')
+                $c9Map[$rg]['PG-19'] += $cnt;
+            else
+                $c9Map[$rg]['Non-Grade'] += $cnt;
+        }
+
         foreach ($unitsDef as $u) {
-            $qUnit = (clone $query)->where('regional_grup_kode', $u['code']);
-
-            $raw = (clone $qUnit)->select('kelompok_grade', DB::raw('count(*) as total'))
-                ->groupBy('kelompok_grade')->get();
-
-            $uMap = array_fill_keys($pgList, 0);
-            foreach ($raw as $r) {
-                $g = trim($r->kelompok_grade);
-                $cnt = (int) $r->total;
-                if ($g === '06' || $g === '6')
-                    $uMap['PG-06'] += $cnt;
-                elseif ($g === '07' || $g === '7')
-                    $uMap['PG-07'] += $cnt;
-                elseif ($g === '08' || $g === '8')
-                    $uMap['PG-08'] += $cnt;
-                elseif ($g === '09' || $g === '9')
-                    $uMap['PG-09'] += $cnt;
-                elseif ($g === '10')
-                    $uMap['PG-10'] += $cnt;
-                elseif ($g === '11')
-                    $uMap['PG-11'] += $cnt;
-                elseif ($g === '12')
-                    $uMap['PG-12'] += $cnt;
-                elseif ($g === '13')
-                    $uMap['PG-13'] += $cnt;
-                elseif ($g === '14')
-                    $uMap['PG-14'] += $cnt;
-                elseif ($g === '15')
-                    $uMap['PG-15'] += $cnt;
-                elseif ($g === '16')
-                    $uMap['PG-16'] += $cnt;
-                elseif ($g === '17')
-                    $uMap['PG-17'] += $cnt;
-                elseif ($g === '18')
-                    $uMap['PG-18'] += $cnt;
-                elseif ($g === '19')
-                    $uMap['PG-19'] += $cnt;
-                else
-                    $uMap['Non-Grade'] += $cnt;
-            }
-
+            $uMap = $c9Map[$u['code']] ?? array_fill_keys($pgList, 0);
             foreach ($pgList as $pg) {
                 $pgData[$pg][] = $uMap[$pg];
             }
@@ -729,21 +759,21 @@ class PageController extends Controller
         }
         $chart12 = ['categories' => $unitCat, 'series' => $unitSeries];
 
-        // 13. Dashboard 13: Distribusi Umur per Regional (Stacked Bar Chart - 4 Kategori: < 30, 31-40, 41-50, > 50)
+        // 13. Dashboard 13: Distribusi Umur per Regional
         $todayStr = date('Y-m-d');
         $ageGroups = ['< 30', '31-40', '41-50', '> 50'];
         $ageData = array_fill_keys($ageGroups, []);
 
-        foreach ($unitsDef as $u) {
-            $qUnit = (clone $query)->where('regional_grup_kode', $u['code']);
-            $raw = (clone $qUnit)->whereNotNull('tanggal_lahir')
-                ->select(
-                    DB::raw("SUM(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, '$todayStr') <= 30 THEN 1 ELSE 0 END) as u30"),
-                    DB::raw("SUM(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, '$todayStr') BETWEEN 31 AND 40 THEN 1 ELSE 0 END) as u40"),
-                    DB::raw("SUM(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, '$todayStr') BETWEEN 41 AND 50 THEN 1 ELSE 0 END) as u50"),
-                    DB::raw("SUM(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, '$todayStr') > 50 THEN 1 ELSE 0 END) as u50plus")
-                )->first();
+        $c13Raw = (clone $query)->whereNotNull('tanggal_lahir')->select(
+            'regional_grup_kode',
+            DB::raw("SUM(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, '$todayStr') <= 30 THEN 1 ELSE 0 END) as u30"),
+            DB::raw("SUM(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, '$todayStr') BETWEEN 31 AND 40 THEN 1 ELSE 0 END) as u40"),
+            DB::raw("SUM(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, '$todayStr') BETWEEN 41 AND 50 THEN 1 ELSE 0 END) as u50"),
+            DB::raw("SUM(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, '$todayStr') > 50 THEN 1 ELSE 0 END) as u50plus")
+        )->groupBy('regional_grup_kode')->get()->keyBy('regional_grup_kode');
 
+        foreach ($unitsDef as $u) {
+            $raw = $c13Raw->get($u['code']);
             $ageData['< 30'][] = (int) ($raw->u30 ?? 0);
             $ageData['31-40'][] = (int) ($raw->u40 ?? 0);
             $ageData['41-50'][] = (int) ($raw->u50 ?? 0);
@@ -769,21 +799,21 @@ class PageController extends Controller
             'totals' => $chart13Totals
         ];
 
-        // 14. Dashboard 14: Masa Kerja per Regional (Stacked Bar Chart - 5 Kategori: < 10, 10-15, 16-20, 21-30, > 30)
+        // 14. Dashboard 14: Masa Kerja per Regional
         $serviceGroups = ['< 10', '10-15', '16-20', '21-30', '> 30'];
         $serviceData = array_fill_keys($serviceGroups, []);
 
-        foreach ($unitsDef as $u) {
-            $qUnit = (clone $query)->where('regional_grup_kode', $u['code']);
-            $raw = (clone $qUnit)->whereNotNull('tanggal_masuk')
-                ->select(
-                    DB::raw("SUM(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_masuk, '$todayStr') < 10 THEN 1 ELSE 0 END) as s10"),
-                    DB::raw("SUM(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_masuk, '$todayStr') BETWEEN 10 AND 15 THEN 1 ELSE 0 END) as s15"),
-                    DB::raw("SUM(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_masuk, '$todayStr') BETWEEN 16 AND 20 THEN 1 ELSE 0 END) as s20"),
-                    DB::raw("SUM(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_masuk, '$todayStr') BETWEEN 21 AND 30 THEN 1 ELSE 0 END) as s30"),
-                    DB::raw("SUM(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_masuk, '$todayStr') > 30 THEN 1 ELSE 0 END) as s30plus")
-                )->first();
+        $c14Raw = (clone $query)->whereNotNull('tanggal_masuk')->select(
+            'regional_grup_kode',
+            DB::raw("SUM(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_masuk, '$todayStr') < 10 THEN 1 ELSE 0 END) as s10"),
+            DB::raw("SUM(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_masuk, '$todayStr') BETWEEN 10 AND 15 THEN 1 ELSE 0 END) as s15"),
+            DB::raw("SUM(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_masuk, '$todayStr') BETWEEN 16 AND 20 THEN 1 ELSE 0 END) as s20"),
+            DB::raw("SUM(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_masuk, '$todayStr') BETWEEN 21 AND 30 THEN 1 ELSE 0 END) as s30"),
+            DB::raw("SUM(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_masuk, '$todayStr') > 30 THEN 1 ELSE 0 END) as s30plus")
+        )->groupBy('regional_grup_kode')->get()->keyBy('regional_grup_kode');
 
+        foreach ($unitsDef as $u) {
+            $raw = $c14Raw->get($u['code']);
             $serviceData['< 10'][] = (int) ($raw->s10 ?? 0);
             $serviceData['10-15'][] = (int) ($raw->s15 ?? 0);
             $serviceData['16-20'][] = (int) ($raw->s20 ?? 0);
@@ -810,23 +840,23 @@ class PageController extends Controller
             'totals' => $chart14Totals
         ];
 
-        // 15. Dashboard 15: Status Pernikahan (Stacked Bar Chart per Regional) - Menikah, Belum Menikah, Cerai/Lainnya
+        // 15. Dashboard 15: Status Pernikahan
         $nikahMenikahData = [];
         $nikahBelumData = [];
         $nikahCeraiData = [];
 
+        $c15Raw = (clone $query)->select(
+            'regional_grup_kode',
+            DB::raw("SUM(CASE WHEN status_nikah IN ('Nikah', 'Menikah', 'K') THEN 1 ELSE 0 END) as m_cnt"),
+            DB::raw("SUM(CASE WHEN status_nikah IN ('Lajang', 'Belum Menikah', 'TK') THEN 1 ELSE 0 END) as b_cnt"),
+            DB::raw("COUNT(*) as total_cnt")
+        )->groupBy('regional_grup_kode')->get()->keyBy('regional_grup_kode');
+
         foreach ($unitsDef as $u) {
-            $qUnit = (clone $query)->where('regional_grup_kode', $u['code']);
-
-            $mCount = (clone $qUnit)->where(function ($q) {
-                $q->whereIn('status_nikah', ['Nikah', 'Menikah', 'K']);
-            })->count();
-
-            $bCount = (clone $qUnit)->where(function ($q) {
-                $q->whereIn('status_nikah', ['Lajang', 'Belum Menikah', 'TK']);
-            })->count();
-
-            $totCount = (clone $qUnit)->count();
+            $row = $c15Raw->get($u['code']);
+            $totCount = (int) ($row->total_cnt ?? 0);
+            $mCount = (int) ($row->m_cnt ?? 0);
+            $bCount = (int) ($row->b_cnt ?? 0);
             $cCount = max(0, $totCount - ($mCount + $bCount));
 
             $nikahMenikahData[] = $mCount;
@@ -902,7 +932,6 @@ class PageController extends Controller
             ];
         }
 
-        // Sort by BOD rank ASC (BOC -> BOD -> BOD-1 -> ... -> BOD-6), then total DESC
         usort($jgItems, function ($a, $b) {
             if ($a['bod_rank'] !== $b['bod_rank']) {
                 return $a['bod_rank'] <=> $b['bod_rank'];
@@ -928,7 +957,7 @@ class PageController extends Controller
             'bod_levels' => $jgBodList
         ];
 
-        // 17. Dashboard 17: Estimasi Pensiun per Regional (Stacked Bar Chart - 30 Hari, 6 Bulan, 1 Tahun, 3 Tahun)
+        // 17. Dashboard 17: Estimasi Pensiun per Regional
         $date30d = date('Y-m-d', strtotime('+30 days'));
         $date6m = date('Y-m-d', strtotime('+6 months'));
         $date1y = date('Y-m-d', strtotime('+1 year'));
@@ -937,16 +966,16 @@ class PageController extends Controller
         $pensiunGroups = ['30 Hari', '6 Bulan', '1 Tahun', '3 Tahun'];
         $pensiunData = array_fill_keys($pensiunGroups, []);
 
-        foreach ($unitsDef as $u) {
-            $qUnit = (clone $query)->where('regional_grup_kode', $u['code']);
-            $raw = (clone $qUnit)->whereNotNull('tanggal_pensiun')
-                ->select(
-                    DB::raw("SUM(CASE WHEN tanggal_pensiun BETWEEN '$todayStr' AND '$date30d' THEN 1 ELSE 0 END) as p30d"),
-                    DB::raw("SUM(CASE WHEN tanggal_pensiun > '$date30d' AND tanggal_pensiun <= '$date6m' THEN 1 ELSE 0 END) as p6m"),
-                    DB::raw("SUM(CASE WHEN tanggal_pensiun > '$date6m' AND tanggal_pensiun <= '$date1y' THEN 1 ELSE 0 END) as p1y"),
-                    DB::raw("SUM(CASE WHEN tanggal_pensiun > '$date1y' AND tanggal_pensiun <= '$date3y' THEN 1 ELSE 0 END) as p3y")
-                )->first();
+        $c17Raw = (clone $query)->whereNotNull('tanggal_pensiun')->select(
+            'regional_grup_kode',
+            DB::raw("SUM(CASE WHEN tanggal_pensiun BETWEEN '$todayStr' AND '$date30d' THEN 1 ELSE 0 END) as p30d"),
+            DB::raw("SUM(CASE WHEN tanggal_pensiun > '$date30d' AND tanggal_pensiun <= '$date6m' THEN 1 ELSE 0 END) as p6m"),
+            DB::raw("SUM(CASE WHEN tanggal_pensiun > '$date6m' AND tanggal_pensiun <= '$date1y' THEN 1 ELSE 0 END) as p1y"),
+            DB::raw("SUM(CASE WHEN tanggal_pensiun > '$date1y' AND tanggal_pensiun <= '$date3y' THEN 1 ELSE 0 END) as p3y")
+        )->groupBy('regional_grup_kode')->get()->keyBy('regional_grup_kode');
 
+        foreach ($unitsDef as $u) {
+            $raw = $c17Raw->get($u['code']);
             $pensiunData['30 Hari'][] = (int) ($raw->p30d ?? 0);
             $pensiunData['6 Bulan'][] = (int) ($raw->p6m ?? 0);
             $pensiunData['1 Tahun'][] = (int) ($raw->p1y ?? 0);
@@ -987,13 +1016,17 @@ class PageController extends Controller
             ['key' => 'REG8', 'title' => 'Regional 8', 'city' => 'Kota Makassar', 'lat' => -5.1477, 'lng' => 119.4327, 'rg_kode' => 'REG8'],
         ];
 
+        $cPinRaw = (clone $query)->select(
+            'regional_grup_kode',
+            DB::raw("COUNT(*) as total_cnt"),
+            DB::raw("SUM(CASE WHEN kelompok_pegawai LIKE '%Tetap%' AND kelompok_pegawai NOT LIKE '%Tidak%' THEN 1 ELSE 0 END) as tetap_cnt")
+        )->groupBy('regional_grup_kode')->get()->keyBy('regional_grup_kode');
+
         $mapPins = [];
         foreach ($pinDefs as $p) {
-            $qPin = (clone $query)->where('regional_grup_kode', $p['rg_kode']);
-            $pCount = (clone $qPin)->count();
-            $pTetap = (clone $qPin)->where('kelompok_pegawai', 'LIKE', '%Tetap%')
-                ->where('kelompok_pegawai', 'NOT LIKE', '%Tidak%')
-                ->count();
+            $row = $cPinRaw->get($p['rg_kode']);
+            $pCount = (int) ($row->total_cnt ?? 0);
+            $pTetap = (int) ($row->tetap_cnt ?? 0);
             $pTidakTetap = $pCount - $pTetap;
             $mapPins[] = [
                 'key' => $p['key'],
@@ -1009,14 +1042,12 @@ class PageController extends Controller
 
         // Filter Options
         $baseFilterQuery = $db->table('pegawai')
-            ->whereIn('regional_grup_kode', function ($sub) {
-                $sub->select('kode')->from('regional_grup');
-            })
+            ->whereIn('regional_grup_kode', $allRegionalGrupKodes)
             ->where(function ($q) {
                 $q->whereNull('penugasan_mutasi_ke')
                     ->orWhere('penugasan_mutasi_ke', '');
             })
-            ->whereRaw("LOWER(status_pegawai) IN ('aktif', 'mbt')");
+            ->whereIn('status_pegawai', $validStatuses);
 
         $pAreaQuery = clone $baseFilterQuery;
         if ($request->filled('regional') && $request->regional !== 'ALL') {
@@ -1066,7 +1097,7 @@ class PageController extends Controller
                 'tahun_list' => [2026, 2025, 2024, 2023, 2022],
                 'personnel_area_list' => $personnelAreaList,
                 'personnel_sub_area_list' => $personnelSubAreaList,
-                'status_pegawai_list' => ['Aktif', 'MBT']
+                'status_pegawai_list' => ['Karyawan Tetap', 'Karyawan Tidak Tetap']
             ]
         ]);
     }
@@ -1164,21 +1195,34 @@ class PageController extends Controller
 
     public function getHrDemographicDetail(Request $request)
     {
+        @set_time_limit(180);
         $db = DB::connection('hris');
+        $allRegionalGrupKodes = ['HO', 'REG1', 'REG2', 'REG3', 'REG4', 'REG5', 'REG6', 'REG7', 'REG8'];
+        $validStatuses = ['Aktif', 'aktif', 'Active', 'active', 'MBT', 'mbt'];
+
         $query = $db->table('pegawai')
-            ->whereIn('regional_grup_kode', function ($sub) {
-                $sub->select('kode')->from('regional_grup');
-            })
+            ->whereIn('regional_grup_kode', $allRegionalGrupKodes)
             ->where(function ($q) {
                 $q->whereNull('penugasan_mutasi_ke')
                     ->orWhere('penugasan_mutasi_ke', '');
             });
 
         // Global Page Filters
+        $query->whereIn('status_pegawai', $validStatuses);
+
         if ($request->filled('status_pegawai') && $request->status_pegawai !== 'ALL') {
-            $query->where('status_pegawai', $request->status_pegawai);
-        } else {
-            $query->whereRaw("LOWER(status_pegawai) IN ('aktif', 'mbt')");
+            $st = trim($request->status_pegawai);
+            if (in_array(strtolower($st), ['tetap', 'karyawan tetap'])) {
+                $query->where('kelompok_pegawai', 'LIKE', '%Tetap%')
+                    ->where('kelompok_pegawai', 'NOT LIKE', '%Tidak%');
+            } elseif (in_array(strtolower($st), ['tidak tetap', 'tidak_tetap', 'karyawan tidak tetap'])) {
+                $query->where(function ($q) {
+                    $q->where('kelompok_pegawai', 'LIKE', '%Tidak%')
+                        ->orWhere('kelompok_pegawai', 'NOT LIKE', '%Tetap%');
+                });
+            } else {
+                $query->where('status_pegawai', $st);
+            }
         }
 
         if ($request->filled('regional') && $request->regional !== 'ALL') {

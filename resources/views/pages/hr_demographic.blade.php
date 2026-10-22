@@ -303,6 +303,86 @@
         margin-top: 6px;
     }
 
+    .card-body-stat {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 8px;
+        margin-top: 6px;
+        flex-wrap: wrap;
+    }
+
+    .card-pct-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        font-size: 0.82rem;
+        font-weight: 800;
+        padding: 3px 9px;
+        border-radius: 9999px;
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid #cbd5e1;
+        letter-spacing: 0.02em;
+        white-space: nowrap;
+    }
+
+    .card-pct-badge.pct-primary {
+        background: #e0f2fe;
+        color: #0369a1;
+        border-color: #bae6fd;
+    }
+
+    .card-pct-badge.pct-success {
+        background: #dcfce7;
+        color: #15803d;
+        border-color: #bbf7d0;
+    }
+
+    .card-pct-badge.pct-warning {
+        background: #fef3c7;
+        color: #b45309;
+        border-color: #fde68a;
+    }
+
+    .submetric-pct {
+        font-size: 0.68rem;
+        font-weight: 700;
+        margin-top: 2px;
+        letter-spacing: 0.01em;
+        opacity: 0.88;
+    }
+
+    .submetric-pct-pill {
+        display: inline-flex;
+        align-items: center;
+        font-size: 0.72rem;
+        font-weight: 800;
+        padding: 2px 7px;
+        border-radius: 9999px;
+        white-space: nowrap;
+    }
+    .submetric-pct-pill.pct-success {
+        background: #dcfce7;
+        color: #15803d;
+        border: 1px solid #bbf7d0;
+    }
+    .submetric-pct-pill.pct-warning {
+        background: #fef3c7;
+        color: #b45309;
+        border: 1px solid #fde68a;
+    }
+    .submetric-pct-pill.pct-primary {
+        background: #dbeafe;
+        color: #1e40af;
+        border: 1px solid #bfdbfe;
+    }
+    .submetric-pct-pill.pct-danger {
+        background: #fee2e2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+    }
+
     /* ===== CHART CARDS ===== */
     .grid-2 {
         display: grid;
@@ -990,8 +1070,8 @@
                     <label class="form-label" for="filterStatusPegawai">Status Pegawai</label>
                     <select id="filterStatusPegawai" class="form-select">
                         <option value="ALL">Semua Status Pegawai</option>
-                        <option value="Aktif">Aktif</option>
-                        <option value="MBT">Masa Bebas Tugas (MBT)</option>
+                        <option value="Tetap">Karyawan Tetap</option>
+                        <option value="Tidak Tetap">Karyawan Tidak Tetap</option>
                     </select>
                 </div>
 
@@ -1010,7 +1090,10 @@
                     <span class="card-label">Total Karyawan</span>
                     <div class="card-icon"><i class="fa-solid fa-users"></i></div>
                 </div>
-                <div class="card-value" id="valTotalKaryawan">-</div>
+                <div class="card-body-stat">
+                    <div class="card-value" id="valTotalKaryawan">-</div>
+                    <span class="card-pct-badge pct-primary" id="pctTotalKaryawan">100%</span>
+                </div>
             </div>
 
             <div class="summary-card" onclick="openEmpDetailModal('head_office')" title="Klik untuk rincian Karyawan Head Office">
@@ -1018,7 +1101,10 @@
                     <span class="card-label">Head Office</span>
                     <div class="card-icon"><i class="fa-solid fa-building"></i></div>
                 </div>
-                <div class="card-value" id="valHeadOffice">-</div>
+                <div class="card-body-stat">
+                    <div class="card-value" id="valHeadOffice">-</div>
+                    <span class="card-pct-badge pct-primary" id="pctHeadOffice">-</span>
+                </div>
             </div>
 
             <div class="summary-card" onclick="openEmpDetailModal('regional')" title="Klik untuk rincian Karyawan Regional">
@@ -1026,7 +1112,10 @@
                     <span class="card-label">Regional</span>
                     <div class="card-icon"><i class="fa-solid fa-map-location-dot"></i></div>
                 </div>
-                <div class="card-value" id="valRegional">-</div>
+                <div class="card-body-stat">
+                    <div class="card-value" id="valRegional">-</div>
+                    <span class="card-pct-badge pct-primary" id="pctRegional">-</span>
+                </div>
             </div>
 
             <div class="summary-card" onclick="openEmpDetailModal('tetap')" title="Klik untuk rincian Karyawan Tetap">
@@ -1034,7 +1123,10 @@
                     <span class="card-label">Karyawan Tetap</span>
                     <div class="card-icon"><i class="fa-solid fa-user-check"></i></div>
                 </div>
-                <div class="card-value" id="valKaryawanTetap">-</div>
+                <div class="card-body-stat">
+                    <div class="card-value" id="valKaryawanTetap">-</div>
+                    <span class="card-pct-badge pct-success" id="pctKaryawanTetap">-</span>
+                </div>
             </div>
 
             <div class="summary-card" onclick="openEmpDetailModal('tidak_tetap')" title="Klik untuk rincian Karyawan Tidak Tetap">
@@ -1042,7 +1134,10 @@
                     <span class="card-label">Karyawan Tidak Tetap</span>
                     <div class="card-icon"><i class="fa-solid fa-user-clock"></i></div>
                 </div>
-                <div class="card-value" id="valKaryawanTidakTetap">-</div>
+                <div class="card-body-stat">
+                    <div class="card-value" id="valKaryawanTidakTetap">-</div>
+                    <span class="card-pct-badge pct-warning" id="pctKaryawanTidakTetap">-</span>
+                </div>
             </div>
         </div>
 
@@ -1077,14 +1172,20 @@
                                 <span style="font-size:0.75rem; font-weight:700; color:#475569; text-transform:uppercase;">Karyawan Tetap</span>
                                 <div style="width:28px; height:28px; border-radius:8px; background:#dcfce7; color:#166534; display:flex; align-items:center; justify-content:center; font-size:0.85rem;"><i class="fa-solid fa-user-check"></i></div>
                             </div>
-                            <div class="submetric-val" id="valChart1Tetap" style="color:#166534; font-size:1.6rem; font-weight:800;">-</div>
+                            <div style="display:flex; align-items:baseline; justify-content:space-between; gap:6px;">
+                                <div class="submetric-val" id="valChart1Tetap" style="color:#166534; font-size:1.6rem; font-weight:800;">-</div>
+                                <span class="submetric-pct-pill pct-success" id="pctChart1Tetap">-</span>
+                            </div>
                         </div>
                         <div class="submetric-card" onclick="openEmpDetailModal('tidak_tetap')" style="cursor:pointer; background:#fffbe6; border:1px solid #ffe58f; text-align:left; padding:16px; border-radius:12px; transition: transform 0.2s;" title="Klik rincian Karyawan Tidak Tetap">
                             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
                                 <span style="font-size:0.75rem; font-weight:700; color:#475569; text-transform:uppercase;">Tidak Tetap</span>
                                 <div style="width:28px; height:28px; border-radius:8px; background:#fff1b8; color:#d48806; display:flex; align-items:center; justify-content:center; font-size:0.85rem;"><i class="fa-solid fa-user-clock"></i></div>
                             </div>
-                            <div class="submetric-val" id="valChart1TidakTetap" style="color:#d48806; font-size:1.6rem; font-weight:800;">-</div>
+                            <div style="display:flex; align-items:baseline; justify-content:space-between; gap:6px;">
+                                <div class="submetric-val" id="valChart1TidakTetap" style="color:#d48806; font-size:1.6rem; font-weight:800;">-</div>
+                                <span class="submetric-pct-pill pct-warning" id="pctChart1TidakTetap">-</span>
+                            </div>
                         </div>
                     </div>
                     <!-- Right Side Stacked Bar Chart -->
@@ -1107,14 +1208,20 @@
                                 <span style="font-size:0.75rem; font-weight:700; color:#475569; text-transform:uppercase;">Karpim (Pimpinan)</span>
                                 <div style="width:28px; height:28px; border-radius:8px; background:#dbeafe; color:#1e40af; display:flex; align-items:center; justify-content:center; font-size:0.85rem;"><i class="fa-solid fa-user-tie"></i></div>
                             </div>
-                            <div class="submetric-val" id="valChart2Karpim" style="color:#1e40af; font-size:1.6rem; font-weight:800;">-</div>
+                            <div style="display:flex; align-items:baseline; justify-content:space-between; gap:6px;">
+                                <div class="submetric-val" id="valChart2Karpim" style="color:#1e40af; font-size:1.6rem; font-weight:800;">-</div>
+                                <span class="submetric-pct-pill pct-primary" id="pctChart2Karpim">-</span>
+                            </div>
                         </div>
                         <div class="submetric-card" onclick="openEmpDetailModal('pelaksana')" style="cursor:pointer; background:#ecfdf5; border:1px solid #a7f3d0; text-align:left; padding:16px; border-radius:12px; transition: transform 0.2s;" title="Klik rincian Karpel (Pelaksana)">
                             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
                                 <span style="font-size:0.75rem; font-weight:700; color:#475569; text-transform:uppercase;">Karpel (Pelaksana)</span>
                                 <div style="width:28px; height:28px; border-radius:8px; background:#d1fae5; color:#10b981; display:flex; align-items:center; justify-content:center; font-size:0.85rem;"><i class="fa-solid fa-users-gear"></i></div>
                             </div>
-                            <div class="submetric-val" id="valChart2Karpel" style="color:#10b981; font-size:1.6rem; font-weight:800;">-</div>
+                            <div style="display:flex; align-items:baseline; justify-content:space-between; gap:6px;">
+                                <div class="submetric-val" id="valChart2Karpel" style="color:#10b981; font-size:1.6rem; font-weight:800;">-</div>
+                                <span class="submetric-pct-pill pct-success" id="pctChart2Karpel">-</span>
+                            </div>
                         </div>
                     </div>
                     <!-- Right Side Stacked Bar Chart -->
@@ -1137,34 +1244,42 @@
                     <div class="submetric-card" onclick="openEmpDetailModal('bod_level', 'BOD')" style="cursor:pointer; background:#f0fdf4; border:1px solid #bbf7d0; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan BOD">
                         <div style="font-size:0.68rem; font-weight:700; color:#166534; text-transform:uppercase;">BOD</div>
                         <div class="submetric-val" id="valBodBOD" style="color:#166534; font-size:1.15rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctBodBOD" style="color:#166534;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('bod_level', 'BOD-1')" style="cursor:pointer; background:#f0fdf4; border:1px solid #bbf7d0; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan BOD-1">
                         <div style="font-size:0.68rem; font-weight:700; color:#15803d; text-transform:uppercase;">BOD-1</div>
                         <div class="submetric-val" id="valBodBOD1" style="color:#15803d; font-size:1.15rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctBodBOD1" style="color:#15803d;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('bod_level', 'BOD-2')" style="cursor:pointer; background:#ecfdf5; border:1px solid #a7f3d0; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan BOD-2">
                         <div style="font-size:0.68rem; font-weight:700; color:#10b981; text-transform:uppercase;">BOD-2</div>
                         <div class="submetric-val" id="valBodBOD2" style="color:#059669; font-size:1.15rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctBodBOD2" style="color:#059669;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('bod_level', 'BOD-3')" style="cursor:pointer; background:#ecfdf5; border:1px solid #a7f3d0; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan BOD-3">
                         <div style="font-size:0.68rem; font-weight:700; color:#059669; text-transform:uppercase;">BOD-3</div>
                         <div class="submetric-val" id="valBodBOD3" style="color:#047857; font-size:1.15rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctBodBOD3" style="color:#047857;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('bod_level', 'BOD-4')" style="cursor:pointer; background:#eff6ff; border:1px solid #bfdbfe; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan BOD-4">
                         <div style="font-size:0.68rem; font-weight:700; color:#2563eb; text-transform:uppercase;">BOD-4</div>
                         <div class="submetric-val" id="valBodBOD4" style="color:#1d4ed8; font-size:1.15rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctBodBOD4" style="color:#1d4ed8;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('bod_level', 'BOD-5')" style="cursor:pointer; background:#eff6ff; border:1px solid #bfdbfe; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan BOD-5">
                         <div style="font-size:0.68rem; font-weight:700; color:#3b82f6; text-transform:uppercase;">BOD-5</div>
                         <div class="submetric-val" id="valBodBOD5" style="color:#2563eb; font-size:1.15rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctBodBOD5" style="color:#2563eb;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('bod_level', 'BOD-6')" style="cursor:pointer; background:#f5f3ff; border:1px solid #ddd6fe; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan BOD-6">
                         <div style="font-size:0.68rem; font-weight:700; color:#8b5cf6; text-transform:uppercase;">BOD-6</div>
                         <div class="submetric-val" id="valBodBOD6" style="color:#7c3aed; font-size:1.15rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctBodBOD6" style="color:#7c3aed;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('bod_level', 'Lainnya')" style="cursor:pointer; background:#fffbeb; border:1px solid #fde68a; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan Lainnya">
                         <div style="font-size:0.68rem; font-weight:700; color:#d97706; text-transform:uppercase;">Lainnya</div>
                         <div class="submetric-val" id="valBodLainnya" style="color:#b45309; font-size:1.15rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctBodLainnya" style="color:#b45309;">-</div>
                     </div>
                 </div>
                 <div class="chart-body" id="chart8"></div>
@@ -1185,62 +1300,77 @@
                     <div class="submetric-card" onclick="openEmpDetailModal('person_grade', 'PG-06')" style="cursor:pointer; background:#f0fdf4; border:1px solid #bbf7d0; text-align:center; padding:7px 3px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan PG-06">
                         <div style="font-size:0.62rem; font-weight:700; color:#166534; text-transform:uppercase;">PG-06</div>
                         <div class="submetric-val" id="valPG06" style="color:#166534; font-size:1rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctPG06" style="color:#166534; font-size:0.62rem;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('person_grade', 'PG-07')" style="cursor:pointer; background:#ecfdf5; border:1px solid #a7f3d0; text-align:center; padding:7px 3px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan PG-07">
                         <div style="font-size:0.62rem; font-weight:700; color:#059669; text-transform:uppercase;">PG-07</div>
                         <div class="submetric-val" id="valPG07" style="color:#059669; font-size:1rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctPG07" style="color:#059669; font-size:0.62rem;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('person_grade', 'PG-08')" style="cursor:pointer; background:#eff6ff; border:1px solid #bfdbfe; text-align:center; padding:7px 3px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan PG-08">
                         <div style="font-size:0.62rem; font-weight:700; color:#2563eb; text-transform:uppercase;">PG-08</div>
                         <div class="submetric-val" id="valPG08" style="color:#1d4ed8; font-size:1rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctPG08" style="color:#1d4ed8; font-size:0.62rem;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('person_grade', 'PG-09')" style="cursor:pointer; background:#eef2ff; border:1px solid #c7d2fe; text-align:center; padding:7px 3px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan PG-09">
                         <div style="font-size:0.62rem; font-weight:700; color:#4338ca; text-transform:uppercase;">PG-09</div>
                         <div class="submetric-val" id="valPG09" style="color:#3730a3; font-size:1rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctPG09" style="color:#3730a3; font-size:0.62rem;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('person_grade', 'PG-10')" style="cursor:pointer; background:#f5f3ff; border:1px solid #ddd6fe; text-align:center; padding:7px 3px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan PG-10">
                         <div style="font-size:0.62rem; font-weight:700; color:#7c3aed; text-transform:uppercase;">PG-10</div>
                         <div class="submetric-val" id="valPG10" style="color:#6d28d9; font-size:1rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctPG10" style="color:#6d28d9; font-size:0.62rem;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('person_grade', 'PG-11')" style="cursor:pointer; background:#fdf4ff; border:1px solid #e9d5ff; text-align:center; padding:7px 3px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan PG-11">
                         <div style="font-size:0.62rem; font-weight:700; color:#9333ea; text-transform:uppercase;">PG-11</div>
                         <div class="submetric-val" id="valPG11" style="color:#7e22ce; font-size:1rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctPG11" style="color:#7e22ce; font-size:0.62rem;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('person_grade', 'PG-12')" style="cursor:pointer; background:#fdf2f8; border:1px solid #fbcfe8; text-align:center; padding:7px 3px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan PG-12">
                         <div style="font-size:0.62rem; font-weight:700; color:#db2777; text-transform:uppercase;">PG-12</div>
                         <div class="submetric-val" id="valPG12" style="color:#be185d; font-size:1rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctPG12" style="color:#be185d; font-size:0.62rem;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('person_grade', 'PG-13')" style="cursor:pointer; background:#fff7ed; border:1px solid #ffedd5; text-align:center; padding:7px 3px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan PG-13">
                         <div style="font-size:0.62rem; font-weight:700; color:#ea580c; text-transform:uppercase;">PG-13</div>
                         <div class="submetric-val" id="valPG13" style="color:#c2410c; font-size:1rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctPG13" style="color:#c2410c; font-size:0.62rem;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('person_grade', 'PG-14')" style="cursor:pointer; background:#fef9c3; border:1px solid #fde68a; text-align:center; padding:7px 3px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan PG-14">
                         <div style="font-size:0.62rem; font-weight:700; color:#d97706; text-transform:uppercase;">PG-14</div>
                         <div class="submetric-val" id="valPG14" style="color:#b45309; font-size:1rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctPG14" style="color:#b45309; font-size:0.62rem;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('person_grade', 'PG-15')" style="cursor:pointer; background:#fef3c7; border:1px solid #fde68a; text-align:center; padding:7px 3px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan PG-15">
                         <div style="font-size:0.62rem; font-weight:700; color:#b45309; text-transform:uppercase;">PG-15</div>
                         <div class="submetric-val" id="valPG15" style="color:#92400e; font-size:1rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctPG15" style="color:#92400e; font-size:0.62rem;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('person_grade', 'PG-16')" style="cursor:pointer; background:#fef2f2; border:1px solid #fecaca; text-align:center; padding:7px 3px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan PG-16">
                         <div style="font-size:0.62rem; font-weight:700; color:#ef4444; text-transform:uppercase;">PG-16</div>
                         <div class="submetric-val" id="valPG16" style="color:#dc2626; font-size:1rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctPG16" style="color:#dc2626; font-size:0.62rem;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('person_grade', 'PG-17')" style="cursor:pointer; background:#fef2f2; border:1px solid #fca5a5; text-align:center; padding:7px 3px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan PG-17">
                         <div style="font-size:0.62rem; font-weight:700; color:#dc2626; text-transform:uppercase;">PG-17</div>
                         <div class="submetric-val" id="valPG17" style="color:#b91c1c; font-size:1rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctPG17" style="color:#b91c1c; font-size:0.62rem;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('person_grade', 'PG-18')" style="cursor:pointer; background:#fdf4ff; border:1px solid #d8b4fe; text-align:center; padding:7px 3px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan PG-18">
                         <div style="font-size:0.62rem; font-weight:700; color:#a855f7; text-transform:uppercase;">PG-18</div>
                         <div class="submetric-val" id="valPG18" style="color:#9333ea; font-size:1rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctPG18" style="color:#9333ea; font-size:0.62rem;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('person_grade', 'PG-19')" style="cursor:pointer; background:#f5f3ff; border:1px solid #c4b5fd; text-align:center; padding:7px 3px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan PG-19">
                         <div style="font-size:0.62rem; font-weight:700; color:#7c3aed; text-transform:uppercase;">PG-19</div>
                         <div class="submetric-val" id="valPG19" style="color:#6d28d9; font-size:1rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctPG19" style="color:#6d28d9; font-size:0.62rem;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('person_grade', 'Non-Grade')" style="cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1; text-align:center; padding:7px 3px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan Non-Grade">
                         <div style="font-size:0.62rem; font-weight:700; color:#64748b; text-transform:uppercase;">Non-Grade</div>
                         <div class="submetric-val" id="valPGNonGrade" style="color:#475569; font-size:1rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctPGNonGrade" style="color:#475569; font-size:0.62rem;">-</div>
                     </div>
                 </div>
                 <div class="chart-body" id="chart9"></div>
@@ -1264,14 +1394,20 @@
                                 <span style="font-size:0.75rem; font-weight:700; color:#475569; text-transform:uppercase;">Total Laki-laki</span>
                                 <div style="width:28px; height:28px; border-radius:8px; background:#dcfce7; color:#166534; display:flex; align-items:center; justify-content:center; font-size:0.85rem;"><i class="fa-solid fa-mars"></i></div>
                             </div>
-                            <div class="submetric-val" id="valTotalLakiLaki" style="color:#166534; font-size:1.6rem; font-weight:800;">-</div>
+                            <div style="display:flex; align-items:baseline; justify-content:space-between; gap:6px;">
+                                <div class="submetric-val" id="valTotalLakiLaki" style="color:#166534; font-size:1.6rem; font-weight:800;">-</div>
+                                <span class="submetric-pct-pill pct-success" id="pctTotalLakiLaki">-</span>
+                            </div>
                         </div>
                         <div class="submetric-card" onclick="openEmpDetailModal('gender', 'Perempuan')" style="cursor:pointer; background:#fdf2f8; border:1px solid #fbcfe8; text-align:left; padding:16px; border-radius:12px; transition: transform 0.2s;" title="Klik rincian Karyawan Perempuan">
                             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
                                 <span style="font-size:0.75rem; font-weight:700; color:#475569; text-transform:uppercase;">Total Perempuan</span>
                                 <div style="width:28px; height:28px; border-radius:8px; background:#fce7f3; color:#ec4899; display:flex; align-items:center; justify-content:center; font-size:0.85rem;"><i class="fa-solid fa-venus"></i></div>
                             </div>
-                            <div class="submetric-val" id="valTotalPerempuan" style="color:#ec4899; font-size:1.6rem; font-weight:800;">-</div>
+                            <div style="display:flex; align-items:baseline; justify-content:space-between; gap:6px;">
+                                <div class="submetric-val" id="valTotalPerempuan" style="color:#ec4899; font-size:1.6rem; font-weight:800;">-</div>
+                                <span class="submetric-pct-pill pct-danger" id="pctTotalPerempuan">-</span>
+                            </div>
                         </div>
                     </div>
                     <!-- Right Side Stacked Bar Chart -->
@@ -1289,26 +1425,35 @@
                 <div style="display: flex; gap: 20px; align-items: stretch; flex: 1; flex-wrap: wrap;">
                     <!-- Left Side Submetric Cards -->
                     <div style="display: flex; flex-direction: column; gap: 14px; width: 170px; min-width: 170px; justify-content: center;">
-                        <div class="submetric-card" onclick="openEmpDetailModal('nikah', 'Menikah')" style="cursor:pointer; background:#f0fdf4; border:1px solid #bbf7d0; text-align:left; padding:16px; border-radius:12px; transition: transform 0.2s;" title="Klik rincian Karyawan Menikah">
-                            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+                        <div class="submetric-card" onclick="openEmpDetailModal('nikah', 'Menikah')" style="cursor:pointer; background:#f0fdf4; border:1px solid #bbf7d0; text-align:left; padding:12px 14px; border-radius:12px; transition: transform 0.2s;" title="Klik rincian Karyawan Menikah">
+                            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
                                 <span style="font-size:0.75rem; font-weight:700; color:#475569; text-transform:uppercase;">Total Menikah</span>
-                                <div style="width:28px; height:28px; border-radius:8px; background:#dcfce7; color:#10b981; display:flex; align-items:center; justify-content:center; font-size:0.85rem;"><i class="fa-solid fa-ring"></i></div>
+                                <div style="width:26px; height:26px; border-radius:6px; background:#dcfce7; color:#10b981; display:flex; align-items:center; justify-content:center; font-size:0.8rem;"><i class="fa-solid fa-ring"></i></div>
                             </div>
-                            <div class="submetric-val" id="valTotalMenikah" style="color:#10b981; font-size:1.6rem; font-weight:800;">-</div>
+                            <div style="display:flex; align-items:baseline; justify-content:space-between; gap:6px;">
+                                <div class="submetric-val" id="valTotalMenikah" style="color:#10b981; font-size:1.4rem; font-weight:800;">-</div>
+                                <span class="submetric-pct-pill pct-success" id="pctTotalMenikah">-</span>
+                            </div>
                         </div>
                         <div class="submetric-card" onclick="openEmpDetailModal('nikah', 'Belum Menikah')" style="cursor:pointer; background:#eff6ff; border:1px solid #bfdbfe; text-align:left; padding:12px 14px; border-radius:12px; transition: transform 0.2s;" title="Klik rincian Karyawan Belum Menikah">
                             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
                                 <span style="font-size:0.75rem; font-weight:700; color:#475569; text-transform:uppercase;">Belum Menikah</span>
                                 <div style="width:26px; height:26px; border-radius:6px; background:#dbeafe; color:#3b82f6; display:flex; align-items:center; justify-content:center; font-size:0.8rem;"><i class="fa-solid fa-user"></i></div>
                             </div>
-                            <div class="submetric-val" id="valTotalBelumMenikah" style="color:#3b82f6; font-size:1.4rem; font-weight:800;">-</div>
+                            <div style="display:flex; align-items:baseline; justify-content:space-between; gap:6px;">
+                                <div class="submetric-val" id="valTotalBelumMenikah" style="color:#3b82f6; font-size:1.4rem; font-weight:800;">-</div>
+                                <span class="submetric-pct-pill pct-primary" id="pctTotalBelumMenikah">-</span>
+                            </div>
                         </div>
                         <div class="submetric-card" onclick="openEmpDetailModal('nikah', 'Cerai')" style="cursor:pointer; background:#fef2f2; border:1px solid #fecaca; text-align:left; padding:12px 14px; border-radius:12px; transition: transform 0.2s;" title="Klik rincian Karyawan Cerai / Lainnya">
                             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
                                 <span style="font-size:0.75rem; font-weight:700; color:#475569; text-transform:uppercase;">Cerai / Lainnya</span>
                                 <div style="width:26px; height:26px; border-radius:6px; background:#fee2e2; color:#ef4444; display:flex; align-items:center; justify-content:center; font-size:0.8rem;"><i class="fa-solid fa-heart-crack"></i></div>
                             </div>
-                            <div class="submetric-val" id="valTotalCerai" style="color:#ef4444; font-size:1.4rem; font-weight:800;">-</div>
+                            <div style="display:flex; align-items:baseline; justify-content:space-between; gap:6px;">
+                                <div class="submetric-val" id="valTotalCerai" style="color:#ef4444; font-size:1.4rem; font-weight:800;">-</div>
+                                <span class="submetric-pct-pill pct-danger" id="pctTotalCerai">-</span>
+                            </div>
                         </div>
                     </div>
                     <!-- Right Side Stacked Bar Chart -->
@@ -1331,34 +1476,42 @@
                     <div class="submetric-card" onclick="openEmpDetailModal('pendidikan', 'SD')" style="cursor:pointer; background:#f0fdf4; border:1px solid #bbf7d0; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan SD">
                         <div style="font-size:0.68rem; font-weight:700; color:#166534; text-transform:uppercase;">SD</div>
                         <div class="submetric-val" id="valEduSD" style="color:#166534; font-size:1.15rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctEduSD" style="color:#166534;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('pendidikan', 'SMP')" style="cursor:pointer; background:#f0fdf4; border:1px solid #bbf7d0; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan SMP">
                         <div style="font-size:0.68rem; font-weight:700; color:#15803d; text-transform:uppercase;">SMP</div>
                         <div class="submetric-val" id="valEduSMP" style="color:#15803d; font-size:1.15rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctEduSMP" style="color:#15803d;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('pendidikan', 'SMA')" style="cursor:pointer; background:#f0fdf4; border:1px solid #bbf7d0; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan SMA">
                         <div style="font-size:0.68rem; font-weight:700; color:#22c55e; text-transform:uppercase;">SMA</div>
                         <div class="submetric-val" id="valEduSMA" style="color:#15803d; font-size:1.15rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctEduSMA" style="color:#15803d;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('pendidikan', 'D3')" style="cursor:pointer; background:#ecfdf5; border:1px solid #a7f3d0; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan D3">
                         <div style="font-size:0.68rem; font-weight:700; color:#10b981; text-transform:uppercase;">D3</div>
                         <div class="submetric-val" id="valEduD3" style="color:#059669; font-size:1.15rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctEduD3" style="color:#059669;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('pendidikan', 'D4')" style="cursor:pointer; background:#ecfdf5; border:1px solid #a7f3d0; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan D4">
                         <div style="font-size:0.68rem; font-weight:700; color:#059669; text-transform:uppercase;">D4</div>
                         <div class="submetric-val" id="valEduD4" style="color:#047857; font-size:1.15rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctEduD4" style="color:#047857;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('pendidikan', 'S1')" style="cursor:pointer; background:#eff6ff; border:1px solid #bfdbfe; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan S1">
                         <div style="font-size:0.68rem; font-weight:700; color:#2563eb; text-transform:uppercase;">S1</div>
                         <div class="submetric-val" id="valEduS1" style="color:#1d4ed8; font-size:1.15rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctEduS1" style="color:#1d4ed8;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('pendidikan', 'S2')" style="cursor:pointer; background:#f5f3ff; border:1px solid #ddd6fe; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan S2">
                         <div style="font-size:0.68rem; font-weight:700; color:#8b5cf6; text-transform:uppercase;">S2</div>
                         <div class="submetric-val" id="valEduS2" style="color:#7c3aed; font-size:1.15rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctEduS2" style="color:#7c3aed;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('pendidikan', 'S3')" style="cursor:pointer; background:#fffbeb; border:1px solid #fde68a; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan S3">
                         <div style="font-size:0.68rem; font-weight:700; color:#d97706; text-transform:uppercase;">S3</div>
                         <div class="submetric-val" id="valEduS3" style="color:#b45309; font-size:1.15rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctEduS3" style="color:#b45309;">-</div>
                     </div>
                 </div>
                 <div class="chart-body" id="chart4"></div>
@@ -1376,30 +1529,37 @@
                     <div class="submetric-card" onclick="openEmpDetailModal('agama', 'Islam')" style="cursor:pointer; background:#f0fdf4; border:1px solid #bbf7d0; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan Agama Islam">
                         <div style="font-size:0.68rem; font-weight:700; color:#166534; text-transform:uppercase;">Islam</div>
                         <div class="submetric-val" id="valAgamaIslam" style="color:#166534; font-size:1.15rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctAgamaIslam" style="color:#166534;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('agama', 'Kristen')" style="cursor:pointer; background:#eff6ff; border:1px solid #bfdbfe; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan Agama Kristen">
                         <div style="font-size:0.68rem; font-weight:700; color:#2563eb; text-transform:uppercase;">Kristen</div>
                         <div class="submetric-val" id="valAgamaKristen" style="color:#1d4ed8; font-size:1.15rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctAgamaKristen" style="color:#1d4ed8;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('agama', 'Katolik')" style="cursor:pointer; background:#f5f3ff; border:1px solid #ddd6fe; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan Agama Katolik">
                         <div style="font-size:0.68rem; font-weight:700; color:#7c3aed; text-transform:uppercase;">Katolik</div>
                         <div class="submetric-val" id="valAgamaKatolik" style="color:#6d28d9; font-size:1.15rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctAgamaKatolik" style="color:#6d28d9;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('agama', 'Hindu')" style="cursor:pointer; background:#fffbeb; border:1px solid #fde68a; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan Agama Hindu">
                         <div style="font-size:0.68rem; font-weight:700; color:#d97706; text-transform:uppercase;">Hindu</div>
                         <div class="submetric-val" id="valAgamaHindu" style="color:#b45309; font-size:1.15rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctAgamaHindu" style="color:#b45309;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('agama', 'Buddha')" style="cursor:pointer; background:#fff7ed; border:1px solid #ffedd5; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan Agama Buddha">
                         <div style="font-size:0.68rem; font-weight:700; color:#ea580c; text-transform:uppercase;">Buddha</div>
                         <div class="submetric-val" id="valAgamaBuddha" style="color:#c2410c; font-size:1.15rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctAgamaBuddha" style="color:#c2410c;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('agama', 'Konghucu')" style="cursor:pointer; background:#fdf2f8; border:1px solid #fbcfe8; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan Agama Konghucu">
                         <div style="font-size:0.68rem; font-weight:700; color:#db2777; text-transform:uppercase;">Konghucu</div>
                         <div class="submetric-val" id="valAgamaKonghucu" style="color:#be185d; font-size:1.15rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctAgamaKonghucu" style="color:#be185d;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('agama', 'Lainnya')" style="cursor:pointer; background:#f8fafc; border:1px solid #e2e8f0; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan Agama Lainnya">
                         <div style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase;">Lainnya</div>
                         <div class="submetric-val" id="valAgamaLainnya" style="color:#475569; font-size:1.15rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctAgamaLainnya" style="color:#475569;">-</div>
                     </div>
                 </div>
                 <div class="chart-body" id="chart6"></div>
@@ -1434,18 +1594,22 @@
                     <div class="submetric-card" onclick="openEmpDetailModal('umur', '< 30')" style="cursor:pointer; background:#ecfdf5; border:1px solid #a7f3d0; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan Umur < 30">
                         <div style="font-size:0.68rem; font-weight:700; color:#059669; text-transform:uppercase;">&lt; 30 Thn</div>
                         <div class="submetric-val" id="valUmurU30" style="color:#059669; font-size:1.15rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctUmurU30" style="color:#059669;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('umur', '31-40')" style="cursor:pointer; background:#eff6ff; border:1px solid #bfdbfe; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan Umur 31-40">
                         <div style="font-size:0.68rem; font-weight:700; color:#2563eb; text-transform:uppercase;">31 - 40 Thn</div>
                         <div class="submetric-val" id="valUmurU40" style="color:#1d4ed8; font-size:1.15rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctUmurU40" style="color:#1d4ed8;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('umur', '41-50')" style="cursor:pointer; background:#fffbeb; border:1px solid #fde68a; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan Umur 41-50">
                         <div style="font-size:0.68rem; font-weight:700; color:#d97706; text-transform:uppercase;">41 - 50 Thn</div>
                         <div class="submetric-val" id="valUmurU50" style="color:#b45309; font-size:1.15rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctUmurU50" style="color:#b45309;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('umur', '> 50')" style="cursor:pointer; background:#fef2f2; border:1px solid #fecaca; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan Umur > 50">
                         <div style="font-size:0.68rem; font-weight:700; color:#dc2626; text-transform:uppercase;">&gt; 50 Thn</div>
                         <div class="submetric-val" id="valUmurU50Plus" style="color:#b91c1c; font-size:1.15rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctUmurU50Plus" style="color:#b91c1c;">-</div>
                     </div>
                 </div>
                 <div class="chart-body" id="chart13"></div>
@@ -1463,22 +1627,27 @@
                     <div class="submetric-card" onclick="openEmpDetailModal('masa_kerja', '< 10')" style="cursor:pointer; background:#ecfdf5; border:1px solid #a7f3d0; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan Masa Kerja < 10 Thn">
                         <div style="font-size:0.65rem; font-weight:700; color:#059669; text-transform:uppercase;">&lt; 10 Thn</div>
                         <div class="submetric-val" id="valServiceS10" style="color:#059669; font-size:1.1rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctServiceS10" style="color:#059669;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('masa_kerja', '10-15')" style="cursor:pointer; background:#f0f9ff; border:1px solid #bae6fd; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan Masa Kerja 10-15 Thn">
                         <div style="font-size:0.65rem; font-weight:700; color:#0284c7; text-transform:uppercase;">10 - 15 Thn</div>
                         <div class="submetric-val" id="valServiceS15" style="color:#0369a1; font-size:1.1rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctServiceS15" style="color:#0369a1;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('masa_kerja', '16-20')" style="cursor:pointer; background:#eef2ff; border:1px solid #c7d2fe; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan Masa Kerja 16-20 Thn">
                         <div style="font-size:0.65rem; font-weight:700; color:#4f46e5; text-transform:uppercase;">16 - 20 Thn</div>
                         <div class="submetric-val" id="valServiceS20" style="color:#4338ca; font-size:1.1rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctServiceS20" style="color:#4338ca;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('masa_kerja', '21-30')" style="cursor:pointer; background:#f5f3ff; border:1px solid #ddd6fe; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan Masa Kerja 21-30 Thn">
                         <div style="font-size:0.65rem; font-weight:700; color:#7c3aed; text-transform:uppercase;">21 - 30 Thn</div>
                         <div class="submetric-val" id="valServiceS30" style="color:#6d28d9; font-size:1.1rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctServiceS30" style="color:#6d28d9;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('masa_kerja', '> 30')" style="cursor:pointer; background:#fffbeb; border:1px solid #fde68a; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian Karyawan Masa Kerja > 30 Thn">
                         <div style="font-size:0.65rem; font-weight:700; color:#d97706; text-transform:uppercase;">&gt; 30 Thn</div>
                         <div class="submetric-val" id="valServiceS30Plus" style="color:#b45309; font-size:1.1rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctServiceS30Plus" style="color:#b45309;">-</div>
                     </div>
                 </div>
                 <div class="chart-body" id="chart14"></div>
@@ -1521,18 +1690,22 @@
                     <div class="submetric-card" onclick="openEmpDetailModal('pensiun', '30d')" style="cursor:pointer; background:#fef2f2; border:1px solid #fecaca; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian pensiun 30 hari">
                         <div style="font-size:0.68rem; font-weight:700; color:#dc2626; text-transform:uppercase;">30 Hari</div>
                         <div class="submetric-val" id="pensiun30d" style="color:#e11d48; font-size:1.15rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctPensiun30d" style="color:#e11d48;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('pensiun', '6m')" style="cursor:pointer; background:#fffbeb; border:1px solid #fde68a; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian pensiun 6 bulan">
                         <div style="font-size:0.68rem; font-weight:700; color:#d97706; text-transform:uppercase;">6 Bulan</div>
                         <div class="submetric-val" id="pensiun6m" style="color:#d97706; font-size:1.15rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctPensiun6m" style="color:#d97706;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('pensiun', '1y')" style="cursor:pointer; background:#eff6ff; border:1px solid #bfdbfe; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian pensiun 1 tahun">
                         <div style="font-size:0.68rem; font-weight:700; color:#2563eb; text-transform:uppercase;">1 Tahun</div>
                         <div class="submetric-val" id="pensiun1y" style="color:#2563eb; font-size:1.15rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctPensiun1y" style="color:#2563eb;">-</div>
                     </div>
                     <div class="submetric-card" onclick="openEmpDetailModal('pensiun', '3y')" style="cursor:pointer; background:#ecfdf5; border:1px solid #a7f3d0; text-align:center; padding:8px 4px; border-radius:10px; transition: transform 0.2s;" title="Klik rincian pensiun 3 tahun">
                         <div style="font-size:0.68rem; font-weight:700; color:#059669; text-transform:uppercase;">3 Tahun</div>
                         <div class="submetric-val" id="pensiun3y" style="color:#166534; font-size:1.15rem; font-weight:800;">-</div>
+                        <div class="submetric-pct" id="pctPensiun3y" style="color:#166534;">-</div>
                     </div>
                 </div>
                 <div class="chart-body" id="chart17"></div>
@@ -1610,7 +1783,7 @@
             .then(data => {
                 populateFilters(data.filter_options);
                 updateSummary(data.summary);
-                renderMapPins(data.map_pins);
+                renderMapPins(data.map_pins, data.summary ? data.summary.total : 0);
                 renderAllCharts(data);
                 hidePageLoading();
             })
@@ -1656,20 +1829,33 @@
 
     function updateSummary(s) {
         if (!s) return;
+        const total = s.total || 0;
         const setVal = (id, val) => {
             const el = document.getElementById(id);
             if (el) el.textContent = val;
         };
-        setVal('valTotalKaryawan', (s.total || 0).toLocaleString());
+        const calcPct = (v) => total > 0 ? ((v / total) * 100).toFixed(1) + '%' : '0%';
+
+        setVal('valTotalKaryawan', total.toLocaleString());
+        setVal('pctTotalKaryawan', '100%');
+
         setVal('valHeadOffice', (s.head_office || 0).toLocaleString());
+        setVal('pctHeadOffice', calcPct(s.head_office || 0));
+
         setVal('valRegional', (s.regional || 0).toLocaleString());
+        setVal('pctRegional', calcPct(s.regional || 0));
+
         setVal('valKaryawanTetap', (s.tetap || 0).toLocaleString());
+        setVal('pctKaryawanTetap', calcPct(s.tetap || 0));
+
         setVal('valKaryawanTidakTetap', (s.tidak_tetap || 0).toLocaleString());
+        setVal('pctKaryawanTidakTetap', calcPct(s.tidak_tetap || 0));
+
         setVal('valPersenPimpinan', (s.pimpinan_pct || 0) + '%');
         setVal('lastUpdateText', 'Update: ' + (s.last_update || ''));
     }
 
-    function renderMapPins(pins) {
+    function renderMapPins(pins, totalKaryawan = 0) {
         if (!pins || !pins.length) return;
 
         if (!mapInstance) {
@@ -1686,30 +1872,34 @@
 
         pins.forEach(p => {
             const isHO = p.key === 'HO';
+            const pctOfTotal = totalKaryawan > 0 ? ((p.total / totalKaryawan) * 100).toFixed(1) + '%' : '';
+            const pctTetap = p.total > 0 ? ((p.tetap / p.total) * 100).toFixed(1) + '%' : '0%';
+            const pctTidakTetap = p.total > 0 ? ((p.tidak_tetap / p.total) * 100).toFixed(1) + '%' : '0%';
+
             const iconHtml = `
                 <div class="hr-pin-marker ${isHO ? 'ho-pin' : ''}">
                     <i class="fa-solid ${isHO ? 'fa-building' : 'fa-location-dot'}"></i>
-                    <span>${p.title}: ${p.total.toLocaleString()}</span>
+                    <span>${p.title}: ${p.total.toLocaleString()} ${pctOfTotal ? '(' + pctOfTotal + ')' : ''}</span>
                 </div>
             `;
             const customIcon = L.divIcon({
                 html: iconHtml,
                 className: 'hr-custom-leaflet-icon',
-                iconSize: [140, 30],
-                iconAnchor: [70, 15]
+                iconSize: [160, 30],
+                iconAnchor: [80, 15]
             });
 
             const popupContent = `
                 <div class="hr-popup-card">
                     <div class="hr-popup-title">${p.title}</div>
                     <div class="hr-popup-city"><i class="fa-solid fa-city"></i> ${p.city}</div>
-                    <div class="hr-popup-val"><i class="fa-solid fa-users"></i> ${p.total.toLocaleString()} Karyawan Aktif</div>
+                    <div class="hr-popup-val"><i class="fa-solid fa-users"></i> ${p.total.toLocaleString()} Karyawan Aktif ${pctOfTotal ? '<span style="font-size:0.75rem; color:#2563eb; font-weight:800; margin-left:4px;">(' + pctOfTotal + ' dari Total)</span>' : ''}</div>
                     <div style="display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap;">
                         <div style="font-size:11.5px; color:#166534; font-weight:700; background:#dcfce7; padding:4px 8px; border-radius:6px; border:1px solid #bbf7d0;">
-                            Tetap: ${(p.tetap || 0).toLocaleString()} Karyawan
+                            Tetap: ${(p.tetap || 0).toLocaleString()} (${pctTetap})
                         </div>
                         <div style="font-size:11.5px; color:#b45309; font-weight:700; background:#fef3c7; padding:4px 8px; border-radius:6px; border:1px solid #fde68a;">
-                            Tidak Tetap: ${(p.tidak_tetap || 0).toLocaleString()} Karyawan
+                            Tidak Tetap: ${(p.tidak_tetap || 0).toLocaleString()} (${pctTidakTetap})
                         </div>
                     </div>
                     <button class="emp-popup-btn" onclick="openEmpDetailModal('map_pin', '${p.key}')">
@@ -1730,10 +1920,35 @@
         });
         chartInstances = {};
 
+        const totalKaryawan = d.summary ? (d.summary.total || 0) : 0;
+        const calcPct = (v) => totalKaryawan > 0 ? ((v / totalKaryawan) * 100).toFixed(1) + '%' : '0%';
+
         const lightChartBase = {
             chart: { background: 'transparent', fontFamily: 'Inter, sans-serif' },
             grid: { borderColor: '#f1f5f9' },
-            tooltip: { theme: 'light' }
+            tooltip: {
+                theme: 'light',
+                y: {
+                    formatter: function (val) {
+                        if (val === undefined || val === null) return '';
+                        return `${val.toLocaleString()} Karyawan (${calcPct(val)} dari Total)`;
+                    }
+                }
+            }
+        };
+
+        const stdStackedDataLabels = {
+            enabled: true,
+            style: {
+                fontSize: '10px',
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 700,
+                colors: ['#ffffff']
+            },
+            formatter: function (val) {
+                if (!val || val <= 0) return '';
+                return val >= 60 ? `${val.toLocaleString()} (${calcPct(val)})` : val.toLocaleString();
+            }
         };
 
         // Helper for chart click events
@@ -1750,8 +1965,12 @@
 
         // 1. Stacked Bar Chart Status Karyawan per Regional (Tetap vs Tidak Tetap)
         if (d.chart1) {
-            document.getElementById('valChart1Tetap').textContent = (d.chart1.total_tetap || 0).toLocaleString();
-            document.getElementById('valChart1TidakTetap').textContent = (d.chart1.total_tidak_tetap || 0).toLocaleString();
+            const tetap = d.chart1.total_tetap || 0;
+            const tidakTetap = d.chart1.total_tidak_tetap || 0;
+            document.getElementById('valChart1Tetap').textContent = tetap.toLocaleString();
+            document.getElementById('valChart1TidakTetap').textContent = tidakTetap.toLocaleString();
+            if (document.getElementById('pctChart1Tetap')) document.getElementById('pctChart1Tetap').textContent = calcPct(tetap);
+            if (document.getElementById('pctChart1TidakTetap')) document.getElementById('pctChart1TidakTetap').textContent = calcPct(tidakTetap);
         }
 
         chartInstances['c1'] = new ApexCharts(document.querySelector("#chart1"), {
@@ -1773,6 +1992,7 @@
                 }
             },
             plotOptions: { bar: { horizontal: false, columnWidth: '50%', borderRadius: 4 } },
+            dataLabels: stdStackedDataLabels,
             xaxis: { categories: d.chart1.categories, labels: { rotate: -25, style: { fontSize: '11px', fontWeight: 600 } } },
             series: d.chart1.series,
             colors: ['#166534', '#f59e0b'],
@@ -1782,8 +2002,12 @@
 
         // 2. Stacked Bar Chart Jabatan Karyawan per Regional (Karpim vs Karpel)
         if (d.chart2) {
-            document.getElementById('valChart2Karpim').textContent = (d.chart2.total_karpim || 0).toLocaleString();
-            document.getElementById('valChart2Karpel').textContent = (d.chart2.total_karpel || 0).toLocaleString();
+            const karpim = d.chart2.total_karpim || 0;
+            const karpel = d.chart2.total_karpel || 0;
+            document.getElementById('valChart2Karpim').textContent = karpim.toLocaleString();
+            document.getElementById('valChart2Karpel').textContent = karpel.toLocaleString();
+            if (document.getElementById('pctChart2Karpim')) document.getElementById('pctChart2Karpim').textContent = calcPct(karpim);
+            if (document.getElementById('pctChart2Karpel')) document.getElementById('pctChart2Karpel').textContent = calcPct(karpel);
         }
 
         chartInstances['c2'] = new ApexCharts(document.querySelector("#chart2"), {
@@ -1805,6 +2029,7 @@
                 }
             },
             plotOptions: { bar: { horizontal: false, columnWidth: '50%', borderRadius: 4 } },
+            dataLabels: stdStackedDataLabels,
             xaxis: { categories: d.chart2.categories, labels: { rotate: -25, style: { fontSize: '11px', fontWeight: 600 } } },
             series: d.chart2.series,
             colors: ['#1e40af', '#10b981'],
@@ -1815,8 +2040,11 @@
         // 4. Grouped Bar Chart Tingkat Pendidikan per Regional (SD s/d S3)
         if (d.chart4 && d.chart4.totals) {
             ['SD', 'SMP', 'SMA', 'D3', 'D4', 'S1', 'S2', 'S3'].forEach(lvl => {
-                const el = document.getElementById('valEdu' + lvl);
-                if (el) el.textContent = (d.chart4.totals[lvl] || 0).toLocaleString();
+                const val = d.chart4.totals[lvl] || 0;
+                const elVal = document.getElementById('valEdu' + lvl);
+                if (elVal) elVal.textContent = val.toLocaleString();
+                const elPct = document.getElementById('pctEdu' + lvl);
+                if (elPct) elPct.textContent = calcPct(val);
             });
         }
 
@@ -1871,8 +2099,12 @@
 
         // 5. Stacked Bar Chart Jenis Kelamin (Laki-laki vs Perempuan per Regional)
         if (d.chart5) {
-            document.getElementById('valTotalLakiLaki').textContent = (d.chart5.total_laki || 0).toLocaleString();
-            document.getElementById('valTotalPerempuan').textContent = (d.chart5.total_perempuan || 0).toLocaleString();
+            const laki = d.chart5.total_laki || 0;
+            const perem = d.chart5.total_perempuan || 0;
+            document.getElementById('valTotalLakiLaki').textContent = laki.toLocaleString();
+            document.getElementById('valTotalPerempuan').textContent = perem.toLocaleString();
+            if (document.getElementById('pctTotalLakiLaki')) document.getElementById('pctTotalLakiLaki').textContent = calcPct(laki);
+            if (document.getElementById('pctTotalPerempuan')) document.getElementById('pctTotalPerempuan').textContent = calcPct(perem);
         }
 
         chartInstances['c5'] = new ApexCharts(document.querySelector("#chart5"), {
@@ -1900,18 +2132,7 @@
                     borderRadius: 4
                 } 
             },
-            dataLabels: {
-                enabled: true,
-                style: {
-                    fontSize: '11px',
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 700,
-                    colors: ['#ffffff']
-                },
-                formatter: function (val) {
-                    return val > 0 ? val.toLocaleString() : '';
-                }
-            },
+            dataLabels: stdStackedDataLabels,
             xaxis: { 
                 categories: d.chart5.categories, 
                 labels: { rotate: -25, style: { fontSize: '11px', fontWeight: 600 } } 
@@ -1925,8 +2146,11 @@
         // 6. Stacked Bar Chart Sebaran Agama per Regional
         if (d.chart6 && d.chart6.totals) {
             ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu', 'Lainnya'].forEach(ag => {
-                const el = document.getElementById('valAgama' + ag);
-                if (el) el.textContent = (d.chart6.totals[ag] || 0).toLocaleString();
+                const val = d.chart6.totals[ag] || 0;
+                const elVal = document.getElementById('valAgama' + ag);
+                if (elVal) elVal.textContent = val.toLocaleString();
+                const elPct = document.getElementById('pctAgama' + ag);
+                if (elPct) elPct.textContent = calcPct(val);
             });
         }
 
@@ -1957,18 +2181,7 @@
                     borderRadius: 4
                 } 
             },
-            dataLabels: {
-                enabled: true,
-                style: {
-                    fontSize: '10px',
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 700,
-                    colors: ['#ffffff']
-                },
-                formatter: function (val) {
-                    return val > 0 ? val.toLocaleString() : '';
-                }
-            },
+            dataLabels: stdStackedDataLabels,
             xaxis: { 
                 categories: d.chart6.categories, 
                 labels: { rotate: -25, style: { fontSize: '11px', fontWeight: 600 } } 
@@ -1997,6 +2210,13 @@
                     }
                 }
             },
+            dataLabels: {
+                enabled: true,
+                formatter: function (text, op) {
+                    const val = op.value;
+                    return [text, `${val.toLocaleString()} (${calcPct(val)})`];
+                }
+            },
             series: [{ data: d.chart7.series }],
             colors: ['#166534', '#15803d', '#22c55e', '#047857']
         });
@@ -2004,10 +2224,23 @@
 
         // 8. Stacked Bar Chart Level Organisasi (BOD Level per Regional)
         if (d.chart8 && d.chart8.totals) {
-            const mapKeys = { 'BOD': 'valBodBOD', 'BOD-1': 'valBodBOD1', 'BOD-2': 'valBodBOD2', 'BOD-3': 'valBodBOD3', 'BOD-4': 'valBodBOD4', 'BOD-5': 'valBodBOD5', 'BOD-6': 'valBodBOD6', 'Lainnya': 'valBodLainnya' };
+            const mapKeys = {
+                'BOD': ['valBodBOD', 'pctBodBOD'],
+                'BOD-1': ['valBodBOD1', 'pctBodBOD1'],
+                'BOD-2': ['valBodBOD2', 'pctBodBOD2'],
+                'BOD-3': ['valBodBOD3', 'pctBodBOD3'],
+                'BOD-4': ['valBodBOD4', 'pctBodBOD4'],
+                'BOD-5': ['valBodBOD5', 'pctBodBOD5'],
+                'BOD-6': ['valBodBOD6', 'pctBodBOD6'],
+                'Lainnya': ['valBodLainnya', 'pctBodLainnya']
+            };
             Object.keys(mapKeys).forEach(lvl => {
-                const el = document.getElementById(mapKeys[lvl]);
-                if (el) el.textContent = (d.chart8.totals[lvl] || 0).toLocaleString();
+                const val = d.chart8.totals[lvl] || 0;
+                const [valId, pctId] = mapKeys[lvl];
+                const elVal = document.getElementById(valId);
+                if (elVal) elVal.textContent = val.toLocaleString();
+                const elPct = document.getElementById(pctId);
+                if (elPct) elPct.textContent = calcPct(val);
             });
         }
 
@@ -2038,18 +2271,7 @@
                     borderRadius: 4
                 } 
             },
-            dataLabels: {
-                enabled: true,
-                style: {
-                    fontSize: '10px',
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 700,
-                    colors: ['#ffffff']
-                },
-                formatter: function (val) {
-                    return val > 0 ? val.toLocaleString() : '';
-                }
-            },
+            dataLabels: stdStackedDataLabels,
             xaxis: { 
                 categories: d.chart8.categories, 
                 labels: { rotate: -25, style: { fontSize: '11px', fontWeight: 600 } } 
@@ -2063,15 +2285,29 @@
         // 9. Person Grade per Regional (Stacked Bar)
         if (d.chart9 && d.chart9.totals) {
             const pgCardMap = {
-                'PG-06': 'valPG06', 'PG-07': 'valPG07', 'PG-08': 'valPG08',
-                'PG-09': 'valPG09', 'PG-10': 'valPG10', 'PG-11': 'valPG11',
-                'PG-12': 'valPG12', 'PG-13': 'valPG13', 'PG-14': 'valPG14',
-                'PG-15': 'valPG15', 'PG-16': 'valPG16', 'PG-17': 'valPG17',
-                'PG-18': 'valPG18', 'PG-19': 'valPG19', 'Non-Grade': 'valPGNonGrade'
+                'PG-06': ['valPG06', 'pctPG06'],
+                'PG-07': ['valPG07', 'pctPG07'],
+                'PG-08': ['valPG08', 'pctPG08'],
+                'PG-09': ['valPG09', 'pctPG09'],
+                'PG-10': ['valPG10', 'pctPG10'],
+                'PG-11': ['valPG11', 'pctPG11'],
+                'PG-12': ['valPG12', 'pctPG12'],
+                'PG-13': ['valPG13', 'pctPG13'],
+                'PG-14': ['valPG14', 'pctPG14'],
+                'PG-15': ['valPG15', 'pctPG15'],
+                'PG-16': ['valPG16', 'pctPG16'],
+                'PG-17': ['valPG17', 'pctPG17'],
+                'PG-18': ['valPG18', 'pctPG18'],
+                'PG-19': ['valPG19', 'pctPG19'],
+                'Non-Grade': ['valPGNonGrade', 'pctPGNonGrade']
             };
             Object.keys(pgCardMap).forEach(pg => {
-                const el = document.getElementById(pgCardMap[pg]);
-                if (el) el.textContent = (d.chart9.totals[pg] || 0).toLocaleString();
+                const val = d.chart9.totals[pg] || 0;
+                const [valId, pctId] = pgCardMap[pg];
+                const elVal = document.getElementById(valId);
+                if (elVal) elVal.textContent = val.toLocaleString();
+                const elPct = document.getElementById(pctId);
+                if (elPct) elPct.textContent = calcPct(val);
             });
         }
 
@@ -2106,18 +2342,7 @@
                     borderRadius: 4
                 } 
             },
-            dataLabels: {
-                enabled: true,
-                style: {
-                    fontSize: '10px',
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 700,
-                    colors: ['#ffffff']
-                },
-                formatter: function (val) {
-                    return val > 0 ? val.toLocaleString() : '';
-                }
-            },
+            dataLabels: stdStackedDataLabels,
             xaxis: { 
                 categories: d.chart9.categories, 
                 labels: { rotate: -25, style: { fontSize: '11px', fontWeight: 600 } } 
@@ -2131,14 +2356,18 @@
         // 13. Distribusi Umur per Regional (Stacked Bar)
         if (d.chart13 && d.chart13.totals) {
             const ageCardMap = {
-                '< 30': 'valUmurU30',
-                '31-40': 'valUmurU40',
-                '41-50': 'valUmurU50',
-                '> 50': 'valUmurU50Plus'
+                '< 30': ['valUmurU30', 'pctUmurU30'],
+                '31-40': ['valUmurU40', 'pctUmurU40'],
+                '41-50': ['valUmurU50', 'pctUmurU50'],
+                '> 50': ['valUmurU50Plus', 'pctUmurU50Plus']
             };
             Object.keys(ageCardMap).forEach(key => {
-                const el = document.getElementById(ageCardMap[key]);
-                if (el) el.textContent = (d.chart13.totals[key] || 0).toLocaleString();
+                const val = d.chart13.totals[key] || 0;
+                const [valId, pctId] = ageCardMap[key];
+                const elVal = document.getElementById(valId);
+                if (elVal) elVal.textContent = val.toLocaleString();
+                const elPct = document.getElementById(pctId);
+                if (elPct) elPct.textContent = calcPct(val);
             });
         }
 
@@ -2168,18 +2397,7 @@
                     borderRadius: 4
                 } 
             },
-            dataLabels: {
-                enabled: true,
-                style: {
-                    fontSize: '10px',
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 700,
-                    colors: ['#ffffff']
-                },
-                formatter: function (val) {
-                    return val > 0 ? val.toLocaleString() : '';
-                }
-            },
+            dataLabels: stdStackedDataLabels,
             xaxis: { 
                 categories: d.chart13.categories, 
                 labels: { rotate: -25, style: { fontSize: '11px', fontWeight: 600 } } 
@@ -2193,15 +2411,19 @@
         // 14. Masa Kerja per Regional (Stacked Bar)
         if (d.chart14 && d.chart14.totals) {
             const serviceCardMap = {
-                '< 10': 'valServiceS10',
-                '10-15': 'valServiceS15',
-                '16-20': 'valServiceS20',
-                '21-30': 'valServiceS30',
-                '> 30': 'valServiceS30Plus'
+                '< 10': ['valServiceS10', 'pctServiceS10'],
+                '10-15': ['valServiceS15', 'pctServiceS15'],
+                '16-20': ['valServiceS20', 'pctServiceS20'],
+                '21-30': ['valServiceS30', 'pctServiceS30'],
+                '> 30': ['valServiceS30Plus', 'pctServiceS30Plus']
             };
             Object.keys(serviceCardMap).forEach(key => {
-                const el = document.getElementById(serviceCardMap[key]);
-                if (el) el.textContent = (d.chart14.totals[key] || 0).toLocaleString();
+                const val = d.chart14.totals[key] || 0;
+                const [valId, pctId] = serviceCardMap[key];
+                const elVal = document.getElementById(valId);
+                if (elVal) elVal.textContent = val.toLocaleString();
+                const elPct = document.getElementById(pctId);
+                if (elPct) elPct.textContent = calcPct(val);
             });
         }
 
@@ -2231,18 +2453,7 @@
                     borderRadius: 4
                 } 
             },
-            dataLabels: {
-                enabled: true,
-                style: {
-                    fontSize: '10px',
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 700,
-                    colors: ['#ffffff']
-                },
-                formatter: function (val) {
-                    return val > 0 ? val.toLocaleString() : '';
-                }
-            },
+            dataLabels: stdStackedDataLabels,
             xaxis: { 
                 categories: d.chart14.categories, 
                 labels: { rotate: -25, style: { fontSize: '11px', fontWeight: 600 } } 
@@ -2255,11 +2466,17 @@
 
         // 15. Stacked Bar Chart Status Pernikahan per Regional (Menikah, Belum Menikah, Cerai)
         if (d.chart15) {
-            document.getElementById('valTotalMenikah').textContent = (d.chart15.total_menikah || 0).toLocaleString();
-            document.getElementById('valTotalBelumMenikah').textContent = (d.chart15.total_belum_menikah || 0).toLocaleString();
+            const nikah = d.chart15.total_menikah || 0;
+            const belumNikah = d.chart15.total_belum_menikah || 0;
+            const cerai = d.chart15.total_cerai || 0;
+            document.getElementById('valTotalMenikah').textContent = nikah.toLocaleString();
+            document.getElementById('valTotalBelumMenikah').textContent = belumNikah.toLocaleString();
             if (document.getElementById('valTotalCerai')) {
-                document.getElementById('valTotalCerai').textContent = (d.chart15.total_cerai || 0).toLocaleString();
+                document.getElementById('valTotalCerai').textContent = cerai.toLocaleString();
             }
+            if (document.getElementById('pctTotalMenikah')) document.getElementById('pctTotalMenikah').textContent = calcPct(nikah);
+            if (document.getElementById('pctTotalBelumMenikah')) document.getElementById('pctTotalBelumMenikah').textContent = calcPct(belumNikah);
+            if (document.getElementById('pctTotalCerai')) document.getElementById('pctTotalCerai').textContent = calcPct(cerai);
         }
 
         chartInstances['c15'] = new ApexCharts(document.querySelector("#chart15"), {
@@ -2287,18 +2504,7 @@
                     borderRadius: 4
                 } 
             },
-            dataLabels: {
-                enabled: true,
-                style: {
-                    fontSize: '11px',
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 700,
-                    colors: ['#ffffff']
-                },
-                formatter: function (val) {
-                    return val > 0 ? val.toLocaleString() : '';
-                }
-            },
+            dataLabels: stdStackedDataLabels,
             xaxis: { 
                 categories: d.chart15.categories, 
                 labels: { rotate: -25, style: { fontSize: '11px', fontWeight: 600 } } 
@@ -2317,15 +2523,15 @@
             : 100;
 
         const bodColorMap = {
-            'BOC': '#065f46',     // Dark Teal/Emerald
-            'BOD': '#166534',     // Deep Green
-            'BOD-1': '#2563eb',   // Biru (Royal Blue)
-            'BOD-2': '#ea580c',   // Jingga (Orange)
-            'BOD-3': '#7c3aed',   // Ungu (Purple)
-            'BOD-4': '#10b981',   // Emerald Green
-            'BOD-5': '#0284c7',   // Sky Blue
-            'BOD-6': '#15803d',   // Forest Green
-            'Lainnya': '#64748b'  // Slate Gray
+            'BOC': '#065f46',
+            'BOD': '#166534',
+            'BOD-1': '#2563eb',
+            'BOD-2': '#ea580c',
+            'BOD-3': '#7c3aed',
+            'BOD-4': '#10b981',
+            'BOD-5': '#0284c7',
+            'BOD-6': '#15803d',
+            'Lainnya': '#64748b'
         };
 
         const jgBarColors = (d.chart16 && d.chart16.bod_levels)
@@ -2370,12 +2576,12 @@
                     colors: ['#1e293b']
                 },
                 formatter: function (val) {
-                    return val > 0 ? val.toLocaleString() : '';
+                    return val > 0 ? `${val.toLocaleString()} (${calcPct(val)})` : '';
                 }
             },
             xaxis: { 
                 categories: d.chart16.categories,
-                max: Math.ceil(maxVal * 1.12),
+                max: Math.ceil(maxVal * 1.15),
                 labels: { style: { fontSize: '11px', fontWeight: 600 } }
             },
             yaxis: {
@@ -2387,10 +2593,22 @@
         chartInstances['c16'].render();
 
         // 17. Pensiun Dashboard Sub-metrics & Stacked Bar Chart per Regional
-        document.getElementById('pensiun30d').textContent = (d.chart17.pensiun_30d || 0).toLocaleString();
-        document.getElementById('pensiun6m').textContent = (d.chart17.pensiun_6m || 0).toLocaleString();
-        document.getElementById('pensiun1y').textContent = (d.chart17.pensiun_1y || 0).toLocaleString();
-        document.getElementById('pensiun3y').textContent = (d.chart17.pensiun_3y || 0).toLocaleString();
+        if (d.chart17) {
+            const p30d = d.chart17.pensiun_30d || 0;
+            const p6m = d.chart17.pensiun_6m || 0;
+            const p1y = d.chart17.pensiun_1y || 0;
+            const p3y = d.chart17.pensiun_3y || 0;
+
+            document.getElementById('pensiun30d').textContent = p30d.toLocaleString();
+            document.getElementById('pensiun6m').textContent = p6m.toLocaleString();
+            document.getElementById('pensiun1y').textContent = p1y.toLocaleString();
+            document.getElementById('pensiun3y').textContent = p3y.toLocaleString();
+
+            if (document.getElementById('pctPensiun30d')) document.getElementById('pctPensiun30d').textContent = calcPct(p30d);
+            if (document.getElementById('pctPensiun6m')) document.getElementById('pctPensiun6m').textContent = calcPct(p6m);
+            if (document.getElementById('pctPensiun1y')) document.getElementById('pctPensiun1y').textContent = calcPct(p1y);
+            if (document.getElementById('pctPensiun3y')) document.getElementById('pctPensiun3y').textContent = calcPct(p3y);
+        }
 
         const pensiunPalette = ['#e11d48', '#d97706', '#2563eb', '#166534'];
         chartInstances['c17'] = new ApexCharts(document.querySelector("#chart17"), {
@@ -2418,18 +2636,7 @@
                     borderRadius: 4
                 } 
             },
-            dataLabels: {
-                enabled: true,
-                style: {
-                    fontSize: '10px',
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 700,
-                    colors: ['#ffffff']
-                },
-                formatter: function (val) {
-                    return val > 0 ? val.toLocaleString() : '';
-                }
-            },
+            dataLabels: stdStackedDataLabels,
             xaxis: { 
                 categories: d.chart17.categories, 
                 labels: { rotate: -25, style: { fontSize: '11px', fontWeight: 600 } } 
