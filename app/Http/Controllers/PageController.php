@@ -5012,8 +5012,72 @@ class PageController extends Controller
 
     public function aigri()
     {
-
         return view('pages/aigr1');
+    }
+
+    public function aigriNew()
+    {
+        return view('pages/aigr1_new');
+    }
+
+    public function getAnamToken(Request $request)
+    {
+        try {
+            $anamApiKey = env('ANAM_API_KEY', '');
+            $personaId = env('ANAM_PERSONA_ID', '');
+            
+            if (empty($anamApiKey)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anam API key not configured'
+                ], 500);
+            }
+
+            // Request session token from Anam API with portrait dimensions
+            $response = Http::withOptions([
+                'verify' => env('ANAM_SSL_VERIFY', false),
+            ])->withHeaders([
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Bearer ' . $anamApiKey,
+            ])->post('https://api.anam.ai/v1/auth/session-token', [
+                'personaConfig' => [
+                    'personaId' => $personaId,
+                    'avatarModel' => 'cara-4.1-express'  // Use latest expressive model
+                ],
+                'sessionOptions' => [
+                    'videoWidth' => 768,    // Portrait width
+                    'videoHeight' => 1152,  // Portrait height (2:3 aspect ratio)
+                    'videoQuality' => 'high'
+                ]
+            ]);
+
+            if (!$response->successful()) {
+                \Log::error('Anam API Error', [
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create Anam session',
+                    'status' => $response->status(),
+                    'error' => $response->json()
+                ], 500);
+            }
+
+            $data = $response->json();
+            
+            return response()->json([
+                'success' => true,
+                'sessionToken' => $data['sessionToken'] ?? null
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function gardai()

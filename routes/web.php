@@ -58,6 +58,8 @@ Route::middleware('auth:custom')->group(function () {
 
     Route::get('/mrc', [PageController::class, 'mrc'])->name('mrc');
     Route::get('/aigri', [PageController::class, 'aigri'])->name('aigri');
+    Route::get('/aigri-new', [PageController::class, 'aigriNew'])->name('aigri.new');
+    Route::post('/aigri/anam-token', [PageController::class, 'getAnamToken'])->name('aigri.anam.token');
     Route::get('/gardai', [PageController::class, 'gardai'])->name('gardai');
     Route::get('/onfarmkaret', [PageController::class, 'onfarmkaret'])->name('onfarmkaret');
     Route::get('/onfarmteh', [PageController::class, 'onfarmteh'])->name('onfarmteh');

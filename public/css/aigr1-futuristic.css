@@ -1,0 +1,553 @@
+/* AIGR1 Futuristic Background & HUD Elements */
+
+/* SVG Background Patterns */
+.hud-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    overflow: hidden;
+}
+
+/* Animated Scanlines */
+.scanlines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        transparent 50%, 
+        rgba(0, 217, 255, 0.03) 50%
+    );
+    background-size: 100% 4px;
+    animation: scanline 8s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes scanline {
+    0% { background-position: 0 0; }
+    100% { background-position: 0 100%; }
+}
+
+/* Corner Brackets */
+.corner-bracket {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    pointer-events: none;
+}
+
+.corner-bracket::before,
+.corner-bracket::after {
+    content: '';
+    position: absolute;
+    background: var(--primary-cyan);
+    box-shadow: 0 0 10px var(--primary-cyan);
+}
+
+/* Top-left bracket */
+.corner-bracket.top-left {
+    top: 0;
+    left: 0;
+}
+
+.corner-bracket.top-left::before {
+    width: 100%;
+    height: 2px;
+    top: 0;
+    left: 0;
+}
+
+.corner-bracket.top-left::after {
+    width: 2px;
+    height: 100%;
+    top: 0;
+    left: 0;
+}
+
+/* Top-right bracket */
+.corner-bracket.top-right {
+    top: 0;
+    right: 0;
+}
+
+.corner-bracket.top-right::before {
+    width: 100%;
+    height: 2px;
+    top: 0;
+    right: 0;
+}
+
+.corner-bracket.top-right::after {
+    width: 2px;
+    height: 100%;
+    top: 0;
+    right: 0;
+}
+
+/* Bottom-left bracket */
+.corner-bracket.bottom-left {
+    bottom: 0;
+    left: 0;
+}
+
+.corner-bracket.bottom-left::before {
+    width: 100%;
+    height: 2px;
+    bottom: 0;
+    left: 0;
+}
+
+.corner-bracket.bottom-left::after {
+    width: 2px;
+    height: 100%;
+    bottom: 0;
+    left: 0;
+}
+
+/* Bottom-right bracket */
+.corner-bracket.bottom-right {
+    bottom: 0;
+    right: 0;
+}
+
+.corner-bracket.bottom-right::before {
+    width: 100%;
+    height: 2px;
+    bottom: 0;
+    right: 0;
+}
+
+.corner-bracket.bottom-right::after {
+    width: 2px;
+    height: 100%;
+    bottom: 0;
+    right: 0;
+}
+
+/* HUD Corner Cuts */
+.hud-panel-cut {
+    position: relative;
+    background: linear-gradient(135deg, var(--dark-panel) 0%, var(--dark-card) 100%);
+    clip-path: polygon(
+        20px 0,
+        calc(100% - 20px) 0,
+        100% 20px,
+        100% calc(100% - 20px),
+        calc(100% - 20px) 100%,
+        20px 100%,
+        0 calc(100% - 20px),
+        0 20px
+    );
+}
+
+.hud-panel-cut::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: inherit;
+    clip-path: polygon(
+        20px 0,
+        calc(100% - 20px) 0,
+        100% 20px,
+        100% calc(100% - 20px),
+        calc(100% - 20px) 100%,
+        20px 100%,
+        0 calc(100% - 20px),
+        0 20px
+    );
+    box-shadow: 
+        inset 0 0 20px rgba(0, 217, 255, 0.1),
+        0 0 20px rgba(0, 217, 255, 0.2);
+}
+
+/* Circular HUD Elements */
+.hud-circle {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 2px solid var(--primary-cyan);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10, 14, 26, 0.8);
+    box-shadow: 
+        0 0 20px rgba(0, 217, 255, 0.3),
+        inset 0 0 20px rgba(0, 217, 255, 0.1);
+}
+
+.hud-circle::before {
+    content: '';
+    position: absolute;
+    width: 90%;
+    height: 90%;
+    border-radius: 50%;
+    border: 1px dashed var(--primary-cyan);
+    opacity: 0.3;
+    animation: rotate 10s linear infinite;
+}
+
+.hud-circle::after {
+    content: '';
+    position: absolute;
+    width: 110%;
+    height: 110%;
+    border-radius: 50%;
+    border: 1px solid var(--primary-cyan);
+    opacity: 0.2;
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* HUD Progress Ring */
+.progress-ring {
+    width: 60px;
+    height: 60px;
+    position: relative;
+}
+
+.progress-ring svg {
+    transform: rotate(-90deg);
+}
+
+.progress-ring circle {
+    fill: none;
+    stroke: var(--primary-cyan);
+    stroke-width: 3;
+    stroke-dasharray: 188.4;
+    stroke-dashoffset: 0;
+    animation: progressRing 3s ease-in-out infinite;
+    filter: drop-shadow(0 0 5px var(--primary-cyan));
+}
+
+@keyframes progressRing {
+    0% { stroke-dashoffset: 188.4; }
+    50% { stroke-dashoffset: 0; }
+    100% { stroke-dashoffset: 188.4; }
+}
+
+/* Hexagon Pattern Background */
+.hexagon-pattern {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 0.05;
+    background-image: 
+        linear-gradient(30deg, transparent 48%, var(--primary-cyan) 50%, transparent 52%),
+        linear-gradient(150deg, transparent 48%, var(--primary-cyan) 50%, transparent 52%);
+    background-size: 60px 104px;
+    background-position: 0 0, 30px 52px;
+    animation: hexMove 20s linear infinite;
+}
+
+@keyframes hexMove {
+    0% { background-position: 0 0, 30px 52px; }
+    100% { background-position: 60px 104px, 90px 156px; }
+}
+
+/* Data Stream Effect */
+.data-stream {
+    position: absolute;
+    width: 2px;
+    height: 100px;
+    background: linear-gradient(
+        to bottom,
+        transparent,
+        var(--primary-cyan),
+        transparent
+    );
+    opacity: 0.5;
+    animation: streamDown 3s linear infinite;
+}
+
+@keyframes streamDown {
+    0% {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    50% {
+        opacity: 0.5;
+    }
+    100% {
+        transform: translateY(100vh);
+        opacity: 0;
+    }
+}
+
+/* Glitch Effect */
+.glitch {
+    position: relative;
+}
+
+.glitch::before,
+.glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.glitch::before {
+    animation: glitch1 2s infinite;
+    color: var(--primary-cyan);
+    z-index: -1;
+}
+
+.glitch::after {
+    animation: glitch2 2s infinite;
+    color: var(--primary-purple);
+    z-index: -2;
+}
+
+@keyframes glitch1 {
+    0%, 100% { clip-path: inset(0 0 0 0); transform: translate(0); }
+    20% { clip-path: inset(0.5em 0 0.8em 0); transform: translate(-2px, 2px); }
+    40% { clip-path: inset(0.2em 0 0.4em 0); transform: translate(2px, -2px); }
+    60% { clip-path: inset(0.7em 0 0.3em 0); transform: translate(-2px, 2px); }
+    80% { clip-path: inset(0.4em 0 0.6em 0); transform: translate(2px, -2px); }
+}
+
+@keyframes glitch2 {
+    0%, 100% { clip-path: inset(0 0 0 0); transform: translate(0); }
+    20% { clip-path: inset(0.3em 0 0.5em 0); transform: translate(2px, -2px); }
+    40% { clip-path: inset(0.6em 0 0.2em 0); transform: translate(-2px, 2px); }
+    60% { clip-path: inset(0.1em 0 0.7em 0); transform: translate(2px, -2px); }
+    80% { clip-path: inset(0.8em 0 0.4em 0); transform: translate(-2px, 2px); }
+}
+
+/* Tech Lines */
+.tech-line {
+    position: absolute;
+    height: 1px;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        var(--primary-cyan),
+        transparent
+    );
+    box-shadow: 0 0 5px var(--primary-cyan);
+}
+
+.tech-line.horizontal {
+    width: 100%;
+    animation: lineSlide 3s ease-in-out infinite;
+}
+
+.tech-line.vertical {
+    width: 1px;
+    height: 100%;
+    animation: lineSlideVertical 3s ease-in-out infinite;
+}
+
+@keyframes lineSlide {
+    0%, 100% { transform: translateX(-100%); }
+    50% { transform: translateX(100%); }
+}
+
+@keyframes lineSlideVertical {
+    0%, 100% { transform: translateY(-100%); }
+    50% { transform: translateY(100%); }
+}
+
+/* HUD Crosshair */
+.crosshair {
+    position: relative;
+    width: 40px;
+    height: 40px;
+}
+
+.crosshair::before,
+.crosshair::after {
+    content: '';
+    position: absolute;
+    background: var(--primary-cyan);
+    box-shadow: 0 0 5px var(--primary-cyan);
+}
+
+.crosshair::before {
+    width: 100%;
+    height: 2px;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+}
+
+.crosshair::after {
+    width: 2px;
+    height: 100%;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+}
+
+/* Pulse Animation */
+.pulse {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(1.05);
+    }
+}
+
+/* Radar Effect */
+.radar {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 2px solid var(--primary-cyan);
+    background: radial-gradient(
+        circle,
+        rgba(0, 217, 255, 0.1) 0%,
+        transparent 70%
+    );
+}
+
+.radar::before {
+    content: '';
+    position: absolute;
+    width: 50%;
+    height: 2px;
+    background: linear-gradient(
+        90deg,
+        var(--primary-cyan),
+        transparent
+    );
+    top: 50%;
+    left: 50%;
+    transform-origin: left center;
+    animation: radarSweep 3s linear infinite;
+    box-shadow: 0 0 10px var(--primary-cyan);
+}
+
+@keyframes radarSweep {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Hologram Effect */
+.hologram {
+    position: relative;
+    animation: hologramFlicker 0.5s infinite alternate;
+}
+
+@keyframes hologramFlicker {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+}
+
+.hologram::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(
+        transparent,
+        var(--primary-cyan) 50%,
+        transparent
+    );
+    background-size: 100% 10px;
+    animation: hologramScan 2s linear infinite;
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+@keyframes hologramScan {
+    0% { background-position: 0 0; }
+    100% { background-position: 0 100%; }
+}
+
+/* Circuit Board Pattern */
+.circuit-pattern {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 0.03;
+    background-image: 
+        linear-gradient(90deg, var(--primary-cyan) 1px, transparent 1px),
+        linear-gradient(var(--primary-cyan) 1px, transparent 1px),
+        linear-gradient(90deg, var(--primary-purple) 1px, transparent 1px),
+        linear-gradient(var(--primary-purple) 1px, transparent 1px);
+    background-size: 
+        50px 50px,
+        50px 50px,
+        100px 100px,
+        100px 100px;
+    background-position: 
+        0 0,
+        0 0,
+        25px 25px,
+        25px 25px;
+}
+
+/* Energy Bar */
+.energy-bar {
+    position: relative;
+    width: 200px;
+    height: 20px;
+    background: rgba(0, 217, 255, 0.1);
+    border: 1px solid var(--primary-cyan);
+    overflow: hidden;
+}
+
+.energy-bar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 70%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        var(--primary-cyan),
+        var(--accent-green)
+    );
+    animation: energyFlow 2s ease-in-out infinite;
+    box-shadow: 0 0 10px var(--primary-cyan);
+}
+
+@keyframes energyFlow {
+    0%, 100% { width: 30%; }
+    50% { width: 90%; }
+}
+
+/* Digital Noise */
+.digital-noise {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 0.02;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    animation: noiseAnim 0.2s steps(10) infinite;
+    pointer-events: none;
+}
+
+@keyframes noiseAnim {
+    0% { transform: translate(0, 0); }
+    10% { transform: translate(-5%, -5%); }
+    20% { transform: translate(-10%, 5%); }
+    30% { transform: translate(5%, -10%); }
+    40% { transform: translate(-5%, 15%); }
+    50% { transform: translate(-10%, 5%); }
+    60% { transform: translate(15%, 0); }
+    70% { transform: translate(0, 10%); }
+    80% { transform: translate(-15%, 0); }
+    90% { transform: translate(10%, 5%); }
+    100% { transform: translate(5%, 0); }
+}
