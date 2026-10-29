@@ -8,6 +8,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Rich chat content (same pipeline as the dashboard chatbot): markdown + sanitizer + shared renderer -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+    <script src="{{ asset('js/chat-content-renderer.js') }}"></script>
     <link rel="stylesheet" href="{{ asset('css/aigr1-futuristic.css') }}">
     <style>
         * {
@@ -108,8 +113,8 @@
             padding: 20px;
         }
 
-        /* Sidebar Panel - Modern Minimal - Portrait 768x1152 (2:3 ratio) */
-        .sidebar {
+        /* AIGR1 Call Panel - Modern Minimal - Portrait 768x1152 (2:3 ratio) */
+        .call-panel {
             width: 640px;
             background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
             border-right: 1px solid var(--border-color);
@@ -121,6 +126,131 @@
             box-shadow: 0 0 40px rgba(0, 0, 0, 0.3);
             overflow: hidden;
             position: relative;
+            flex-shrink: 0;
+        }
+
+        /* ───────── AGRINAV navigation drawer (same behaviour as dashboard home) ───────── */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 100vh;
+            height: 100dvh;
+            background-color: #202124;
+            overflow-x: hidden;
+            overflow-y: auto;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.3s;
+            z-index: 99999;
+            visibility: hidden;
+            box-sizing: border-box;
+            font-family: 'Droid Sans', 'Inter', sans-serif;
+        }
+
+        .sidebar.open {
+            width: 250px;
+            padding: 1rem;
+            visibility: visible;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .sidebar .sidebar-header {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 10px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 6px;
+        }
+        .sidebar.open .sidebar-header { display: flex; }
+
+        .sidebar .sidebar-brand { display: flex; align-items: center; gap: 10px; }
+        .sidebar .sidebar-title { font-size: 1.35rem; font-weight: 700; letter-spacing: 0.05em; color: #e8eaed; }
+        .sidebar .sidebar-logo { height: 32px; width: auto; object-fit: contain; }
+
+        .sidebar .sidebar-close-btn {
+            background: none;
+            border: none;
+            color: #9aa0a6;
+            font-size: 1.75rem;
+            line-height: 1;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: color 0.2s, background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .sidebar .sidebar-close-btn:hover { color: #fff; background-color: rgba(255, 255, 255, 0.1); }
+
+        .sidebar .menu { display: none; padding-top: 12px; }
+        .sidebar.open .menu { display: block; }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            text-decoration: none;
+            color: #e8e8e8;
+            text-align: left;
+            transition: background-color 0.3s;
+            font-size: 1em;
+            min-height: 40px;
+        }
+        .sidebar a:hover { background-color: #575757; }
+
+        .sidebar .menu-icon { flex-shrink: 0; width: 1.15em; margin-right: 10px; text-align: center; color: #e8e8e8; }
+        .sidebar a .toggle-icon { margin-left: auto; flex-shrink: 0; font-size: 0.78em; transition: transform 0.3s; }
+        .sidebar a .toggle-icon.open { transform: rotate(90deg); }
+
+        .sidebar .submenu { display: none; background-color: #3c4043; }
+        .sidebar .submenu a { padding-left: 36px; }
+        .sidebar a.active + .submenu { display: block; }
+
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-track { background: #1e1f22; }
+        .sidebar::-webkit-scrollbar-thumb { background: #4e5058; border-radius: 3px; }
+
+        /* Hamburger button (top-left, outside the drawer) */
+        .icon {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            cursor: pointer;
+            z-index: 10002;
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.35);
+            border-radius: 8px;
+            backdrop-filter: blur(4px);
+            transition: background-color 0.2s;
+        }
+        .icon:hover { background: rgba(0, 0, 0, 0.55); }
+        .icon img { width: 26px; height: 26px; }
+
+        .sidebar-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(2px);
+            z-index: 99998;
+        }
+        .sidebar-backdrop.active { display: block; }
+
+        @media (max-width: 768px) {
+            .sidebar.open { width: 280px; max-width: 82vw; }
+            .sidebar a { padding: 12px 14px; font-size: 0.95rem; }
         }
 
         /* Logo Section - Modern Minimal */
@@ -625,6 +755,48 @@
             color: var(--text-primary);
         }
 
+        /* Rich assistant content: markdown, tables, charts / images */
+        .message-content { min-width: 0; overflow-wrap: anywhere; }
+        .message.assistant .message-content.has-media { max-width: 88%; }
+        .message.assistant .message-content > :first-child { margin-top: 0; }
+        .message.assistant .message-content > :last-child { margin-bottom: 0; }
+        .message.assistant .message-content p { margin: 0 0 0.65em; }
+        .message.assistant .message-content h1,
+        .message.assistant .message-content h2,
+        .message.assistant .message-content h3,
+        .message.assistant .message-content h4 { margin: 0.9em 0 0.4em; font-weight: 700; line-height: 1.3; color: #fff; }
+        .message.assistant .message-content h1 { font-size: 1.25em; }
+        .message.assistant .message-content h2 { font-size: 1.15em; }
+        .message.assistant .message-content h3 { font-size: 1.05em; }
+        .message.assistant .message-content h4 { font-size: 1em; }
+        .message.assistant .message-content ul,
+        .message.assistant .message-content ol { margin: 0.3em 0 0.75em; padding-left: 1.4em; }
+        .message.assistant .message-content li { margin: 0.2em 0; }
+        .message.assistant .message-content strong { color: #fff; font-weight: 700; }
+        .message.assistant .message-content a { color: #67e8f9; text-decoration: underline; }
+        .message.assistant .message-content code { background: rgba(15, 23, 42, 0.6); padding: 0.1em 0.4em; border-radius: 4px; font-size: 0.9em; }
+        .message.assistant .message-content pre { background: rgba(2, 6, 23, 0.7); padding: 12px; border-radius: 8px; overflow-x: auto; margin: 0.6em 0; }
+        .message.assistant .message-content pre code { background: none; padding: 0; }
+        .message.assistant .message-content blockquote { margin: 0.6em 0; padding: 0.4em 0.9em; border-left: 3px solid rgba(0, 217, 255, 0.6); background: rgba(0, 217, 255, 0.07); border-radius: 0 8px 8px 0; }
+        .message.assistant .message-content hr { border: none; border-top: 1px solid rgba(148, 163, 184, 0.25); margin: 0.9em 0; }
+        .message.assistant .message-content .table-wrap { overflow-x: auto; margin: 0.6em 0; border-radius: 8px; border: 1px solid rgba(0, 217, 255, 0.2); }
+        .message.assistant .message-content table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+        .message.assistant .message-content th,
+        .message.assistant .message-content td { padding: 8px 12px; text-align: left; border-bottom: 1px solid rgba(148, 163, 184, 0.15); }
+        .message.assistant .message-content th { background: rgba(0, 217, 255, 0.12); font-weight: 700; }
+        .message.assistant .message-content tr:last-child td { border-bottom: none; }
+        .message.assistant .message-content .ai-generated-image { margin: 0.75em 0; text-align: center; }
+        .message.assistant .message-content img { max-width: 100%; height: auto; border-radius: 10px; background: #fff; border: 1px solid rgba(148, 163, 184, 0.25); cursor: zoom-in; }
+        .message.assistant .message-content .chart-caption { font-size: 0.82em; color: var(--text-secondary); margin-top: 6px; }
+        .message.assistant .message-content .chart-generating-hint { margin-top: 8px; font-size: 0.85em; opacity: 0.8; animation: hintPulse 1.4s ease-in-out infinite; }
+        .thinking-label { opacity: 0.85; font-style: italic; }
+        .msg-error { color: #fca5a5; }
+        .msg-warn { color: #fcd34d; }
+        .img-error { font-size: 0.85em; opacity: 0.7; }
+        @keyframes hintPulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+        .img-lightbox { position: fixed; inset: 0; z-index: 100000; background: rgba(2, 6, 23, 0.88); display: flex; align-items: center; justify-content: center; padding: 24px; cursor: zoom-out; }
+        .img-lightbox img { max-width: 96vw; max-height: 92vh; border-radius: 12px; background: #fff; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6); }
+
         /* Typing Indicator */
         .typing-indicator {
             display: flex;
@@ -765,7 +937,7 @@
 
         /* Responsive */
         @media (max-width: 1024px) {
-            .sidebar {
+            .call-panel {
                 width: 500px;
             }
         }
@@ -777,23 +949,23 @@
                 gap: 10px;
             }
 
-            .sidebar {
+            .call-panel {
                 width: 100%;
                 min-height: 500px;
                 max-height: 600px;
             }
-            
+
             .chat-area {
                 flex: 1;
             }
-            
+
             .session-history {
                 max-height: 150px;
             }
         }
         
         @media (min-width: 1400px) {
-            .sidebar {
+            .call-panel {
                 width: 720px;
             }
             
@@ -832,10 +1004,21 @@
     <div class="grid-background"></div>
     <div class="particles" id="particles"></div>
 
+    <!-- AGRINAV menu toggle (hamburger, same as dashboard home) -->
+    <div class="icon" id="menuIcon" title="Toggle Menu">
+        <img src="{{ url('') }}/asset/images/menu.png" alt="Menu Icon">
+    </div>
+
+    <!-- Backdrop overlay for the AGRINAV menu -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <!-- AGRINAV navigation drawer (list menu, shared with dashboard) -->
+    @include('layouts.sidebar')
+
     <!-- Main Container -->
     <div class="main-container">
-        <!-- Sidebar - Now Video Call Panel -->
-        <aside class="sidebar">
+        <!-- Call Panel - Video Call -->
+        <aside class="call-panel" id="callPanel">
             <!-- Compact Header -->
             <div class="logo-section">
                 <h1 class="glitch" data-text="AIGR1">AIGR1</h1>
@@ -982,6 +1165,7 @@
         let currentSessionId = Date.now();
         let currentInputMode = 'text';
         let isProcessing = false;
+        let aiSessionId = '';   // ai-be sessionId (conversation memory) - distinct from the local history id
         let anamClient = null;
         let mediaRecorder = null;
         let audioChunks = [];
@@ -989,6 +1173,93 @@
         let isMicActive = false;
         let isSpeakerActive = true;
         let isVideoActive = true;
+
+        // ai-be voice brain state (Anam = STT + avatar + TTS; answers come from ai-be)
+        const ANAM_SDK_URL = 'https://esm.sh/@anam-ai/js-sdk@4.29.1';
+        const VOICE_GREETING = 'Halo, saya EVA, asisten AgriNav PTPN 1. Siap membantu. Ada yang ingin Anda tanyakan?';
+        const VOICE_FILLER_POOL = [
+            'Baik, saya cek datanya dulu ya.',
+            'Sebentar, saya ambilkan informasinya.',
+            'Oke, saya proses pertanyaan Anda.',
+            'Satu momen, saya sedang mencari datanya.',
+        ];
+        const VOICE_ACK_POOL = [
+            'Oke.',
+            'Baik.',
+            'Ya.',
+            'Siap.',
+        ];
+        const VOICE_ERROR = 'Maaf, saya sedang mengalami kendala. Silakan coba lagi sebentar lagi.';
+        const VOICE_FAREWELL = 'Baik, sampai jumpa lagi!';
+        const VOICE_FILLER_AFTER_MS = 2800;   // say a short filler if the answer takes longer than this
+        const USER_TURN_DEBOUNCE_MS = 750;    // wait for trailing-silence before firing ai-be request
+        const BARGE_IN_COOLDOWN_MS  = 800;    // ignore barge-in events this soon after interrupting
+        // Adaptive status labels cycling through processing stages
+        const STATUS_CYCLE = ['Menganalisis...', 'Mengambil data...', 'Menyusun jawaban...'];
+        let brainMode = 'anam';
+        let voiceTurnTimer = null;
+        let voiceAbort = null;
+        let voiceTurnSeq = 0;
+        let activeTalkStream = null;
+        let lastBargeInAt = 0;          // timestamp of last barge-in interrupt
+        let statusCycleTimer = null;    // cycles HUD labels while processing
+        const handledUserMessageIds = new Set();
+
+        function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+        // Cycle through STATUS_CYCLE labels while the AI is working.
+        function startStatusCycle(el) {
+            stopStatusCycle();
+            let idx = 0;
+            el.textContent = STATUS_CYCLE[idx];
+            statusCycleTimer = setInterval(() => {
+                idx = (idx + 1) % STATUS_CYCLE.length;
+                el.textContent = STATUS_CYCLE[idx];
+            }, 2000);
+        }
+        function stopStatusCycle() {
+            if (statusCycleTimer) { clearInterval(statusCycleTimer); statusCycleTimer = null; }
+        }
+
+        // ── AGRINAV menu drawer toggle (same behaviour as dashboard home) ──────────
+        (function () {
+            const drawer   = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            const menuIcon = document.getElementById('menuIcon');
+            if (!drawer) return;
+
+            function setDrawer(open) {
+                drawer.classList.toggle('open', open);
+                backdrop.classList.toggle('active', open);
+            }
+
+            menuIcon.addEventListener('click', function (e) {
+                e.stopPropagation();
+                setDrawer(!drawer.classList.contains('open'));
+            });
+            const closeBtn = document.getElementById('sidebarCloseBtn');
+            if (closeBtn) closeBtn.addEventListener('click', function (e) { e.stopPropagation(); setDrawer(false); });
+            backdrop.addEventListener('click', function () { setDrawer(false); });
+            document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setDrawer(false); });
+
+            // Expandable parent menus (accordion, one open at a time)
+            drawer.querySelectorAll('a.parent').forEach(function (parent) {
+                parent.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const willOpen = !parent.classList.contains('active');
+                    drawer.querySelectorAll('a.parent').forEach(function (p) {
+                        p.classList.remove('active');
+                        const ic = p.querySelector('.toggle-icon');
+                        if (ic) ic.classList.remove('open');
+                    });
+                    if (willOpen) {
+                        parent.classList.add('active');
+                        const icon = parent.querySelector('.toggle-icon');
+                        if (icon) icon.classList.add('open');
+                    }
+                });
+            });
+        })();
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
@@ -1066,6 +1337,7 @@
         // Session Management
         window.startNewSession = function() {
             currentSessionId = Date.now();
+            aiSessionId = '';
             const messagesContainer = document.getElementById('messagesContainer');
             messagesContainer.innerHTML = `
                 <div class="message assistant">
@@ -1088,6 +1360,7 @@
                 id: currentSessionId,
                 title: messages.length > 1 ? messages[1].content.slice(0, 30) + '...' : 'New Session',
                 messages: messages,
+                aiSessionId: aiSessionId,
                 timestamp: Date.now()
             };
             
@@ -1101,8 +1374,10 @@
             
             messagesContainer.querySelectorAll('.message:not(.typing-indicator)').forEach(msg => {
                 const isUser = msg.classList.contains('user');
-                const content = msg.querySelector('.message-content').textContent.trim();
-                messages.push({ content, isUser });
+                const el = msg.querySelector('.message-content');
+                const content = el.textContent.trim();
+                // Assistant messages keep their sanitized rich HTML so tables/charts survive a reload
+                messages.push(isUser ? { content, isUser } : { content, html: el.innerHTML, isUser });
             });
             
             return messages;
@@ -1120,7 +1395,7 @@
                     const sessionItem = document.createElement('div');
                     sessionItem.className = 'session-item' + (session.id === currentSessionId ? ' active' : '');
                     sessionItem.innerHTML = `
-                        <div class="session-title">${session.title}</div>
+                        <div class="session-title">${escapeHtml(session.title)}</div>
                         <div class="session-actions">
                             <button class="session-btn" onclick="loadSession(${session.id})">↻</button>
                             <button class="session-btn" onclick="deleteSession(${session.id})">🗑</button>
@@ -1139,8 +1414,15 @@
                 const messagesContainer = document.getElementById('messagesContainer');
                 messagesContainer.innerHTML = '';
                 
+                aiSessionId = session.aiSessionId || '';
                 session.messages.forEach(msg => {
-                    addMessage(msg.content, msg.isUser);
+                    if (msg.isUser) {
+                        addMessage(msg.content, true);
+                    } else {
+                        const el = addMessage('');
+                        const safe = msg.html ? sanitizeHtml(msg.html) : null;
+                        setBotHtml(el, safe != null ? safe : formatBotHtml(msg.content));
+                    }
                 });
                 
                 loadSessionHistory();
@@ -1188,11 +1470,12 @@
             
             messageDiv.innerHTML = `
                 ${avatarHtml}
-                <div class="message-content">${content}</div>
+                <div class="message-content">${isUser ? escapeHtml(content).replace(/\n/g, '<br>') : content}</div>
             `;
             
             messagesContainer.appendChild(messageDiv);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            return messageDiv.querySelector('.message-content');
         }
 
         function addTypingIndicator() {
@@ -1214,53 +1497,100 @@
 
         window.sendMessage = async function() {
             if (isProcessing) return;
-            
+
             const messageInput = document.getElementById('messageInput');
             const message = messageInput.value.trim();
-            
+
             if (!message) return;
-            
+
             isProcessing = true;
             messageInput.value = '';
             messageInput.style.height = 'auto';
-            
+
             addMessage(message, true);
-            const typingIndicator = addTypingIndicator();
-            
+            const bubble = addMessage('<span class="thinking-label">🧠 Thinking...</span>');
+
+            let queued = false;      // a render has been scheduled (sync flag)
+            let rendered = false;    // a render actually displayed content
+            let streamed = '';
+            let errorMsg = '';
+            let renderChain = Promise.resolve();
+
+            const setStatus = (label) => {
+                if (queued) return;   // never overwrite an answer that is already on screen
+                bubble.innerHTML = '<span class="thinking-label">' + escapeHtml(label) + '</span>';
+                scrollChatToBottom();
+            };
+            const render = (payload) => {
+                queued = true;
+                renderChain = renderChain
+                    .then(() => renderBotContent(bubble, payload))
+                    .then((ok) => { if (ok) rendered = true; })
+                    .catch(err => console.error('Render error:', err));
+            };
+
             try {
-                const response = await fetch('/ai/response', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ 
-                        message: message,
-                        sessionId: currentSessionId
-                    })
+                // Same SSE contract as the dashboard chatbot: thinking -> skill_called -> token ->
+                // partial_response (text ready) -> done (may add charts / contentBlocks).
+                await streamAiTurn(message, undefined, false, (event, data) => {
+                    switch (event) {
+                        case 'thinking':
+                            if (data && data.message) setStatus('🧠 ' + data.message);
+                            break;
+
+                        case 'skill_called': {
+                            const isChart = data.skill === 'generate_chart_image';
+                            const label = data.label || (isChart ? 'membuat visualisasi' : 'mengambil data');
+                            if (!queued) setStatus((isChart ? '📊 ' : '⚙️ ') + label + '...');
+                            else if (isChart) showChartHint(bubble, '📊 ' + label);
+                            break;
+                        }
+
+                        case 'token':
+                            // Plain text preview only; full markdown/chart render happens once on partial/done.
+                            streamed += (data && data.token) || '';
+                            if (!queued && !looksLikePlanningJson(streamed)) {
+                                bubble.textContent = streamed;
+                                scrollChatToBottom();
+                            }
+                            break;
+
+                        case 'partial_response':
+                        case 'done': {
+                            const r = data && data.response;
+                            const content = r && r.message && r.message.content;
+                            const blocks = (r && Array.isArray(r.contentBlocks) && r.contentBlocks.length) ? r.contentBlocks : null;
+                            const imageUrl = (r && r.images && r.images.output) || null;
+                            if (event === 'done' && queued && !blocks && !imageUrl) break;   // nothing new
+                            if (content || blocks) render({ text: content, blocks, imageUrl });
+                            break;
+                        }
+
+                        case 'error':
+                            errorMsg = (data && (data.error || data.message)) || 'AI backend error';
+                            break;
+                    }
                 });
-                
-                if (!response.ok) throw new Error('Network response was not ok');
-                
-                const data = await response.json();
-                typingIndicator.remove();
-                
-                if (data.data && data.data.response) {
-                    const cleanResponse = data.data.response
-                        .replace(/【\d+:\d+†source】/g, '')
-                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                        .replace(/\n/g, '<br>');
-                    
-                    addMessage(cleanResponse);
-                    saveSession();
+
+                await renderChain;
+
+                if (!rendered) {
+                    if (streamed && !looksLikePlanningJson(streamed)) {
+                        await renderBotContent(bubble, { text: streamed });
+                    } else if (errorMsg) {
+                        bubble.innerHTML = '<span class="msg-error">Maaf, terjadi kesalahan: ' + escapeHtml(errorMsg) + '</span>';
+                    } else {
+                        bubble.innerHTML = '<span class="msg-warn">Maaf, saya belum berhasil mengambil datanya untuk pertanyaan itu. Coba ulangi atau perjelas pertanyaannya ya.</span>';
+                    }
                 }
             } catch (error) {
                 console.error('Error:', error);
-                typingIndicator.remove();
-                addMessage('⚠️ Sorry, there was an error processing your request. Please try again.');
+                bubble.innerHTML = '<span class="msg-error">Maaf, terjadi kesalahan saat memproses permintaan Anda. Silakan coba lagi.</span>';
             } finally {
+                const hint = bubble.querySelector('.chart-generating-hint');
+                if (hint) hint.remove();
                 isProcessing = false;
+                saveSession();
             }
         };
 
@@ -1278,6 +1608,441 @@
                 this.style.height = 'auto';
                 this.style.height = Math.min(this.scrollHeight, 100) + 'px';
             });
+        }
+
+        // ── ai-be voice brain helpers ──────────────────────────────────────────────────────
+        function escapeHtml(s) {
+            return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        function formatBotHtml(text) {
+            return escapeHtml(text)
+                .replace(/【\d+:\d+†source】/g, '')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\n/g, '<br>');
+        }
+
+        // ── Rich content pipeline (shared with the dashboard chatbot) ────────────────────────────────
+        // Contract from ai-be (see AIResponse): message.content (markdown), optional contentBlocks
+        // (ordered text/chart), optional images.output (single chart), metadata.spokenText (voice only).
+        const contentRenderer = (typeof window.ChatContentRenderer === 'function') ? new window.ChatContentRenderer() : null;
+        const CITATION_RE = /【\d+:\d+†source】/g;
+
+        function scrollChatToBottom() {
+            const c = document.getElementById('messagesContainer');
+            c.scrollTop = c.scrollHeight;
+        }
+
+        function captureAiSessionId(data) {
+            const sid = data && (data.sessionId || (data.response && data.response.sessionId));
+            if (sid) aiSessionId = String(sid);
+        }
+
+        function looksLikePlanningJson(s) {
+            const t = String(s || '').trim();
+            return t.startsWith('{') && t.includes('"answer"');
+        }
+
+        // The model sometimes returns its internal planning JSON ({"dataSourcesToFetch":..,"answer":..}).
+        // Never show that raw: take `answer` (also salvaging truncated JSON), or '' when there is none.
+        function unwrapPlanningJson(text) {
+            if (typeof text !== 'string') return '';
+            const t = text.trim();
+            if (!looksLikePlanningJson(t)) return text;
+            try {
+                const obj = JSON.parse(t);
+                if (obj && Object.prototype.hasOwnProperty.call(obj, 'answer')) {
+                    return (typeof obj.answer === 'string' && obj.answer.trim()) ? obj.answer : '';
+                }
+                return text;
+            } catch (_) {
+                if (/"answer"\s*:\s*null/.test(t)) return '';
+                const m = t.match(/"answer"\s*:\s*"((?:[^"\\]|\\[\s\S])*)/);
+                if (m) {
+                    try { return JSON.parse('"' + m[1] + '"'); }
+                    catch (_e) { return m[1].replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\'); }
+                }
+                return text;
+            }
+        }
+
+        // AI/n8n output is untrusted HTML once markdown-parsed -> always sanitize before innerHTML.
+        // Returns null when DOMPurify is unavailable so callers fall back to escaped plain text.
+        function sanitizeHtml(html) {
+            if (!window.DOMPurify) return null;
+            return window.DOMPurify.sanitize(html, {
+                FORBID_TAGS: ['style', 'iframe', 'form', 'input', 'button', 'textarea', 'select'],
+                FORBID_ATTR: ['style']
+            });
+        }
+
+        function isSafeImageUrl(u) {
+            return typeof u === 'string' && /^(https?:\/\/|\/(?!\/))/i.test(u);
+        }
+
+        // Post-process a live bubble: links in new tab, tables scrollable, images lazy + safe + error fallback.
+        function enhanceRichNode(root) {
+            root.querySelectorAll('a[href]').forEach(a => { a.target = '_blank'; a.rel = 'noopener noreferrer'; });
+            root.querySelectorAll('table').forEach(t => {
+                if (t.parentElement && t.parentElement.classList.contains('table-wrap')) return;
+                const w = document.createElement('div');
+                w.className = 'table-wrap';
+                t.parentNode.insertBefore(w, t);
+                w.appendChild(t);
+            });
+            root.querySelectorAll('img').forEach(img => {
+                if (!isSafeImageUrl(img.getAttribute('src'))) { img.remove(); return; }
+                img.loading = 'lazy';
+                img.referrerPolicy = 'no-referrer';
+                img.addEventListener('error', () => {
+                    const msg = document.createElement('span');
+                    msg.className = 'img-error';
+                    msg.textContent = 'Gambar tidak dapat dimuat';
+                    img.replaceWith(msg);
+                }, { once: true });
+                img.addEventListener('load', scrollChatToBottom, { once: true });
+            });
+            root.classList.toggle('has-media', !!root.querySelector('img'));
+        }
+
+        function setBotHtml(el, html) {
+            el.innerHTML = html;
+            enhanceRichNode(el);
+            scrollChatToBottom();
+        }
+
+        function blocksFallbackHtml(blocks) {
+            return blocks.map(b => {
+                if (b.type === 'text') return '<p>' + formatBotHtml(b.text || '') + '</p>';
+                if (b.type === 'chart' && isSafeImageUrl(b.imageUrl)) {
+                    return '<div class="ai-generated-image"><img src="' + escapeHtml(b.imageUrl) + '" alt="' + escapeHtml(b.caption || 'Chart') + '">' +
+                        (b.caption ? '<div class="chart-caption">' + escapeHtml(b.caption) + '</div>' : '') + '</div>';
+                }
+                return '';
+            }).join('');
+        }
+
+        /**
+         * Render an ai-be answer into a bubble. Preference order (per ai-be contract):
+         *  1. contentBlocks  -> ordered text + charts woven together
+         *  2. message.content (markdown) + images.output (single chart appended)
+         * Returns true when something was displayed.
+         */
+        async function renderBotContent(el, { text = '', blocks = null, imageUrl = null } = {}) {
+            const cleanText = unwrapPlanningJson(String(text || '')).replace(CITATION_RE, '');
+            const hasBlocks = Array.isArray(blocks) && blocks.length > 0;
+            if (!cleanText.trim() && !hasBlocks) {
+                el.innerHTML = '<span class="msg-warn">Maaf, saya belum berhasil mendapatkan jawabannya. Coba ulangi atau perjelas pertanyaannya ya.</span>';
+                return false;
+            }
+
+            const imgHtml = (!hasBlocks && isSafeImageUrl(imageUrl))
+                ? '<div class="ai-generated-image"><img src="' + escapeHtml(imageUrl) + '" alt="Chart/Visualisasi dari AI"></div>' : '';
+
+            let html = null;
+            try {
+                if (contentRenderer && window.DOMPurify) {
+                    const raw = hasBlocks
+                        ? await contentRenderer.renderContentBlocks(blocks)
+                        : await contentRenderer.renderContent(cleanText) + imgHtml;
+                    html = sanitizeHtml(raw);
+                }
+            } catch (err) {
+                console.warn('Rich render failed, using plain fallback:', err);
+                html = null;
+            }
+            if (html == null || !String(html).trim()) {
+                html = (hasBlocks ? blocksFallbackHtml(blocks) : formatBotHtml(cleanText)) + imgHtml;
+            }
+            setBotHtml(el, html);
+            return true;
+        }
+
+        function showChartHint(el, label) {
+            if (el.querySelector('.chart-generating-hint')) return;
+            const h = document.createElement('div');
+            h.className = 'chart-generating-hint';
+            h.textContent = label + '...';
+            el.appendChild(h);
+            scrollChatToBottom();
+        }
+
+        function openLightbox(src, alt) {
+            const ov = document.createElement('div');
+            ov.className = 'img-lightbox';
+            const big = document.createElement('img');
+            big.src = src;
+            big.alt = alt || '';
+            ov.appendChild(big);
+            const onKey = (e) => { if (e.key === 'Escape') close(); };
+            const close = () => { ov.remove(); document.removeEventListener('keydown', onKey); };
+            ov.addEventListener('click', close);
+            document.addEventListener('keydown', onKey);
+            document.body.appendChild(ov);
+        }
+        document.getElementById('messagesContainer').addEventListener('click', (e) => {
+            const img = e.target.closest && e.target.closest('.message.assistant .message-content img');
+            if (img) openLightbox(img.currentSrc || img.src, img.alt);
+        });
+
+        // Client-side fallback in case the backend did not send metadata.spokenText.
+        function toSpeakable(text) {
+            let t = unwrapPlanningJson(String(text || '')).replace(CITATION_RE, '')
+                .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+                .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+                .replace(/https?:\/\/\S+/g, ' ')
+                .replace(/^\s*[-•*]\s+/gm, '')
+                .replace(/[`*_#>|~]/g, ' ')
+                .replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, '')
+                .replace(/\s*\n+\s*/g, '. ')
+                .replace(/\s{2,}/g, ' ')
+                .replace(/\.\s*\./g, '.')
+                .trim();
+            if (t.length > 500) {
+                const cut = t.slice(0, 500);
+                t = cut.slice(0, Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('! '), cut.lastIndexOf('? '), 120) + 1) + ' Detail lengkapnya saya tampilkan di layar chat.';
+            }
+            return t;
+        }
+
+        // Stream text to the avatar sentence-by-sentence (faster time-to-first-audio).
+        async function speakViaAnam(text, existingStream = null) {
+            if (!anamClient || !text) return;
+            const sentences = text.match(/[^.!?]+[.!?]*\s*/g) || [text];
+            let stream = existingStream && existingStream.isActive() ? existingStream : anamClient.createTalkMessageStream();
+            activeTalkStream = stream;
+            for (let i = 0; i < sentences.length; i++) {
+                await stream.streamMessageChunk(sentences[i], i === sentences.length - 1);
+            }
+        }
+
+        function handleSseBlock(raw, onEvent) {
+            let event = 'message';
+            const dataLines = [];
+            raw.split(/\r?\n/).forEach(line => {
+                if (!line || line.startsWith(':')) return;           // heartbeat / comment
+                if (line.startsWith('event:')) event = line.slice(6).trim();
+                else if (line.startsWith('data:')) dataLines.push(line.slice(5).trim());
+            });
+            if (!dataLines.length) return;
+            const dataStr = dataLines.join('\n');
+            if (dataStr === '[DONE]') return;
+            let data;
+            try { data = JSON.parse(dataStr); } catch (e) { return; }
+            if (event === 'message' && data && data.type) event = data.type;   // Laravel-originated errors
+            onEvent(event, data);
+        }
+
+        async function streamAiTurn(text, signal, voice, onEvent) {
+            const handle = (event, data) => { captureAiSessionId(data); onEvent(event, data); };
+            const response = await fetch('/ai/response', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'text/event-stream'
+                },
+                body: JSON.stringify({ message: text, sessionId: aiSessionId || undefined, stream: true, voice: !!voice }),
+                signal
+            });
+            if (!response.ok || !response.body) throw new Error('HTTP ' + response.status);
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+                let idx;
+                while ((idx = buffer.search(/\r?\n\r?\n/)) !== -1) {
+                    const block = buffer.slice(0, idx);
+                    buffer = buffer.slice(idx).replace(/^\r?\n\r?\n/, '');
+                    handleSseBlock(block, handle);
+                }
+            }
+            if (buffer.trim()) handleSseBlock(buffer, handle);
+        }
+
+        // One conversational turn: user speech (transcribed by Anam) → ai-be → avatar speech + chat bubble.
+        async function runVoiceTurn(text) {
+            const seq = ++voiceTurnSeq;
+            if (voiceAbort) voiceAbort.abort();            // a newer utterance supersedes the old turn
+            voiceAbort = new AbortController();
+            const videoStatus = document.getElementById('videoStatus');
+
+            isProcessing = true;
+            stopStatusCycle();                             // clear any previous cycle
+            addMessage(text, true);
+            const typing = addTypingIndicator();
+
+            // ── Trick 1: Immediate micro-acknowledgement (< 150ms latency perception) ────
+            // Speak a one-word acknowledgement right away so the user knows EVA heard them.
+            // This stream stays open; the filler (if needed) appends to the same channel.
+            let ackStream = null;
+            try {
+                if (anamClient) {
+                    ackStream = anamClient.createTalkMessageStream();
+                    activeTalkStream = ackStream;
+                    await ackStream.streamMessageChunk(pickRandom(VOICE_ACK_POOL) + ' ', false);
+                }
+            } catch (e) { ackStream = null; }
+
+            // ── Trick 2: Adaptive status labels cycle so the HUD feels alive ─────────────
+            startStatusCycle(videoStatus);
+
+            let answered = false;
+            let chartRendered = false;
+            let bubble = null;
+            let fillerStream = null;
+            const fillerTimer = setTimeout(async () => {
+                if (answered || !anamClient || seq !== voiceTurnSeq) return;
+                try {
+                    // Reuse ackStream if still open, otherwise open a new one
+                    const fs = (ackStream && ackStream.isActive()) ? ackStream : anamClient.createTalkMessageStream();
+                    fillerStream = fs;
+                    activeTalkStream = fs;
+                    await fs.streamMessageChunk(pickRandom(VOICE_FILLER_POOL) + ' ', false);
+                } catch (e) { fillerStream = null; }
+            }, VOICE_FILLER_AFTER_MS);
+
+            // Voice best practice: the avatar only speaks the short spokenText; the full markdown answer,
+            // tables and charts are shown in the chat bubble (charts arrive with a later `done` event).
+            try {
+                await streamAiTurn(text, voiceAbort.signal, true, (event, data) => {
+                    if (seq !== voiceTurnSeq) return;
+
+                    if (event === 'skill_called') {
+                        // ── Trick 3: Skill-specific status labels ─────────────────────────
+                        const isChart = data && data.skill === 'generate_chart_image';
+                        stopStatusCycle();
+                        videoStatus.textContent = isChart ? 'Membuat grafik...' : 'Mengambil data...';
+                    } else if (event === 'partial_response' || event === 'done') {
+                        const r = data && data.response;
+                        const content = r && r.message && r.message.content;
+                        const blocks = (r && Array.isArray(r.contentBlocks) && r.contentBlocks.length) ? r.contentBlocks : null;
+                        const imageUrl = (r && r.images && r.images.output) || null;
+                        if (!content && !blocks) return;
+
+                        if (!answered) {
+                            answered = true;
+                            clearTimeout(fillerTimer);
+                            stopStatusCycle();
+                            typing.remove();
+                            bubble = addMessage('');
+                            chartRendered = !!(blocks || imageUrl);
+                            renderBotContent(bubble, { text: content, blocks, imageUrl }).then(saveSession);
+                            videoStatus.textContent = 'Berbicara...';
+                            const spoken = (r.message && r.message.metadata && r.message.metadata.spokenText) || toSpeakable(content);
+                            // ── Trick 4: Brief lead-in pause before main answer ───────────
+                            // A 200ms gap separates the ack/filler from the substantive reply,
+                            // making the speech feel structured rather than rushed.
+                            const answerDelay = (ackStream || fillerStream) ? 200 : 0;
+                            setTimeout(() => {
+                                speakViaAnam(spoken, fillerStream || ackStream)
+                                    .then(() => {
+                                        // ── Trick 5: Return to Listening after speaking ──────
+                                        if (seq === voiceTurnSeq && isVideoCallActive) {
+                                            videoStatus.textContent = 'Mendengarkan...';
+                                        }
+                                    })
+                                    .catch(err => console.error('Anam speak error:', err));
+                            }, answerDelay);
+                        } else if (!chartRendered && (blocks || imageUrl)) {
+                            // Charts arrive with the later `done`: upgrade the same bubble in place.
+                            // Never re-speak - the avatar already delivered the answer.
+                            chartRendered = true;
+                            renderBotContent(bubble, { text: content, blocks, imageUrl }).then(saveSession);
+                        }
+                    } else if (event === 'error') {
+                        throw new Error(data.error || 'AI backend error');
+                    }
+                });
+
+                if (!answered && seq === voiceTurnSeq) throw new Error('Empty response');
+            } catch (error) {
+                if (error.name === 'AbortError' || seq !== voiceTurnSeq) return;   // superseded or call ended
+                console.error('Voice turn error:', error);
+                clearTimeout(fillerTimer);
+                stopStatusCycle();
+                typing.remove();
+                addMessage('⚠️ ' + VOICE_ERROR);
+                speakViaAnam(VOICE_ERROR, fillerStream || ackStream).catch(() => {});
+            } finally {
+                clearTimeout(fillerTimer);
+                stopStatusCycle();
+                // Remove any leftover typing indicator (double-safe)
+                document.querySelectorAll('.message.typing-indicator').forEach(el => el.remove());
+                if (seq === voiceTurnSeq) {
+                    isProcessing = false;
+                    // Status restored to Listening after speak (Trick 5), but fall-back after 6s
+                    setTimeout(() => {
+                        if (isVideoCallActive && seq === voiceTurnSeq) videoStatus.textContent = 'Mendengarkan...';
+                    }, 6000);
+                }
+            }
+        }
+
+        function setupAiBeBrain(anamSdk) {
+            // Finished user utterances arrive via history updates; debounce to use the final transcript.
+            // ── Trick 6: Trailing-silence guard ──────────────────────────────────────────
+            // Reset the debounce timer on every update so partial mid-sentence transcripts
+            // don't fire ai-be prematurely. Only the stable final text triggers the turn.
+            anamClient.addListener(anamSdk.AnamEvent.MESSAGE_HISTORY_UPDATED, (messages) => {
+                if (!messages || !messages.length) return;
+                const last = messages[messages.length - 1];
+                if (last.role !== 'user' || !last.content || !last.content.trim()) return;
+                if (handledUserMessageIds.has(last.id)) return;
+
+                clearTimeout(voiceTurnTimer);
+                voiceTurnTimer = setTimeout(() => {
+                    if (handledUserMessageIds.has(last.id)) return;
+                    handledUserMessageIds.add(last.id);
+                    runVoiceTurn(last.content.trim());
+                }, USER_TURN_DEBOUNCE_MS);
+            });
+
+            // ── Trick 7: Barge-in with cooldown ──────────────────────────────────────────
+            // Stop the avatar immediately when the user starts speaking, but apply a
+            // short cooldown so an echo of the avatar's own voice doesn't self-interrupt.
+            anamClient.addListener(anamSdk.AnamEvent.USER_SPEECH_STARTED, () => {
+                const now = Date.now();
+                if (now - lastBargeInAt < BARGE_IN_COOLDOWN_MS) return;   // skip echo
+                lastBargeInAt = now;
+                try {
+                    if (activeTalkStream && activeTalkStream.isActive()) anamClient.interruptPersona();
+                    stopStatusCycle();
+                } catch (e) { console.warn('interruptPersona failed:', e); }
+            });
+
+            anamClient.addListener(anamSdk.AnamEvent.MESSAGE_DELIVERY_FAILED, (failure) => {
+                console.warn('Anam message delivery failed:', failure);
+            });
+
+            // ── Trick 8: Tab-focus reconnect health check ─────────────────────────────
+            // If the user switches away and comes back, a stale connection may not
+            // recover on its own. Ping the video element; if it stopped, notify.
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden && isVideoCallActive) {
+                    const vid = document.getElementById('avatarVideo');
+                    if (vid && vid.paused) {
+                        vid.play().catch(() => {});
+                    }
+                }
+            });
+        }
+
+        function resetVoiceBrain() {
+            clearTimeout(voiceTurnTimer);
+            voiceTurnTimer = null;
+            stopStatusCycle();
+            voiceTurnSeq++;                                // invalidates any in-flight turn
+            if (voiceAbort) { voiceAbort.abort(); voiceAbort = null; }
+            activeTalkStream = null;
+            lastBargeInAt = 0;
+            handledUserMessageIds.clear();
+            brainMode = 'anam';
+            isProcessing = false;
         }
 
         // Video Call Functions (Anam AI Integration)
@@ -1344,7 +2109,7 @@
                 }
                 
                 // Import Anam AI SDK
-                const anamSdk = await import('https://esm.sh/@anam-ai/js-sdk@latest');
+                const anamSdk = await import(ANAM_SDK_URL);
                 
                 // Request microphone permission explicitly first
                 videoStatus.textContent = 'Requesting microphone access...';
@@ -1369,6 +2134,12 @@
                 anamClient.addListener(anamSdk.AnamEvent.CONNECTION_CLOSED, (code) => {
                     console.log('Anam connection closed:', code);
                 });
+
+                // ai-be brain: Anam only transcribes + renders; answers come from agrinav_voice_agent
+                brainMode = data.brainMode || 'anam';
+                if (brainMode === 'ai-be') {
+                    setupAiBeBrain(anamSdk);
+                }
                 
                 // Hide placeholder, show video
                 placeholder.style.display = 'none';
@@ -1399,8 +2170,17 @@
                 
                 // Update button states
                 updateControlButtons();
-                
-                addMessage('📹 Video call connected! You can now talk with EVO.', false);
+
+                addMessage('📹 Video call terhubung! Silakan berbicara dengan EVA.', false);
+
+                if (brainMode === 'ai-be') {
+                    // ── Trick 9: Greeting with Listening state ───────────────────────
+                    const videoStatus = document.getElementById('videoStatus');
+                    videoStatus.textContent = 'Mendengarkan...';
+                    speakViaAnam(VOICE_GREETING)
+                        .then(() => { if (isVideoCallActive) videoStatus.textContent = 'Mendengarkan...'; })
+                        .catch(err => console.warn('Greeting failed:', err));
+                }
                 
             } catch (error) {
                 console.error('Video call error:', error);
@@ -1438,6 +2218,8 @@
         window.endVideoCall = function() {
             if (!isVideoCallActive) return;
             
+            resetVoiceBrain();
+
             if (anamClient) {
                 try {
                     // Stop streaming and disconnect properly
@@ -1470,8 +2252,12 @@
             // Show placeholder
             placeholder.style.display = 'block';
             
-            addMessage('📞 Video call ended.', false);
-            
+            // ── Trick 10: Farewell before disconnect ─────────────────────────────
+            // A brief goodbye makes the end-of-call feel deliberate, not abrupt.
+            // Note: anamClient is already set to null at this point by the caller path,
+            // so we only speak if the client reference was captured before the call.
+            addMessage('📞 Video call berakhir.', false);
+
             setTimeout(() => {
                 videoStatus.textContent = 'Ready';
             }, 2000);
@@ -1623,13 +2409,7 @@
             }
         });
 
-        // Cleanup on visibility change (tab switch)
-        document.addEventListener('visibilitychange', function() {
-            if (document.hidden && isVideoCallActive) {
-                console.log('Tab hidden - maintaining connection');
-                // Optional: pause/unpause based on requirements
-            }
-        });
+        // Note: visibilitychange for reconnect is handled inside setupAiBeBrain.
     </script>
 </body>
 </html>

@@ -5020,17 +5020,76 @@ class PageController extends Controller
         return view('pages/aigr1_new');
     }
 
+    /**
+     * Resolve avatar/voice for the Anam persona used in 'ai-be' brain mode.
+     * Priority: ANAM_AVATAR_ID / ANAM_VOICE_ID env → the existing persona
+     * (ANAM_PERSONA_ID) fetched from the Anam API (cached 24h).
+     */
+    private function resolveAnamPersonaAssets(string $apiKey, string $personaId): array
+    {
+        $avatarId = env('ANAM_AVATAR_ID');
+        $voiceId  = env('ANAM_VOICE_ID');
+        $name     = env('ANAM_PERSONA_NAME', 'EVA');
+
+        if ($avatarId && $voiceId) {
+            return ['name' => $name, 'avatarId' => $avatarId, 'voiceId' => $voiceId];
+        }
+
+        return \Cache::remember('anam_persona_assets_' . $personaId, now()->addHours(24), function () use ($apiKey, $personaId, $name, $avatarId, $voiceId) {
+            $resp = Http::withOptions(['verify' => env('ANAM_SSL_VERIFY', false)])
+                ->withHeaders(['Authorization' => 'Bearer ' . $apiKey])
+                ->timeout(15)
+                ->get('https://api.anam.ai/v1/personas/' . $personaId);
+
+            if (!$resp->successful()) {
+                throw new \RuntimeException('Cannot resolve Anam persona assets (HTTP ' . $resp->status() . '). Set ANAM_AVATAR_ID and ANAM_VOICE_ID.');
+            }
+
+            $p = $resp->json();
+            return [
+                'name'     => $p['name'] ?? $name,
+                'avatarId' => $avatarId ?: ($p['avatar']['id'] ?? $p['avatarId'] ?? null),
+                'voiceId'  => $voiceId ?: ($p['voice']['id'] ?? $p['voiceId'] ?? null),
+            ];
+        });
+    }
+
     public function getAnamToken(Request $request)
     {
         try {
             $anamApiKey = env('ANAM_API_KEY', '');
             $personaId = env('ANAM_PERSONA_ID', '');
-            
+
             if (empty($anamApiKey)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Anam API key not configured'
                 ], 500);
+            }
+
+            // Brain mode:
+            //   'ai-be' (default) → Anam = STT + avatar + TTS only (llmId CUSTOMER_CLIENT_V1);
+            //                       answers come from ai-be (agrinav_voice_agent) via /ai/response.
+            //   'anam'            → legacy: Anam's own LLM answers (no n8n data, memory, or history).
+            $brainMode = strtolower((string) env('ANAM_BRAIN_MODE', 'ai-be')) === 'anam' ? 'anam' : 'ai-be';
+
+            if ($brainMode === 'ai-be') {
+                $assets = $this->resolveAnamPersonaAssets($anamApiKey, $personaId);
+                $personaConfig = [
+                    'name' => $assets['name'],
+                    'avatarId' => $assets['avatarId'],
+                    'avatarModel' => env('ANAM_AVATAR_MODEL', 'cara-4.1-express'),
+                    'voiceId' => $assets['voiceId'],
+                    'llmId' => 'CUSTOMER_CLIENT_V1',
+                ];
+                if ($lang = env('ANAM_LANGUAGE_CODE')) {
+                    $personaConfig['languageCode'] = $lang;
+                }
+            } else {
+                $personaConfig = [
+                    'personaId' => $personaId,
+                    'avatarModel' => 'cara-4.1-express'  // Use latest expressive model
+                ];
             }
 
             // Request session token from Anam API with portrait dimensions
@@ -5040,10 +5099,7 @@ class PageController extends Controller
                 'Content-Type' => 'application/json',
                 'Authorization' => 'Bearer ' . $anamApiKey,
             ])->post('https://api.anam.ai/v1/auth/session-token', [
-                'personaConfig' => [
-                    'personaId' => $personaId,
-                    'avatarModel' => 'cara-4.1-express'  // Use latest expressive model
-                ],
+                'personaConfig' => $personaConfig,
                 'sessionOptions' => [
                     'videoWidth' => 768,    // Portrait width
                     'videoHeight' => 1152,  // Portrait height (2:3 aspect ratio)
@@ -5054,6 +5110,7 @@ class PageController extends Controller
             if (!$response->successful()) {
                 \Log::error('Anam API Error', [
                     'status' => $response->status(),
+                    'brainMode' => $brainMode,
                     'body' => $response->body()
                 ]);
                 
@@ -5069,7 +5126,8 @@ class PageController extends Controller
             
             return response()->json([
                 'success' => true,
-                'sessionToken' => $data['sessionToken'] ?? null
+                'sessionToken' => $data['sessionToken'] ?? null,
+                'brainMode' => $brainMode,
             ]);
 
         } catch (\Exception $e) {

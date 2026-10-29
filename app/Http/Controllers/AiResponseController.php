@@ -155,14 +155,19 @@ class AiResponseController extends Controller
         // Terima sessionId, fallback ke thread_id untuk kompatibilitas mundur.
         $sessionId = $request->input('sessionId', $request->input('thread_id', ''));
 
-        // Nama agent yang benar: agrinav_agent
+        // Mode suara (Anam avatar di /aigri-new): agent & source ditentukan di server.
+        $isVoice = filter_var($request->input('voice', false), FILTER_VALIDATE_BOOLEAN);
+
+        // Nama agent yang benar: agrinav_agent (teks) / agrinav_voice_agent (suara)
         $agent = $request->input('agent');
-        if (empty($agent) || empty($agent['name'])) {
+        if ($isVoice) {
+            $agent = ['name' => env('AI_BACKEND_VOICE_AGENT', 'agrinav_voice_agent')];
+        } elseif (empty($agent) || empty($agent['name'])) {
             $agent = ['name' => env('AI_BACKEND_AGENT', 'agrinav_agent')];
         }
 
-        // source platform (web) sesuai panduan.
-        $source = $request->input('source', 'web');
+        // source platform (web) sesuai panduan; 'voice' untuk avatar/video call.
+        $source = $isVoice ? 'voice' : $request->input('source', 'web');
         
         // Page Context dari frontend (NEW!)
         $pageContext = $request->input('pageContext', []);
