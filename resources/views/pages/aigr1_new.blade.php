@@ -109,6 +109,7 @@
             z-index: 2;
             display: flex;
             height: 100vh;
+            overflow: hidden;
             gap: 20px;
             padding: 20px;
         }
@@ -651,6 +652,7 @@
         .chat-panel {
             flex: 1;
             min-height: 0;
+            overflow: hidden;
             background: linear-gradient(135deg, rgba(15, 20, 32, 0.95) 0%, rgba(26, 31, 46, 0.95) 100%);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(0, 217, 255, 0.3);
