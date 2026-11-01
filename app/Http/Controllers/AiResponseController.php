@@ -146,6 +146,82 @@ class AiResponseController extends Controller
         return null;
     }
 
+    /**
+     * Ambil JWT login (berumur pendek, default 24 jam) dari AI Backend.
+     * Dipakai untuk akses LANGSUNG dari browser ke AI Backend, menggantikan
+     * webChatToken yang permanen agar kebocoran token punya masa berlaku terbatas.
+     *
+     * @return array|null ['token' => string, 'expiresAt' => int(unix)]
+     */
+    private function getBrowserJwt($forceRefresh = false)
+    {
+        $cacheKey = 'ai_backend_browser_jwt';
+
+        if (!$forceRefresh) {
+            $cached = Cache::get($cacheKey);
+            // Sisakan minimal 1 jam masa berlaku agar browser tidak menerima token yang hampir mati
+            if ($cached && ($cached['expiresAt'] - time()) > 3600) {
+                return $cached;
+            }
+        }
+
+        $baseUrl = env('AI_BACKEND_BASE_URL', 'https://be.ptpn1.co.id');
+        try {
+            $response = Http::withoutVerifying()
+                ->timeout(20)
+                ->withHeaders(['Content-Type' => 'application/json'])
+                ->post($baseUrl . '/api/auth/login', [
+                    'username' => env('AI_BACKEND_USERNAME', 'agent_test'),
+                    'password' => env('AI_BACKEND_PASSWORD', 'agent123'),
+                ]);
+
+            if ($response->successful()) {
+                $data  = $response->json('data') ?? [];
+                $token = $data['token'] ?? null;
+                if ($token) {
+                    $ttl   = (int) ($data['expiresIn'] ?? 86400);
+                    $entry = ['token' => $token, 'expiresAt' => time() + $ttl];
+                    // Cache lebih singkat dari masa berlaku token (sisakan >1 jam)
+                    Cache::put($cacheKey, $entry, max(60, $ttl - 7200));
+                    return $entry;
+                }
+            }
+
+            Log::warning('AI Backend login (browser JWT) gagal', [
+                'status' => $response->status(),
+                'body'   => substr($response->body(), 0, 300),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('AI Backend login (browser JWT) error: ' . $e->getMessage());
+        }
+
+        return null;
+    }
+
+    /**
+     * Endpoint kecil agar frontend bisa chat langsung ke AI Backend (tanpa hop proxy).
+     * Hanya mengembalikan token + URL; seluruh chat/streaming tidak lagi lewat Laravel.
+     */
+    public function aiToken(Request $request)
+    {
+        $entry = $this->getBrowserJwt($request->boolean('refresh'));
+        if (!$entry) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Gagal autentikasi ke AI Backend.',
+            ], 502);
+        }
+
+        return response()->json([
+            'status'     => 'success',
+            'token'      => $entry['token'],
+            'expiresAt'  => $entry['expiresAt'],
+            'url'        => env('AI_BACKEND_URL', 'https://be.ptpn1.co.id/api/ai/chat'),
+            'agent'      => env('AI_BACKEND_AGENT', 'agrinav_agent'),
+            'voiceAgent' => env('AI_BACKEND_VOICE_AGENT', 'agrinav_voice_agent'),
+        ])->header('Cache-Control', 'no-store');
+    }
+
     public function aiResponse(Request $request)
     {
         $message = $request->input('message');

@@ -206,6 +206,8 @@ Route::middleware('auth:custom')->group(function () {
 
     // AI Response Routes
     Route::post('/ai/response', [AiResponseController::class, 'aiResponse']);
+    // Token untuk chat langsung browser -> AI Backend (tanpa proxy Laravel)
+    Route::post('/ai/token', [AiResponseController::class, 'aiToken'])->name('ai.token');
 
     // Log Viewer Routes (Admin only)
     Route::prefix('admin/logs')->name('admin.logs.')->group(function () {

@@ -2153,14 +2153,40 @@
             onEvent(event, data);
         }
 
-        async function streamAiTurn(text, signal, voice, onEvent) {
-            const handle = (event, data) => { captureAiSessionId(data); onEvent(event, data); };
-            // Routing eksplisit: mode suara/video → agrinav_voice_agent, mode teks → agrinav_agent
-            // Controller Laravel masih mem-validasi voice flag sebagai lapisan kedua,
-            // namun mengirim name eksplisit memastikan tidak ada ambiguitas resolusi.
-            const agentName  = voice ? 'agrinav_voice_agent' : 'agrinav_agent';
-            const sourcePlatform = voice ? 'voice' : 'web';
-            const response = await fetch('/ai/response', {
+        // ── Direct-to-AI-backend (skips the Laravel proxy hop) ─────────────────────
+        // Laravel only mints a short-lived JWT (/ai/token); chat + SSE then go straight to ai-be.
+        // If the direct path is unreachable (network/CORS), we silently fall back to /ai/response.
+        let aiDirect = { token: null, expiresAt: 0, url: null, pending: null, disabled: false };
+
+        async function getAiDirectToken(force = false) {
+            const nowSec = Math.floor(Date.now() / 1000);
+            if (!force && aiDirect.token && aiDirect.expiresAt - nowSec > 300) return aiDirect;
+            if (aiDirect.pending && !force) return aiDirect.pending;
+            aiDirect.pending = (async () => {
+                try {
+                    const r = await fetch('/ai/token' + (force ? '?refresh=1' : ''), {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
+                    });
+                    if (!r.ok) throw new Error('token HTTP ' + r.status);
+                    const j = await r.json();
+                    if (!j.token || !j.url) throw new Error('token payload invalid');
+                    aiDirect.token = j.token;
+                    aiDirect.expiresAt = j.expiresAt || (nowSec + 3600);
+                    aiDirect.url = j.url;
+                    return aiDirect;
+                } finally {
+                    aiDirect.pending = null;
+                }
+            })();
+            return aiDirect.pending;
+        }
+
+        // Pre-warm so the first question doesn't pay the token round-trip (nor the CORS preflight).
+        getAiDirectToken().catch(() => { aiDirect.disabled = false; });
+
+        async function openAiStream(text, signal, voice, agentName, sourcePlatform) {
+            const viaProxy = () => fetch('/ai/response', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -2177,6 +2203,48 @@
                 }),
                 signal
             });
+
+            if (aiDirect.disabled) return viaProxy();
+
+            const viaDirect = async (force) => {
+                const t = await getAiDirectToken(force);
+                return fetch(t.url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'text/event-stream',
+                        'Authorization': 'Bearer ' + t.token
+                    },
+                    body: JSON.stringify({
+                        message: text,
+                        sessionId: aiSessionId || undefined,
+                        stream: true,
+                        agent: { name: agentName },
+                        token: t.token,
+                        source: sourcePlatform
+                    }),
+                    signal
+                });
+            };
+
+            try {
+                let res = await viaDirect(false);
+                if (res.status === 401 || res.status === 403) res = await viaDirect(true);   // expired token → refresh once
+                return res;
+            } catch (e) {
+                if (e && e.name === 'AbortError') throw e;
+                console.warn('Direct AI call failed, falling back to proxy:', e);
+                aiDirect.disabled = true;          // don't retry the broken path on every turn
+                return viaProxy();
+            }
+        }
+
+        async function streamAiTurn(text, signal, voice, onEvent) {
+            const handle = (event, data) => { captureAiSessionId(data); onEvent(event, data); };
+            // Routing eksplisit: mode suara/video → agrinav_voice_agent, mode teks → agrinav_agent
+            const agentName  = voice ? 'agrinav_voice_agent' : 'agrinav_agent';
+            const sourcePlatform = voice ? 'voice' : 'web';
+            const response = await openAiStream(text, signal, voice, agentName, sourcePlatform);
 
             if (!response.ok || !response.body) throw new Error('HTTP ' + response.status);
 
