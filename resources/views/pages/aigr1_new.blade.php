@@ -1416,21 +1416,20 @@
         const VOICE_GREETING = 'Halo, saya EVA, asisten AgriNav PTPN 1. Siap membantu. Ada yang ingin Anda tanyakan?';
         const VOICE_FILLER_POOL = [
             'Baik, saya cek datanya dulu ya.',
-            'Sebentar, saya ambilkan informasinya.',
-            'Oke, saya proses pertanyaan Anda.',
-            'Satu momen, saya sedang mencari datanya.',
+            'Sebentar ya, saya ambilkan datanya.',
+            'Oke, saya carikan datanya dulu.',
+            'Baik, mohon tunggu sebentar, saya cek dulu.',
         ];
-        const VOICE_ACK_POOL = [
-            'Oke.',
-            'Baik.',
-            'Ya.',
-            'Siap.',
+        const VOICE_STILL_WORKING_POOL = [
+            'Datanya masih saya proses, sebentar lagi ya.',
+            'Masih saya kumpulkan datanya, mohon tunggu sebentar.',
         ];
         const VOICE_ERROR = 'Maaf, saya sedang mengalami kendala. Silakan coba lagi sebentar lagi.';
         const VOICE_FAREWELL = 'Baik, sampai jumpa lagi!';
-        const VOICE_FILLER_AFTER_MS = 2800;   // say a short filler if the answer takes longer than this
-        const USER_TURN_DEBOUNCE_MS = 750;    // wait for trailing-silence before firing ai-be request
-        const BARGE_IN_COOLDOWN_MS  = 800;    // ignore barge-in events this soon after interrupting
+        const VOICE_FILLER_AFTER_MS = 1300;   // one natural filler if the answer is not ready yet
+        const VOICE_STILL_WORKING_MS = 9000;  // second (last) filler for slow data fetches
+        const USER_TURN_DEBOUNCE_MS = 1100;   // trailing-silence before firing ai-be (avoids splitting one sentence)
+        const TURN_MERGE_WINDOW_MS  = 3000;   // a follow-up fragment this soon (unanswered) is merged into the previous turn
         // Adaptive status labels cycling through processing stages
         const STATUS_CYCLE = ['Menganalisis...', 'Mengambil data...', 'Menyusun jawaban...'];
         let brainMode = 'anam';
@@ -1438,7 +1437,7 @@
         let voiceAbort = null;
         let voiceTurnSeq = 0;
         let activeTalkStream = null;
-        let lastBargeInAt = 0;          // timestamp of last barge-in interrupt
+        let lastTurn = { text: '', at: 0, answered: true };   // used to merge split utterances
         let statusCycleTimer = null;    // cycles HUD labels while processing
         const handledUserMessageIds = new Set();
 
@@ -2061,12 +2060,16 @@
                 .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
                 .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
                 .replace(/https?:\/\/\S+/g, ' ')
-                .replace(/^\s*[-•*]\s+/gm, '')
+                .replace(/^\s*\d+[.)]\s+/gm, '')
                 .replace(/[`*_#>|~]/g, ' ')
                 .replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, '')
+                // list items flow as one sentence ("a, b, c") instead of many choppy mini-sentences
+                .replace(/:\s*\n\s*[-•]\s+/g, ': ')
+                .replace(/\n\s*[-•]\s+/g, ', ')
+                .replace(/^\s*[-•]\s+/gm, '')
                 .replace(/\s*\n+\s*/g, '. ')
                 .replace(/\s{2,}/g, ' ')
-                .replace(/\.\s*\./g, '.')
+                .replace(/([.!?,:])\s*[.,]/g, '$1')
                 .trim();
             if (t.length > 500) {
                 const cut = t.slice(0, 500);
@@ -2075,14 +2078,61 @@
             return t;
         }
 
-        // Stream text to the avatar sentence-by-sentence (faster time-to-first-audio).
+        // TTS reads symbols literally ("Pak/Bu" -> "pak garis miring bu"). Rewrite them into spoken Indonesian.
+        // Applied to EVERY utterance, including backend metadata.spokenText.
+        function normalizeForSpeech(text) {
+            return String(text || '')
+                .replace(/\b(Bapak|Pak)\s*\/\s*(Ibu|Bu)\b/gi, 'Bapak atau Ibu')
+                .replace(/\b(Ibu|Bu)\s*\/\s*(Bapak|Pak)\b/gi, 'Ibu atau Bapak')
+                .replace(/\bRp\.?\s*([\d.,]+)\s*(T|M|Jt|Rb)\b/g, (m, n, u) => n + ' ' + ({ T: 'triliun', M: 'miliar', Jt: 'juta', Rb: 'ribu' }[u]) + ' rupiah')
+                .replace(/\bRp\.?\s*([\d.,]+)\s*(triliun|miliar|juta|ribu)?/gi, (m, n, u) => n + (u ? ' ' + u : '') + ' rupiah')
+                .replace(/(-?\d[\d.,]*)\s*T\b/g, '$1 triliun')
+                .replace(/(-?\d[\d.,]*)\s*M\b/g, '$1 miliar')
+                .replace(/(-?\d[\d.,]*)\s*(Jt|jt)\b/g, '$1 juta')
+                .replace(/(^|[\s(:])-(\d)/g, '$1minus $2')
+                .replace(/(\d)\s*%/g, '$1 persen')
+                .replace(/\s*\/\s*(ha|Ha|HA)\b/g, ' per hektar')
+                .replace(/\s*\/\s*(hari|minggu|bulan|tahun|jam|kg|ton|liter|orang)\b/gi, ' per $1')
+                .replace(/\bYoY\b/g, 'dibanding tahun lalu')
+                .replace(/\bMoM\b/g, 'dibanding bulan lalu')
+                .replace(/\bvs\.?\b/gi, 'dibanding')
+                .replace(/\bdll\.?/gi, 'dan lain-lain')
+                .replace(/\bdsb\.?/gi, 'dan sebagainya')
+                .replace(/\byg\b/gi, 'yang')
+                .replace(/\btdk\b/gi, 'tidak')
+                .replace(/\s*&\s*/g, ' dan ')
+                .replace(/([A-Za-z\u00C0-\u024F]+)\s*\/\s*(?=[A-Za-z\u00C0-\u024F])/g, '$1 atau ')   // "Excel/PDF" -> "Excel atau PDF"
+                .replace(/\//g, ' ')
+                .replace(/[()\[\]{}"]/g, ' ')
+                .replace(/\s+([,.!?])/g, '$1')
+                .replace(/\s{2,}/g, ' ')
+                .trim();
+        }
+
+        // Split into natural phrases WITHOUT breaking decimals ("3,5" / "1.250") or abbreviations,
+        // then merge short sentences so the TTS keeps a continuous prosody instead of word-by-word chops.
+        function chunkForSpeech(text, minLen = 90) {
+            const parts = text.split(/(?<=[.!?])\s+(?=[A-Z\u00C0-\u00DD0-9"'])/);
+            const chunks = [];
+            let buf = '';
+            for (const p of parts) {
+                buf = buf ? buf + ' ' + p : p;
+                if (buf.length >= minLen) { chunks.push(buf); buf = ''; }
+            }
+            if (buf) chunks.push(buf);
+            return chunks.length ? chunks : [text];
+        }
+
+        // Stream text to the avatar in phrase-sized chunks (fast first audio, smooth prosody).
         async function speakViaAnam(text, existingStream = null) {
             if (!anamClient || !text) return;
-            const sentences = text.match(/[^.!?]+[.!?]*\s*/g) || [text];
+            const spoken = normalizeForSpeech(text);
+            if (!spoken) return;
+            const chunks = chunkForSpeech(spoken);
             let stream = existingStream && existingStream.isActive() ? existingStream : anamClient.createTalkMessageStream();
             activeTalkStream = stream;
-            for (let i = 0; i < sentences.length; i++) {
-                await stream.streamMessageChunk(sentences[i], i === sentences.length - 1);
+            for (let i = 0; i < chunks.length; i++) {
+                await stream.streamMessageChunk(chunks[i] + ' ', i === chunks.length - 1);
             }
         }
 
@@ -2149,6 +2199,23 @@
 
         // One conversational turn: user speech (transcribed by Anam) → ai-be → avatar speech + chat bubble.
         async function runVoiceTurn(text) {
+            // A real (transcribed) user turn is the only reliable barge-in signal: stop the avatar now.
+            try {
+                if (anamClient && activeTalkStream && activeTalkStream.isActive()) anamClient.interruptPersona();
+            } catch (e) { console.warn('interruptPersona failed:', e); }
+
+            // STT sometimes splits one sentence into two turns ("tampilkan dan analisa" + "data keuangan").
+            // If the previous turn is still unanswered and very recent, merge instead of asking twice.
+            const now = Date.now();
+            if (!lastTurn.answered && now - lastTurn.at < TURN_MERGE_WINDOW_MS && lastTurn.text) {
+                text = lastTurn.text + ' ' + text;
+                const users = document.querySelectorAll('#messagesContainer .message.user');
+                const prev = users[users.length - 1];
+                if (prev) prev.remove();
+            }
+            const turnRef = { text, at: now, answered: false };
+            lastTurn = turnRef;
+
             const seq = ++voiceTurnSeq;
             if (voiceAbort) voiceAbort.abort();            // a newer utterance supersedes the old turn
             voiceAbort = new AbortController();
@@ -2157,38 +2224,32 @@
             voiceTurnInFlight = true;
             setProcessing(true);
             stopStatusCycle();                             // clear any previous cycle
+            document.querySelectorAll('.message.typing-indicator').forEach(el => el.remove());
             addMessage(text, true);
             const typing = addTypingIndicator();
 
-            // ── Trick 1: Immediate micro-acknowledgement (< 150ms latency perception) ────
-            // Speak a one-word acknowledgement right away so the user knows EVA heard them.
-            // This stream stays open; the filler (if needed) appends to the same channel.
-            let ackStream = null;
-            try {
-                if (anamClient) {
-                    ackStream = anamClient.createTalkMessageStream();
-                    activeTalkStream = ackStream;
-                    await ackStream.streamMessageChunk(pickRandom(VOICE_ACK_POOL) + ' ', false);
-                }
-            } catch (e) { ackStream = null; }
-
-            // ── Trick 2: Adaptive status labels cycle so the HUD feels alive ─────────────
             startStatusCycle(videoStatus);
 
+            // No instant one-word ack (it produced a lone "Oke." followed by dead air = choppy).
+            // Instead: ONE natural filler only if the answer is not ready after ~1.3s, and one
+            // "still working" line for slow data fetches. Filler + answer share ONE talk stream so
+            // the avatar flows into the answer without restarting.
+            let ackStream = null;
             let answered = false;
             let chartRendered = false;
             let bubble = null;
             let fillerStream = null;
-            const fillerTimer = setTimeout(async () => {
+            const sayFiller = async (pool) => {
                 if (answered || !anamClient || seq !== voiceTurnSeq) return;
                 try {
-                    // Reuse ackStream if still open, otherwise open a new one
-                    const fs = (ackStream && ackStream.isActive()) ? ackStream : anamClient.createTalkMessageStream();
+                    const fs = (fillerStream && fillerStream.isActive()) ? fillerStream : anamClient.createTalkMessageStream();
                     fillerStream = fs;
                     activeTalkStream = fs;
-                    await fs.streamMessageChunk(pickRandom(VOICE_FILLER_POOL) + ' ', false);
+                    await fs.streamMessageChunk(pickRandom(pool) + ' ', false);
                 } catch (e) { fillerStream = null; }
-            }, VOICE_FILLER_AFTER_MS);
+            };
+            const fillerTimer = setTimeout(() => sayFiller(VOICE_FILLER_POOL), VOICE_FILLER_AFTER_MS);
+            const stillTimer  = setTimeout(() => sayFiller(VOICE_STILL_WORKING_POOL), VOICE_STILL_WORKING_MS);
 
             // Voice best practice: the avatar only speaks the short spokenText; the full markdown answer,
             // tables and charts are shown in the chat bubble (charts arrive with a later `done` event).
@@ -2210,7 +2271,9 @@
 
                         if (!answered) {
                             answered = true;
+                            turnRef.answered = true;
                             clearTimeout(fillerTimer);
+                            clearTimeout(stillTimer);
                             stopStatusCycle();
                             typing.remove();
                             bubble = addMessage('');
@@ -2218,10 +2281,8 @@
                             renderBotContent(bubble, { text: content, blocks, imageUrl }).then(saveSession);
                             videoStatus.textContent = 'Berbicara...';
                             const spoken = (r.message && r.message.metadata && r.message.metadata.spokenText) || toSpeakable(content);
-                            // ── Trick 4: Brief lead-in pause before main answer ───────────
-                            // A 200ms gap separates the ack/filler from the substantive reply,
-                            // making the speech feel structured rather than rushed.
-                            const answerDelay = (ackStream || fillerStream) ? 200 : 0;
+                            // Short breath between filler and answer (only when a filler was spoken).
+                            const answerDelay = fillerStream ? 250 : 0;
                             setTimeout(() => {
                                 speakViaAnam(spoken, fillerStream || ackStream)
                                     .then(() => {
@@ -2247,13 +2308,16 @@
             } catch (error) {
                 if (error.name === 'AbortError' || seq !== voiceTurnSeq) return;   // superseded or call ended
                 console.error('Voice turn error:', error);
+                turnRef.answered = true;
                 clearTimeout(fillerTimer);
+                clearTimeout(stillTimer);
                 stopStatusCycle();
                 typing.remove();
                 addMessage('⚠️ ' + VOICE_ERROR);
                 speakViaAnam(VOICE_ERROR, fillerStream || ackStream).catch(() => {});
             } finally {
                 clearTimeout(fillerTimer);
+                clearTimeout(stillTimer);
                 stopStatusCycle();
                 // Remove any leftover typing indicator (double-safe)
                 document.querySelectorAll('.message.typing-indicator').forEach(el => el.remove());
@@ -2288,18 +2352,15 @@
                 }, USER_TURN_DEBOUNCE_MS);
             });
 
-            // ── Trick 7: Barge-in with cooldown ──────────────────────────────────────────
-            // Stop the avatar immediately when the user starts speaking, but apply a
-            // short cooldown so an echo of the avatar's own voice doesn't self-interrupt.
+            // Barge-in: do NOT interrupt on raw speech-start. Speaker echo, coughs and background noise
+            // fire this event and were cutting EVA off mid-sentence. The avatar is interrupted only when
+            // a real transcript arrives (see runVoiceTurn). Here we just reflect the state in the HUD.
             anamClient.addListener(anamSdk.AnamEvent.USER_SPEECH_STARTED, () => {
-                if (callState !== 'active' || !anamClient) return;
-                const now = Date.now();
-                if (now - lastBargeInAt < BARGE_IN_COOLDOWN_MS) return;   // skip echo
-                lastBargeInAt = now;
-                try {
-                    if (activeTalkStream && activeTalkStream.isActive()) anamClient.interruptPersona();
+                if (callState !== 'active') return;
+                if (!(activeTalkStream && activeTalkStream.isActive())) {
                     stopStatusCycle();
-                } catch (e) { console.warn('interruptPersona failed:', e); }
+                    document.getElementById('videoStatus').textContent = 'Mendengarkan...';
+                }
             });
 
             anamClient.addListener(anamSdk.AnamEvent.MESSAGE_DELIVERY_FAILED, (failure) => {
@@ -2314,7 +2375,7 @@
             voiceTurnSeq++;                                // invalidates any in-flight turn
             if (voiceAbort) { voiceAbort.abort(); voiceAbort = null; }
             activeTalkStream = null;
-            lastBargeInAt = 0;
+            lastTurn = { text: '', at: 0, answered: true };
             handledUserMessageIds.clear();
             brainMode = 'anam';
             // Only release the busy flag when a voice turn owned it; a typed-text request may still be streaming.
