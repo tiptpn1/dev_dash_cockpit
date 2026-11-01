@@ -975,6 +975,115 @@
                 font-size: 36px;
             }
         }
+
+        /* ── Microphone Check & Test ─────────────────────────────── */
+        .mic-test-btn {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(99, 102, 241, 0.1);
+            border: none;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.2s ease;
+        }
+        .mic-test-btn:hover { background: rgba(99, 102, 241, 0.22); }
+
+        .mt-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            background: rgba(2, 6, 23, 0.7);
+            backdrop-filter: blur(6px);
+        }
+        .mt-overlay.open { display: flex; }
+
+        .mt-modal {
+            width: 100%;
+            max-width: 460px;
+            max-height: 92vh;
+            overflow-y: auto;
+            padding: 22px;
+            border-radius: 16px;
+            background: var(--dark-panel);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            animation: mtPop 0.2s ease;
+        }
+        @keyframes mtPop { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: none; } }
+
+        .mt-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+        .mt-header h2 { font-size: 17px; font-weight: 700; margin: 0; }
+        .mt-close { background: none; border: none; color: var(--text-secondary); font-size: 26px; line-height: 1; cursor: pointer; }
+        .mt-close:hover { color: var(--text-primary); }
+
+        .mt-checks { list-style: none; margin: 0 0 14px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+        .mt-checks li { display: flex; align-items: flex-start; gap: 10px; font-size: 12.5px; line-height: 1.45; color: var(--text-secondary); }
+        .mt-dot { flex: 0 0 10px; width: 10px; height: 10px; margin-top: 4px; border-radius: 50%; background: #64748b; }
+        .mt-checks li[data-state="ok"] .mt-dot { background: var(--accent-color); box-shadow: 0 0 8px rgba(16, 185, 129, 0.6); }
+        .mt-checks li[data-state="warn"] .mt-dot { background: #f59e0b; }
+        .mt-checks li[data-state="err"] .mt-dot { background: var(--danger-color); box-shadow: 0 0 8px rgba(239, 68, 68, 0.6); }
+        .mt-checks li[data-state="ok"] { color: var(--text-primary); }
+        .mt-checks li[data-state="err"] { color: #fca5a5; }
+
+        .mt-label { display: block; margin: 12px 0 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-secondary); }
+        .mt-select {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: var(--dark-bg);
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            color: var(--text-primary);
+            font-size: 13px;
+        }
+
+        .mt-meter { height: 14px; border-radius: 7px; background: var(--dark-bg); overflow: hidden; border: 1px solid rgba(148, 163, 184, 0.2); }
+        .mt-meter-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent-color) 0%, #f59e0b 70%, var(--danger-color) 100%);
+            background-size: 100% 100%;
+            transition: width 0.06s linear;
+        }
+        .mt-meter-db { margin-top: 4px; font-size: 11px; text-align: right; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+
+        .mt-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+        .mt-btn {
+            flex: 1 1 auto;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            background: var(--dark-card);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s ease, transform 0.1s ease;
+        }
+        .mt-btn:hover:not(:disabled) { opacity: 0.88; }
+        .mt-btn:active:not(:disabled) { transform: scale(0.98); }
+        .mt-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .mt-btn.primary { background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); border-color: transparent; }
+        .mt-btn.danger { background: var(--danger-color); border-color: transparent; }
+        .mt-btn.recording { background: var(--danger-color); border-color: transparent; animation: mtPulse 1s infinite; }
+        @keyframes mtPulse { 50% { opacity: 0.65; } }
+
+        .mt-status { margin: 14px 0 0; font-size: 12.5px; color: var(--text-primary); min-height: 18px; }
+        .mt-note { margin: 8px 0 0; font-size: 11.5px; color: var(--text-secondary); }
     </style>
 </head>
 <body>
@@ -1100,6 +1209,16 @@
                 New Session
             </button>
 
+            <button class="mic-test-btn" id="openMicTestBtn" onclick="openMicTest()" title="Cek &amp; test mikrofon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+                Cek &amp; Test Mikrofon
+            </button>
+
             <div class="session-history" id="sessionHistory">
                 <!-- Session items will be dynamically added here -->
             </div>
@@ -1157,6 +1276,40 @@
                     </button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Microphone Check & Test modal -->
+    <div class="mt-overlay" id="micTestModal" role="dialog" aria-modal="true" aria-labelledby="mtTitle">
+        <div class="mt-modal">
+            <div class="mt-header">
+                <h2 id="mtTitle">Cek &amp; Test Mikrofon</h2>
+                <button class="mt-close" onclick="closeMicTest()" title="Tutup" aria-label="Tutup">&times;</button>
+            </div>
+
+            <ul class="mt-checks">
+                <li data-mt-check="secure" data-state="idle"><span class="mt-dot"></span><span class="mt-check-text">Memeriksa...</span></li>
+                <li data-mt-check="support" data-state="idle"><span class="mt-dot"></span><span class="mt-check-text">Memeriksa...</span></li>
+                <li data-mt-check="perm" data-state="idle"><span class="mt-dot"></span><span class="mt-check-text">Memeriksa...</span></li>
+                <li data-mt-check="device" data-state="idle"><span class="mt-dot"></span><span class="mt-check-text">Memeriksa...</span></li>
+                <li data-mt-check="signal" data-state="idle"><span class="mt-dot"></span><span class="mt-check-text">Belum diuji</span></li>
+            </ul>
+
+            <label class="mt-label" for="mtDevice">Perangkat mikrofon</label>
+            <select id="mtDevice" class="mt-select"></select>
+
+            <label class="mt-label">Level suara</label>
+            <div class="mt-meter"><div class="mt-meter-fill" id="mtMeterFill"></div></div>
+            <div class="mt-meter-db" id="mtMeterDb">-∞ dB</div>
+
+            <div class="mt-actions">
+                <button class="mt-btn primary" id="mtStartBtn" onclick="micTestStart()">Mulai Test</button>
+                <button class="mt-btn danger" id="mtStopBtn" onclick="micTestStop()" style="display:none;">Stop</button>
+                <button class="mt-btn" id="mtRecordBtn" onclick="micTestRecord()" disabled><span>Rekam &amp; Putar Ulang</span></button>
+            </div>
+
+            <p class="mt-status" id="mtStatus">Klik "Mulai Test" lalu bicara.</p>
+            <p class="mt-note" id="mtCallNote" style="display:none;">Video call sedang aktif. Perangkat yang dipilih akan dipakai pada panggilan berikutnya.</p>
         </div>
     </div>
 
@@ -2138,7 +2291,7 @@
                 // Request microphone permission explicitly first
                 videoStatus.textContent = 'Requesting microphone access...';
                 const mediaStream = await navigator.mediaDevices.getUserMedia({
-                    audio: true,
+                    audio: window.getPreferredMicConstraints(),   // device chosen in Mic Check & Test
                     video: false
                 });
                 
@@ -2417,6 +2570,264 @@
                 addMessage('⚠️ Failed to access microphone. Please check permissions.', false);
             }
         };
+
+        // ══════════════════════════════════════════════════════════════════════
+        // Microphone Check & Test
+        // Diagnoses secure-context / permission / device problems, shows a live
+        // input level meter and lets the user record + play back a short sample.
+        // The device chosen here is also used by the video call.
+        // ══════════════════════════════════════════════════════════════════════
+        const MIC_PREF_KEY = 'aigr1_mic_device';
+        const MIC_RECORD_MS = 4000;
+        const micTest = { stream: null, ctx: null, analyser: null, raf: 0, started: 0, peak: 0, recorder: null, recTimer: 0, audioUrl: null, player: null, permStatus: null };
+
+        window.getPreferredMicConstraints = function() {
+            const id = localStorage.getItem(MIC_PREF_KEY);
+            return id ? { deviceId: { ideal: id } } : true;
+        };
+
+        function mtSetCheck(key, state, text) {
+            const row = document.querySelector('[data-mt-check="' + key + '"]');
+            if (!row) return;
+            row.dataset.state = state;                       // idle | ok | warn | err
+            row.querySelector('.mt-check-text').textContent = text;
+        }
+
+        function mtSetStatus(text) {
+            document.getElementById('mtStatus').textContent = text;
+        }
+
+        function mtRunStaticChecks() {
+            mtSetCheck('secure',
+                window.isSecureContext ? 'ok' : 'err',
+                window.isSecureContext
+                    ? 'Koneksi aman (' + location.origin + ')'
+                    : 'Halaman tidak aman (' + location.origin + '). Buka via HTTPS atau http://localhost');
+            const supported = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+            mtSetCheck('support', supported ? 'ok' : 'err',
+                supported ? 'Browser mendukung akses mikrofon' : 'Browser/konteks ini tidak menyediakan akses mikrofon');
+            return window.isSecureContext && supported;
+        }
+
+        async function mtWatchPermission() {
+            if (!navigator.permissions || !navigator.permissions.query) {
+                mtSetCheck('perm', 'idle', 'Status izin tidak bisa dibaca di browser ini');
+                return;
+            }
+            try {
+                const ps = await navigator.permissions.query({ name: 'microphone' });
+                micTest.permStatus = ps;
+                const render = () => {
+                    const map = {
+                        granted: ['ok', 'Izin mikrofon diberikan'],
+                        prompt: ['warn', 'Izin belum diminta. Klik "Mulai Test" lalu pilih Allow'],
+                        denied: ['err', 'Izin DITOLAK. Klik ikon gembok di address bar → Microphone → Allow, lalu reload']
+                    };
+                    const m = map[ps.state] || ['idle', 'Status: ' + ps.state];
+                    mtSetCheck('perm', m[0], m[1]);
+                };
+                ps.onchange = render;
+                render();
+            } catch (e) {
+                mtSetCheck('perm', 'idle', 'Status izin tidak bisa dibaca di browser ini');
+            }
+        }
+
+        async function mtRefreshDevices() {
+            const select = document.getElementById('mtDevice');
+            if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
+            const devices = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'audioinput');
+            const saved = localStorage.getItem(MIC_PREF_KEY);
+            select.innerHTML = '';
+            if (!devices.length) {
+                select.innerHTML = '<option value="">Tidak ada mikrofon terdeteksi</option>';
+                mtSetCheck('device', 'err', 'Tidak ada perangkat mikrofon. Pastikan mic terpasang & tidak dinonaktifkan di Windows');
+                return;
+            }
+            devices.forEach((d, i) => {
+                const opt = document.createElement('option');
+                opt.value = d.deviceId;
+                opt.textContent = d.label || ('Microphone ' + (i + 1));
+                select.appendChild(opt);
+            });
+            if (saved && devices.some(d => d.deviceId === saved)) select.value = saved;
+            mtSetCheck('device', 'ok', devices.length + ' mikrofon terdeteksi');
+        }
+
+        function mtStopStream() {
+            cancelAnimationFrame(micTest.raf);
+            micTest.raf = 0;
+            if (micTest.stream) micTest.stream.getTracks().forEach(t => t.stop());
+            micTest.stream = null;
+            if (micTest.ctx) micTest.ctx.close().catch(() => {});
+            micTest.ctx = null;
+            micTest.analyser = null;
+        }
+
+        function mtDrawMeter() {
+            const a = micTest.analyser;
+            if (!a) return;
+            const buf = new Float32Array(a.fftSize);
+            a.getFloatTimeDomainData(buf);
+            let sum = 0;
+            for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
+            const rms = Math.sqrt(sum / buf.length);
+            const db = rms > 0 ? 20 * Math.log10(rms) : -100;
+            const pct = Math.max(0, Math.min(1, (db + 60) / 60));
+            micTest.peak = Math.max(micTest.peak, rms);
+
+            document.getElementById('mtMeterFill').style.width = (pct * 100).toFixed(1) + '%';
+            document.getElementById('mtMeterDb').textContent = (db > -99 ? db.toFixed(0) : '-∞') + ' dB';
+
+            // After 3s with no signal, tell the user instead of leaving them guessing.
+            if (Date.now() - micTest.started > 3000) {
+                if (micTest.peak < 0.01) {
+                    mtSetCheck('signal', 'warn', 'Belum ada suara terdeteksi. Coba bicara, atau cek mute fisik / pilihan perangkat');
+                } else {
+                    mtSetCheck('signal', 'ok', 'Suara terdeteksi. Mikrofon berfungsi');
+                }
+            }
+            micTest.raf = requestAnimationFrame(mtDrawMeter);
+        }
+
+        window.micTestStart = async function() {
+            if (!mtRunStaticChecks()) {
+                mtSetStatus('Perbaiki masalah di checklist terlebih dahulu.');
+                return;
+            }
+            mtStopStream();
+            const select = document.getElementById('mtDevice');
+            const id = select.value;
+            mtSetStatus('Meminta akses mikrofon...');
+            try {
+                micTest.stream = await navigator.mediaDevices.getUserMedia({
+                    audio: id ? { deviceId: { exact: id } } : true,
+                    video: false
+                });
+            } catch (err) {
+                console.error('Mic test error:', err);
+                const reasons = {
+                    NotAllowedError: 'Izin mikrofon ditolak. Izinkan lewat ikon gembok di address bar, lalu reload.',
+                    NotFoundError: 'Mikrofon tidak ditemukan.',
+                    NotReadableError: 'Mikrofon sedang dipakai aplikasi lain atau diblokir oleh sistem (Windows Settings → Privacy → Microphone).',
+                    OverconstrainedError: 'Perangkat yang dipilih tidak tersedia. Pilih perangkat lain.',
+                    SecurityError: 'Diblokir kebijakan keamanan browser.'
+                };
+                mtSetCheck('perm', err.name === 'NotAllowedError' ? 'err' : 'warn', reasons[err.name] || ('Gagal: ' + err.name));
+                mtSetStatus(reasons[err.name] || ('Gagal mengakses mikrofon: ' + err.message));
+                return;
+            }
+            // Labels only become available after permission is granted.
+            await mtRefreshDevices();
+            const track = micTest.stream.getAudioTracks()[0];
+            if (track) {
+                const settings = track.getSettings();
+                if (settings.deviceId) select.value = settings.deviceId;
+            }
+            mtSetCheck('perm', 'ok', 'Izin mikrofon diberikan');
+            mtSetCheck('signal', 'idle', 'Silakan bicara untuk menguji level suara...');
+
+            const AC = window.AudioContext || window.webkitAudioContext;
+            micTest.ctx = new AC();
+            const src = micTest.ctx.createMediaStreamSource(micTest.stream);
+            micTest.analyser = micTest.ctx.createAnalyser();
+            micTest.analyser.fftSize = 1024;
+            src.connect(micTest.analyser);
+            micTest.started = Date.now();
+            micTest.peak = 0;
+            micTest.raf = requestAnimationFrame(mtDrawMeter);
+
+            document.getElementById('mtStartBtn').style.display = 'none';
+            document.getElementById('mtStopBtn').style.display = '';
+            document.getElementById('mtRecordBtn').disabled = false;
+            mtSetStatus('Mikrofon aktif. Coba bicara, bar level harus bergerak.');
+        };
+
+        window.micTestStop = function() {
+            mtStopStream();
+            clearTimeout(micTest.recTimer);
+            if (micTest.recorder && micTest.recorder.state === 'recording') micTest.recorder.stop();
+            document.getElementById('mtMeterFill').style.width = '0%';
+            document.getElementById('mtMeterDb').textContent = '-∞ dB';
+            document.getElementById('mtStartBtn').style.display = '';
+            document.getElementById('mtStopBtn').style.display = 'none';
+            document.getElementById('mtRecordBtn').disabled = true;
+            mtSetStatus('Test dihentikan.');
+        };
+
+        window.micTestRecord = function() {
+            if (!micTest.stream || typeof MediaRecorder === 'undefined') {
+                mtSetStatus('Rekam tidak tersedia. Mulai test mikrofon dulu.');
+                return;
+            }
+            if (micTest.recorder && micTest.recorder.state === 'recording') return;
+            if (micTest.player) { micTest.player.pause(); micTest.player = null; }
+            if (micTest.audioUrl) { URL.revokeObjectURL(micTest.audioUrl); micTest.audioUrl = null; }
+
+            const chunks = [];
+            const rec = new MediaRecorder(micTest.stream);
+            micTest.recorder = rec;
+            rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+            rec.onstop = () => {
+                const btn = document.getElementById('mtRecordBtn');
+                btn.classList.remove('recording');
+                btn.querySelector('span').textContent = 'Rekam & Putar Ulang';
+                if (!chunks.length) return;
+                micTest.audioUrl = URL.createObjectURL(new Blob(chunks, { type: rec.mimeType || 'audio/webm' }));
+                micTest.player = new Audio(micTest.audioUrl);
+                mtSetStatus('Memutar rekaman... Jika suara Anda terdengar jelas, mikrofon siap dipakai.');
+                micTest.player.onended = () => mtSetStatus('Selesai. Jika suara terdengar jelas, mikrofon siap dipakai.');
+                micTest.player.play().catch(e => mtSetStatus('Gagal memutar: ' + e.message));
+            };
+            rec.start();
+
+            const btn = document.getElementById('mtRecordBtn');
+            btn.classList.add('recording');
+            let left = Math.round(MIC_RECORD_MS / 1000);
+            const tick = () => {
+                btn.querySelector('span').textContent = 'Merekam... ' + left + 's';
+                mtSetStatus('Merekam ' + left + ' detik. Silakan bicara.');
+                if (left-- > 0) micTest.recTimer = setTimeout(tick, 1000);
+                else if (rec.state === 'recording') rec.stop();
+            };
+            tick();
+        };
+
+        window.openMicTest = async function() {
+            const modal = document.getElementById('micTestModal');
+            modal.classList.add('open');
+            mtSetCheck('signal', 'idle', 'Belum diuji');
+            mtSetStatus('Klik "Mulai Test" lalu bicara.');
+            document.getElementById('mtCallNote').style.display = isVideoCallActive ? '' : 'none';
+            if (mtRunStaticChecks()) {
+                await mtWatchPermission();
+                await mtRefreshDevices();
+            }
+        };
+
+        window.closeMicTest = function() {
+            window.micTestStop();
+            if (micTest.player) { micTest.player.pause(); micTest.player = null; }
+            if (micTest.audioUrl) { URL.revokeObjectURL(micTest.audioUrl); micTest.audioUrl = null; }
+            if (micTest.permStatus) micTest.permStatus.onchange = null;
+            document.getElementById('micTestModal').classList.remove('open');
+        };
+
+        document.getElementById('mtDevice').addEventListener('change', (e) => {
+            localStorage.setItem(MIC_PREF_KEY, e.target.value);
+            if (micTest.stream) window.micTestStart();       // switch live to the new device
+        });
+        document.getElementById('micTestModal').addEventListener('click', (e) => {
+            if (e.target.id === 'micTestModal') window.closeMicTest();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.getElementById('micTestModal').classList.contains('open')) window.closeMicTest();
+        });
+        if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) {
+            navigator.mediaDevices.addEventListener('devicechange', () => {
+                if (document.getElementById('micTestModal').classList.contains('open')) mtRefreshDevices();
+            });
+        }
 
         // Initialize session on load
         if (!localStorage.getItem('aigr1_sessions')) {
