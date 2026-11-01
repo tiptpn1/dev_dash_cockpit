@@ -1503,6 +1503,21 @@
 
             if (!message) return;
 
+            // Video call active → typed text is a conversational turn for the avatar too.
+            const canAnamText = isVideoCallActive && anamClient &&
+                (brainMode === 'ai-be' || typeof anamClient.sendUserMessage === 'function');
+            if (canAnamText) {
+                messageInput.value = '';
+                messageInput.style.height = 'auto';
+                if (brainMode === 'ai-be') {
+                    runVoiceTurn(message);                       // ai-be answers, avatar speaks
+                } else {
+                    addMessage(message, true);
+                    anamClient.sendUserMessage(message);         // Anam's own brain answers
+                }
+                return;
+            }
+
             isProcessing = true;
             messageInput.value = '';
             messageInput.style.height = 'auto';
@@ -1991,6 +2006,7 @@
             anamClient.addListener(anamSdk.AnamEvent.MESSAGE_HISTORY_UPDATED, (messages) => {
                 if (!messages || !messages.length) return;
                 const last = messages[messages.length - 1];
+                console.log('[Anam] history updated, last:', last.role, JSON.stringify(last.content));
                 if (last.role !== 'user' || !last.content || !last.content.trim()) return;
                 if (handledUserMessageIds.has(last.id)) return;
 
@@ -2111,6 +2127,14 @@
                 // Import Anam AI SDK
                 const anamSdk = await import(ANAM_SDK_URL);
                 
+                // Mic API only exists in secure contexts (HTTPS or localhost/127.0.0.1).
+                // Accessing via http://<IP-LAN> makes navigator.mediaDevices undefined → browser never prompts.
+                if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+                    const err = new Error('Microphone permission unavailable: halaman harus dibuka via HTTPS atau http://localhost (sekarang: ' + location.origin + ')');
+                    err.name = 'NotAllowedError';
+                    throw err;
+                }
+
                 // Request microphone permission explicitly first
                 videoStatus.textContent = 'Requesting microphone access...';
                 const mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -2187,7 +2211,9 @@
                 
                 if (error.name === 'NotAllowedError' || error.message.includes('permission')) {
                     videoStatus.textContent = 'Microphone access denied';
-                    addMessage('⚠️ Microphone access denied. Please allow microphone permission in your browser settings.', false);
+                    addMessage('⚠️ Microphone access denied. ' + (window.isSecureContext
+                        ? 'Klik ikon gembok di address bar → Microphone → Allow, lalu reload.'
+                        : 'Buka halaman via HTTPS atau http://localhost — browser memblokir mic di HTTP biasa.'), false);
                 } else {
                     videoStatus.textContent = 'Connection failed';
                     addMessage('⚠️ Failed to start video call: ' + error.message, false);
