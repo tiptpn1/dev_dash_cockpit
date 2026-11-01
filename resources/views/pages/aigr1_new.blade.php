@@ -408,6 +408,8 @@
             display: flex;
             flex-direction: column;
             gap: 20px;
+            min-height: 0;
+            overflow: hidden;
         }
 
         /* Video Call Panel - Modern Minimal */
@@ -648,6 +650,7 @@
         /* Chat Messages Panel */
         .chat-panel {
             flex: 1;
+            min-height: 0;
             background: linear-gradient(135deg, rgba(15, 20, 32, 0.95) 0%, rgba(26, 31, 46, 0.95) 100%);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(0, 217, 255, 0.3);
@@ -664,11 +667,14 @@
 
         .messages-container {
             flex: 1;
+            min-height: 0;
             overflow-y: auto;
+            overflow-x: hidden;
             display: flex;
             flex-direction: column;
             gap: 15px;
             padding-right: 10px;
+            padding-bottom: 8px;
         }
 
         .messages-container::-webkit-scrollbar {
@@ -828,6 +834,7 @@
         /* Input Area */
         .input-area {
             display: flex;
+            flex-shrink: 0;
             gap: 15px;
             align-items: center;
             background: rgba(0, 217, 255, 0.05);
@@ -945,18 +952,22 @@
         @media (max-width: 768px) {
             .main-container {
                 flex-direction: column;
-                overflow-y: auto;
+                height: 100vh;
+                overflow: hidden;
                 gap: 10px;
             }
 
             .call-panel {
                 width: 100%;
-                min-height: 500px;
-                max-height: 600px;
+                min-height: 350px;
+                max-height: 45vh;
+                flex-shrink: 0;
             }
 
             .chat-area {
                 flex: 1;
+                min-height: 0;
+                overflow: hidden;
             }
 
             .session-history {
@@ -2092,6 +2103,11 @@
 
         async function streamAiTurn(text, signal, voice, onEvent) {
             const handle = (event, data) => { captureAiSessionId(data); onEvent(event, data); };
+            // Routing eksplisit: mode suara/video → agrinav_voice_agent, mode teks → agrinav_agent
+            // Controller Laravel masih mem-validasi voice flag sebagai lapisan kedua,
+            // namun mengirim name eksplisit memastikan tidak ada ambiguitas resolusi.
+            const agentName  = voice ? 'agrinav_voice_agent' : 'agrinav_agent';
+            const sourcePlatform = voice ? 'voice' : 'web';
             const response = await fetch('/ai/response', {
                 method: 'POST',
                 headers: {
@@ -2099,9 +2115,17 @@
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
                     'Accept': 'text/event-stream'
                 },
-                body: JSON.stringify({ message: text, sessionId: aiSessionId || undefined, stream: true, voice: !!voice }),
+                body: JSON.stringify({
+                    message: text,
+                    sessionId: aiSessionId || undefined,
+                    stream: true,
+                    voice: !!voice,
+                    agent: { name: agentName },
+                    source: sourcePlatform
+                }),
                 signal
             });
+
             if (!response.ok || !response.body) throw new Error('HTTP ' + response.status);
 
             const reader = response.body.getReader();
