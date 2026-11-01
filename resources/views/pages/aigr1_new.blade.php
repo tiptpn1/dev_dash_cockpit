@@ -1084,6 +1084,69 @@
 
         .mt-status { margin: 14px 0 0; font-size: 12.5px; color: var(--text-primary); min-height: 18px; }
         .mt-note { margin: 8px 0 0; font-size: 11.5px; color: var(--text-secondary); }
+
+        /* Mic test shortcut on the video panel (always visible, independent of panel height) */
+        .mic-test-fab {
+            position: absolute;
+            top: 32px;
+            right: 32px;
+            z-index: 11;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 100px;
+            border: 1px solid rgba(99, 102, 241, 0.45);
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(24px);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transition: background 0.2s ease, transform 0.15s ease;
+        }
+        .mic-test-fab:hover { background: rgba(99, 102, 241, 0.35); transform: translateY(-1px); }
+        .call-panel > .new-chat-btn, .call-panel > .mic-test-btn, .call-panel > .back-btn { flex-shrink: 0; }
+
+        /* Call / control feedback states */
+        .main-call-button.connecting { background: #f59e0b; box-shadow: 0 4px 16px rgba(245, 158, 11, 0.35); animation: mtPulse 1.2s infinite; }
+        .control-btn-small.off { background: rgba(239, 68, 68, 0.18); border-color: var(--danger-color); color: var(--danger-color); }
+        .send-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+        .send-btn.busy { animation: mtPulse 1.2s infinite; }
+
+        /* Toast notifications */
+        .toast-host {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10001;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            pointer-events: none;
+        }
+        .toast {
+            max-width: min(90vw, 440px);
+            padding: 10px 16px;
+            border-radius: 10px;
+            background: var(--dark-panel);
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            border-left: 4px solid var(--primary-color);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+            animation: mtPop 0.2s ease;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+        .toast.hide { opacity: 0; transform: translateY(6px); }
+        .toast-success { border-left-color: var(--accent-color); }
+        .toast-warn { border-left-color: #f59e0b; }
+        .toast-error { border-left-color: var(--danger-color); }
     </style>
 </head>
 <body>
@@ -1114,7 +1177,7 @@
     <div class="particles" id="particles"></div>
 
     <!-- AGRINAV menu toggle (hamburger, same as dashboard home) -->
-    <div class="icon" id="menuIcon" title="Toggle Menu">
+    <div class="icon" id="menuIcon" title="Buka/tutup menu">
         <img src="{{ url('') }}/asset/images/menu.png" alt="Menu Icon">
     </div>
 
@@ -1139,8 +1202,13 @@
                 <!-- Video Status Badge -->
                 <div class="video-status">
                     <div class="status-dot"></div>
-                    <span id="videoStatus">Ready</span>
+                    <span id="videoStatus" aria-live="polite">Siap</span>
                 </div>
+
+                <button class="mic-test-fab" id="openMicTestFab" onclick="openMicTest()" title="Cek & test mikrofon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line></svg>
+                    Tes Mikrofon
+                </button>
                 
                 <!-- Video Container -->
                 <div class="video-container">
@@ -1163,13 +1231,13 @@
                 <div class="call-button-container">
                     <!-- Secondary Controls (shown when call is active) -->
                     <div class="secondary-controls" id="secondaryControls" style="display: none;">
-                        <button class="control-btn-small" id="videoToggleSmall" title="Toggle Video" onclick="toggleVideo()">
+                        <button class="control-btn-small" id="videoToggleSmall" title="Tampilkan/sembunyikan avatar" aria-label="Tampilkan atau sembunyikan avatar" onclick="toggleVideo()">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polygon points="23 7 16 12 23 17 23 7"></polygon>
                                 <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
                             </svg>
                         </button>
-                        <button class="control-btn-small" id="micToggleSmall" title="Toggle Microphone" onclick="toggleMic()">
+                        <button class="control-btn-small" id="micToggleSmall" title="Nyalakan/bisukan mikrofon" aria-label="Nyalakan atau bisukan mikrofon" onclick="toggleMic()">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
                                 <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
@@ -1177,7 +1245,7 @@
                                 <line x1="8" y1="23" x2="16" y2="23"></line>
                             </svg>
                         </button>
-                        <button class="control-btn-small" id="speakerToggleSmall" title="Toggle Speaker" onclick="toggleSpeaker()">
+                        <button class="control-btn-small" id="speakerToggleSmall" title="Nyalakan/bisukan suara EVA" aria-label="Nyalakan atau bisukan suara EVA" onclick="toggleSpeaker()">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                                 <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
@@ -1186,7 +1254,7 @@
                     </div>
                     
                     <!-- Main Call/End Button -->
-                    <button class="main-call-button" id="mainCallButton" onclick="handleMainCallButton()" title="Start Call">
+                    <button class="main-call-button" id="mainCallButton" onclick="handleMainCallButton()" title="Mulai panggilan" aria-label="Mulai panggilan">
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
                         </svg>
@@ -1194,7 +1262,7 @@
                     
                     <div style="text-align: center;">
                         <p id="callButtonLabel" style="color: var(--accent-color); font-size: 11px; font-weight: 600; letter-spacing: 0.5px;">
-                            Tap to call
+                            Ketuk untuk menelepon
                         </p>
                     </div>
                 </div>
@@ -1206,7 +1274,7 @@
                     <line x1="12" y1="5" x2="12" y2="19"></line>
                     <line x1="5" y1="12" x2="19" y2="12"></line>
                 </svg>
-                New Session
+                Sesi Baru
             </button>
 
             <button class="mic-test-btn" id="openMicTestBtn" onclick="openMicTest()" title="Cek &amp; test mikrofon">
@@ -1228,7 +1296,7 @@
                     <line x1="19" y1="12" x2="5" y2="12"></line>
                     <polyline points="12 19 5 12 12 5"></polyline>
                 </svg>
-                Back to AGRINAV
+                Kembali ke AGRINAV
             </a>
         </aside>
 
@@ -1254,30 +1322,32 @@
 
                 <div class="input-area">
                     <div class="input-modes">
-                        <button class="mode-btn active" id="textMode" title="Text Mode" onclick="setInputMode('text')">
+                        <button class="mode-btn active" id="textMode" title="Mode teks" onclick="setInputMode('text')">
                             💬
                         </button>
-                        <button class="mode-btn" id="voiceMode" title="Voice Mode" onclick="setInputMode('voice')">
+                        <button class="mode-btn" id="voiceMode" title="Mode suara (bicara langsung dengan EVA)" onclick="setInputMode('voice')">
                             🎙️
                         </button>
-                        <button class="mode-btn" id="videoMode" title="Video Call Mode" onclick="setInputMode('video')">
+                        <button class="mode-btn" id="videoMode" title="Mode video call" onclick="setInputMode('video')">
                             📹
                         </button>
                     </div>
                     <textarea 
                         class="message-input" 
                         id="messageInput" 
-                        placeholder="Type your message here..."
+                        placeholder="Ketik pesan Anda di sini..."
                         rows="1"
-                        onkeypress="handleKeyPress(event)"
+                        onkeydown="handleKeyPress(event)"
                     ></textarea>
-                    <button class="send-btn" onclick="sendMessage()">
+                    <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="Kirim pesan" aria-label="Kirim pesan">
                         ➤
                     </button>
                 </div>
             </div>
         </div>
     </div>
+
+    <div class="toast-host" id="toastHost" aria-live="polite"></div>
 
     <!-- Microphone Check & Test modal -->
     <div class="mt-overlay" id="micTestModal" role="dialog" aria-modal="true" aria-labelledby="mtTitle">
@@ -1326,6 +1396,7 @@
         let isMicActive = false;
         let isSpeakerActive = true;
         let isVideoActive = true;
+        let voiceTurnInFlight = false;   // true while a voice/typed-in-call turn owns isProcessing
 
         // ai-be voice brain state (Anam = STT + avatar + TTS; answers come from ai-be)
         const ANAM_SDK_URL = 'https://esm.sh/@anam-ai/js-sdk@4.29.1';
@@ -1488,17 +1559,27 @@
         }
 
         // Session Management
+        // Switching sessions while an answer streams would write it into the wrong session.
+        function guardSessionSwitch() {
+            if (isProcessing) {
+                showToast('Tunggu sampai EVA selesai menjawab sebelum berpindah sesi.', 'warn');
+                return false;
+            }
+            return true;
+        }
+
         window.startNewSession = function() {
+            if (!guardSessionSwitch()) return;
             currentSessionId = Date.now();
             aiSessionId = '';
             const messagesContainer = document.getElementById('messagesContainer');
             messagesContainer.innerHTML = `
                 <div class="message assistant">
                     <div class="message-avatar">
-                        <img src="{{ asset('evopng.png') }}" alt="EVO">
+                        <img src="{{ asset('eva-ico.png') }}" alt="EVA">
                     </div>
                     <div class="message-content">
-                        👋 Hi! I'm EVO, your AI-powered assistant for AGRINAV. I can help you with text, voice, or video communication. How can I assist you today?
+                        👋 Halo! Saya EVA, asisten AI untuk AGRINAV PTPN 1. Saya bisa membantu Anda melalui teks, suara, atau video call. Ada yang bisa saya bantu hari ini?
                     </div>
                 </div>
             `;
@@ -1511,7 +1592,7 @@
             
             sessions[currentSessionId] = {
                 id: currentSessionId,
-                title: messages.length > 1 ? messages[1].content.slice(0, 30) + '...' : 'New Session',
+                title: messages.length > 1 ? messages[1].content.slice(0, 30) + '...' : 'Sesi Baru',
                 messages: messages,
                 aiSessionId: aiSessionId,
                 timestamp: Date.now()
@@ -1550,8 +1631,8 @@
                     sessionItem.innerHTML = `
                         <div class="session-title">${escapeHtml(session.title)}</div>
                         <div class="session-actions">
-                            <button class="session-btn" onclick="loadSession(${session.id})">↻</button>
-                            <button class="session-btn" onclick="deleteSession(${session.id})">🗑</button>
+                            <button class="session-btn" onclick="loadSession(${session.id})" title="Buka sesi" aria-label="Buka sesi">↻</button>
+                            <button class="session-btn" onclick="deleteSession(${session.id})" title="Hapus sesi" aria-label="Hapus sesi">🗑</button>
                         </div>
                     `;
                     historyContainer.appendChild(sessionItem);
@@ -1561,6 +1642,8 @@
         window.loadSession = function(sessionId) {
             const sessions = JSON.parse(localStorage.getItem('aigr1_sessions') || '{}');
             const session = sessions[sessionId];
+            if (sessionId === currentSessionId) return;
+            if (!guardSessionSwitch()) return;
             
             if (session) {
                 currentSessionId = sessionId;
@@ -1583,7 +1666,8 @@
         };
 
         window.deleteSession = function(sessionId) {
-            if (confirm('Delete this session?')) {
+            if (sessionId === currentSessionId && !guardSessionSwitch()) return;
+            if (confirm('Hapus sesi ini? Riwayat percakapannya tidak bisa dikembalikan.')) {
                 const sessions = JSON.parse(localStorage.getItem('aigr1_sessions') || '{}');
                 delete sessions[sessionId];
                 localStorage.setItem('aigr1_sessions', JSON.stringify(sessions));
@@ -1597,18 +1681,19 @@
         };
 
         // Input Mode Management
+        // Voice and video both use the Anam call (Anam transcribes speech); text mode never ends a live call implicitly.
         window.setInputMode = function(mode) {
-            currentInputMode = mode;
-            
-            // Update active state
-            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(mode + 'Mode').classList.add('active');
-            
-            if (mode === 'video') {
-                startVideoCall();
-            } else if (mode === 'voice') {
-                startVoiceRecording();
+            if (mode === 'text') {
+                markInputMode('text');
+                document.getElementById('messageInput').focus();
+                if (callState === 'active') showToast('Video call tetap aktif. Pesan ketikan juga akan dijawab EVA dengan suara.', 'info');
+                return;
             }
+            if (callState === 'connecting') { showToast('Sedang menghubungkan, mohon tunggu...', 'info'); return; }
+            if (callState === 'active') { markInputMode(mode); showToast('Panggilan sudah aktif. Silakan langsung berbicara.', 'info'); return; }
+            markInputMode(mode);
+            if (mode === 'voice') showToast('Mode suara memakai panggilan EVA. Silakan izinkan mikrofon bila diminta.', 'info');
+            startVideoCall();
         };
 
         // Message Handling
@@ -1649,12 +1734,15 @@
         }
 
         window.sendMessage = async function() {
-            if (isProcessing) return;
-
             const messageInput = document.getElementById('messageInput');
             const message = messageInput.value.trim();
 
-            if (!message) return;
+            if (!message) { messageInput.focus(); return; }
+            // During a call a typed message supersedes the running voice turn; otherwise wait for the answer.
+            if (isProcessing && callState !== 'active') {
+                showToast('EVA masih menyiapkan jawaban sebelumnya, mohon tunggu.', 'info');
+                return;
+            }
 
             // Video call active → typed text is a conversational turn for the avatar too.
             const canAnamText = isVideoCallActive && anamClient &&
@@ -1671,12 +1759,12 @@
                 return;
             }
 
-            isProcessing = true;
+            setProcessing(true);
             messageInput.value = '';
             messageInput.style.height = 'auto';
 
             addMessage(message, true);
-            const bubble = addMessage('<span class="thinking-label">🧠 Thinking...</span>');
+            const bubble = addMessage('<span class="thinking-label">🧠 Sedang berpikir...</span>');
 
             let queued = false;      // a render has been scheduled (sync flag)
             let rendered = false;    // a render actually displayed content
@@ -1735,7 +1823,7 @@
                         }
 
                         case 'error':
-                            errorMsg = (data && (data.error || data.message)) || 'AI backend error';
+                            errorMsg = (data && (data.error || data.message)) || 'layanan AI tidak merespons';
                             break;
                     }
                 });
@@ -1746,7 +1834,8 @@
                     if (streamed && !looksLikePlanningJson(streamed)) {
                         await renderBotContent(bubble, { text: streamed });
                     } else if (errorMsg) {
-                        bubble.innerHTML = '<span class="msg-error">Maaf, terjadi kesalahan: ' + escapeHtml(errorMsg) + '</span>';
+                        console.warn('AI error detail:', errorMsg);   // raw backend text stays in the console (often English/technical)
+                        bubble.innerHTML = '<span class="msg-error">Maaf, layanan AI sedang mengalami kendala. Silakan coba lagi beberapa saat lagi.</span>';
                     } else {
                         bubble.innerHTML = '<span class="msg-warn">Maaf, saya belum berhasil mengambil datanya untuk pertanyaan itu. Coba ulangi atau perjelas pertanyaannya ya.</span>';
                     }
@@ -1757,7 +1846,7 @@
             } finally {
                 const hint = bubble.querySelector('.chart-generating-hint');
                 if (hint) hint.remove();
-                isProcessing = false;
+                setProcessing(false);
                 saveSession();
             }
         };
@@ -2039,7 +2128,8 @@
             voiceAbort = new AbortController();
             const videoStatus = document.getElementById('videoStatus');
 
-            isProcessing = true;
+            voiceTurnInFlight = true;
+            setProcessing(true);
             stopStatusCycle();                             // clear any previous cycle
             addMessage(text, true);
             const typing = addTypingIndicator();
@@ -2123,7 +2213,7 @@
                             renderBotContent(bubble, { text: content, blocks, imageUrl }).then(saveSession);
                         }
                     } else if (event === 'error') {
-                        throw new Error(data.error || 'AI backend error');
+                        throw new Error(data.error || 'layanan AI tidak merespons');
                     }
                 });
 
@@ -2142,7 +2232,8 @@
                 // Remove any leftover typing indicator (double-safe)
                 document.querySelectorAll('.message.typing-indicator').forEach(el => el.remove());
                 if (seq === voiceTurnSeq) {
-                    isProcessing = false;
+                    voiceTurnInFlight = false;
+                    setProcessing(false);
                     // Status restored to Listening after speak (Trick 5), but fall-back after 6s
                     setTimeout(() => {
                         if (isVideoCallActive && seq === voiceTurnSeq) videoStatus.textContent = 'Mendengarkan...';
@@ -2157,7 +2248,7 @@
             // Reset the debounce timer on every update so partial mid-sentence transcripts
             // don't fire ai-be prematurely. Only the stable final text triggers the turn.
             anamClient.addListener(anamSdk.AnamEvent.MESSAGE_HISTORY_UPDATED, (messages) => {
-                if (!messages || !messages.length) return;
+                if (callState !== 'active' || !messages || !messages.length) return;
                 const last = messages[messages.length - 1];
                 console.log('[Anam] history updated, last:', last.role, JSON.stringify(last.content));
                 if (last.role !== 'user' || !last.content || !last.content.trim()) return;
@@ -2165,7 +2256,7 @@
 
                 clearTimeout(voiceTurnTimer);
                 voiceTurnTimer = setTimeout(() => {
-                    if (handledUserMessageIds.has(last.id)) return;
+                    if (callState !== 'active' || handledUserMessageIds.has(last.id)) return;
                     handledUserMessageIds.add(last.id);
                     runVoiceTurn(last.content.trim());
                 }, USER_TURN_DEBOUNCE_MS);
@@ -2175,6 +2266,7 @@
             // Stop the avatar immediately when the user starts speaking, but apply a
             // short cooldown so an echo of the avatar's own voice doesn't self-interrupt.
             anamClient.addListener(anamSdk.AnamEvent.USER_SPEECH_STARTED, () => {
+                if (callState !== 'active' || !anamClient) return;
                 const now = Date.now();
                 if (now - lastBargeInAt < BARGE_IN_COOLDOWN_MS) return;   // skip echo
                 lastBargeInAt = now;
@@ -2186,18 +2278,6 @@
 
             anamClient.addListener(anamSdk.AnamEvent.MESSAGE_DELIVERY_FAILED, (failure) => {
                 console.warn('Anam message delivery failed:', failure);
-            });
-
-            // ── Trick 8: Tab-focus reconnect health check ─────────────────────────────
-            // If the user switches away and comes back, a stale connection may not
-            // recover on its own. Ping the video element; if it stopped, notify.
-            document.addEventListener('visibilitychange', () => {
-                if (!document.hidden && isVideoCallActive) {
-                    const vid = document.getElementById('avatarVideo');
-                    if (vid && vid.paused) {
-                        vid.play().catch(() => {});
-                    }
-                }
             });
         }
 
@@ -2211,105 +2291,245 @@
             lastBargeInAt = 0;
             handledUserMessageIds.clear();
             brainMode = 'anam';
-            isProcessing = false;
+            // Only release the busy flag when a voice turn owned it; a typed-text request may still be streaming.
+            if (voiceTurnInFlight) { voiceTurnInFlight = false; setProcessing(false); }
+        }
+
+        // ── UI feedback helpers ───────────────────────────────────────────────────────────
+        function showToast(message, type = 'info', duration = 3200) {
+            const host = document.getElementById('toastHost');
+            if (!host) return;
+            const el = document.createElement('div');
+            el.className = 'toast toast-' + type;
+            el.textContent = message;
+            host.appendChild(el);
+            while (host.children.length > 3) host.firstChild.remove();
+            setTimeout(() => {
+                el.classList.add('hide');
+                setTimeout(() => el.remove(), 260);
+            }, duration);
+        }
+
+        // Single place that flips the busy flag so the send button always reflects it.
+        // During a call typed messages are allowed to supersede the running turn, so the button stays enabled.
+        function setProcessing(value) {
+            isProcessing = value;
+            const sendBtn = document.getElementById('sendBtn');
+            if (sendBtn) {
+                sendBtn.disabled = value && !isVideoCallActive;
+                sendBtn.classList.toggle('busy', value);
+            }
+        }
+
+        // ── Call lifecycle (state machine: idle → connecting → active → idle) ───────────────
+        let callState = 'idle';
+        let callAttempt = 0;               // bumps on every start/cancel/end so stale async steps can bail out
+        let callMediaStream = null;        // microphone stream handed to Anam; must be stopped on teardown
+        let visibilityHandler = null;      // registered once per call, removed on teardown
+
+        const ICON_PHONE = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>';
+        const ICON_END = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+
+        function withTimeout(promise, ms, message) {
+            let timer;
+            const timeout = new Promise((_, reject) => {
+                timer = setTimeout(() => { const e = new Error(message); e.name = 'TimeoutError'; reject(e); }, ms);
+            });
+            return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+        }
+
+        function markInputMode(mode) {
+            currentInputMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.id === mode + 'Mode'));
+        }
+
+        function updateControlButtons() {
+            const inCall = callState === 'active';
+            [['videoToggleSmall', isVideoActive], ['micToggleSmall', isMicActive], ['speakerToggleSmall', isSpeakerActive]].forEach(([id, on]) => {
+                const b = document.getElementById(id);
+                if (!b) return;
+                b.classList.toggle('active', !!on);
+                b.classList.toggle('off', inCall && !on);
+                b.setAttribute('aria-pressed', on ? 'true' : 'false');
+            });
+        }
+
+        function renderCallUi() {
+            const button = document.getElementById('mainCallButton');
+            const label = document.getElementById('callButtonLabel');
+            const secondary = document.getElementById('secondaryControls');
+            const ui = {
+                idle:       { text: 'Ketuk untuk menelepon',                 title: 'Mulai panggilan',       color: 'var(--accent-color)' },
+                connecting: { text: 'Menghubungkan... ketuk untuk batal',    title: 'Batalkan panggilan',    color: '#f59e0b' },
+                active:     { text: 'Akhiri panggilan',                      title: 'Akhiri panggilan',      color: 'var(--danger-color)' }
+            }[callState];
+            button.innerHTML = callState === 'idle' ? ICON_PHONE : ICON_END;
+            button.classList.toggle('active', callState !== 'idle');
+            button.classList.toggle('connecting', callState === 'connecting');
+            button.title = ui.title;
+            button.setAttribute('aria-label', ui.title);
+            label.textContent = ui.text;
+            label.style.color = ui.color;
+            secondary.style.display = callState === 'active' ? 'flex' : 'none';
+            updateControlButtons();
+            setProcessing(isProcessing);                    // refresh send button for the new mode
+        }
+
+        // Stops everything a call owns. Safe to call repeatedly and from any state.
+        function releaseCallResources() {
+            if (visibilityHandler) {
+                document.removeEventListener('visibilitychange', visibilityHandler);
+                visibilityHandler = null;
+            }
+            const client = anamClient;
+            anamClient = null;                              // null first so CONNECTION_CLOSED from our own disconnect is ignored
+            if (client) {
+                try { Promise.resolve(client.stopStreaming()).catch(() => {}); } catch (e) { console.warn('stopStreaming failed:', e); }
+                try { Promise.resolve(client.disconnect()).catch(() => {}); } catch (e) { console.warn('disconnect failed:', e); }
+            }
+            if (callMediaStream) {
+                callMediaStream.getTracks().forEach(t => t.stop());   // releases the mic (browser indicator turns off)
+                callMediaStream = null;
+            }
+            const video = document.getElementById('avatarVideo');
+            const placeholder = document.getElementById('avatarPlaceholder');
+            if (video) {
+                video.pause();
+                video.srcObject = null;
+                video.style.display = 'none';
+                video.style.visibility = 'visible';
+            }
+            if (placeholder) placeholder.style.display = 'block';
+            isMicActive = false;
+            isVideoActive = false;
+            isSpeakerActive = false;
+        }
+
+        function describeCallError(error) {
+            const name = error && error.name;
+            if (name === 'NotAllowedError' || name === 'SecurityError') {
+                return {
+                    status: 'Akses mikrofon ditolak',
+                    text: window.isSecureContext
+                        ? 'Akses mikrofon ditolak. Klik ikon gembok di address bar → Mikrofon → Izinkan, lalu muat ulang halaman. Anda juga bisa memakai tombol "Cek & Test Mikrofon".'
+                        : 'Browser memblokir mikrofon di HTTP biasa. Buka halaman lewat HTTPS atau http://localhost.'
+                };
+            }
+            if (name === 'NotFoundError') {
+                return { status: 'Mikrofon tidak ditemukan', text: 'Mikrofon tidak terdeteksi. Hubungkan mikrofon lalu coba lagi, atau gunakan tombol "Cek & Test Mikrofon".' };
+            }
+            if (name === 'NotReadableError') {
+                return { status: 'Mikrofon sedang dipakai', text: 'Mikrofon sedang dipakai aplikasi lain atau diblokir sistem. Tutup aplikasi lain lalu coba lagi.' };
+            }
+            if (name === 'TimeoutError') {
+                return { status: 'Waktu habis', text: 'Menghubungkan terlalu lama. Periksa koneksi internet Anda lalu coba lagi.' };
+            }
+            return { status: 'Gagal terhubung', text: 'Video call gagal dimulai. Periksa koneksi internet atau pengaturan Anam AI, lalu coba lagi.' };
         }
 
         // Video Call Functions (Anam AI Integration)
         window.handleMainCallButton = async function() {
-            const button = document.getElementById('mainCallButton');
-            const label = document.getElementById('callButtonLabel');
-            const secondaryControls = document.getElementById('secondaryControls');
-            const placeholder = document.getElementById('avatarPlaceholder');
-            const video = document.getElementById('avatarVideo');
-            
-            if (!isVideoCallActive) {
-                // Start call
-                button.classList.add('active');
-                button.innerHTML = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>`;
-                label.textContent = 'End call';
-                label.style.color = 'var(--danger-color)';
-                secondaryControls.style.display = 'flex';
-                
+            if (callState === 'idle') {
+                markInputMode('video');
                 await startVideoCall();
+            } else if (callState === 'connecting') {
+                cancelConnecting();
             } else {
-                // End call
-                button.classList.remove('active');
-                button.innerHTML = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                </svg>`;
-                label.textContent = 'Tap to call';
-                label.style.color = 'var(--accent-color)';
-                secondaryControls.style.display = 'none';
-                
                 endVideoCall();
             }
         };
 
+        function cancelConnecting() {
+            callAttempt++;                                  // invalidates the pending startVideoCall
+            resetVoiceBrain();
+            releaseCallResources();
+            callState = 'idle';
+            renderCallUi();
+            markInputMode('text');
+            document.getElementById('videoStatus').textContent = 'Panggilan dibatalkan';
+            showToast('Panggilan dibatalkan.', 'info');
+            setTimeout(() => { if (callState === 'idle') document.getElementById('videoStatus').textContent = 'Siap'; }, 2000);
+        }
+
         window.startVideoCall = async function() {
-            if (isVideoCallActive) return;
-            
+            if (callState !== 'idle') return;                // blocks double-clicks / duplicate sessions
+
+            callState = 'connecting';
+            const attempt = ++callAttempt;
+            const isStale = () => attempt !== callAttempt;
+
             const videoStatus = document.getElementById('videoStatus');
             const placeholder = document.getElementById('avatarPlaceholder');
             const video = document.getElementById('avatarVideo');
-            
-            videoStatus.textContent = 'Connecting...';
-            
+
+            renderCallUi();
+            videoStatus.textContent = 'Menghubungkan...';
+
+            let stream = null;
             try {
                 // Get session token from backend
-                const tokenResponse = await fetch('/aigri/anam-token', {
+                const tokenResponse = await withTimeout(fetch('/aigri/anam-token', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     }
-                });
-                
+                }), 20000, 'Token session timeout');
+                if (isStale()) return;
+
                 if (!tokenResponse.ok) {
-                    throw new Error('Failed to get Anam session token');
+                    throw new Error('Failed to get Anam session token (HTTP ' + tokenResponse.status + ')');
                 }
-                
+
                 const data = await tokenResponse.json();
-                
+                if (isStale()) return;
+
                 if (!data.success || !data.sessionToken) {
                     throw new Error(data.message || 'Invalid session token');
                 }
-                
+
                 // Import Anam AI SDK
-                const anamSdk = await import(ANAM_SDK_URL);
-                
+                const anamSdk = await withTimeout(import(ANAM_SDK_URL), 20000, 'SDK load timeout');
+                if (isStale()) return;
+
                 // Mic API only exists in secure contexts (HTTPS or localhost/127.0.0.1).
                 // Accessing via http://<IP-LAN> makes navigator.mediaDevices undefined → browser never prompts.
                 if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
-                    const err = new Error('Microphone permission unavailable: halaman harus dibuka via HTTPS atau http://localhost (sekarang: ' + location.origin + ')');
+                    const err = new Error('Microphone unavailable in insecure context: ' + location.origin);
                     err.name = 'NotAllowedError';
                     throw err;
                 }
 
                 // Request microphone permission explicitly first
-                videoStatus.textContent = 'Requesting microphone access...';
-                const mediaStream = await navigator.mediaDevices.getUserMedia({
+                videoStatus.textContent = 'Meminta akses mikrofon...';
+                stream = await navigator.mediaDevices.getUserMedia({
                     audio: window.getPreferredMicConstraints(),   // device chosen in Mic Check & Test
                     video: false
                 });
-                
-                videoStatus.textContent = 'Initializing AI...';
-                
+                if (isStale()) { stream.getTracks().forEach(t => t.stop()); return; }
+                callMediaStream = stream;
+
+                videoStatus.textContent = 'Menyiapkan EVA...';
+
                 // Create Anam client with session token and custom audio stream
-                anamClient = anamSdk.createClient(data.sessionToken, {
+                const client = anamSdk.createClient(data.sessionToken, {
                     disableInputAudio: false, // Enable audio input
                 });
-                
+                anamClient = client;
+
                 // Listen for connection events
-                anamClient.addListener(anamSdk.AnamEvent.CONNECTION_ESTABLISHED, () => {
+                client.addListener(anamSdk.AnamEvent.CONNECTION_ESTABLISHED, () => {
                     console.log('Anam connection established');
-                    videoStatus.textContent = 'Connected';
+                    if (anamClient === client) videoStatus.textContent = 'Terhubung';
                 });
-                
-                anamClient.addListener(anamSdk.AnamEvent.CONNECTION_CLOSED, (code) => {
+
+                client.addListener(anamSdk.AnamEvent.CONNECTION_CLOSED, (code) => {
                     console.log('Anam connection closed:', code);
+                    // Remote drop while the call is live → tear down cleanly instead of leaving a frozen avatar.
+                    if (anamClient === client && callState === 'active') {
+                        endVideoCall('📞 Koneksi video call terputus.');
+                        showToast('Koneksi terputus. Ketuk tombol telepon untuk menyambung lagi.', 'error', 4500);
+                    }
                 });
 
                 // ai-be brain: Anam only transcribes + renders; answers come from agrinav_voice_agent
@@ -2317,258 +2537,149 @@
                 if (brainMode === 'ai-be') {
                     setupAiBeBrain(anamSdk);
                 }
-                
+
                 // Hide placeholder, show video
                 placeholder.style.display = 'none';
                 video.style.display = 'block';
-                
+
                 // Start streaming with custom media stream to video element
-                await anamClient.streamToVideoElement('avatarVideo', mediaStream);
-                
+                await withTimeout(client.streamToVideoElement('avatarVideo', stream), 30000, 'Streaming timeout');
+                if (isStale()) return;
+
                 // Ensure video is unmuted and playing
                 video.muted = false;
                 video.volume = 1.0;
                 await video.play().catch(e => console.log('Video autoplay:', e));
-                
+
                 // Get and display audio state
-                const audioState = anamClient.getInputAudioState();
+                const audioState = client.getInputAudioState();
                 console.log('Audio state:', audioState);
-                
+
                 if (audioState.permissionState === 'denied') {
-                    throw new Error('Microphone permission denied');
+                    const err = new Error('Microphone permission denied');
+                    err.name = 'NotAllowedError';
+                    throw err;
                 }
-                
+
+                callState = 'active';
                 isVideoCallActive = true;
                 isMicActive = true;
                 isSpeakerActive = true;
                 isVideoActive = true;
-                
-                videoStatus.textContent = 'Connected';
-                
-                // Update button states
-                updateControlButtons();
+
+                // Browsers pause media in background tabs; resume when the user comes back (registered once per call).
+                visibilityHandler = () => {
+                    if (!document.hidden && callState === 'active') {
+                        const vid = document.getElementById('avatarVideo');
+                        if (vid && vid.paused) vid.play().catch(() => {});
+                    }
+                };
+                document.addEventListener('visibilitychange', visibilityHandler);
+
+                videoStatus.textContent = 'Terhubung';
+                renderCallUi();
 
                 addMessage('📹 Video call terhubung! Silakan berbicara dengan EVA.', false);
+                showToast('Terhubung. Silakan langsung berbicara, tidak perlu mengetik.', 'success');
 
                 if (brainMode === 'ai-be') {
                     // ── Trick 9: Greeting with Listening state ───────────────────────
-                    const videoStatus = document.getElementById('videoStatus');
                     videoStatus.textContent = 'Mendengarkan...';
                     speakViaAnam(VOICE_GREETING)
-                        .then(() => { if (isVideoCallActive) videoStatus.textContent = 'Mendengarkan...'; })
+                        .then(() => { if (callState === 'active') videoStatus.textContent = 'Mendengarkan...'; })
                         .catch(err => console.warn('Greeting failed:', err));
                 }
-                
+
             } catch (error) {
+                if (isStale()) return;                       // user cancelled; cancelConnecting already cleaned up
                 console.error('Video call error:', error);
-                
-                if (error.name === 'NotAllowedError' || error.message.includes('permission')) {
-                    videoStatus.textContent = 'Microphone access denied';
-                    addMessage('⚠️ Microphone access denied. ' + (window.isSecureContext
-                        ? 'Klik ikon gembok di address bar → Microphone → Allow, lalu reload.'
-                        : 'Buka halaman via HTTPS atau http://localhost — browser memblokir mic di HTTP biasa.'), false);
-                } else {
-                    videoStatus.textContent = 'Connection failed';
-                    addMessage('⚠️ Failed to start video call: ' + error.message, false);
-                }
-                
-                // Show placeholder again
-                placeholder.style.display = 'block';
-                video.style.display = 'none';
-                
-                // Reset button
-                const button = document.getElementById('mainCallButton');
-                const label = document.getElementById('callButtonLabel');
-                const secondaryControls = document.getElementById('secondaryControls');
-                
-                button.classList.remove('active');
-                label.textContent = 'Tap to call';
-                label.style.color = 'var(--accent-green)';
-                secondaryControls.style.display = 'none';
-                
-                addMessage('⚠️ Failed to start video call: ' + error.message + '. Please check your Anam AI configuration.', false);
-                
+
+                callAttempt++;
+                resetVoiceBrain();
+                releaseCallResources();                      // also stops the mic stream if it was already opened
+                if (stream) stream.getTracks().forEach(t => t.stop());
+                callState = 'idle';
+                isVideoCallActive = false;
+                renderCallUi();
+                markInputMode('text');
+
+                const info = describeCallError(error);
+                videoStatus.textContent = info.status;
+                addMessage('⚠️ ' + info.text, false);
+                showToast(info.status, 'error');
+
                 setTimeout(() => {
-                    videoStatus.textContent = 'Ready';
+                    if (callState === 'idle') videoStatus.textContent = 'Siap';
                 }, 3000);
             }
         };
 
-        window.endVideoCall = function() {
-            if (!isVideoCallActive) return;
-            
-            resetVoiceBrain();
+        window.endVideoCall = function(message) {
+            if (callState !== 'active') return;
 
-            if (anamClient) {
-                try {
-                    // Stop streaming and disconnect properly
-                    anamClient.stopStreaming();
-                    anamClient.disconnect();
-                } catch (e) {
-                    console.error('Error disconnecting:', e);
-                }
-                anamClient = null;
-            }
-            
+            callAttempt++;
+            resetVoiceBrain();
+            releaseCallResources();
+            callState = 'idle';
             isVideoCallActive = false;
-            isMicActive = false;
-            isVideoActive = false;
-            isSpeakerActive = false;
-            
+            renderCallUi();
+            markInputMode('text');
+
             const videoStatus = document.getElementById('videoStatus');
-            const placeholder = document.getElementById('avatarPlaceholder');
-            const video = document.getElementById('avatarVideo');
-            
-            videoStatus.textContent = 'Call ended';
-            
-            // Stop and clear video element
-            if (video) {
-                video.pause();
-                video.srcObject = null;
-                video.style.display = 'none';
-            }
-            
-            // Show placeholder
-            placeholder.style.display = 'block';
-            
+            videoStatus.textContent = 'Panggilan berakhir';
+
             // ── Trick 10: Farewell before disconnect ─────────────────────────────
             // A brief goodbye makes the end-of-call feel deliberate, not abrupt.
             // Note: anamClient is already set to null at this point by the caller path,
             // so we only speak if the client reference was captured before the call.
-            addMessage('📞 Video call berakhir.', false);
+            addMessage(typeof message === 'string' ? message : '📞 Video call berakhir.', false);
 
             setTimeout(() => {
-                videoStatus.textContent = 'Ready';
+                if (callState === 'idle') videoStatus.textContent = 'Siap';
             }, 2000);
         };
 
-        function updateControlButtons() {
-            // Update small control buttons
-            const videoBtn = document.getElementById('videoToggleSmall');
-            const micBtn = document.getElementById('micToggleSmall');
-            const speakerBtn = document.getElementById('speakerToggleSmall');
-            
-            if (videoBtn) {
-                if (isVideoActive) {
-                    videoBtn.classList.add('active');
-                } else {
-                    videoBtn.classList.remove('active');
-                }
-            }
-            
-            if (micBtn) {
-                if (isMicActive) {
-                    micBtn.classList.add('active');
-                } else {
-                    micBtn.classList.remove('active');
-                }
-            }
-            
-            if (speakerBtn) {
-                if (isSpeakerActive) {
-                    speakerBtn.classList.add('active');
-                } else {
-                    speakerBtn.classList.remove('active');
-                }
-            }
-        }
-
+        // Camera button: the avatar's picture can be hidden while the voice conversation continues.
         window.toggleVideo = function() {
-            if (!isVideoCallActive) return;
-            
+            if (callState !== 'active') { showToast('Mulai panggilan terlebih dahulu.', 'info'); return; }
+
             isVideoActive = !isVideoActive;
-            const btn = document.getElementById('videoToggleSmall');
-            
-            if (btn) {
-                if (isVideoActive) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
-            }
-            
-            // TODO: Implement actual video toggle with Anam client
-            if (anamClient && anamClient.toggleVideo) {
-                anamClient.toggleVideo(isVideoActive);
-            }
-            
-            addMessage(isVideoActive ? '📹 Camera enabled' : '📹 Camera disabled', false);
+            const video = document.getElementById('avatarVideo');
+            if (video) video.style.visibility = isVideoActive ? 'visible' : 'hidden';
+            updateControlButtons();
+            showToast(isVideoActive ? 'Tampilan avatar diaktifkan.' : 'Tampilan avatar disembunyikan. Suara tetap berjalan.', 'info');
         };
 
         window.toggleMic = function() {
-            if (!isVideoCallActive || !anamClient) return;
-            
-            isMicActive = !isMicActive;
-            const btn = document.getElementById('micToggleSmall');
-            
-            if (btn) {
-                if (isMicActive) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
+            if (callState !== 'active' || !anamClient) { showToast('Mulai panggilan terlebih dahulu.', 'info'); return; }
+
+            const next = !isMicActive;
+            try {
+                // Use Anam API to mute/unmute
+                if (next) anamClient.unmuteInputAudio();
+                else anamClient.muteInputAudio();
+            } catch (e) {
+                console.error('Toggle mic failed:', e);
+                showToast('Gagal mengubah status mikrofon. Coba lagi.', 'error');
+                return;
             }
-            
-            // Use Anam API to mute/unmute
-            if (isMicActive) {
-                anamClient.unmuteInputAudio();
-            } else {
-                anamClient.muteInputAudio();
-            }
-            
-            addMessage(isMicActive ? '🎤 Microphone enabled' : '🎤 Microphone muted', false);
+            isMicActive = next;
+            updateControlButtons();
+            document.getElementById('videoStatus').textContent = next ? 'Mendengarkan...' : 'Mikrofon dibisukan';
+            showToast(next ? 'Mikrofon diaktifkan. EVA mendengarkan Anda.' : 'Mikrofon dibisukan. EVA tidak akan mendengar Anda.', next ? 'success' : 'warn');
         };
 
         window.toggleSpeaker = function() {
-            if (!isVideoCallActive) return;
-            
+            if (callState !== 'active') { showToast('Mulai panggilan terlebih dahulu.', 'info'); return; }
+
             isSpeakerActive = !isSpeakerActive;
-            const btn = document.getElementById('speakerToggleSmall');
-            
-            if (btn) {
-                if (isSpeakerActive) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
-            }
-            
             const videoElement = document.getElementById('avatarVideo');
             if (videoElement) {
                 videoElement.muted = !isSpeakerActive;
                 videoElement.volume = isSpeakerActive ? 1.0 : 0;
             }
-            
-            addMessage(isSpeakerActive ? '🔊 Speaker enabled' : '🔇 Speaker muted', false);
-        };
-
-        // Voice Recording Functions
-        window.startVoiceRecording = async function() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                audioChunks = [];
-                
-                mediaRecorder.ondataavailable = (event) => {
-                    audioChunks.push(event.data);
-                };
-                
-                mediaRecorder.onstop = async () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                    // TODO: Send audio to backend for speech-to-text processing
-                    addMessage('🎙️ Voice message recorded (speech-to-text processing coming soon)', true);
-                    
-                    // Stop all tracks
-                    stream.getTracks().forEach(track => track.stop());
-                };
-                
-                mediaRecorder.start();
-                addMessage('🎙️ Recording voice message... Click send when done.', false);
-                
-            } catch (error) {
-                console.error('Voice recording error:', error);
-                addMessage('⚠️ Failed to access microphone. Please check permissions.', false);
-            }
+            updateControlButtons();
+            showToast(isSpeakerActive ? 'Suara EVA diaktifkan.' : 'Suara EVA dibisukan. Jawaban tetap tampil di chat.', isSpeakerActive ? 'success' : 'warn');
         };
 
         // ══════════════════════════════════════════════════════════════════════
