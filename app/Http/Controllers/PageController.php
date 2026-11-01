@@ -5017,7 +5017,15 @@ class PageController extends Controller
 
     public function aigriNew()
     {
-        return view('pages/aigr1_new');
+        // Token chat langsung browser -> AI Backend ditanam di halaman (tanpa route /ai/token).
+        // Gagal/lambat -> null, frontend otomatis pakai proxy /ai/response.
+        try {
+            $aiDirectBoot = app(\App\Http\Controllers\AiResponseController::class)->browserCredentials(false, 5);
+        } catch (\Throwable $e) {
+            $aiDirectBoot = null;
+        }
+
+        return view('pages/aigr1_new', ['aiDirectBoot' => $aiDirectBoot]);
     }
 
     /**

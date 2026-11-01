@@ -153,7 +153,7 @@ class AiResponseController extends Controller
      *
      * @return array|null ['token' => string, 'expiresAt' => int(unix)]
      */
-    private function getBrowserJwt($forceRefresh = false)
+    private function getBrowserJwt($forceRefresh = false, $timeout = 20)
     {
         $cacheKey = 'ai_backend_browser_jwt';
 
@@ -168,7 +168,7 @@ class AiResponseController extends Controller
         $baseUrl = env('AI_BACKEND_BASE_URL', 'https://be.ptpn1.co.id');
         try {
             $response = Http::withoutVerifying()
-                ->timeout(20)
+                ->timeout($timeout)
                 ->withHeaders(['Content-Type' => 'application/json'])
                 ->post($baseUrl . '/api/auth/login', [
                     'username' => env('AI_BACKEND_USERNAME', 'agent_test'),
@@ -199,27 +199,44 @@ class AiResponseController extends Controller
     }
 
     /**
+     * Kredensial akses langsung browser -> AI Backend (token + URL + nama agent).
+     * Bisa dipanggil dari controller halaman agar token ditanam langsung di HTML
+     * (tanpa request tambahan / route tambahan), atau lewat endpoint aiToken().
+     *
+     * @return array|null
+     */
+    public function browserCredentials($forceRefresh = false, $timeout = 20)
+    {
+        $entry = $this->getBrowserJwt($forceRefresh, $timeout);
+        if (!$entry) {
+            return null;
+        }
+
+        return [
+            'token'      => $entry['token'],
+            'expiresAt'  => $entry['expiresAt'],
+            'url'        => env('AI_BACKEND_URL', 'https://be.ptpn1.co.id/api/ai/chat'),
+            'agent'      => env('AI_BACKEND_AGENT', 'agrinav_agent'),
+            'voiceAgent' => env('AI_BACKEND_VOICE_AGENT', 'agrinav_voice_agent'),
+        ];
+    }
+
+    /**
      * Endpoint kecil agar frontend bisa chat langsung ke AI Backend (tanpa hop proxy).
      * Hanya mengembalikan token + URL; seluruh chat/streaming tidak lagi lewat Laravel.
      */
     public function aiToken(Request $request)
     {
-        $entry = $this->getBrowserJwt($request->boolean('refresh'));
-        if (!$entry) {
+        $creds = $this->browserCredentials($request->boolean('refresh'));
+        if (!$creds) {
             return response()->json([
                 'status'  => 'error',
                 'message' => 'Gagal autentikasi ke AI Backend.',
             ], 502);
         }
 
-        return response()->json([
-            'status'     => 'success',
-            'token'      => $entry['token'],
-            'expiresAt'  => $entry['expiresAt'],
-            'url'        => env('AI_BACKEND_URL', 'https://be.ptpn1.co.id/api/ai/chat'),
-            'agent'      => env('AI_BACKEND_AGENT', 'agrinav_agent'),
-            'voiceAgent' => env('AI_BACKEND_VOICE_AGENT', 'agrinav_voice_agent'),
-        ])->header('Cache-Control', 'no-store');
+        return response()->json(['status' => 'success'] + $creds)
+            ->header('Cache-Control', 'no-store');
     }
 
     public function aiResponse(Request $request)

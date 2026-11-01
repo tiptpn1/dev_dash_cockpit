@@ -2156,7 +2156,14 @@
         // ── Direct-to-AI-backend (skips the Laravel proxy hop) ─────────────────────
         // Laravel only mints a short-lived JWT (/ai/token); chat + SSE then go straight to ai-be.
         // If the direct path is unreachable (network/CORS), we silently fall back to /ai/response.
-        let aiDirect = { token: null, expiresAt: 0, url: null, pending: null, disabled: false };
+        const aiDirectBoot = {!! json_encode($aiDirectBoot ?? null, JSON_UNESCAPED_SLASHES) !!};
+        let aiDirect = {
+            token: aiDirectBoot ? aiDirectBoot.token : null,
+            expiresAt: aiDirectBoot ? aiDirectBoot.expiresAt : 0,
+            url: aiDirectBoot ? aiDirectBoot.url : null,
+            pending: null,
+            disabled: false
+        };
 
         async function getAiDirectToken(force = false) {
             const nowSec = Math.floor(Date.now() / 1000);
