@@ -2633,6 +2633,53 @@
             setTimeout(() => { if (callState === 'idle') document.getElementById('videoStatus').textContent = 'Siap'; }, 2000);
         }
 
+        // Anam session token: ai-be first (no PHP in the path), Laravel only as a fallback.
+        let anamDirectDisabled = false;     // set when ai-be answers 404 (endpoint not deployed) or is unreachable
+        async function fetchAnamSessionToken() {
+            if (!anamDirectDisabled && !aiDirect.disabled) {
+                const ctrl = new AbortController();
+                const abortTimer = setTimeout(() => ctrl.abort(), 12000);   // don't burn the whole budget on a dead path
+                try {
+                    const post = async (force) => {
+                        const t = await getAiDirectToken(force);
+                        const base = String(t.url).replace(/\/api\/ai\/chat\/?$/, '');
+                        return fetch(base + '/api/anam/session-token', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t.token },
+                            signal: ctrl.signal
+                        });
+                    };
+                    let r = await post(false);
+                    if (r.status === 401 || r.status === 403) r = await post(true);   // expired token → refresh once
+                    if (r.ok) {
+                        const d = await r.json();
+                        if (d && d.success && d.sessionToken) { console.log('[Anam] session token via ai-be'); return d; }
+                    } else if (r.status === 404) {
+                        anamDirectDisabled = true;      // old ai-be without the endpoint — stop trying this page load
+                    }
+                    console.warn('[Anam] ai-be token unavailable (HTTP ' + r.status + '), using Laravel fallback');
+                } catch (e) {
+                    console.warn('[Anam] ai-be token failed, using Laravel fallback:', e && e.message);
+                    if (!(e && e.name === 'AbortError')) anamDirectDisabled = true;
+                } finally {
+                    clearTimeout(abortTimer);
+                }
+            }
+
+            const tokenResponse = await fetch('/aigri/anam-token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            });
+            if (!tokenResponse.ok) {
+                throw new Error('Failed to get Anam session token (HTTP ' + tokenResponse.status + ')');
+            }
+            console.log('[Anam] session token via Laravel');
+            return tokenResponse.json();
+        }
+
         window.startVideoCall = async function() {
             if (callState !== 'idle') return;                // blocks double-clicks / duplicate sessions
 
@@ -2655,21 +2702,8 @@
                 const sdkPromise = withTimeout(loadAnamSdk(), 45000, 'SDK load timeout');
                 sdkPromise.catch(() => {});                // surfaced below; avoid an unhandled rejection if the token step fails first
 
-                // Get session token from backend
-                const tokenResponse = await withTimeout(fetch('/aigri/anam-token', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    }
-                }), 30000, 'Token session timeout');
-                if (isStale()) return;
-
-                if (!tokenResponse.ok) {
-                    throw new Error('Failed to get Anam session token (HTTP ' + tokenResponse.status + ')');
-                }
-
-                const data = await tokenResponse.json();
+                // Get session token (ai-be directly; Laravel only as fallback)
+                const data = await withTimeout(fetchAnamSessionToken(), 30000, 'Token session timeout');
                 if (isStale()) return;
 
                 if (!data.success || !data.sessionToken) {
