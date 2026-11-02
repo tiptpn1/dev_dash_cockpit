@@ -1423,17 +1423,55 @@
             return anamSdkPromise;
         }
         (window.requestIdleCallback || ((cb) => setTimeout(cb, 1500)))(() => { loadAnamSdk().catch(() => {}); });
-        const VOICE_GREETING = 'Halo, saya EVA, asisten AgriNav PTPN 1. Siap membantu. Ada yang ingin Anda tanyakan?';
-        const VOICE_FILLER_POOL = [
-            'Baik, saya cek datanya dulu ya.',
-            'Sebentar ya, saya ambilkan datanya.',
-            'Oke, saya carikan datanya dulu.',
-            'Baik, mohon tunggu sebentar, saya cek dulu.',
+                        const VOICE_GREETING = 'Halo, saya EVA, asisten AgriNav PTPN 1. Siap membantu. Ada yang ingin Anda tanyakan?';
+
+        // ── Variasi Filler & Kalimat Menunggu Universal (Luwes, Alami & Cocok untuk Semua Pertanyaan) ──
+        const VOICE_FILLERS = [
+            'Baik, saya carikan informasinya sebentar ya.',
+            'Sebentar ya, saya cek dulu.',
+            'Oke, saya periksa catatannya dulu ya.',
+            'Siap, mohon tunggu beberapa saat ya.',
+            'Baik, saya siapkan jawabannya ya.',
+            'Tentu, saya lihat dulu detailnya.',
+            'Oke, tunggu sebentar ya, saya cek dulu.',
+            'Baik, saya telusuri dulu ya.',
+            'Siap, sebentar ya saya siapkan informasinya.',
+            'Boleh, tunggu sebentar ya.',
+            'Oke, saya sinkronkan dulu ya.',
+            'Baik, saya proses dulu permintaannya ya.',
+            'Siap, sebentar ya, saya lihat dulu.',
+            'Baik, mohon tunggu sebentar ya.'
         ];
+
         const VOICE_STILL_WORKING_POOL = [
-            'Datanya masih saya proses, sebentar lagi ya.',
-            'Masih saya kumpulkan datanya, mohon tunggu sebentar.',
+            'Masih saya rangkum ya, sebentar lagi selesai.',
+            'Mohon tunggu sebentar ya, sedang saya proses.',
+            'Hampir selesai, sebentar lagi ya.',
+            'Sedang saya siapkan ringkasannya, mohon ditunggu ya.',
+            'Tunggu sebentar lagi ya, sedang difinalisasi.'
         ];
+
+        // Anti-repetition tracker: EVA tidak akan mengulang kalimat yang sama berturut-turut
+        const recentlyUsedFillers = [];
+
+        function pickNonRepeating(arr) {
+            const candidates = arr.filter(p => !recentlyUsedFillers.includes(p));
+            const pool = candidates.length > 0 ? candidates : arr;
+            const chosen = pool[Math.floor(Math.random() * pool.length)];
+            
+            recentlyUsedFillers.push(chosen);
+            if (recentlyUsedFillers.length > 6) {
+                recentlyUsedFillers.shift();
+            }
+            return chosen;
+        }
+
+        function getFillerPhrase(isStillWorking = false) {
+            return isStillWorking 
+                ? pickNonRepeating(VOICE_STILL_WORKING_POOL)
+                : pickNonRepeating(VOICE_FILLERS);
+        }
+
         const VOICE_ERROR = 'Maaf, saya sedang mengalami kendala. Silakan coba lagi sebentar lagi.';
         const VOICE_FAREWELL = 'Baik, sampai jumpa lagi!';
         const VOICE_FILLER_AFTER_MS = 1300;   // one natural filler if the answer is not ready yet
@@ -1441,7 +1479,7 @@
         const USER_TURN_DEBOUNCE_MS = 1100;   // trailing-silence before firing ai-be (avoids splitting one sentence)
         const TURN_MERGE_WINDOW_MS  = 3000;   // a follow-up fragment this soon (unanswered) is merged into the previous turn
         // Adaptive status labels cycling through processing stages
-        const STATUS_CYCLE = ['Menganalisis...', 'Mengambil data...', 'Menyusun jawaban...'];
+        const STATUS_CYCLE = ['Menganalisis permintaan...', 'Mengambil data dari n8n...', 'Mengolah indikator...', 'Menyusun ringkasan...'];
         let brainMode = 'anam';
         let voiceTurnTimer = null;
         let voiceAbort = null;
@@ -2432,14 +2470,14 @@
             let chartRendered = false;
             let bubble = null;
 
-            // Natural conversational filler: if data takes >1.3s to fetch from n8n/database,
+                                    // Natural conversational filler: if data takes >1.3s to fetch from n8n/database,
             // EVA acknowledges warmly with a complete short phrase, keeping flow smooth.
-                        const sayFiller = async (pool) => {
+            const sayFiller = async (isStillWorking) => {
                 if (answered || !anamClient || seq !== voiceTurnSeq || isEvaSpeaking) return;
                 try {
-                    const phrase = pickRandom(pool);
+                    const phrase = getFillerPhrase(isStillWorking);
                     stopStatusCycle();
-                    if (videoStatus) videoStatus.textContent = 'Mengecek data...';
+                    if (videoStatus) videoStatus.textContent = isStillWorking ? 'Masih memproses...' : 'Mengecek data...';
                     const stream = anamClient.createTalkMessageStream();
                     activeTalkStream = stream;
                     isEvaSpeaking = true;
@@ -2459,8 +2497,8 @@
                     currentSpokenText = '';
                 }
             };
-            const fillerTimer = setTimeout(() => sayFiller(VOICE_FILLER_POOL), VOICE_FILLER_AFTER_MS);
-            const stillTimer  = setTimeout(() => sayFiller(VOICE_STILL_WORKING_POOL), VOICE_STILL_WORKING_MS);
+            const fillerTimer = setTimeout(() => sayFiller(false), VOICE_FILLER_AFTER_MS);
+            const stillTimer  = setTimeout(() => sayFiller(true), VOICE_STILL_WORKING_MS);
 
             try {
                 await streamAiTurn(text, voiceAbort.signal, true, (event, data) => {
