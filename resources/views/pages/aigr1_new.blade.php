@@ -2401,7 +2401,6 @@
                 isEvaSpeaking = false;
                 currentSpokenText = '';
             }
-            }
 
             // STT sometimes splits one sentence into two turns ("tampilkan dan analisa" + "data keuangan").
             // If the previous turn is still unanswered and very recent, merge instead of asking twice.
