@@ -332,7 +332,7 @@ class LogViewerController extends Controller
             'queue_driver'      => config('queue.default'),
             'disk_free_space'   => round(disk_free_space(storage_path()) / (1024 ** 3), 2) . ' GB',
 
-            // Provider 1: agrinav_agent (be.ptpn1.co.id - Active)
+            // Provider 1: agrinav_agent (be-v2.ptpn1.co.id - Active)
             'ai_backend_url'    => env('AI_BACKEND_URL', 'Not configured'),
             'ai_backend_agent'  => env('AI_BACKEND_AGENT', 'Not configured'),
             'ai_backend_base'   => env('AI_BACKEND_BASE_URL', 'Not configured'),
@@ -354,7 +354,7 @@ class LogViewerController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        $baseUrl = env('AI_BACKEND_BASE_URL', 'https://be.ptpn1.co.id');
+        $baseUrl = env('AI_BACKEND_BASE_URL', 'https://be-v2.ptpn1.co.id');
         $username = env('AI_BACKEND_USERNAME', 'agent_test');
         $password = env('AI_BACKEND_PASSWORD', 'agent123');
         
@@ -530,7 +530,7 @@ class LogViewerController extends Controller
 
     /**
      * Test chatbot endpoint — support dua provider:
-     *   provider=agrinav  → be.ptpn1.co.id (JSON, webChatToken)
+     *   provider=agrinav  → be-v2.ptpn1.co.id (JSON, webChatToken)
      *   provider=workflow  → workflow.ptpn1.co.id (form-urlencoded, tanpa token)
      */
     public function testChatbot(Request $request)
@@ -596,18 +596,18 @@ class LogViewerController extends Controller
                 ]);
             }
 
-            // ── PROVIDER: agrinav (agrinav_agent via be.ptpn1.co.id) ──────────
+            // ── PROVIDER: agrinav (agrinav_agent via be-v2.ptpn1.co.id) ──────────
             $token = $this->getChatbotToken();
 
             if (!$token) {
                 return response()->json([
                     'success' => false,
-                    'error'   => 'Gagal mendapatkan webChatToken dari be.ptpn1.co.id. ' .
+                    'error'   => 'Gagal mendapatkan webChatToken dari be-v2.ptpn1.co.id. ' .
                                  'Periksa AI_BACKEND_USERNAME/PASSWORD di .env.',
                 ], 500);
             }
 
-            $url     = env('AI_BACKEND_URL', 'https://be.ptpn1.co.id/api/ai/chat');
+            $url     = env('AI_BACKEND_URL', 'https://be-v2.ptpn1.co.id/api/ai/chat');
             $agent   = env('AI_BACKEND_AGENT', 'agrinav_agent');
 
             $payload = [
@@ -728,7 +728,7 @@ class LogViewerController extends Controller
             return $cached;
         }
 
-        $baseUrl = env('AI_BACKEND_BASE_URL', 'https://be.ptpn1.co.id');
+        $baseUrl = env('AI_BACKEND_BASE_URL', 'https://be-v2.ptpn1.co.id');
         $username = env('AI_BACKEND_USERNAME', 'agent_test');
         $password = env('AI_BACKEND_PASSWORD', 'agent123');
 

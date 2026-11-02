@@ -111,7 +111,7 @@ class AiResponseController extends Controller
             }
         }
 
-        $baseUrl = env('AI_BACKEND_BASE_URL', 'https://be.ptpn1.co.id');
+        $baseUrl = env('AI_BACKEND_BASE_URL', 'https://be-v2.ptpn1.co.id');
         $username = env('AI_BACKEND_USERNAME', 'agent_test');
         $password = env('AI_BACKEND_PASSWORD', 'agent123');
 
@@ -165,7 +165,7 @@ class AiResponseController extends Controller
             }
         }
 
-        $baseUrl = env('AI_BACKEND_BASE_URL', 'https://be.ptpn1.co.id');
+        $baseUrl = env('AI_BACKEND_BASE_URL', 'https://be-v2.ptpn1.co.id');
         try {
             $response = Http::withoutVerifying()
                 ->timeout($timeout)
@@ -215,7 +215,7 @@ class AiResponseController extends Controller
         return [
             'token'      => $entry['token'],
             'expiresAt'  => $entry['expiresAt'],
-            'url'        => env('AI_BACKEND_URL', 'https://be.ptpn1.co.id/api/ai/chat'),
+            'url'        => env('AI_BACKEND_URL', 'https://be-v2.ptpn1.co.id/api/ai/chat'),
             'agent'      => env('AI_BACKEND_AGENT', 'agrinav_agent'),
             'voiceAgent' => env('AI_BACKEND_VOICE_AGENT', 'agrinav_voice_agent'),
         ];
@@ -299,7 +299,7 @@ class AiResponseController extends Controller
                         return;
                     }
 
-                    $url = env('AI_BACKEND_URL', 'https://be.ptpn1.co.id/api/ai/chat');
+                    $url = env('AI_BACKEND_URL', 'https://be-v2.ptpn1.co.id/api/ai/chat');
 
                     $requestData = [
                         'message' => $contextMessage,  // Message dengan context
@@ -392,7 +392,7 @@ class AiResponseController extends Controller
                 ], 500);
             }
 
-            $url = env('AI_BACKEND_URL', 'https://be.ptpn1.co.id/api/ai/chat');
+            $url = env('AI_BACKEND_URL', 'https://be-v2.ptpn1.co.id/api/ai/chat');
 
             $payload = [
                 'message' => $contextMessage,  // Message dengan context
@@ -479,7 +479,7 @@ class AiResponseController extends Controller
      * Tujuan: mengisolasi sumber 504.
      *   - Jika `curl -N https://.../sse-test` memunculkan angka SATU PER SATU tiap detik
      *     -> jalur nginx->PHP SSE sudah OK; berarti 504 di /ai/response berasal dari
-     *        AI backend (be.ptpn1.co.id) yang lambat/hang.
+     *        AI backend (be-v2.ptpn1.co.id) yang lambat/hang.
      *   - Jika angka muncul MENUMPUK di akhir / malah 504 -> masih ada buffering/timeout
      *        di nginx (proxy_buffering / proxy_read_timeout).
      */
