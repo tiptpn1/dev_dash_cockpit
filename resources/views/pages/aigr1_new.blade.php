@@ -1447,6 +1447,9 @@
         let voiceAbort = null;
         let voiceTurnSeq = 0;
         let activeTalkStream = null;
+        let isEvaSpeaking = false;
+        let evaSpeakingTimer = null;
+        let currentSpokenText = '';
         let lastTurn = { text: '', at: 0, answered: true };   // used to merge split utterances
         let statusCycleTimer = null;    // cycles HUD labels while processing
         const handledUserMessageIds = new Set();
@@ -2066,24 +2069,53 @@
 
         // Client-side fallback in case the backend did not send metadata.spokenText.
         function toSpeakable(text) {
-            let t = unwrapPlanningJson(String(text || '')).replace(CITATION_RE, '')
-                .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
-                .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-                .replace(/https?:\/\/\S+/g, ' ')
-                .replace(/^\s*\d+[.)]\s+/gm, '')
-                .replace(/[`*_#>|~]/g, ' ')
-                .replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, '')
-                // list items flow as one sentence ("a, b, c") instead of many choppy mini-sentences
-                .replace(/:\s*\n\s*[-•]\s+/g, ': ')
-                .replace(/\n\s*[-•]\s+/g, ', ')
-                .replace(/^\s*[-•]\s+/gm, '')
-                .replace(/\s*\n+\s*/g, '. ')
-                .replace(/\s{2,}/g, ' ')
-                .replace(/([.!?,:])\s*[.,]/g, '$1')
-                .trim();
-            if (t.length > 500) {
-                const cut = t.slice(0, 500);
-                t = cut.slice(0, Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('! '), cut.lastIndexOf('? '), 120) + 1) + ' Detail lengkapnya saya tampilkan di layar chat.';
+            let t = unwrapPlanningJson(String(text || '')).replace(CITATION_RE, '');
+
+            // Drop image markdown (charts are visible on screen, not read)
+            t = t.replace(/!\[[^\]]*\]\([^)]*\)/g, ' ');
+            // Drop link URLs, keep label
+            t = t.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1');
+            t = t.replace(/https?:\/\/\S+/gi, ' ');
+
+            // Convert markdown tables into a natural conversational summary notice
+            if (/\|[^\n]+\|\s*\n\s*\|[-: |]+\|/m.test(t)) {
+                t = t.replace(/(?:^|\n)\|[^\n]+\|(?:\n\|[^\n]+\|)+/g, '\nDetail tabel lengkapnya sudah saya tampilkan di layar chat.\n');
+            }
+
+            // Remove code blocks and inline code
+            t = t.replace(/```[\s\S]*?```/g, ' ');
+            t = t.replace(/`([^`]*)`/g, '$1');
+
+            // Strip headings, bold, italic, strikethrough, blockquotes
+            t = t.replace(/^#{1,6}\s*/gm, '');
+            t = t.replace(/^>\s*/gm, '');
+            t = t.replace(/(\*{1,2}|_{1,2}|~~)/g, '');
+            t = t.replace(/[`#~]/g, ' ');
+
+            // Strip emoji / symbols
+            t = t.replace(/[\p{Extended_Pictographic}\uFE0F\u200D\u20E3]/gu, '');
+
+            // Bullet & numbered lists flow smoothly as spoken pauses
+            t = t.replace(/:\s*\n\s*[-•*]\s+/g, ': ');
+            t = t.replace(/\n\s*[-•*]\s+/g, ', ');
+            t = t.replace(/^\s*[-•*]\s+/gm, '');
+            t = t.replace(/^\s*\d+[.)]\s+/gm, ', ');
+
+            // Normalize linebreaks to sentence pauses
+            t = t.replace(/\s*\n+\s*/g, '. ');
+            t = t.replace(/\s{2,}/g, ' ');
+            t = t.replace(/([.!?,:])\s*[.,]/g, '$1');
+            t = t.replace(/^[,.\s]+/, '').trim();
+
+            // Intelligent truncation: cut at a natural sentence boundary (<= 380 chars)
+            if (t.length > 380) {
+                const cut = t.slice(0, 380);
+                const lastDot = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('! '), cut.lastIndexOf('? '));
+                if (lastDot > 90) {
+                    t = cut.slice(0, lastDot + 1) + ' Detail lengkapnya sudah saya tampilkan di layar chat.';
+                } else {
+                    t = cut.replace(/\s+\S*$/, '') + '. Detail selengkapnya dapat Anda lihat di layar chat.';
+                }
             }
             return t;
         }
@@ -2092,17 +2124,43 @@
         // Applied to EVERY utterance, including backend metadata.spokenText.
         function normalizeForSpeech(text) {
             return String(text || '')
+                // Sapaan / Panggilan
                 .replace(/\b(Bapak|Pak)\s*\/\s*(Ibu|Bu)\b/gi, 'Bapak atau Ibu')
                 .replace(/\b(Ibu|Bu)\s*\/\s*(Bapak|Pak)\b/gi, 'Ibu atau Bapak')
-                .replace(/\bRp\.?\s*([\d.,]+)\s*(T|M|Jt|Rb)\b/g, (m, n, u) => n + ' ' + ({ T: 'triliun', M: 'miliar', Jt: 'juta', Rb: 'ribu' }[u]) + ' rupiah')
-                .replace(/\bRp\.?\s*([\d.,]+)\s*(triliun|miliar|juta|ribu)?/gi, (m, n, u) => n + (u ? ' ' + u : '') + ' rupiah')
+
+                // PTPN & Terminologi Korporat
+                .replace(/\bPTPN\s*(1|I)\b/gi, 'PTPN Satu')
+                .replace(/\bPTPN\s*(2|II)\b/gi, 'PTPN Dua')
+                .replace(/\bPTPN\s*(3|III)\b/gi, 'PTPN Tiga')
+                .replace(/\bPTPN\s*(4|IV)\b/gi, 'PTPN Empat')
+                .replace(/\bPTPN\s*(5|V)\b/gi, 'PTPN Lima')
+                .replace(/\bRKAP\b/gi, 'R-K-A-P')
+                .replace(/\bSDM\b/gi, 'S-D-M')
+                .replace(/\bHGU\b/gi, 'H-G-U')
+                .replace(/\bDRC\b/gi, 'D-R-C')
+                .replace(/\bTM\b/g, 'Tanaman Menghasilkan')
+                .replace(/\bTBM\b/g, 'Tanaman Belum Menghasilkan')
+
+                // Mata Uang
+                .replace(/\bRp\.?\s*([\d.,]+)\s*(T|triliun)\b/gi, '$1 triliun rupiah')
+                .replace(/\bRp\.?\s*([\d.,]+)\s*(M|miliar)\b/gi, '$1 miliar rupiah')
+                .replace(/\bRp\.?\s*([\d.,]+)\s*(Jt|juta)\b/gi, '$1 juta rupiah')
+                .replace(/\bRp\.?\s*([\d.,]+)\s*(Rb|ribu)\b/gi, '$1 ribu rupiah')
+                .replace(/\bRp\.?\s*([\d.,]+)/gi, '$1 rupiah')
+
+                // Satuan & Angka
                 .replace(/(-?\d[\d.,]*)\s*T\b/g, '$1 triliun')
                 .replace(/(-?\d[\d.,]*)\s*M\b/g, '$1 miliar')
                 .replace(/(-?\d[\d.,]*)\s*(Jt|jt)\b/g, '$1 juta')
                 .replace(/(^|[\s(:])-(\d)/g, '$1minus $2')
-                .replace(/(\d)\s*%/g, '$1 persen')
+                .replace(/(\d+)\s*%/g, '$1 persen')
                 .replace(/\s*\/\s*(ha|Ha|HA)\b/g, ' per hektar')
+                .replace(/\b(ha|Ha|HA)\b/g, 'hektar')
+                .replace(/\bkg\b/gi, 'kilogram')
+                .replace(/\bton\b/gi, 'ton')
                 .replace(/\s*\/\s*(hari|minggu|bulan|tahun|jam|kg|ton|liter|orang)\b/gi, ' per $1')
+
+                // Perbandingan & Singkatan
                 .replace(/\bYoY\b/g, 'dibanding tahun lalu')
                 .replace(/\bMoM\b/g, 'dibanding bulan lalu')
                 .replace(/\bvs\.?\b/gi, 'dibanding')
@@ -2110,8 +2168,13 @@
                 .replace(/\bdsb\.?/gi, 'dan sebagainya')
                 .replace(/\byg\b/gi, 'yang')
                 .replace(/\btdk\b/gi, 'tidak')
+                .replace(/\bdgn\b/gi, 'dengan')
+                .replace(/\bjml\b/gi, 'jumlah')
+                .replace(/\bprod\b/gi, 'produksi')
                 .replace(/\s*&\s*/g, ' dan ')
-                .replace(/([A-Za-z\u00C0-\u024F]+)\s*\/\s*(?=[A-Za-z\u00C0-\u024F])/g, '$1 atau ')   // "Excel/PDF" -> "Excel atau PDF"
+                .replace(/([A-Za-z\u00C0-\u024F]+)\s*\/\s*(?=[A-Za-z\u00C0-\u024F])/g, '$1 atau ')
+
+                // Bersihkan karakter teknis
                 .replace(/\//g, ' ')
                 .replace(/[()\[\]{}"]/g, ' ')
                 .replace(/\s+([,.!?])/g, '$1')
@@ -2121,7 +2184,7 @@
 
         // Split into natural phrases WITHOUT breaking decimals ("3,5" / "1.250") or abbreviations,
         // then merge short sentences so the TTS keeps a continuous prosody instead of word-by-word chops.
-        function chunkForSpeech(text, minLen = 90) {
+        function chunkForSpeech(text, minLen = 80) {
             const parts = text.split(/(?<=[.!?])\s+(?=[A-Z\u00C0-\u00DD0-9"'])/);
             const chunks = [];
             let buf = '';
@@ -2133,17 +2196,62 @@
             return chunks.length ? chunks : [text];
         }
 
-        // Stream text to the avatar in phrase-sized chunks (fast first audio, smooth prosody).
-        async function speakViaAnam(text, existingStream = null) {
+                // Stream text to the avatar in phrase-sized chunks with talk() fallback and smart voice barge-in.
+        async function speakViaAnam(text) {
             if (!anamClient || !text) return;
             const spoken = normalizeForSpeech(text);
-            if (!spoken) return;
+            if (!spoken || !spoken.trim()) return;
+
+            // Track speech & text for smart barge-in echo filtering (mic stays active so user can interrupt)
+            isEvaSpeaking = true;
+            currentSpokenText = spoken.toLowerCase();
+            stopStatusCycle();
+            const videoStatus = document.getElementById('videoStatus');
+            if (videoStatus) videoStatus.textContent = 'Berbicara...';
+
+            let spokenOk = false;
             const chunks = chunkForSpeech(spoken);
-            let stream = existingStream && existingStream.isActive() ? existingStream : anamClient.createTalkMessageStream();
-            activeTalkStream = stream;
-            for (let i = 0; i < chunks.length; i++) {
-                await stream.streamMessageChunk(chunks[i] + ' ', i === chunks.length - 1);
+
+            // 1. Try streaming chunks via TalkMessageStream
+            try {
+                const stream = anamClient.createTalkMessageStream();
+                activeTalkStream = stream;
+                for (let i = 0; i < chunks.length; i++) {
+                    if (!isEvaSpeaking) {
+                        console.log('[Anam Barge-in] Speech interrupted by user during stream');
+                        break;
+                    }
+                    if (stream.isActive()) {
+                        await stream.streamMessageChunk(chunks[i] + ' ', i === chunks.length - 1);
+                    }
+                }
+                spokenOk = true;
+                console.log('[Anam] Streamed speech chunks successfully (' + chunks.length + ' chunks)');
+            } catch (err) {
+                console.warn('[Anam] createTalkMessageStream error, falling back to talk():', err);
             }
+
+            // 2. Fallback to direct talk() if stream failed or was inactive
+            if (!spokenOk && isEvaSpeaking && typeof anamClient.talk === 'function') {
+                try {
+                    await anamClient.talk(spoken);
+                    spokenOk = true;
+                    console.log('[Anam] Spoke via talk() fallback');
+                } catch (talkErr) {
+                    console.error('[Anam] talk() fallback also failed:', talkErr);
+                }
+            }
+
+            // 3. Duration timer: return to "Mendengarkan..." once speech playback completes
+            const durationMs = Math.max(2200, Math.min(28000, Math.round((spoken.length / 13) * 1000) + 1000));
+            clearTimeout(evaSpeakingTimer);
+            evaSpeakingTimer = setTimeout(() => {
+                isEvaSpeaking = false;
+                currentSpokenText = '';
+                if (callState === 'active') {
+                    if (videoStatus) videoStatus.textContent = 'Mendengarkan...';
+                }
+            }, durationMs);
         }
 
         function handleSseBlock(raw, onEvent) {
@@ -2284,10 +2392,16 @@
 
         // One conversational turn: user speech (transcribed by Anam) → ai-be → avatar speech + chat bubble.
         async function runVoiceTurn(text) {
-            // A real (transcribed) user turn is the only reliable barge-in signal: stop the avatar now.
-            try {
-                if (anamClient && activeTalkStream && activeTalkStream.isActive()) anamClient.interruptPersona();
-            } catch (e) { console.warn('interruptPersona failed:', e); }
+            // Instant barge-in: If avatar is speaking, stop immediately so user feels in full control
+            if (isEvaSpeaking || (anamClient && activeTalkStream && activeTalkStream.isActive())) {
+                try {
+                    if (anamClient) anamClient.interruptPersona();
+                } catch (e) { console.warn('interruptPersona failed:', e); }
+                clearTimeout(evaSpeakingTimer);
+                isEvaSpeaking = false;
+                currentSpokenText = '';
+            }
+            }
 
             // STT sometimes splits one sentence into two turns ("tampilkan dan analisa" + "data keuangan").
             // If the previous turn is still unanswered and very recent, merge instead of asking twice.
@@ -2315,35 +2429,45 @@
 
             startStatusCycle(videoStatus);
 
-            // No instant one-word ack (it produced a lone "Oke." followed by dead air = choppy).
-            // Instead: ONE natural filler only if the answer is not ready after ~1.3s, and one
-            // "still working" line for slow data fetches. Filler + answer share ONE talk stream so
-            // the avatar flows into the answer without restarting.
-            let ackStream = null;
             let answered = false;
             let chartRendered = false;
             let bubble = null;
-            let fillerStream = null;
-            const sayFiller = async (pool) => {
-                if (answered || !anamClient || seq !== voiceTurnSeq) return;
+
+            // Natural conversational filler: if data takes >1.3s to fetch from n8n/database,
+            // EVA acknowledges warmly with a complete short phrase, keeping flow smooth.
+                        const sayFiller = async (pool) => {
+                if (answered || !anamClient || seq !== voiceTurnSeq || isEvaSpeaking) return;
                 try {
-                    const fs = (fillerStream && fillerStream.isActive()) ? fillerStream : anamClient.createTalkMessageStream();
-                    fillerStream = fs;
-                    activeTalkStream = fs;
-                    await fs.streamMessageChunk(pickRandom(pool) + ' ', false);
-                } catch (e) { fillerStream = null; }
+                    const phrase = pickRandom(pool);
+                    stopStatusCycle();
+                    if (videoStatus) videoStatus.textContent = 'Mengecek data...';
+                    const stream = anamClient.createTalkMessageStream();
+                    activeTalkStream = stream;
+                    isEvaSpeaking = true;
+                    currentSpokenText = phrase.toLowerCase();
+                    await stream.streamMessageChunk(phrase + ' ', true); // cleanly complete filler
+                    clearTimeout(evaSpeakingTimer);
+                    evaSpeakingTimer = setTimeout(() => {
+                        isEvaSpeaking = false;
+                        currentSpokenText = '';
+                        if (callState === 'active' && !answered) {
+                            startStatusCycle(videoStatus);
+                        }
+                    }, 2400);
+                } catch (e) {
+                    console.warn('[Anam] Filler speech failed:', e);
+                    isEvaSpeaking = false;
+                    currentSpokenText = '';
+                }
             };
             const fillerTimer = setTimeout(() => sayFiller(VOICE_FILLER_POOL), VOICE_FILLER_AFTER_MS);
             const stillTimer  = setTimeout(() => sayFiller(VOICE_STILL_WORKING_POOL), VOICE_STILL_WORKING_MS);
 
-            // Voice best practice: the avatar only speaks the short spokenText; the full markdown answer,
-            // tables and charts are shown in the chat bubble (charts arrive with a later `done` event).
             try {
                 await streamAiTurn(text, voiceAbort.signal, true, (event, data) => {
                     if (seq !== voiceTurnSeq) return;
 
                     if (event === 'skill_called') {
-                        // ── Trick 3: Skill-specific status labels ─────────────────────────
                         const isChart = data && data.skill === 'generate_chart_image';
                         stopStatusCycle();
                         videoStatus.textContent = isChart ? 'Membuat grafik...' : 'Mengambil data...';
@@ -2364,23 +2488,21 @@
                             bubble = addMessage('');
                             chartRendered = !!(blocks || imageUrl);
                             renderBotContent(bubble, { text: content, blocks, imageUrl }).then(saveSession);
-                            videoStatus.textContent = 'Berbicara...';
+
+                            // Extract spoken text: prioritize backend metadata.spokenText (generated for agrinav_voice_agent),
+                            // fallback to client-side toSpeakable(content)
                             const spoken = (r.message && r.message.metadata && r.message.metadata.spokenText) || toSpeakable(content);
-                            // Short breath between filler and answer (only when a filler was spoken).
-                            const answerDelay = fillerStream ? 250 : 0;
+
+                            // Cadence pause: if a filler was actively speaking, wait a moment before delivering the main answer
+                            const delay = isEvaSpeaking ? 400 : 0;
                             setTimeout(() => {
-                                speakViaAnam(spoken, fillerStream || ackStream)
-                                    .then(() => {
-                                        // ── Trick 5: Return to Listening after speaking ──────
-                                        if (seq === voiceTurnSeq && isVideoCallActive) {
-                                            videoStatus.textContent = 'Mendengarkan...';
-                                        }
-                                    })
-                                    .catch(err => console.error('Anam speak error:', err));
-                            }, answerDelay);
+                                if (seq === voiceTurnSeq && isVideoCallActive) {
+                                    speakViaAnam(spoken).catch(err => console.error('Anam speak error:', err));
+                                }
+                            }, delay);
                         } else if (!chartRendered && (blocks || imageUrl)) {
                             // Charts arrive with the later `done`: upgrade the same bubble in place.
-                            // Never re-speak - the avatar already delivered the answer.
+                            // Never re-speak - the avatar already delivered the spoken answer.
                             chartRendered = true;
                             renderBotContent(bubble, { text: content, blocks, imageUrl }).then(saveSession);
                         }
@@ -2391,7 +2513,7 @@
 
                 if (!answered && seq === voiceTurnSeq) throw new Error('Empty response');
             } catch (error) {
-                if (error.name === 'AbortError' || seq !== voiceTurnSeq) return;   // superseded or call ended
+                if (error.name === 'AbortError' || seq !== voiceTurnSeq) return;
                 console.error('Voice turn error:', error);
                 turnRef.answered = true;
                 clearTimeout(fillerTimer);
@@ -2399,29 +2521,55 @@
                 stopStatusCycle();
                 typing.remove();
                 addMessage('⚠️ ' + VOICE_ERROR);
-                speakViaAnam(VOICE_ERROR, fillerStream || ackStream).catch(() => {});
+                speakViaAnam(VOICE_ERROR).catch(() => {});
             } finally {
                 clearTimeout(fillerTimer);
                 clearTimeout(stillTimer);
                 stopStatusCycle();
-                // Remove any leftover typing indicator (double-safe)
                 document.querySelectorAll('.message.typing-indicator').forEach(el => el.remove());
                 if (seq === voiceTurnSeq) {
                     voiceTurnInFlight = false;
                     setProcessing(false);
-                    // Status restored to Listening after speak (Trick 5), but fall-back after 6s
-                    setTimeout(() => {
-                        if (isVideoCallActive && seq === voiceTurnSeq) videoStatus.textContent = 'Mendengarkan...';
-                    }, 6000);
                 }
             }
         }
 
+                // Smart Voice Barge-in & Echo Classifier
+        function isGenuineUserInterruption(rawTranscript) {
+            if (!rawTranscript) return false;
+            const text = rawTranscript.trim().toLowerCase();
+            if (text.length < 2) return false;
+
+            // Direct interruption keywords & common agricultural query triggers
+            const INTERRUPT_KEYWORDS_RE = /\b(stop|tunggu|bentar|sebentar|diam|cukup|batal|interupsi|halo|eva|tanya|mau tanya|ganti|bukan|eh|kenapa|berapa|bagaimana|gimana|apa|apakah|siapa|tolong|coba|tampilkan|lihat|jelaskan|hitung|ptpn|kebun|rkap|drc|sawit|karet|tebu|produksi|biaya|target|realisasi)\b/i;
+            if (INTERRUPT_KEYWORDS_RE.test(text)) {
+                return true;
+            }
+
+            if (!isEvaSpeaking || !currentSpokenText) return true;
+
+            // Echo filter: compare words of incoming transcript against EVA's ongoing speech
+            const transcriptWords = text.replace(/[^a-zA-Z0-9\s]/g, '').split(/\s+/).filter(w => w.length > 2);
+            if (!transcriptWords.length) return false;
+
+            let matchCount = 0;
+            for (const w of transcriptWords) {
+                if (currentSpokenText.includes(w)) matchCount++;
+            }
+            const overlapRatio = matchCount / transcriptWords.length;
+
+            // If words match EVA's speech by >= 65% without command keywords, it's speaker echo
+            if (overlapRatio >= 0.65) {
+                console.log('[Anam Barge-in] Discarded as speaker echo (overlap ' + Math.round(overlapRatio * 100) + '%):', text);
+                return false;
+            }
+
+            return true;
+        }
+
         function setupAiBeBrain(anamSdk) {
-            // Finished user utterances arrive via history updates; debounce to use the final transcript.
-            // ── Trick 6: Trailing-silence guard ──────────────────────────────────────────
-            // Reset the debounce timer on every update so partial mid-sentence transcripts
-            // don't fire ai-be prematurely. Only the stable final text triggers the turn.
+            // Finished user utterances arrive via history updates
+            // ── Trick 6: Smart Voice Barge-in & Echo Classifier ──────────────────────────
             anamClient.addListener(anamSdk.AnamEvent.MESSAGE_HISTORY_UPDATED, (messages) => {
                 if (callState !== 'active' || !messages || !messages.length) return;
                 const last = messages[messages.length - 1];
@@ -2429,23 +2577,39 @@
                 if (last.role !== 'user' || !last.content || !last.content.trim()) return;
                 if (handledUserMessageIds.has(last.id)) return;
 
+                const userText = last.content.trim();
+
+                // Smart Voice Barge-in: If EVA is currently speaking, check if user is interrupting
+                if (isEvaSpeaking) {
+                    if (!isGenuineUserInterruption(userText)) {
+                        handledUserMessageIds.add(last.id);
+                        return; // Discard speaker echo
+                    }
+                    console.log('[Anam Barge-in] Valid user interruption detected:', userText);
+                    // Instant interruption: Cut EVA off immediately!
+                    try {
+                        anamClient.interruptPersona();
+                    } catch (e) { console.warn('interruptPersona failed:', e); }
+                    clearTimeout(evaSpeakingTimer);
+                    isEvaSpeaking = false;
+                    currentSpokenText = '';
+                    const videoStatus = document.getElementById('videoStatus');
+                    if (videoStatus) videoStatus.textContent = 'Mendengarkan...';
+                }
+
                 clearTimeout(voiceTurnTimer);
                 voiceTurnTimer = setTimeout(() => {
                     if (callState !== 'active' || handledUserMessageIds.has(last.id)) return;
                     handledUserMessageIds.add(last.id);
-                    runVoiceTurn(last.content.trim());
+                    runVoiceTurn(userText);
                 }, USER_TURN_DEBOUNCE_MS);
             });
 
-            // Barge-in: do NOT interrupt on raw speech-start. Speaker echo, coughs and background noise
-            // fire this event and were cutting EVA off mid-sentence. The avatar is interrupted only when
-            // a real transcript arrives (see runVoiceTurn). Here we just reflect the state in the HUD.
+            // Status indicator: reflect user speech in HUD only when EVA is not speaking
             anamClient.addListener(anamSdk.AnamEvent.USER_SPEECH_STARTED, () => {
-                if (callState !== 'active') return;
-                if (!(activeTalkStream && activeTalkStream.isActive())) {
-                    stopStatusCycle();
-                    document.getElementById('videoStatus').textContent = 'Mendengarkan...';
-                }
+                if (callState !== 'active' || isEvaSpeaking) return;
+                stopStatusCycle();
+                document.getElementById('videoStatus').textContent = 'Mendengarkan...';
             });
 
             anamClient.addListener(anamSdk.AnamEvent.MESSAGE_DELIVERY_FAILED, (failure) => {
@@ -2456,6 +2620,10 @@
         function resetVoiceBrain() {
             clearTimeout(voiceTurnTimer);
             voiceTurnTimer = null;
+            clearTimeout(evaSpeakingTimer);
+            evaSpeakingTimer = null;
+            isEvaSpeaking = false;
+            currentSpokenText = '';
             stopStatusCycle();
             voiceTurnSeq++;                                // invalidates any in-flight turn
             if (voiceAbort) { voiceAbort.abort(); voiceAbort = null; }
@@ -2463,7 +2631,6 @@
             lastTurn = { text: '', at: 0, answered: true };
             handledUserMessageIds.clear();
             brainMode = 'anam';
-            // Only release the busy flag when a voice turn owned it; a typed-text request may still be streaming.
             if (voiceTurnInFlight) { voiceTurnInFlight = false; setProcessing(false); }
         }
 
@@ -2654,7 +2821,7 @@
                     if (r.ok) {
                         const d = await r.json();
                         if (d && d.success && d.sessionToken) { console.log('[Anam] session token via ai-be'); return d; }
-                    } else if (r.status === 404) {
+                    } else if (r.status === 404 || r.status === 500 || r.status === 502) {
                         anamDirectDisabled = true;      // old ai-be without the endpoint — stop trying this page load
                     }
                     console.warn('[Anam] ai-be token unavailable (HTTP ' + r.status + '), using Laravel fallback');
@@ -2919,7 +3086,12 @@
 
         window.getPreferredMicConstraints = function() {
             const id = localStorage.getItem(MIC_PREF_KEY);
-            return id ? { deviceId: { ideal: id } } : true;
+            const baseConstraints = {
+                echoCancellation: { ideal: true },
+                noiseSuppression: { ideal: true },
+                autoGainControl: { ideal: true }
+            };
+            return id ? { ...baseConstraints, deviceId: { ideal: id } } : baseConstraints;
         };
 
         function mtSetCheck(key, state, text) {
