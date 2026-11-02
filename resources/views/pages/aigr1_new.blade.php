@@ -1413,6 +1413,16 @@
 
         // ai-be voice brain state (Anam = STT + avatar + TTS; answers come from ai-be)
         const ANAM_SDK_URL = 'https://esm.sh/@anam-ai/js-sdk@4.29.1';
+        // Cached, retry-safe SDK loader. Warmed up while the page is idle so a call doesn't pay the
+        // esm.sh download (often the slowest step on corporate networks) on its critical path.
+        let anamSdkPromise = null;
+        function loadAnamSdk() {
+            if (!anamSdkPromise) {
+                anamSdkPromise = import(ANAM_SDK_URL).catch(err => { anamSdkPromise = null; throw err; });
+            }
+            return anamSdkPromise;
+        }
+        (window.requestIdleCallback || ((cb) => setTimeout(cb, 1500)))(() => { loadAnamSdk().catch(() => {}); });
         const VOICE_GREETING = 'Halo, saya EVA, asisten AgriNav PTPN 1. Siap membantu. Ada yang ingin Anda tanyakan?';
         const VOICE_FILLER_POOL = [
             'Baik, saya cek datanya dulu ya.',
@@ -2584,6 +2594,16 @@
                 return { status: 'Mikrofon sedang dipakai', text: 'Mikrofon sedang dipakai aplikasi lain atau diblokir sistem. Tutup aplikasi lain lalu coba lagi.' };
             }
             if (name === 'TimeoutError') {
+                const msg = (error && error.message) || '';
+                if (/SDK/i.test(msg)) {
+                    return { status: 'Gagal memuat SDK', text: 'Library video call (esm.sh) tidak bisa dimuat. Periksa apakah jaringan/firewall memblokir esm.sh, lalu coba lagi.' };
+                }
+                if (/Streaming/i.test(msg)) {
+                    return { status: 'Koneksi video lambat', text: 'Sambungan video ke Anam AI terlalu lama (WebRTC). Jaringan atau firewall mungkin memblokir koneksi real-time (UDP), coba jaringan lain lalu ulangi.' };
+                }
+                if (/Token/i.test(msg)) {
+                    return { status: 'Server lambat', text: 'Server terlalu lama membuat sesi video call. Coba lagi sebentar lagi.' };
+                }
                 return { status: 'Waktu habis', text: 'Menghubungkan terlalu lama. Periksa koneksi internet Anda lalu coba lagi.' };
             }
             return { status: 'Gagal terhubung', text: 'Video call gagal dimulai. Periksa koneksi internet atau pengaturan Anam AI, lalu coba lagi.' };
@@ -2629,6 +2649,12 @@
 
             let stream = null;
             try {
+                // Start loading the SDK right away (usually already cached by the idle warm-up),
+                // in parallel with the session-token request, instead of one after the other.
+                const t0 = performance.now();
+                const sdkPromise = withTimeout(loadAnamSdk(), 45000, 'SDK load timeout');
+                sdkPromise.catch(() => {});                // surfaced below; avoid an unhandled rejection if the token step fails first
+
                 // Get session token from backend
                 const tokenResponse = await withTimeout(fetch('/aigri/anam-token', {
                     method: 'POST',
@@ -2636,7 +2662,7 @@
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     }
-                }), 20000, 'Token session timeout');
+                }), 30000, 'Token session timeout');
                 if (isStale()) return;
 
                 if (!tokenResponse.ok) {
@@ -2650,8 +2676,9 @@
                     throw new Error(data.message || 'Invalid session token');
                 }
 
-                // Import Anam AI SDK
-                const anamSdk = await withTimeout(import(ANAM_SDK_URL), 20000, 'SDK load timeout');
+                // Import Anam AI SDK (already loading / loaded)
+                const anamSdk = await sdkPromise;
+                console.log('[Anam] token + SDK ready in ' + Math.round(performance.now() - t0) + 'ms');
                 if (isStale()) return;
 
                 // Mic API only exists in secure contexts (HTTPS or localhost/127.0.0.1).
@@ -2705,7 +2732,9 @@
                 video.style.display = 'block';
 
                 // Start streaming with custom media stream to video element
-                await withTimeout(client.streamToVideoElement('avatarVideo', stream), 30000, 'Streaming timeout');
+                const tStream = performance.now();
+                await withTimeout(client.streamToVideoElement('avatarVideo', stream), 60000, 'Streaming timeout');
+                console.log('[Anam] video stream ready in ' + Math.round(performance.now() - tStream) + 'ms');
                 if (isStale()) return;
 
                 // Ensure video is unmuted and playing
