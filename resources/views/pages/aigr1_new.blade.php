@@ -1479,7 +1479,7 @@
         const USER_TURN_DEBOUNCE_MS = 1100;   // trailing-silence before firing ai-be (avoids splitting one sentence)
         const TURN_MERGE_WINDOW_MS  = 3000;   // a follow-up fragment this soon (unanswered) is merged into the previous turn
         // Adaptive status labels cycling through processing stages
-        const STATUS_CYCLE = ['Menganalisis permintaan...', 'Mengambil data dari n8n...', 'Mengolah indikator...', 'Menyusun ringkasan...'];
+        const STATUS_CYCLE = ['Menganalisis permintaan...', 'Mengambil data...', 'Mengolah indikator...', 'Menyusun ringkasan...'];
         let brainMode = 'anam';
         let voiceTurnTimer = null;
         let voiceAbort = null;
