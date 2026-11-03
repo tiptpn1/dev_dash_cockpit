@@ -45,6 +45,8 @@ if (isset($user)) {
                                     $rawUrl = $child->url;
                                     if ($child->slug === 'sales_sonia') {
                                         $rawUrl = rtrim(config('services.sonia.url'), '/') . '/auth/agrinav?token=' . urlencode(config('services.sonia.sso_token'));
+                                    } elseif ($child->slug === 'sales_forecast') {
+                                        $rawUrl = '/sales_forecast';
                                     } elseif ($child->slug === 'operasional_cctv') {
                                         $rawUrl = 'https://cctv.ptpn1.co.id/index.php?token=QMekBGJyEv4kFk8tscWzEV2xXFxUWfqvQ2poIDqb1z2LaDJiJzJrGwveJ7DLxz76';
                                     } elseif ($child->slug === 'gis_areal') {

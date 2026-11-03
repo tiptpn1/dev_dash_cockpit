@@ -53,6 +53,14 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.href = '/evaluasi-aplikasi/monika';
         return;
       }
+      if (selectedApp === 'AGHRIS') {
+        window.location.href = '/evaluasi-aghris';
+        return;
+      }
+      if (selectedApp === 'Konsol Presensi Dfarm & HRIS') {
+        window.location.href = '/evaluasi-konsol-presensi';
+        return;
+      }
     });
   }
 });

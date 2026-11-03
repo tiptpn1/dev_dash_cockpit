@@ -847,7 +847,9 @@
                                     <option value="SAPA-Amanah">SAPA-Amanah</option>
                                     <option value="AGHRIS">AGHRIS</option>
                                 @endif
+                                <option value="Konsol Presensi Dfarm & HRIS">Konsol Presensi Dfarm & HRIS</option>
                             </select>
+
                         @endif
                     </div>
                 </div>
@@ -1950,6 +1952,11 @@
                     window.location.href = '/evaluasi-aghris';
                     return;
                 }
+                if (selectedApp === 'Konsol Presensi Dfarm & HRIS') {
+                    window.location.href = '/evaluasi-konsol-presensi';
+                    return;
+                }
+
 
                 tableTitle.textContent = `Hasil Evaluasi Aplikasi ${selectedApp} — Periode ${formattedPeriod}`;
 

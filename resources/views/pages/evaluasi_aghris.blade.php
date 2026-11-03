@@ -402,10 +402,10 @@
                 <div class="filter-grid" style="display: block;">
                     <div class="form-group" style="max-width: 300px;">
                         <label class="form-label" style="text-transform: uppercase;">Nama Aplikasi</label>
-                        <select class="form-select" id="app_select" onchange="updateDashboard()">
-                            <!-- <option value="HRIS">HRIS</option> -->
+                        <select class="form-select" id="app_select" onchange="if(this.value==='HRIS'){window.location.href='/evaluasi-aplikasi';}else if(this.value==='Konsol Presensi Dfarm & HRIS'){window.location.href='/evaluasi-konsol-presensi';}">
+                            <option value="HRIS">HRIS</option>
                             <option value="AGHRIS" selected>AGHRIS</option>
-
+                            <option value="Konsol Presensi Dfarm & HRIS">Konsol Presensi Dfarm & HRIS</option>
                         </select>
                     </div>
                 </div>

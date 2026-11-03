@@ -86,6 +86,9 @@ class CustomUser extends Model implements AuthenticatableContract
         }
 
         // Tambahan khusus untuk legacy standalone features yang berubah menjadi sub-menu
+        if ($slug === 'sales_forecast' && in_array('sales', $this->featureCache)) {
+            return true;
+        }
         if ($slug === 'sales_sonia' && in_array('sonia', $this->featureCache)) {
             return true;
         }

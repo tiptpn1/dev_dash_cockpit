@@ -134,6 +134,8 @@ Route::middleware('auth:custom')->group(function () {
     Route::get('/penjualan_karet', [PageController::class, 'penjualan_karet'])->name('penjualan_karet');
     Route::get('/pemasaran_karet', [PageController::class, 'pemasaran_karet'])->name('pemasaran_karet');
     Route::get('/sales_operational_karet', [PageController::class, 'sales_operational_karet'])->name('sales_operational_karet');
+    Route::get('/sales_forecast', [PageController::class, 'sales_forecast'])->name('sales_forecast');
+    Route::get('/api/sales/forecast-data', [PageController::class, 'sales_forecast_data'])->name('api.sales.forecast_data');
     Route::get('/crm', [PageController::class, 'crm_dashboard'])->name('crm_dashboard');
     Route::get('/api/crm/approved-prices', [PageController::class, 'crm_approved_prices'])->name('crm.approved_prices');
 
@@ -262,6 +264,11 @@ Route::middleware(['check.token.or.session'])->group(function () {
     Route::get('/evaluasi-aplikasi/hris-rekap-regional-detail', [PageController::class, 'evaluasi_hris_rekap_regional_detail'])->name('evaluasi_hris_rekap_regional_detail');
     Route::get('/evaluasi-aplikasi/hris-rekap-regional-pegawai', [PageController::class, 'evaluasi_hris_rekap_regional_pegawai'])->name('evaluasi_hris_rekap_regional_pegawai');
     Route::get('/evaluasi-aplikasi/hris-rekap-regional-pegawai-detail', [PageController::class, 'evaluasi_hris_rekap_regional_pegawai_detail'])->name('evaluasi_hris_rekap_regional_pegawai_detail');
+
+    Route::get('/evaluasi-konsol-presensi', [PageController::class, 'evaluasi_konsol_presensi'])->name('evaluasi_konsol_presensi');
+    Route::get('/api/konsol-presensi/chart-data', [PageController::class, 'konsol_presensi_chart_data'])->name('konsol_presensi_chart_data');
+    Route::get('/api/konsol-presensi/detail-data', [PageController::class, 'konsol_presensi_detail_data'])->name('konsol_presensi_detail_data');
+
 
 });
 

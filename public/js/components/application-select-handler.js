@@ -60,6 +60,18 @@ function initializeApplicationSelect() {
         window.location.href = '/evaluasi-aplikasi/monika';
         return;
       }
+
+      // Redirect to AGHRIS if selected
+      if (selectedApp === 'AGHRIS') {
+        window.location.href = '/evaluasi-aghris';
+        return;
+      }
+
+      // Redirect to Konsol Presensi Dfarm & HRIS if selected
+      if (selectedApp === 'Konsol Presensi Dfarm & HRIS') {
+        window.location.href = '/evaluasi-konsol-presensi';
+        return;
+      }
     });
   }
 
@@ -112,6 +124,18 @@ function initializeApplicationSelect() {
       // Redirect to BPD if selected
       if (selectedApp === 'BPD') {
         window.location.href = '/bpd-evaluasi';
+        return;
+      }
+
+      // Redirect to AGHRIS if selected
+      if (selectedApp === 'AGHRIS') {
+        window.location.href = '/evaluasi-aghris';
+        return;
+      }
+
+      // Redirect to Konsol Presensi Dfarm & HRIS if selected
+      if (selectedApp === 'Konsol Presensi Dfarm & HRIS') {
+        window.location.href = '/evaluasi-konsol-presensi';
         return;
       }
     });

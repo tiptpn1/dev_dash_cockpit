@@ -20,7 +20,9 @@
         <option value="MONIKA" {{ isset($selected) && $selected === 'MONIKA' ? 'selected' : '' }}>MONIKA</option>
         <option value="BPD" {{ isset($selected) && $selected === 'BPD' ? 'selected' : '' }}>Aplikasi BPD</option>
         <option value="SAPA-Amanah" {{ isset($selected) && $selected === 'SAPA-Amanah' ? 'selected' : '' }}>SAPA-Amanah</option>
+        <option value="AGHRIS" {{ isset($selected) && $selected === 'AGHRIS' ? 'selected' : '' }}>AGHRIS</option>
       @endif
+      <option value="Konsol Presensi Dfarm & HRIS" {{ isset($selected) && $selected === 'Konsol Presensi Dfarm & HRIS' ? 'selected' : '' }}>Konsol Presensi Dfarm & HRIS</option>
     </select>
   </div>
 </div>

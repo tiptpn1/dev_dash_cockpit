@@ -148,6 +148,7 @@
                         <option value="monika">MONIKA</option>
                         <option value="sapa_amanah">SAPA-Amanah</option>
                     @endif
+                    <option value="konsol_presensi">Konsol Presensi Dfarm & HRIS</option>
                 </select>
             </div>
         </div>
@@ -192,6 +193,8 @@ function initMaia() {
                 window.location.href = '/evaluasi-aplikasi/monika';
             } else if (val === 'maia') {
                 window.location.href = '/evaluasi-aplikasi/maia';
+            } else if (val === 'konsol_presensi') {
+                window.location.href = '/evaluasi-konsol-presensi';
             }
         });
     }
