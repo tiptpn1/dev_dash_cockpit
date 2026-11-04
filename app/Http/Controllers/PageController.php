@@ -8468,10 +8468,20 @@ class PageController extends Controller
                     SELECT 
                         u.unit_nama,
                         u.total_pegawai,
+                        u.total_pegawai_tetap,
+                        (u.total_pegawai - u.total_pegawai_tetap) as total_pegawai_tidak_tetap,
                         COALESCE(att.hadir_hris_only, 0) as hadir_hris,
                         COALESCE(att.hadir_dfarm_only, 0) as hadir_dfarm,
                         COALESCE(att.hadir_both, 0) as hadir_both,
                         COALESCE(att.total_hadir, 0) as total_hadir,
+                        COALESCE(att.hadir_tetap, 0) as hadir_tetap,
+                        (COALESCE(att.total_hadir, 0) - COALESCE(att.hadir_tetap, 0)) as hadir_tidak_tetap,
+                        COALESCE(att.hadir_hris_tetap, 0) as hadir_hris_tetap,
+                        (COALESCE(att.hadir_hris_only, 0) - COALESCE(att.hadir_hris_tetap, 0)) as hadir_hris_tidak_tetap,
+                        COALESCE(att.hadir_dfarm_tetap, 0) as hadir_dfarm_tetap,
+                        (COALESCE(att.hadir_dfarm_only, 0) - COALESCE(att.hadir_dfarm_tetap, 0)) as hadir_dfarm_tidak_tetap,
+                        COALESCE(att.hadir_both_tetap, 0) as hadir_both_tetap,
+                        (COALESCE(att.hadir_both, 0) - COALESCE(att.hadir_both_tetap, 0)) as hadir_both_tidak_tetap,
                         ROUND(COALESCE(att.hadir_hris_only, 0) / u.total_pegawai * 100, 1) as pct_hris,
                         ROUND(COALESCE(att.hadir_dfarm_only, 0) / u.total_pegawai * 100, 1) as pct_dfarm,
                         ROUND(COALESCE(att.hadir_both, 0) / u.total_pegawai * 100, 1) as pct_both,
@@ -8479,7 +8489,8 @@ class PageController extends Controller
                     FROM (
                         SELECT 
                             COALESCE(NULLIF(TRIM(p.divisi), ''), 'Lainnya') as unit_nama,
-                            COUNT(DISTINCT p.pegawai_id) as total_pegawai
+                            COUNT(DISTINCT p.pegawai_id) as total_pegawai,
+                            COUNT(DISTINCT CASE WHEN p.kelompok_pegawai LIKE '%Tetap%' AND p.kelompok_pegawai NOT LIKE '%Tidak%' THEN p.pegawai_id END) as total_pegawai_tetap
                         FROM pegawai p
                         WHERE ({$regCase}) = ?
                           AND NULLIF(TRIM(p.regional), '') IS NOT NULL
@@ -8491,9 +8502,13 @@ class PageController extends Controller
                         SELECT 
                             COALESCE(NULLIF(TRIM(p.divisi), ''), 'Lainnya') as unit_nama,
                             COUNT(DISTINCT a_sub.pegawai_id) as total_hadir,
+                            COUNT(DISTINCT CASE WHEN p.kelompok_pegawai LIKE '%Tetap%' AND p.kelompok_pegawai NOT LIKE '%Tidak%' THEN a_sub.pegawai_id END) as hadir_tetap,
                             COUNT(DISTINCT CASE WHEN a_sub.has_hris = 1 AND a_sub.has_dfarm = 0 THEN a_sub.pegawai_id END) as hadir_hris_only,
+                            COUNT(DISTINCT CASE WHEN a_sub.has_hris = 1 AND a_sub.has_dfarm = 0 AND (p.kelompok_pegawai LIKE '%Tetap%' AND p.kelompok_pegawai NOT LIKE '%Tidak%') THEN a_sub.pegawai_id END) as hadir_hris_tetap,
                             COUNT(DISTINCT CASE WHEN a_sub.has_dfarm = 1 AND a_sub.has_hris = 0 THEN a_sub.pegawai_id END) as hadir_dfarm_only,
-                            COUNT(DISTINCT CASE WHEN a_sub.has_hris = 1 AND a_sub.has_dfarm = 1 THEN a_sub.pegawai_id END) as hadir_both
+                            COUNT(DISTINCT CASE WHEN a_sub.has_dfarm = 1 AND a_sub.has_hris = 0 AND (p.kelompok_pegawai LIKE '%Tetap%' AND p.kelompok_pegawai NOT LIKE '%Tidak%') THEN a_sub.pegawai_id END) as hadir_dfarm_tetap,
+                            COUNT(DISTINCT CASE WHEN a_sub.has_hris = 1 AND a_sub.has_dfarm = 1 THEN a_sub.pegawai_id END) as hadir_both,
+                            COUNT(DISTINCT CASE WHEN a_sub.has_hris = 1 AND a_sub.has_dfarm = 1 AND (p.kelompok_pegawai LIKE '%Tetap%' AND p.kelompok_pegawai NOT LIKE '%Tidak%') THEN a_sub.pegawai_id END) as hadir_both_tetap
                         FROM (
                             SELECT 
                                 a.pegawai_id,
@@ -8520,10 +8535,20 @@ class PageController extends Controller
                     SELECT 
                         r.regional_label,
                         r.total_pegawai,
+                        r.total_pegawai_tetap,
+                        (r.total_pegawai - r.total_pegawai_tetap) as total_pegawai_tidak_tetap,
                         COALESCE(att.hadir_hris_only, 0) as hadir_hris,
                         COALESCE(att.hadir_dfarm_only, 0) as hadir_dfarm,
                         COALESCE(att.hadir_both, 0) as hadir_both,
                         COALESCE(att.total_hadir, 0) as total_hadir,
+                        COALESCE(att.hadir_tetap, 0) as hadir_tetap,
+                        (COALESCE(att.total_hadir, 0) - COALESCE(att.hadir_tetap, 0)) as hadir_tidak_tetap,
+                        COALESCE(att.hadir_hris_tetap, 0) as hadir_hris_tetap,
+                        (COALESCE(att.hadir_hris_only, 0) - COALESCE(att.hadir_hris_tetap, 0)) as hadir_hris_tidak_tetap,
+                        COALESCE(att.hadir_dfarm_tetap, 0) as hadir_dfarm_tetap,
+                        (COALESCE(att.hadir_dfarm_only, 0) - COALESCE(att.hadir_dfarm_tetap, 0)) as hadir_dfarm_tidak_tetap,
+                        COALESCE(att.hadir_both_tetap, 0) as hadir_both_tetap,
+                        (COALESCE(att.hadir_both, 0) - COALESCE(att.hadir_both_tetap, 0)) as hadir_both_tidak_tetap,
                         ROUND(COALESCE(att.hadir_hris_only, 0) / r.total_pegawai * 100, 1) as pct_hris,
                         ROUND(COALESCE(att.hadir_dfarm_only, 0) / r.total_pegawai * 100, 1) as pct_dfarm,
                         ROUND(COALESCE(att.hadir_both, 0) / r.total_pegawai * 100, 1) as pct_both,
@@ -8531,7 +8556,8 @@ class PageController extends Controller
                     FROM (
                         SELECT 
                             {$regCase} AS regional_label,
-                            COUNT(DISTINCT p.pegawai_id) as total_pegawai
+                            COUNT(DISTINCT p.pegawai_id) as total_pegawai,
+                            COUNT(DISTINCT CASE WHEN p.kelompok_pegawai LIKE '%Tetap%' AND p.kelompok_pegawai NOT LIKE '%Tidak%' THEN p.pegawai_id END) as total_pegawai_tetap
                         FROM pegawai p
                         WHERE NULLIF(TRIM(p.regional), '') IS NOT NULL
                           AND (p.penugasan_mutasi_ke IS NULL OR TRIM(p.penugasan_mutasi_ke) = '')
@@ -8542,9 +8568,13 @@ class PageController extends Controller
                         SELECT 
                             {$regCase} AS regional_label,
                             COUNT(DISTINCT a_sub.pegawai_id) as total_hadir,
+                            COUNT(DISTINCT CASE WHEN p.kelompok_pegawai LIKE '%Tetap%' AND p.kelompok_pegawai NOT LIKE '%Tidak%' THEN a_sub.pegawai_id END) as hadir_tetap,
                             COUNT(DISTINCT CASE WHEN a_sub.has_hris = 1 AND a_sub.has_dfarm = 0 THEN a_sub.pegawai_id END) as hadir_hris_only,
+                            COUNT(DISTINCT CASE WHEN a_sub.has_hris = 1 AND a_sub.has_dfarm = 0 AND (p.kelompok_pegawai LIKE '%Tetap%' AND p.kelompok_pegawai NOT LIKE '%Tidak%') THEN a_sub.pegawai_id END) as hadir_hris_tetap,
                             COUNT(DISTINCT CASE WHEN a_sub.has_dfarm = 1 AND a_sub.has_hris = 0 THEN a_sub.pegawai_id END) as hadir_dfarm_only,
-                            COUNT(DISTINCT CASE WHEN a_sub.has_hris = 1 AND a_sub.has_dfarm = 1 THEN a_sub.pegawai_id END) as hadir_both
+                            COUNT(DISTINCT CASE WHEN a_sub.has_dfarm = 1 AND a_sub.has_hris = 0 AND (p.kelompok_pegawai LIKE '%Tetap%' AND p.kelompok_pegawai NOT LIKE '%Tidak%') THEN a_sub.pegawai_id END) as hadir_dfarm_tetap,
+                            COUNT(DISTINCT CASE WHEN a_sub.has_hris = 1 AND a_sub.has_dfarm = 1 THEN a_sub.pegawai_id END) as hadir_both,
+                            COUNT(DISTINCT CASE WHEN a_sub.has_hris = 1 AND a_sub.has_dfarm = 1 AND (p.kelompok_pegawai LIKE '%Tetap%' AND p.kelompok_pegawai NOT LIKE '%Tidak%') THEN a_sub.pegawai_id END) as hadir_both_tetap
                         FROM (
                             SELECT 
                                 a.pegawai_id,
@@ -8586,10 +8616,24 @@ class PageController extends Controller
             $dataShareBoth = [];
 
             $totalPegawaiAll = 0;
-            $totalHadirHrisAll = 0;
-            $totalHadirDfarmAll = 0;
-            $totalHadirBothAll = 0;
+            $totalPegawaiTetapAll = 0;
+            $totalPegawaiTidakTetapAll = 0;
+
             $totalHadirAll = 0;
+            $totalHadirTetapAll = 0;
+            $totalHadirTidakTetapAll = 0;
+
+            $totalHadirHrisAll = 0;
+            $totalHadirHrisTetapAll = 0;
+            $totalHadirHrisTidakTetapAll = 0;
+
+            $totalHadirDfarmAll = 0;
+            $totalHadirDfarmTetapAll = 0;
+            $totalHadirDfarmTidakTetapAll = 0;
+
+            $totalHadirBothAll = 0;
+            $totalHadirBothTetapAll = 0;
+            $totalHadirBothTidakTetapAll = 0;
 
             foreach ($rows as $row) {
                 $labels[] = $isUnitLevel ? $row->unit_nama : $row->regional_label;
@@ -8604,10 +8648,24 @@ class PageController extends Controller
                 $dataShareBoth[] = $totHadir > 0 ? round(((int) $row->hadir_both / $totHadir) * 100, 1) : 0;
 
                 $totalPegawaiAll += (int) $row->total_pegawai;
-                $totalHadirHrisAll += (int) $row->hadir_hris;
-                $totalHadirDfarmAll += (int) $row->hadir_dfarm;
-                $totalHadirBothAll += (int) $row->hadir_both;
+                $totalPegawaiTetapAll += (int) ($row->total_pegawai_tetap ?? 0);
+                $totalPegawaiTidakTetapAll += (int) ($row->total_pegawai_tidak_tetap ?? 0);
+
                 $totalHadirAll += (int) $row->total_hadir;
+                $totalHadirTetapAll += (int) ($row->hadir_tetap ?? 0);
+                $totalHadirTidakTetapAll += (int) ($row->hadir_tidak_tetap ?? 0);
+
+                $totalHadirHrisAll += (int) $row->hadir_hris;
+                $totalHadirHrisTetapAll += (int) ($row->hadir_hris_tetap ?? 0);
+                $totalHadirHrisTidakTetapAll += (int) ($row->hadir_hris_tidak_tetap ?? 0);
+
+                $totalHadirDfarmAll += (int) $row->hadir_dfarm;
+                $totalHadirDfarmTetapAll += (int) ($row->hadir_dfarm_tetap ?? 0);
+                $totalHadirDfarmTidakTetapAll += (int) ($row->hadir_dfarm_tidak_tetap ?? 0);
+
+                $totalHadirBothAll += (int) $row->hadir_both;
+                $totalHadirBothTetapAll += (int) ($row->hadir_both_tetap ?? 0);
+                $totalHadirBothTidakTetapAll += (int) ($row->hadir_both_tidak_tetap ?? 0);
             }
 
             $overallPctHris = $totalPegawaiAll > 0 ? round(($totalHadirHrisAll / $totalPegawaiAll) * 100, 1) : 0;
@@ -8635,10 +8693,20 @@ class PageController extends Controller
                 'raw_rows' => $rows,
                 'summary' => [
                     'total_pegawai' => $totalPegawaiAll,
+                    'total_pegawai_tetap' => $totalPegawaiTetapAll,
+                    'total_pegawai_tidak_tetap' => $totalPegawaiTidakTetapAll,
                     'hadir_hris' => $totalHadirHrisAll,
+                    'hadir_hris_tetap' => $totalHadirHrisTetapAll,
+                    'hadir_hris_tidak_tetap' => $totalHadirHrisTidakTetapAll,
                     'hadir_dfarm' => $totalHadirDfarmAll,
+                    'hadir_dfarm_tetap' => $totalHadirDfarmTetapAll,
+                    'hadir_dfarm_tidak_tetap' => $totalHadirDfarmTidakTetapAll,
                     'hadir_both' => $totalHadirBothAll,
+                    'hadir_both_tetap' => $totalHadirBothTetapAll,
+                    'hadir_both_tidak_tetap' => $totalHadirBothTidakTetapAll,
                     'total_hadir' => $totalHadirAll,
+                    'hadir_tetap' => $totalHadirTetapAll,
+                    'hadir_tidak_tetap' => $totalHadirTidakTetapAll,
                     'pct_hris' => $overallPctHris,
                     'pct_dfarm' => $overallPctDfarm,
                     'pct_both' => $overallPctBoth,
@@ -8664,6 +8732,7 @@ class PageController extends Controller
             $bulan = $request->get('bulan', date('Y-m'));
             $tab = strtolower($request->get('tab', 'all')); // 'hris', 'dfarm', or 'all'
             $search = trim($request->get('search', ''));
+            $status = strtolower($request->get('status', 'all')); // 'all', 'tetap', or 'tidak_tetap'
 
             if ($mode === 'bulan') {
                 if (!preg_match('/^\d{4}-\d{2}$/', $bulan)) {
@@ -8709,6 +8778,13 @@ class PageController extends Controller
                 $bindings[] = $unit;
             }
 
+            $whereStatus = "";
+            if (in_array($status, ['tetap', 'karyawan tetap'])) {
+                $whereStatus = " AND (p.kelompok_pegawai LIKE '%Tetap%' AND p.kelompok_pegawai NOT LIKE '%Tidak%') ";
+            } elseif (in_array($status, ['tidak_tetap', 'tidak tetap', 'karyawan tidak tetap'])) {
+                $whereStatus = " AND NOT (p.kelompok_pegawai LIKE '%Tetap%' AND p.kelompok_pegawai NOT LIKE '%Tidak%') ";
+            }
+
             // Hitung count untuk tab HRIS, DFarm, dan Both (hanya check-in unik per pegawai)
             $countSql = "
                 SELECT 
@@ -8729,6 +8805,7 @@ class PageController extends Controller
                 WHERE 1=1
                 {$whereReg}
                 {$whereUnit}
+                {$whereStatus}
             ";
             $counts = DB::connection('hris')->selectOne($countSql, $bindings);
 
@@ -8772,6 +8849,15 @@ class PageController extends Controller
                             p.nama,
                             p.jabatan,
                             p.divisi,
+                            p.kelompok_pegawai,
+                            CASE 
+                                WHEN p.kelompok_pegawai LIKE '%Tetap%' AND p.kelompok_pegawai NOT LIKE '%Tidak%' THEN 'tetap' 
+                                ELSE 'tidak_tetap' 
+                            END as status_karyawan,
+                            CASE 
+                                WHEN p.kelompok_pegawai LIKE '%Tetap%' AND p.kelompok_pegawai NOT LIKE '%Tidak%' THEN 'Tetap' 
+                                ELSE 'Tidak Tetap' 
+                            END as status_label,
                             ({$regCase}) as regional_nama,
                             ROW_NUMBER() OVER (
                                 PARTITION BY a.pegawai_id, DATE(a.jam)
@@ -8785,6 +8871,7 @@ class PageController extends Controller
                           AND a.alat != 'OFFONFARM'
                           {$whereReg}
                           {$whereUnit}
+                          {$whereStatus}
                           {$searchClause}
                     )
                     SELECT 
@@ -8797,6 +8884,9 @@ class PageController extends Controller
                         nama,
                         jabatan,
                         divisi,
+                        kelompok_pegawai,
+                        status_karyawan,
+                        status_label,
                         regional_nama
                     FROM ranked_absen
                     WHERE rn = 1
@@ -8830,6 +8920,15 @@ class PageController extends Controller
                             p.nama,
                             p.jabatan,
                             p.divisi,
+                            p.kelompok_pegawai,
+                            CASE 
+                                WHEN p.kelompok_pegawai LIKE '%Tetap%' AND p.kelompok_pegawai NOT LIKE '%Tidak%' THEN 'tetap' 
+                                ELSE 'tidak_tetap' 
+                            END as status_karyawan,
+                            CASE 
+                                WHEN p.kelompok_pegawai LIKE '%Tetap%' AND p.kelompok_pegawai NOT LIKE '%Tidak%' THEN 'Tetap' 
+                                ELSE 'Tidak Tetap' 
+                            END as status_label,
                             ({$regCase}) as regional_nama,
                             ROW_NUMBER() OVER (
                                 PARTITION BY a.pegawai_id, DATE(a.jam)
@@ -8843,6 +8942,7 @@ class PageController extends Controller
                           AND a.alat = 'OFFONFARM'
                           {$whereReg}
                           {$whereUnit}
+                          {$whereStatus}
                           {$searchClause}
                     )
                     SELECT 
@@ -8855,6 +8955,9 @@ class PageController extends Controller
                         nama,
                         jabatan,
                         divisi,
+                        kelompok_pegawai,
+                        status_karyawan,
+                        status_label,
                         regional_nama
                     FROM ranked_absen
                     WHERE rn = 1
@@ -8873,6 +8976,15 @@ class PageController extends Controller
                         p.nama,
                         p.jabatan,
                         p.divisi,
+                        p.kelompok_pegawai,
+                        CASE 
+                            WHEN p.kelompok_pegawai LIKE '%Tetap%' AND p.kelompok_pegawai NOT LIKE '%Tidak%' THEN 'tetap' 
+                            ELSE 'tidak_tetap' 
+                        END as status_karyawan,
+                        CASE 
+                            WHEN p.kelompok_pegawai LIKE '%Tetap%' AND p.kelompok_pegawai NOT LIKE '%Tidak%' THEN 'Tetap' 
+                            ELSE 'Tidak Tetap' 
+                        END as status_label,
                         ({$regCase}) as regional_nama,
                         MIN(a.absensi_id) as absensi_id,
                         COALESCE(
@@ -8897,9 +9009,10 @@ class PageController extends Controller
                       AND UPPER(TRIM(a.device_id)) = 'IN'
                       {$whereReg}
                       {$whereUnit}
+                      {$whereStatus}
                       {$searchClause}
                     GROUP BY 
-                        p.pegawai_id, p.nik, p.nama, p.jabatan, p.divisi, 
+                        p.pegawai_id, p.nik, p.nama, p.jabatan, p.divisi, p.kelompok_pegawai,
                         {$regCase},
                         DATE(a.jam)
                     HAVING MAX(CASE WHEN a.alat != 'OFFONFARM' THEN 1 ELSE 0 END) = 1

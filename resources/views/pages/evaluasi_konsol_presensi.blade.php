@@ -198,7 +198,7 @@
         /* ===== KPI SUMMARY CARDS ===== */
         .kpi-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 16px;
             margin-bottom: 22px;
         }
@@ -206,12 +206,12 @@
         .kpi-card {
             background: #fff;
             border-radius: 10px;
-            padding: 16px 20px;
+            padding: 16px 18px;
             border: 1px solid #e2e8f0;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
             display: flex;
-            align-items: center;
-            gap: 14px;
+            align-items: flex-start;
+            gap: 12px;
             transition: transform 0.2s, box-shadow 0.2s;
         }
 
@@ -221,14 +221,15 @@
         }
 
         .kpi-icon {
-            width: 46px;
-            height: 46px;
+            width: 42px;
+            height: 42px;
             border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 19px;
             flex-shrink: 0;
+            margin-top: 2px;
         }
 
         .kpi-icon.blue { background: #eff6ff; color: #2563eb; }
@@ -239,6 +240,8 @@
         .kpi-body {
             display: flex;
             flex-direction: column;
+            flex: 1;
+            min-width: 0;
         }
 
         .kpi-label {
@@ -254,13 +257,65 @@
             font-weight: 700;
             color: #0f172a;
             line-height: 1.2;
+            margin: 2px 0;
         }
 
         .kpi-sub {
             font-size: 11px;
             font-weight: 500;
             color: #64748b;
-            margin-top: 2px;
+            margin-bottom: 2px;
+        }
+
+        .kpi-breakdown {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .kpi-breakdown-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+            line-height: 1.35;
+        }
+
+        .kpi-breakdown-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: #64748b;
+            font-size: 10.5px;
+            font-weight: 500;
+        }
+
+        .kpi-breakdown-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        .kpi-breakdown-dot.tetap {
+            background-color: #166534;
+            box-shadow: 0 0 0 2px rgba(22, 101, 52, 0.15);
+        }
+
+        .kpi-breakdown-dot.tidak-tetap {
+            background-color: #d97706;
+            box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.15);
+        }
+
+        .kpi-breakdown-val {
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 11px;
+            font-variant-numeric: tabular-nums;
         }
 
         /* ===== MAIN CARD & TABS ===== */
@@ -572,6 +627,84 @@
             border: 1px solid #99f6e4;
         }
 
+        .status-filter-group {
+            display: inline-flex;
+            align-items: center;
+            height: 34px;
+            box-sizing: border-box;
+            background: #f1f5f9;
+            padding: 2px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .status-filter-btn {
+            height: 28px;
+            box-sizing: border-box;
+            border: none;
+            background: transparent;
+            padding: 0 12px;
+            border-radius: 6px;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .status-filter-btn:hover {
+            color: #0f172a;
+        }
+
+        .status-filter-btn.active {
+            background: #ffffff;
+            color: #166534;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            border: 1px solid #cbd5e1;
+        }
+
+        .pill-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .pill-dot.tetap {
+            background-color: #166534;
+        }
+
+        .pill-dot.tidak-tetap {
+            background-color: #d97706;
+        }
+
+        .badge-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .badge-status.tetap {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .badge-status.tidak-tetap {
+            background: #fef3c7;
+            color: #b45309;
+            border: 1px solid #fde68a;
+        }
+
 
         .badge-jenis {
             display: inline-block;
@@ -766,7 +899,17 @@
                     <div class="kpi-body">
                         <span class="kpi-label">Total Pegawai Aktif</span>
                         <span class="kpi-value" id="kpiTotalPegawai">0</span>
-                        <span class="kpi-sub">HO & Reg 1 - Reg 8</span>
+                        <span class="kpi-sub" id="kpiSubTotalPegawai" title="HO & Reg 1 - Reg 8" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;">HO & Reg 1 - Reg 8</span>
+                        <div class="kpi-breakdown">
+                            <div class="kpi-breakdown-row" title="Karyawan Tetap">
+                                <span class="kpi-breakdown-label"><span class="kpi-breakdown-dot tetap"></span>Tetap:</span>
+                                <span class="kpi-breakdown-val" id="kpiTetapPegawai">0</span>
+                            </div>
+                            <div class="kpi-breakdown-row" title="Karyawan Tidak Tetap">
+                                <span class="kpi-breakdown-label"><span class="kpi-breakdown-dot tidak-tetap"></span>Tidak Tetap:</span>
+                                <span class="kpi-breakdown-val" id="kpiTidakTetapPegawai">0</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -778,6 +921,16 @@
                         <span class="kpi-label">Total Kehadiran</span>
                         <span class="kpi-value" id="kpiTotalHadir">0</span>
                         <span class="kpi-sub" id="kpiPctTotal">0% Kehadiran</span>
+                        <div class="kpi-breakdown">
+                            <div class="kpi-breakdown-row" title="Karyawan Tetap Hadir">
+                                <span class="kpi-breakdown-label"><span class="kpi-breakdown-dot tetap"></span>Tetap:</span>
+                                <span class="kpi-breakdown-val" id="kpiTetapTotalHadir">0</span>
+                            </div>
+                            <div class="kpi-breakdown-row" title="Karyawan Tidak Tetap Hadir">
+                                <span class="kpi-breakdown-label"><span class="kpi-breakdown-dot tidak-tetap"></span>Tidak Tetap:</span>
+                                <span class="kpi-breakdown-val" id="kpiTidakTetapTotalHadir">0</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -789,6 +942,16 @@
                         <span class="kpi-label">Presensi HRIS</span>
                         <span class="kpi-value" id="kpiHadirHris">0</span>
                         <span class="kpi-sub" id="kpiPctHris">0% dari Pegawai</span>
+                        <div class="kpi-breakdown">
+                            <div class="kpi-breakdown-row" title="Karyawan Tetap Presensi HRIS">
+                                <span class="kpi-breakdown-label"><span class="kpi-breakdown-dot tetap"></span>Tetap:</span>
+                                <span class="kpi-breakdown-val" id="kpiTetapHris">0</span>
+                            </div>
+                            <div class="kpi-breakdown-row" title="Karyawan Tidak Tetap Presensi HRIS">
+                                <span class="kpi-breakdown-label"><span class="kpi-breakdown-dot tidak-tetap"></span>Tidak Tetap:</span>
+                                <span class="kpi-breakdown-val" id="kpiTidakTetapHris">0</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -800,6 +963,16 @@
                         <span class="kpi-label">Presensi DFarm</span>
                         <span class="kpi-value" id="kpiHadirDfarm">0</span>
                         <span class="kpi-sub" id="kpiPctDfarm">0% dari Pegawai</span>
+                        <div class="kpi-breakdown">
+                            <div class="kpi-breakdown-row" title="Karyawan Tetap Presensi DFarm">
+                                <span class="kpi-breakdown-label"><span class="kpi-breakdown-dot tetap"></span>Tetap:</span>
+                                <span class="kpi-breakdown-val" id="kpiTetapDfarm">0</span>
+                            </div>
+                            <div class="kpi-breakdown-row" title="Karyawan Tidak Tetap Presensi DFarm">
+                                <span class="kpi-breakdown-label"><span class="kpi-breakdown-dot tidak-tetap"></span>Tidak Tetap:</span>
+                                <span class="kpi-breakdown-val" id="kpiTidakTetapDfarm">0</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -811,6 +984,16 @@
                         <span class="kpi-label">Presensi di Dfarm & HRIS</span>
                         <span class="kpi-value" id="kpiHadirBoth">0</span>
                         <span class="kpi-sub" id="kpiPctBoth">0% dari Pegawai</span>
+                        <div class="kpi-breakdown">
+                            <div class="kpi-breakdown-row" title="Karyawan Tetap Presensi DFarm & HRIS">
+                                <span class="kpi-breakdown-label"><span class="kpi-breakdown-dot tetap"></span>Tetap:</span>
+                                <span class="kpi-breakdown-val" id="kpiTetapBoth">0</span>
+                            </div>
+                            <div class="kpi-breakdown-row" title="Karyawan Tidak Tetap Presensi DFarm & HRIS">
+                                <span class="kpi-breakdown-label"><span class="kpi-breakdown-dot tidak-tetap"></span>Tidak Tetap:</span>
+                                <span class="kpi-breakdown-val" id="kpiTidakTetapBoth">0</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -900,13 +1083,26 @@
                     </button>
                 </div>
 
-                <!-- Table Toolbar (Search & info) -->
+                <!-- Table Toolbar (Search, Filter Status & info) -->
                 <div class="table-toolbar">
-                    <div class="search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="tableSearchInput" placeholder="Cari NIK, Nama, Divisi, atau Jabatan..." oninput="handleSearchInput(this.value)">
+                    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="tableSearchInput" placeholder="Cari NIK, Nama, Divisi, atau Jabatan..." oninput="handleSearchInput(this.value)">
+                        </div>
+                        <div class="status-filter-group" title="Filter berdasarkan Status Karyawan">
+                            <button type="button" class="status-filter-btn active" id="btnFilterStatusAll" onclick="switchStatusFilter('ALL')">
+                                Semua
+                            </button>
+                            <button type="button" class="status-filter-btn" id="btnFilterStatusTetap" onclick="switchStatusFilter('tetap')">
+                                <span class="pill-dot tetap"></span> Kary. Tetap
+                            </button>
+                            <button type="button" class="status-filter-btn" id="btnFilterStatusTidakTetap" onclick="switchStatusFilter('tidak_tetap')">
+                                <span class="pill-dot tidak-tetap"></span> Kary. Tidak Tetap
+                            </button>
+                        </div>
                     </div>
-                    <div style="font-size:12px; color:#64748b;">
+                    <div style="font-size:12px; color:#64748b; white-space:nowrap;">
                         Menampilkan <strong id="infoShowingRows">0</strong> data presensi
                     </div>
                 </div>
@@ -924,6 +1120,7 @@
                                 <th style="width: 50px; text-align: center;">NO</th>
                                 <th style="width: 100px;">NIK</th>
                                 <th>NAMA KARYAWAN</th>
+                                <th style="width: 110px; text-align: center;">STATUS</th>
                                 <th>JABATAN</th>
                                 <th>UNIT / DIVISI</th>
                                 <th>REGIONAL</th>
@@ -982,6 +1179,7 @@
         let activeRegional = 'ALL'; // 'ALL' or regional name e.g. 'Regional 2'
         let activeUnit = ''; // '' or unit name e.g. 'Kebun Sukamangli'
         let activeTab = 'hris'; // 'hris' or 'dfarm'
+        let activeStatusFilter = 'ALL'; // 'ALL', 'tetap', or 'tidak_tetap'
         let chartInstance = null;
         let chartRawData = null;
 
@@ -1107,18 +1305,73 @@
             if (!summary) return;
             const fmt = (n) => new Intl.NumberFormat('id-ID').format(n || 0);
 
+            // 1. Total Pegawai Aktif
             document.getElementById('kpiTotalPegawai').textContent = fmt(summary.total_pegawai);
+            if (document.getElementById('kpiTetapPegawai')) {
+                document.getElementById('kpiTetapPegawai').textContent = fmt(summary.total_pegawai_tetap);
+            }
+            if (document.getElementById('kpiTidakTetapPegawai')) {
+                document.getElementById('kpiTidakTetapPegawai').textContent = fmt(summary.total_pegawai_tidak_tetap);
+            }
+
+            // Sub-keterangan Scope Total Pegawai (HO & Reg 1 - Reg 8, Regional Name, atau Unit Name)
+            const subTotalElem = document.getElementById('kpiSubTotalPegawai');
+            if (subTotalElem) {
+                let scopeText = 'HO & Reg 1 - Reg 8';
+                let scopeTitle = 'HO & Reg 1 - Reg 8';
+                if (summary.scope_label) {
+                    scopeText = summary.scope_label;
+                    scopeTitle = summary.scope_title || summary.scope_label;
+                } else if (activeUnit) {
+                    scopeText = activeUnit;
+                    scopeTitle = (activeRegional && activeRegional !== 'ALL') ? `${activeRegional} • ${activeUnit}` : activeUnit;
+                } else if (activeRegional && activeRegional !== 'ALL') {
+                    scopeText = activeRegional;
+                    scopeTitle = activeRegional;
+                }
+                subTotalElem.textContent = scopeText;
+                subTotalElem.title = scopeTitle;
+            }
+
+            // 2. Total Kehadiran
             document.getElementById('kpiTotalHadir').textContent = fmt(summary.total_hadir);
             document.getElementById('kpiPctTotal').textContent = `${summary.pct_total}% Persentase Kehadiran`;
+            if (document.getElementById('kpiTetapTotalHadir')) {
+                document.getElementById('kpiTetapTotalHadir').textContent = fmt(summary.hadir_tetap);
+            }
+            if (document.getElementById('kpiTidakTetapTotalHadir')) {
+                document.getElementById('kpiTidakTetapTotalHadir').textContent = fmt(summary.hadir_tidak_tetap);
+            }
 
+            // 3. Presensi HRIS
             document.getElementById('kpiHadirHris').textContent = fmt(summary.hadir_hris);
             document.getElementById('kpiPctHris').textContent = `${summary.pct_hris}% dari Total Pegawai`;
+            if (document.getElementById('kpiTetapHris')) {
+                document.getElementById('kpiTetapHris').textContent = fmt(summary.hadir_hris_tetap);
+            }
+            if (document.getElementById('kpiTidakTetapHris')) {
+                document.getElementById('kpiTidakTetapHris').textContent = fmt(summary.hadir_hris_tidak_tetap);
+            }
 
+            // 4. Presensi DFarm
             document.getElementById('kpiHadirDfarm').textContent = fmt(summary.hadir_dfarm);
             document.getElementById('kpiPctDfarm').textContent = `${summary.pct_dfarm}% dari Total Pegawai`;
+            if (document.getElementById('kpiTetapDfarm')) {
+                document.getElementById('kpiTetapDfarm').textContent = fmt(summary.hadir_dfarm_tetap);
+            }
+            if (document.getElementById('kpiTidakTetapDfarm')) {
+                document.getElementById('kpiTidakTetapDfarm').textContent = fmt(summary.hadir_dfarm_tidak_tetap);
+            }
 
+            // 5. Presensi DFarm & HRIS
             document.getElementById('kpiHadirBoth').textContent = fmt(summary.hadir_both);
             document.getElementById('kpiPctBoth').textContent = `${summary.pct_both}% dari Total Pegawai`;
+            if (document.getElementById('kpiTetapBoth')) {
+                document.getElementById('kpiTetapBoth').textContent = fmt(summary.hadir_both_tetap);
+            }
+            if (document.getElementById('kpiTidakTetapBoth')) {
+                document.getElementById('kpiTidakTetapBoth').textContent = fmt(summary.hadir_both_tidak_tetap);
+            }
 
             const isUnit = chartRawData && chartRawData.level === 'unit';
             const regName = chartRawData && chartRawData.regional ? chartRawData.regional : activeRegional;
@@ -1346,11 +1599,11 @@
                                     const fmt = (n) => new Intl.NumberFormat('id-ID').format(n || 0);
                                     return [
                                         `--------------------------`,
-                                        `Total Pegawai: ${fmt(raw.total_pegawai)} org`,
-                                        `Hanya HRIS: ${fmt(raw.hadir_hris)} org (${raw.pct_hris}%)`,
-                                        `Hanya DFarm: ${fmt(raw.hadir_dfarm)} org (${raw.pct_dfarm}%)`,
-                                        `Di Keduanya: ${fmt(raw.hadir_both)} org (${raw.pct_both}%)`,
-                                        `Total Hadir: ${fmt(raw.total_hadir)} org (${raw.pct_total}%)`,
+                                        `Total Pegawai: ${fmt(raw.total_pegawai)} org (Tetap: ${fmt(raw.total_pegawai_tetap)}, Tdk Tetap: ${fmt(raw.total_pegawai_tidak_tetap)})`,
+                                        `Hanya HRIS: ${fmt(raw.hadir_hris)} org (${raw.pct_hris}%) [Tetap: ${fmt(raw.hadir_hris_tetap)}, Tdk Tetap: ${fmt(raw.hadir_hris_tidak_tetap)}]`,
+                                        `Hanya DFarm: ${fmt(raw.hadir_dfarm)} org (${raw.pct_dfarm}%) [Tetap: ${fmt(raw.hadir_dfarm_tetap)}, Tdk Tetap: ${fmt(raw.hadir_dfarm_tidak_tetap)}]`,
+                                        `Di Keduanya: ${fmt(raw.hadir_both)} org (${raw.pct_both}%) [Tetap: ${fmt(raw.hadir_both_tetap)}, Tdk Tetap: ${fmt(raw.hadir_both_tidak_tetap)}]`,
+                                        `Total Hadir: ${fmt(raw.total_hadir)} org (${raw.pct_total}%) [Tetap: ${fmt(raw.hadir_tetap)}, Tdk Tetap: ${fmt(raw.hadir_tidak_tetap)}]`,
                                         isUnit ? `Klik untuk menyaring tabel detail` : `Klik untuk melihat stacked chart per unit`
                                     ];
                                 }
@@ -1394,6 +1647,37 @@
                 unitBadge.style.display = 'inline-flex';
             }
 
+            // Update KPI cards khusus untuk unit yang dipilih jika datanya ada di chartRawData
+            if (chartRawData && chartRawData.raw_rows) {
+                const row = chartRawData.raw_rows.find(r => r.unit_nama === unitName);
+                if (row) {
+                    const unitSummary = {
+                        total_pegawai: row.total_pegawai,
+                        total_pegawai_tetap: row.total_pegawai_tetap,
+                        total_pegawai_tidak_tetap: row.total_pegawai_tidak_tetap,
+                        total_hadir: row.total_hadir,
+                        hadir_tetap: row.hadir_tetap,
+                        hadir_tidak_tetap: row.hadir_tidak_tetap,
+                        hadir_hris: row.hadir_hris,
+                        hadir_hris_tetap: row.hadir_hris_tetap,
+                        hadir_hris_tidak_tetap: row.hadir_hris_tidak_tetap,
+                        hadir_dfarm: row.hadir_dfarm,
+                        hadir_dfarm_tetap: row.hadir_dfarm_tetap,
+                        hadir_dfarm_tidak_tetap: row.hadir_dfarm_tidak_tetap,
+                        hadir_both: row.hadir_both,
+                        hadir_both_tetap: row.hadir_both_tetap,
+                        hadir_both_tidak_tetap: row.hadir_both_tidak_tetap,
+                        pct_hris: row.pct_hris,
+                        pct_dfarm: row.pct_dfarm,
+                        pct_both: row.pct_both,
+                        pct_total: row.pct_total,
+                        scope_label: unitName,
+                        scope_title: (activeRegional && activeRegional !== 'ALL') ? `${activeRegional} • ${unitName}` : unitName
+                    };
+                    updateKPI(unitSummary, chartRawData.period_label);
+                }
+            }
+
             // Scroll halus ke tabel detail
             scrollToDetail();
 
@@ -1411,6 +1695,12 @@
             }
             const searchInput = document.getElementById('tableSearchInput');
             if (searchInput) searchInput.value = '';
+
+            // Kembalikan KPI cards ke summary regional saat ini
+            if (chartRawData && chartRawData.summary) {
+                updateKPI(chartRawData.summary, chartRawData.period_label);
+            }
+
             currentPage = 1;
             loadDetailData();
         }
@@ -1425,6 +1715,14 @@
             if (badge) {
                 badge.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${regName}`;
             }
+
+            // Update label KPI sementara menunggu data datang
+            const subTotalElem = document.getElementById('kpiSubTotalPegawai');
+            if (subTotalElem) {
+                subTotalElem.textContent = regName;
+                subTotalElem.title = regName;
+            }
+
             loadDashboardData(regName);
         }
 
@@ -1442,6 +1740,14 @@
             if (searchInput) {
                 searchInput.value = '';
             }
+
+            // Reset sub-keterangan ke default
+            const subTotalElem = document.getElementById('kpiSubTotalPegawai');
+            if (subTotalElem) {
+                subTotalElem.textContent = 'HO & Reg 1 - Reg 8';
+                subTotalElem.title = 'HO & Reg 1 - Reg 8';
+            }
+
             loadDashboardData('ALL');
         }
 
@@ -1451,6 +1757,21 @@
             } else {
                 drillDownToRegional(regName);
             }
+        }
+
+        function switchStatusFilter(status) {
+            activeStatusFilter = status;
+
+            const btnAll = document.getElementById('btnFilterStatusAll');
+            const btnTetap = document.getElementById('btnFilterStatusTetap');
+            const btnTidakTetap = document.getElementById('btnFilterStatusTidakTetap');
+
+            if (btnAll) btnAll.classList.toggle('active', status === 'ALL');
+            if (btnTetap) btnTetap.classList.toggle('active', status === 'tetap');
+            if (btnTidakTetap) btnTidakTetap.classList.toggle('active', status === 'tidak_tetap');
+
+            currentPage = 1;
+            loadDetailData();
         }
 
         async function loadDetailData() {
@@ -1466,6 +1787,7 @@
                 bulan: bulan,
                 regional: activeRegional,
                 unit: activeUnit || '',
+                status: activeStatusFilter,
                 tab: 'all',
                 search: searchVal
             });
@@ -1609,11 +1931,17 @@
 
                 const jenisBadge = `<span class="badge-jenis">${row.jenis_absen || '-'}</span>`;
 
+                const isTetap = row.status_karyawan === 'tetap' || (row.kelompok_pegawai && row.kelompok_pegawai.includes('Tetap') && !row.kelompok_pegawai.includes('Tidak'));
+                const statusBadge = isTetap
+                    ? `<span class="badge-status tetap" title="${row.kelompok_pegawai || 'Karyawan Tetap'}"><i class="fas fa-check-circle" style="font-size:10px;"></i> Tetap</span>`
+                    : `<span class="badge-status tidak-tetap" title="${row.kelompok_pegawai || 'Karyawan Tidak Tetap'}"><i class="fas fa-clock" style="font-size:10px;"></i> Tdk Tetap</span>`;
+
                 html += `
                     <tr>
                         <td style="text-align: center; color: #64748b; font-weight: 600;">${no}</td>
                         <td style="font-family: monospace; font-weight: 600; color: #334155;">${row.nik || '-'}</td>
                         <td style="font-weight: 700; color: #0f172a;">${row.nama || '-'}</td>
+                        <td style="text-align: center;">${statusBadge}</td>
                         <td style="color: #475569;">${row.jabatan || '-'}</td>
                         <td style="color: #1e293b; font-weight: 500;">${row.divisi || '-'}</td>
                         <td><span style="font-size:11px; font-weight:600; color:#166534;">${row.regional_nama || '-'}</span></td>
@@ -1645,21 +1973,27 @@
             const tabName = activeTab === 'hris' ? 'HRIS' : (activeTab === 'dfarm' ? 'DFarm' : 'DFarm_dan_HRIS');
             const regLabel = activeRegional === 'ALL' ? 'Semua_Regional' : activeRegional.replace(/\s+/g, '_');
             const unitLabel = activeUnit ? `_${activeUnit.replace(/\s+/g, '_')}` : '';
+            const statusLabel = activeStatusFilter === 'ALL' ? '' : (activeStatusFilter === 'tetap' ? '_Tetap' : '_Tidak_Tetap');
             const dateStr = currentMode === 'hari' ? document.getElementById('filterTanggal').value : document.getElementById('filterBulan').value;
-            const fileName = `Presensi_${tabName}_${regLabel}${unitLabel}_${dateStr}.xlsx`;
+            const fileName = `Presensi_${tabName}${statusLabel}_${regLabel}${unitLabel}_${dateStr}.xlsx`;
 
-            const exportData = filteredRows.map((r, idx) => ({
-                'No': idx + 1,
-                'NIK': r.nik || '',
-                'Nama Karyawan': r.nama || '',
-                'Jabatan': r.jabatan || '',
-                'Divisi / Unit': r.divisi || '',
-                'Regional': r.regional_nama || '',
-                'Waktu Absen': r.jam || '',
-                'Jenis Absen': r.jenis_absen || '',
-                'Alat': r.alat || '',
-                'Lokasi / Alamat': r.alamat || ''
-            }));
+            const exportData = filteredRows.map((r, idx) => {
+                const isTetap = r.status_karyawan === 'tetap' || (r.kelompok_pegawai && r.kelompok_pegawai.includes('Tetap') && !r.kelompok_pegawai.includes('Tidak'));
+                return {
+                    'No': idx + 1,
+                    'NIK': r.nik || '',
+                    'Nama Karyawan': r.nama || '',
+                    'Status': isTetap ? 'Tetap' : 'Tidak Tetap',
+                    'Kelompok Pegawai': r.kelompok_pegawai || '',
+                    'Jabatan': r.jabatan || '',
+                    'Divisi / Unit': r.divisi || '',
+                    'Regional': r.regional_nama || '',
+                    'Waktu Absen': r.jam || '',
+                    'Jenis Absen': r.jenis_absen || '',
+                    'Alat': r.alat || '',
+                    'Lokasi / Alamat': r.alamat || ''
+                };
+            });
 
             const ws = XLSX.utils.json_to_sheet(exportData);
 
@@ -1696,6 +2030,7 @@
             const tabName = activeTab === 'hris' ? 'HRIS' : (activeTab === 'dfarm' ? 'DFarm' : 'DFarm & HRIS');
             const regLabel = activeRegional === 'ALL' ? 'Semua Regional' : activeRegional;
             const unitSub = activeUnit ? ` | Unit: ${activeUnit}` : '';
+            const statusLabel = activeStatusFilter === 'ALL' ? 'Semua Status' : (activeStatusFilter === 'tetap' ? 'Kary. Tetap' : 'Kary. Tidak Tetap');
             const dateStr = currentMode === 'hari' ? document.getElementById('filterTanggal').value : document.getElementById('filterBulan').value;
 
             doc.setFontSize(14);
@@ -1704,24 +2039,28 @@
 
             doc.setFontSize(10);
             doc.setTextColor(71, 85, 105);
-            doc.text(`Regional: ${regLabel}${unitSub} | Periode: ${dateStr} | Total: ${filteredRows.length} Data`, 14, 22);
+            doc.text(`Regional: ${regLabel}${unitSub} | Status: ${statusLabel} | Periode: ${dateStr} | Total: ${filteredRows.length} Data`, 14, 22);
 
             const tableHeaders = [
-                ['No', 'NIK', 'Nama Karyawan', 'Jabatan', 'Divisi', 'Regional', 'Waktu', 'Jenis', 'Alat', 'Alamat']
+                ['No', 'NIK', 'Nama Karyawan', 'Status', 'Jabatan', 'Divisi', 'Regional', 'Waktu', 'Jenis', 'Alat', 'Alamat']
             ];
 
-            const tableRows = filteredRows.map((r, idx) => [
-                idx + 1,
-                r.nik || '',
-                r.nama || '',
-                r.jabatan || '',
-                r.divisi || '',
-                r.regional_nama || '',
-                r.jam || '',
-                r.jenis_absen || '',
-                r.alat || '',
-                (r.alamat || '').slice(0, 40)
-            ]);
+            const tableRows = filteredRows.map((r, idx) => {
+                const isTetap = r.status_karyawan === 'tetap' || (r.kelompok_pegawai && r.kelompok_pegawai.includes('Tetap') && !r.kelompok_pegawai.includes('Tidak'));
+                return [
+                    idx + 1,
+                    r.nik || '',
+                    r.nama || '',
+                    isTetap ? 'Tetap' : 'Tdk Tetap',
+                    r.jabatan || '',
+                    r.divisi || '',
+                    r.regional_nama || '',
+                    r.jam || '',
+                    r.jenis_absen || '',
+                    r.alat || '',
+                    (r.alamat || '').slice(0, 35)
+                ];
+            });
 
             doc.autoTable({
                 head: tableHeaders,
