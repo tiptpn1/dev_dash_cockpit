@@ -1041,7 +1041,88 @@
         // INITIALIZE SUMMARY LINE CHART & ASYNC LOADER
         // ============================================
         let chartRetryCount = 0;
+        let currentSummaryMetric = 'prosentase_kehadiran';
+        let latestMonthlySummaryData = null;
+
+        function updateSummaryMatrixTable(metric) {
+          if (!latestMonthlySummaryData) return;
+
+          const titleEl = document.getElementById('summaryMatrixTitleText');
+          if (titleEl) {
+            const metricLabel = metric === 'prosentase_input' ? '% Input Presensi' : '% Kehadiran';
+            titleEl.textContent = `Matriks Akumulasi Bulanan ${metricLabel} per Regional`;
+          }
+
+          const tbody = document.getElementById('summaryMatrixTableBody');
+          if (!tbody) return;
+
+          const monthKeys = Object.keys(latestMonthlySummaryData.months || {});
+          const dataByReg = latestMonthlySummaryData.dataByRegional || {};
+
+          let totalTenagaKerja = 0;
+          let rowsHtml = '';
+
+          Object.values(dataByReg).forEach(reg => {
+            const totalKaryawan = reg.total_karyawan || 0;
+            totalTenagaKerja += totalKaryawan;
+
+            let cellsHtml = '';
+            monthKeys.forEach(m => {
+              const rawVal = (reg.months && reg.months[m] && reg.months[m][metric] !== undefined)
+                ? reg.months[m][metric]
+                : 0;
+              const val = Number(rawVal || 0);
+              const colorBg = val >= 75 ? '#dcfce7' : (val >= 50 ? '#fef9c3' : '#fee2e2');
+              const colorText = val >= 75 ? '#15803d' : (val >= 50 ? '#854d0e' : '#b91c1c');
+
+              cellsHtml += `
+                <td style="padding: 9px 12px; text-align: center;">
+                  <span style="background: ${colorBg}; color: ${colorText}; font-weight: 700; padding: 2px 8px; border-radius: 4px; font-size: 11px;">
+                    ${val}%
+                  </span>
+                </td>
+              `;
+            });
+
+            const formattedKaryawan = new Intl.NumberFormat('id-ID').format(totalKaryawan);
+            rowsHtml += `
+              <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 9px 14px; font-weight: 600; color: #111827;">${reg.name}</td>
+                <td style="padding: 9px 14px; text-align: right; color: #4b5563;">${formattedKaryawan}</td>
+                ${cellsHtml}
+              </tr>
+            `;
+          });
+
+          // Gabungan (Rata-rata) Row
+          let corpCellsHtml = '';
+          monthKeys.forEach(m => {
+            const rawCorp = (latestMonthlySummaryData.corporateByMonth && latestMonthlySummaryData.corporateByMonth[m] && latestMonthlySummaryData.corporateByMonth[m][metric] !== undefined)
+              ? latestMonthlySummaryData.corporateByMonth[m][metric]
+              : 0;
+            const valCorp = Number(rawCorp || 0);
+
+            corpCellsHtml += `
+              <td style="padding: 10px 12px; text-align: center; color: #166534;">
+                ${valCorp}%
+              </td>
+            `;
+          });
+
+          const formattedTotalSDM = new Intl.NumberFormat('id-ID').format(totalTenagaKerja);
+          rowsHtml += `
+            <tr style="background: #f8fafc; font-weight: 700; border-top: 2px solid #cbd5e1;">
+              <td style="padding: 10px 14px; color: #166534;">Gabungan (Rata-rata)</td>
+              <td style="padding: 10px 14px; text-align: right; color: #166534;">${formattedTotalSDM}</td>
+              ${corpCellsHtml}
+            </tr>
+          `;
+
+          tbody.innerHTML = rowsHtml;
+        }
+
         function initSummaryLineChart(monthlySummaryData) {
+          latestMonthlySummaryData = monthlySummaryData;
           const summaryChartCanvas = document.getElementById('summaryLineChart');
           if (!summaryChartCanvas) {
             console.warn('[initSummaryLineChart] Canvas #summaryLineChart belum tersedia di DOM.');
@@ -1091,7 +1172,7 @@
               const regId = reg.id;
               const colors = regColorMap[regId] || regColorMap.default;
               const points = monthKeys.map(m => {
-                return (reg.months && reg.months[m]) ? reg.months[m][metric] : 0;
+                return (reg.months && reg.months[m] && reg.months[m][metric] !== undefined) ? reg.months[m][metric] : 0;
               });
 
               datasets.push({
@@ -1112,7 +1193,7 @@
 
             // Gabungan (Rata-rata)
             const corpPoints = monthKeys.map(m => {
-              return (monthlySummaryData.corporateByMonth && monthlySummaryData.corporateByMonth[m]) 
+              return (monthlySummaryData.corporateByMonth && monthlySummaryData.corporateByMonth[m] && monthlySummaryData.corporateByMonth[m][metric] !== undefined) 
                 ? monthlySummaryData.corporateByMonth[m][metric] 
                 : 0;
             });
@@ -1136,14 +1217,12 @@
             return datasets;
           }
 
-          let currentMetric = 'prosentase_kehadiran';
-
           try {
             window.summaryLineChart = new Chart(summaryChartCanvas, {
               type: 'line',
               data: {
                 labels: monthLabels,
-                datasets: buildSummaryDatasets(currentMetric)
+                datasets: buildSummaryDatasets(currentSummaryMetric)
               },
               options: {
                 responsive: true,
@@ -1225,34 +1304,58 @@
           const btnMetricKehadiran = document.getElementById('btnMetricKehadiran');
           const btnMetricInput = document.getElementById('btnMetricInput');
 
+          function applyMetricUI(metric) {
+            currentSummaryMetric = metric;
+            if (metric === 'prosentase_input') {
+              if (btnMetricInput) {
+                btnMetricInput.style.background = '#166534';
+                btnMetricInput.style.color = '#fff';
+              }
+              if (btnMetricKehadiran) {
+                btnMetricKehadiran.style.background = 'transparent';
+                btnMetricKehadiran.style.color = '#4b5563';
+              }
+            } else {
+              if (btnMetricKehadiran) {
+                btnMetricKehadiran.style.background = '#166534';
+                btnMetricKehadiran.style.color = '#fff';
+              }
+              if (btnMetricInput) {
+                btnMetricInput.style.background = 'transparent';
+                btnMetricInput.style.color = '#4b5563';
+              }
+            }
+          }
+
           if (btnMetricKehadiran && btnMetricInput) {
+            applyMetricUI(currentSummaryMetric);
+
             btnMetricKehadiran.onclick = () => {
-              if (currentMetric === 'prosentase_kehadiran') return;
-              currentMetric = 'prosentase_kehadiran';
-              btnMetricKehadiran.style.background = '#166534';
-              btnMetricKehadiran.style.color = '#fff';
-              btnMetricInput.style.background = 'transparent';
-              btnMetricInput.style.color = '#4b5563';
+              if (currentSummaryMetric === 'prosentase_kehadiran') return;
+              applyMetricUI('prosentase_kehadiran');
 
               if (window.summaryLineChart) {
                 window.summaryLineChart.data.datasets = buildSummaryDatasets('prosentase_kehadiran');
                 window.summaryLineChart.update();
               }
+              updateSummaryMatrixTable('prosentase_kehadiran');
             };
 
             btnMetricInput.onclick = () => {
-              if (currentMetric === 'prosentase_input') return;
-              currentMetric = 'prosentase_input';
-              btnMetricInput.style.background = '#166534';
-              btnMetricInput.style.color = '#fff';
-              btnMetricKehadiran.style.background = 'transparent';
-              btnMetricKehadiran.style.color = '#4b5563';
+              if (currentSummaryMetric === 'prosentase_input') return;
+              applyMetricUI('prosentase_input');
 
               if (window.summaryLineChart) {
                 window.summaryLineChart.data.datasets = buildSummaryDatasets('prosentase_input');
                 window.summaryLineChart.update();
               }
+              updateSummaryMatrixTable('prosentase_input');
             };
+          }
+
+          // Pastikan table sinkron dengan currentSummaryMetric saat init (jika metric saat ini prosentase_input)
+          if (currentSummaryMetric !== 'prosentase_kehadiran') {
+            updateSummaryMatrixTable(currentSummaryMetric);
           }
         }
 
@@ -2203,6 +2306,7 @@
         const btnResetSummary = document.getElementById('btnResetSummary');
         if (btnResetSummary) {
           btnResetSummary.addEventListener('click', () => {
+            currentSummaryMetric = 'prosentase_kehadiran';
             if (document.getElementById('selectJobDescSummary')) document.getElementById('selectJobDescSummary').value = 'PENYADAP';
             if (document.getElementById('selectTahunSummary')) document.getElementById('selectTahunSummary').value = '{{ date('Y') }}';
             
