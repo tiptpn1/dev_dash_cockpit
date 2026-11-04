@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -2850,6 +2850,7 @@
                         return fetch(base + '/api/anam/session-token', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t.token },
+                            body: JSON.stringify({ languageCode: 'id' }),
                             signal: ctrl.signal
                         });
                     };
@@ -2875,7 +2876,8 @@
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                }
+                },
+                body: JSON.stringify({ languageCode: 'id' })
             });
             if (!tokenResponse.ok) {
                 throw new Error('Failed to get Anam session token (HTTP ' + tokenResponse.status + ')');

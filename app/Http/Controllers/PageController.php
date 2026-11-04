@@ -5451,6 +5451,7 @@ class PageController extends Controller
             //                       answers come from ai-be (agrinav_voice_agent) via /ai/response.
             //   'anam'            → legacy: Anam's own LLM answers (no n8n data, memory, or history).
             $brainMode = strtolower((string) env('ANAM_BRAIN_MODE', 'ai-be')) === 'anam' ? 'anam' : 'ai-be';
+            $languageCode = $request->input('languageCode', env('ANAM_LANGUAGE_CODE', 'id')) ?: 'id';
 
             if ($brainMode === 'ai-be') {
                 $assets = $this->resolveAnamPersonaAssets($anamApiKey, $personaId);
@@ -5460,14 +5461,13 @@ class PageController extends Controller
                     'avatarModel' => env('ANAM_AVATAR_MODEL', 'cara-4.1-express'),
                     'voiceId' => $assets['voiceId'],
                     'llmId' => 'CUSTOMER_CLIENT_V1',
+                    'languageCode' => $languageCode,
                 ];
-                if ($lang = env('ANAM_LANGUAGE_CODE')) {
-                    $personaConfig['languageCode'] = $lang;
-                }
             } else {
                 $personaConfig = [
                     'personaId' => $personaId,
-                    'avatarModel' => 'cara-4.1-express'  // Use latest expressive model
+                    'avatarModel' => 'cara-4.1-express',
+                    'languageCode' => $languageCode,
                 ];
             }
 
