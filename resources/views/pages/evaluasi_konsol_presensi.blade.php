@@ -316,6 +316,16 @@
             color: #1e293b;
             font-size: 11px;
             font-variant-numeric: tabular-nums;
+            display: inline-flex;
+            align-items: baseline;
+            gap: 4px;
+            white-space: nowrap;
+        }
+
+        .kpi-breakdown-pct {
+            font-size: 10px;
+            font-weight: 600;
+            color: #64748b;
         }
 
         /* ===== MAIN CARD & TABS ===== */
@@ -903,11 +913,17 @@
                         <div class="kpi-breakdown">
                             <div class="kpi-breakdown-row" title="Karyawan Tetap">
                                 <span class="kpi-breakdown-label"><span class="kpi-breakdown-dot tetap"></span>Tetap:</span>
-                                <span class="kpi-breakdown-val" id="kpiTetapPegawai">0</span>
+                                <span class="kpi-breakdown-val">
+                                    <span id="kpiTetapPegawai">0</span>
+                                    <span class="kpi-breakdown-pct" id="kpiPctTetapPegawai">(0%)</span>
+                                </span>
                             </div>
                             <div class="kpi-breakdown-row" title="Karyawan Tidak Tetap">
                                 <span class="kpi-breakdown-label"><span class="kpi-breakdown-dot tidak-tetap"></span>Tidak Tetap:</span>
-                                <span class="kpi-breakdown-val" id="kpiTidakTetapPegawai">0</span>
+                                <span class="kpi-breakdown-val">
+                                    <span id="kpiTidakTetapPegawai">0</span>
+                                    <span class="kpi-breakdown-pct" id="kpiPctTidakTetapPegawai">(0%)</span>
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -924,11 +940,17 @@
                         <div class="kpi-breakdown">
                             <div class="kpi-breakdown-row" title="Karyawan Tetap Hadir">
                                 <span class="kpi-breakdown-label"><span class="kpi-breakdown-dot tetap"></span>Tetap:</span>
-                                <span class="kpi-breakdown-val" id="kpiTetapTotalHadir">0</span>
+                                <span class="kpi-breakdown-val">
+                                    <span id="kpiTetapTotalHadir">0</span>
+                                    <span class="kpi-breakdown-pct" id="kpiPctTetapTotalHadir">(0%)</span>
+                                </span>
                             </div>
                             <div class="kpi-breakdown-row" title="Karyawan Tidak Tetap Hadir">
                                 <span class="kpi-breakdown-label"><span class="kpi-breakdown-dot tidak-tetap"></span>Tidak Tetap:</span>
-                                <span class="kpi-breakdown-val" id="kpiTidakTetapTotalHadir">0</span>
+                                <span class="kpi-breakdown-val">
+                                    <span id="kpiTidakTetapTotalHadir">0</span>
+                                    <span class="kpi-breakdown-pct" id="kpiPctTidakTetapTotalHadir">(0%)</span>
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -945,11 +967,17 @@
                         <div class="kpi-breakdown">
                             <div class="kpi-breakdown-row" title="Karyawan Tetap Presensi HRIS">
                                 <span class="kpi-breakdown-label"><span class="kpi-breakdown-dot tetap"></span>Tetap:</span>
-                                <span class="kpi-breakdown-val" id="kpiTetapHris">0</span>
+                                <span class="kpi-breakdown-val">
+                                    <span id="kpiTetapHris">0</span>
+                                    <span class="kpi-breakdown-pct" id="kpiPctTetapHris">(0%)</span>
+                                </span>
                             </div>
                             <div class="kpi-breakdown-row" title="Karyawan Tidak Tetap Presensi HRIS">
                                 <span class="kpi-breakdown-label"><span class="kpi-breakdown-dot tidak-tetap"></span>Tidak Tetap:</span>
-                                <span class="kpi-breakdown-val" id="kpiTidakTetapHris">0</span>
+                                <span class="kpi-breakdown-val">
+                                    <span id="kpiTidakTetapHris">0</span>
+                                    <span class="kpi-breakdown-pct" id="kpiPctTidakTetapHris">(0%)</span>
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -966,11 +994,17 @@
                         <div class="kpi-breakdown">
                             <div class="kpi-breakdown-row" title="Karyawan Tetap Presensi DFarm">
                                 <span class="kpi-breakdown-label"><span class="kpi-breakdown-dot tetap"></span>Tetap:</span>
-                                <span class="kpi-breakdown-val" id="kpiTetapDfarm">0</span>
+                                <span class="kpi-breakdown-val">
+                                    <span id="kpiTetapDfarm">0</span>
+                                    <span class="kpi-breakdown-pct" id="kpiPctTetapDfarm">(0%)</span>
+                                </span>
                             </div>
                             <div class="kpi-breakdown-row" title="Karyawan Tidak Tetap Presensi DFarm">
                                 <span class="kpi-breakdown-label"><span class="kpi-breakdown-dot tidak-tetap"></span>Tidak Tetap:</span>
-                                <span class="kpi-breakdown-val" id="kpiTidakTetapDfarm">0</span>
+                                <span class="kpi-breakdown-val">
+                                    <span id="kpiTidakTetapDfarm">0</span>
+                                    <span class="kpi-breakdown-pct" id="kpiPctTidakTetapDfarm">(0%)</span>
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -987,11 +1021,17 @@
                         <div class="kpi-breakdown">
                             <div class="kpi-breakdown-row" title="Karyawan Tetap Presensi DFarm & HRIS">
                                 <span class="kpi-breakdown-label"><span class="kpi-breakdown-dot tetap"></span>Tetap:</span>
-                                <span class="kpi-breakdown-val" id="kpiTetapBoth">0</span>
+                                <span class="kpi-breakdown-val">
+                                    <span id="kpiTetapBoth">0</span>
+                                    <span class="kpi-breakdown-pct" id="kpiPctTetapBoth">(0%)</span>
+                                </span>
                             </div>
                             <div class="kpi-breakdown-row" title="Karyawan Tidak Tetap Presensi DFarm & HRIS">
                                 <span class="kpi-breakdown-label"><span class="kpi-breakdown-dot tidak-tetap"></span>Tidak Tetap:</span>
-                                <span class="kpi-breakdown-val" id="kpiTidakTetapBoth">0</span>
+                                <span class="kpi-breakdown-val">
+                                    <span id="kpiTidakTetapBoth">0</span>
+                                    <span class="kpi-breakdown-pct" id="kpiPctTidakTetapBoth">(0%)</span>
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -1304,14 +1344,27 @@
         function updateKPI(summary, periodLabel) {
             if (!summary) return;
             const fmt = (n) => new Intl.NumberFormat('id-ID').format(n || 0);
+            const calcPct = (val, total) => {
+                const t = Number(total) || 0;
+                const v = Number(val) || 0;
+                if (t <= 0) return '(0%)';
+                const pct = (v / t) * 100;
+                return `(${pct.toFixed(1)}%)`;
+            };
 
             // 1. Total Pegawai Aktif
             document.getElementById('kpiTotalPegawai').textContent = fmt(summary.total_pegawai);
             if (document.getElementById('kpiTetapPegawai')) {
                 document.getElementById('kpiTetapPegawai').textContent = fmt(summary.total_pegawai_tetap);
             }
+            if (document.getElementById('kpiPctTetapPegawai')) {
+                document.getElementById('kpiPctTetapPegawai').textContent = calcPct(summary.total_pegawai_tetap, summary.total_pegawai);
+            }
             if (document.getElementById('kpiTidakTetapPegawai')) {
                 document.getElementById('kpiTidakTetapPegawai').textContent = fmt(summary.total_pegawai_tidak_tetap);
+            }
+            if (document.getElementById('kpiPctTidakTetapPegawai')) {
+                document.getElementById('kpiPctTidakTetapPegawai').textContent = calcPct(summary.total_pegawai_tidak_tetap, summary.total_pegawai);
             }
 
             // Sub-keterangan Scope Total Pegawai (HO & Reg 1 - Reg 8, Regional Name, atau Unit Name)
@@ -1339,8 +1392,14 @@
             if (document.getElementById('kpiTetapTotalHadir')) {
                 document.getElementById('kpiTetapTotalHadir').textContent = fmt(summary.hadir_tetap);
             }
+            if (document.getElementById('kpiPctTetapTotalHadir')) {
+                document.getElementById('kpiPctTetapTotalHadir').textContent = calcPct(summary.hadir_tetap, summary.total_hadir);
+            }
             if (document.getElementById('kpiTidakTetapTotalHadir')) {
                 document.getElementById('kpiTidakTetapTotalHadir').textContent = fmt(summary.hadir_tidak_tetap);
+            }
+            if (document.getElementById('kpiPctTidakTetapTotalHadir')) {
+                document.getElementById('kpiPctTidakTetapTotalHadir').textContent = calcPct(summary.hadir_tidak_tetap, summary.total_hadir);
             }
 
             // 3. Presensi HRIS
@@ -1349,8 +1408,14 @@
             if (document.getElementById('kpiTetapHris')) {
                 document.getElementById('kpiTetapHris').textContent = fmt(summary.hadir_hris_tetap);
             }
+            if (document.getElementById('kpiPctTetapHris')) {
+                document.getElementById('kpiPctTetapHris').textContent = calcPct(summary.hadir_hris_tetap, summary.hadir_hris);
+            }
             if (document.getElementById('kpiTidakTetapHris')) {
                 document.getElementById('kpiTidakTetapHris').textContent = fmt(summary.hadir_hris_tidak_tetap);
+            }
+            if (document.getElementById('kpiPctTidakTetapHris')) {
+                document.getElementById('kpiPctTidakTetapHris').textContent = calcPct(summary.hadir_hris_tidak_tetap, summary.hadir_hris);
             }
 
             // 4. Presensi DFarm
@@ -1359,8 +1424,14 @@
             if (document.getElementById('kpiTetapDfarm')) {
                 document.getElementById('kpiTetapDfarm').textContent = fmt(summary.hadir_dfarm_tetap);
             }
+            if (document.getElementById('kpiPctTetapDfarm')) {
+                document.getElementById('kpiPctTetapDfarm').textContent = calcPct(summary.hadir_dfarm_tetap, summary.hadir_dfarm);
+            }
             if (document.getElementById('kpiTidakTetapDfarm')) {
                 document.getElementById('kpiTidakTetapDfarm').textContent = fmt(summary.hadir_dfarm_tidak_tetap);
+            }
+            if (document.getElementById('kpiPctTidakTetapDfarm')) {
+                document.getElementById('kpiPctTidakTetapDfarm').textContent = calcPct(summary.hadir_dfarm_tidak_tetap, summary.hadir_dfarm);
             }
 
             // 5. Presensi DFarm & HRIS
@@ -1369,8 +1440,14 @@
             if (document.getElementById('kpiTetapBoth')) {
                 document.getElementById('kpiTetapBoth').textContent = fmt(summary.hadir_both_tetap);
             }
+            if (document.getElementById('kpiPctTetapBoth')) {
+                document.getElementById('kpiPctTetapBoth').textContent = calcPct(summary.hadir_both_tetap, summary.hadir_both);
+            }
             if (document.getElementById('kpiTidakTetapBoth')) {
                 document.getElementById('kpiTidakTetapBoth').textContent = fmt(summary.hadir_both_tidak_tetap);
+            }
+            if (document.getElementById('kpiPctTidakTetapBoth')) {
+                document.getElementById('kpiPctTidakTetapBoth').textContent = calcPct(summary.hadir_both_tidak_tetap, summary.hadir_both);
             }
 
             const isUnit = chartRawData && chartRawData.level === 'unit';
