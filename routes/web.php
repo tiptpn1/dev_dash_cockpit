@@ -89,6 +89,7 @@ Route::middleware('auth:custom')->group(function () {
 
     Route::get('/dfarmkaret', [PageController::class, 'dfarmkaretpresensi'])->name('dfarmkaretpresensi');
     Route::get('/ajax/dfarmkaret/monthly-summary', [PageController::class, 'ajaxMonthlySummaryPresensi'])->name('dfarmkaret.ajax_monthly_summary');
+    Route::get('/ajax/dfarmkaret/presensi-tenaga', [PageController::class, 'ajaxPresensiByTenaga'])->name('dfarmkaret.ajax_presensi_tenaga');
     Route::get('/dfarmpresensitabular', [PageController::class, 'dfarmkaretpresensitabular'])->name('dfarmkaretpresensitabular');
     Route::get('/dfarmkaretproduksi', [PageController::class, 'dfarmkaretproduksi'])->name('dfarmkaretproduksi');
     Route::get('/dfarmproduksi', [PageController::class, 'dfarmkaretproduksi'])->name('dfarmproduksi');
