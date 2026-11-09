@@ -757,7 +757,7 @@
                   <div class="filter-grid">
                     <div class="form-group">
                       <label class="form-label">Periode</label>
-                      <div style="position: relative;">
+                      <div class="relative" style="position: relative;">
                         <input type="text" id="dateRange" placeholder="Nov 5, 2024 - Nov 6, 2024" readonly class="form-input" style="cursor: pointer; width: 100%;">
                         <div id="datePickerPopup" class="hidden" style="position: absolute; top: 100%; left: 0; margin-top: 8px; background: white; border: 1px solid #d1d5db; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); padding: 16px; z-index: 50; min-width: 320px;">
                           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
@@ -938,7 +938,7 @@
                   <div class="filter-grid">
                     <div class="form-group">
                       <label class="form-label">Periode</label>
-                      <div style="position: relative;">
+                      <div class="relative" style="position: relative;">
                         <input type="text" id="dateRangeTeh" placeholder="Nov 5, 2024 - Nov 6, 2024" readonly class="form-input" style="cursor: pointer; width: 100%;">
                         <div id="datePickerPopupTeh" class="hidden" style="position: absolute; top: 100%; left: 0; margin-top: 8px; background: white; border: 1px solid #d1d5db; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); padding: 16px; z-index: 50; min-width: 320px;">
                           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
@@ -1083,7 +1083,7 @@
                   <div class="filter-grid">
                     <div class="form-group">
                       <label class="form-label">Periode</label>
-                      <div style="position: relative;">
+                      <div class="relative" style="position: relative;">
                         <input type="text" id="dateRangeKopi" placeholder="Nov 5, 2024 - Nov 6, 2024" readonly class="form-input" style="cursor: pointer; width: 100%;">
                         <div id="datePickerPopupKopi" class="hidden" style="position: absolute; top: 100%; left: 0; margin-top: 8px; background: white; border: 1px solid #d1d5db; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); padding: 16px; z-index: 50; min-width: 320px;">
                           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
@@ -1238,7 +1238,7 @@
                     <!-- Date Range with Popup -->
                     <div class="form-group">
                       <label class="form-label">Periode</label>
-                      <div style="position: relative;">
+                      <div class="relative" style="position: relative;">
                         <input type="text" id="dateRangePemeliharaan" placeholder="Nov 5, 2024 - Nov 6, 2024" readonly class="form-input" style="cursor: pointer; width: 100%;">
                         <div id="datePickerPopupPemeliharaan" class="hidden" style="position: absolute; top: 100%; left: 0; background-color: white; border: 1px solid #ccc; border-radius: 8px; padding: 15px; width: 300px; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
                           <div style="margin-bottom: 10px;">
@@ -1664,6 +1664,16 @@
       }
     });
   });
+
+  // Auto-activate tab from URL parameter
+  const tabUrlParams = new URLSearchParams(window.location.search);
+  const activeTabFromUrl = tabUrlParams.get('tab') || (tabUrlParams.has('tgl_awal') && !tabUrlParams.has('tahun') ? 'rekap' : null);
+  if (activeTabFromUrl) {
+    const targetTabBtn = document.querySelector(`.hris-tab-btn[data-tab="${activeTabFromUrl}"]`);
+    if (targetTabBtn && !targetTabBtn.classList.contains('active')) {
+      targetTabBtn.click();
+    }
+  }
 
   // Chart Colors
   const chartColors = {
@@ -2475,8 +2485,14 @@
   updateDateDisplay();
 
   // Toggle popup
-  dateRangeInput.addEventListener('click', () => {
+  dateRangeInput.addEventListener('click', (e) => {
+    e.stopPropagation();
     datePickerPopup.classList.toggle('hidden');
+  });
+
+  // Prevent clicks inside popup from bubbling to document
+  datePickerPopup.addEventListener('click', (e) => {
+    e.stopPropagation();
   });
 
   // Apply button
@@ -2500,7 +2516,7 @@
 
   // Close popup when clicking outside
   document.addEventListener('click', (e) => {
-    if (!e.target.closest('.relative')) {
+    if (!dateRangeInput.contains(e.target) && !datePickerPopup.contains(e.target)) {
       datePickerPopup.classList.add('hidden');
     }
   });
@@ -2588,6 +2604,7 @@
     if (tglAkhir) params.push('tgl_akhir=' + tglAkhir);
     params.push('id_reg=' + (idReg || ''));
     if (kodeKebun) params.push('kode_kebun=' + kodeKebun);
+    params.push('tab=rekap');
 
     url += params.join('&');
 
@@ -2601,8 +2618,8 @@
     document.getElementById('selectRegional').value = '';
     document.getElementById('selectKebun').value = '';
     
-    // Reset ke halaman tanpa parameter
-    window.location.href = window.location.pathname;
+    // Reset ke halaman tanpa parameter tetapi tetap di tab rekap
+    window.location.href = window.location.pathname + '?tab=rekap';
   });
 
   // ============================================
