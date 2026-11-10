@@ -75,6 +75,7 @@ Route::middleware('auth:custom')->group(function () {
     Route::get('/arealproduksi_regional7', [PageController::class, 'arealproduksi_regional7'])->name('arealproduksi_regional7');
     Route::get('/arealproduksi_regional8', [PageController::class, 'arealproduksi_regional8'])->name('arealproduksi_regional8');
     Route::get('/arealproduksikebun', [PageController::class, 'arealproduksikebun'])->name('arealproduksikebun');
+    Route::get('/arealproduksi_repl', [\App\Http\Controllers\ArealProduksiReplController::class, 'index'])->name('arealproduksi_repl');
 
     Route::get('/agrowisata_overview', [PageController::class, 'agrowisata_overview'])->name('agrowisata_overview');
     Route::get('/agrowisata_pendapatan', [PageController::class, 'agrowisata_pendapatan'])->name('agrowisata_pendapatan');

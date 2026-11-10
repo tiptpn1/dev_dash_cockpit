@@ -71,7 +71,7 @@ return [
             'username' => env('DB_USERNAME_LOOKER', 'forge'),
             'password' => env('DB_PASSWORD_LOOKER', ''),
             'charset' => 'utf8mb4',
-            'collation' => 'utf8mb4_unicode_ci',
+            'collation' => 'utf8mb4_general_ci',
             'prefix' => '',
             'strict' => true,
             'engine' => null,
