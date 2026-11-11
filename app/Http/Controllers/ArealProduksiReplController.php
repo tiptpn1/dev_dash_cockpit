@@ -11,7 +11,7 @@ class ArealProduksiReplController extends Controller
 {
     public function index(Request $request)
     {
-        // 1. Filter Parameters
+        // 1. Master Reference Data
         $listTahun = Cache::remember('areal_list_tahun', 86400, function () {
             return DB::connection('looker')->table('vw_trend_dengan_pembanding')
                 ->select('tahun')
@@ -25,28 +25,12 @@ class ArealProduksiReplController extends Controller
             $listTahun = [date('Y')];
         }
 
-        $tahunSelected = (int) $request->input('tahun', $listTahun[0]);
-
-        // List Bulan
         $listBulan = [
             1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
             5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
             9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
         ];
 
-        // Cari bulan maksimum yang memiliki data produksi real di tahun terpilih
-        $maxBulanWithData = Cache::remember("areal_max_bulan_{$tahunSelected}", 3600, function () use ($tahunSelected) {
-            return DB::connection('looker')->table('vw_trend_dengan_pembanding')
-                ->where('tahun', $tahunSelected)
-                ->where('produksi_real', '>', 0)
-                ->max('bulan');
-        });
-        
-        $defaultBulan = $maxBulanWithData ?: 11;
-        $bulanSelected = (int) $request->input('bulan', $defaultBulan);
-        $modePeriode = $request->input('mode_periode', 'sd'); // 'sd' (s.d. / YTD) or 'single' (hanya bulan)
-
-        // List Regional
         $listRegional = Cache::remember('areal_list_regional', 86400, function () {
             return DB::connection('looker')->table('vw_trend_dengan_pembanding')
                 ->select('reg')
@@ -56,35 +40,110 @@ class ArealProduksiReplController extends Controller
                 ->toArray();
         });
 
-        // Regional selected (support single string or array of multiples)
+        $listKomoditi = ['KARET', 'TEH', 'ARABICA', 'ROBUSTA'];
+        $allowedTabs = ['summary', 'produktivitas_regional', 'trend_produksi', 'rincian_kebun'];
+        $allowedModes = ['sd', 'single'];
+
+        // Handler jika form disubmit via POST (PRG: Post-Redirect-Get untuk mencegah URL terekspos dan Reflected XSS)
+        if ($request->isMethod('post')) {
+            $inputTahun = (int) $request->input('tahun', $listTahun[0]);
+            $tahunClean = in_array($inputTahun, $listTahun, true) ? $inputTahun : $listTahun[0];
+
+            $inputBulan = (int) $request->input('bulan', 11);
+            $bulanClean = ($inputBulan >= 1 && $inputBulan <= 12) ? $inputBulan : 11;
+
+            $inputMode = $request->input('mode_periode', 'sd');
+            $modeClean = in_array($inputMode, $allowedModes, true) ? $inputMode : 'sd';
+
+            $inputTab = $request->input('tab', 'summary');
+            $tabClean = in_array($inputTab, $allowedTabs, true) ? $inputTab : 'summary';
+
+            $inputKomoditi = strtoupper(trim((string)$request->input('komoditi', 'KARET')));
+            $komoditiClean = in_array($inputKomoditi, $listKomoditi, true) ? $inputKomoditi : 'KARET';
+
+            // Regional sanitasi dengan whitelist
+            $rawReg = $request->input('regional');
+            $regClean = [];
+            if (is_array($rawReg)) {
+                $regClean = array_values(array_intersect($rawReg, $listRegional));
+            } elseif (is_string($rawReg) && strlen(trim($rawReg)) > 0) {
+                $exploded = array_map('trim', explode(',', $rawReg));
+                $regClean = array_values(array_intersect($exploded, $listRegional));
+            }
+            if (empty($regClean)) {
+                $regClean = ['5'];
+            }
+
+            // Kebun sanitasi (hanya izinkan string alfanumerik / nama kebun bersih)
+            $rawKebun = $request->input('kebun');
+            $kebunClean = [];
+            if (is_array($rawKebun)) {
+                $kebunClean = array_values(array_filter(array_map('trim', $rawKebun), fn($v) => !empty($v)));
+            } elseif (is_string($rawKebun) && strlen(trim($rawKebun)) > 0) {
+                $kebunClean = array_values(array_filter(array_map('trim', explode(',', $rawKebun)), fn($v) => !empty($v)));
+            }
+
+            session(['areal_filters' => [
+                'tahun' => $tahunClean,
+                'bulan' => $bulanClean,
+                'mode_periode' => $modeClean,
+                'tab' => $tabClean,
+                'komoditi' => $komoditiClean,
+                'regional' => $regClean,
+                'kebun' => $kebunClean,
+            ]]);
+
+            return redirect()->route('arealproduksi_repl');
+        }
+
+        // 2. Ambil Parameter Filter dari Session atau Request GET (Strict Whitelisting Anti-XSS)
+        $savedFilters = session('areal_filters', []);
+
+        // Tahun
+        $reqTahun = $request->has('tahun') ? (int)$request->input('tahun') : ($savedFilters['tahun'] ?? $listTahun[0]);
+        $tahunSelected = in_array($reqTahun, $listTahun, true) ? $reqTahun : $listTahun[0];
+
+        // Cari bulan maksimum yang memiliki data produksi real di tahun terpilih
+        $maxBulanWithData = Cache::remember("areal_max_bulan_{$tahunSelected}", 3600, function () use ($tahunSelected) {
+            return DB::connection('looker')->table('vw_trend_dengan_pembanding')
+                ->where('tahun', $tahunSelected)
+                ->where('produksi_real', '>', 0)
+                ->max('bulan');
+        });
+        $defaultBulan = $maxBulanWithData ?: 11;
+
+        // Bulan
+        $reqBulan = $request->has('bulan') ? (int)$request->input('bulan') : ($savedFilters['bulan'] ?? $defaultBulan);
+        $bulanSelected = ($reqBulan >= 1 && $reqBulan <= 12) ? $reqBulan : $defaultBulan;
+
+        // Mode Periode
+        $reqMode = $request->input('mode_periode', $savedFilters['mode_periode'] ?? 'sd');
+        $modePeriode = in_array($reqMode, $allowedModes, true) ? $reqMode : 'sd';
+
+        // Tab
+        $reqTab = $request->input('tab', $savedFilters['tab'] ?? 'summary');
+        $activeTab = in_array($reqTab, $allowedTabs, true) ? $reqTab : 'summary';
+
+        // Komoditi
+        $reqKomoditi = strtoupper(trim((string)$request->input('komoditi', $savedFilters['komoditi'] ?? 'KARET')));
+        $komoditiSelected = in_array($reqKomoditi, $listKomoditi, true) ? $reqKomoditi : 'KARET';
+
+        // Regional (Strict Whitelist terhadap $listRegional)
         if ($request->has('regional')) {
-            $rawRegional = $request->input('regional');
-            if (is_array($rawRegional)) {
-                $regionalSelected = array_values(array_filter($rawRegional, fn($v) => !empty($v)));
-            } elseif (is_string($rawRegional) && strlen(trim($rawRegional)) > 0) {
-                $regionalSelected = array_values(array_filter(explode(',', $rawRegional), fn($v) => !empty($v)));
-            } else {
-                $regionalSelected = $listRegional;
+            $rawReg = $request->input('regional');
+            $regArr = is_array($rawReg) ? $rawReg : (is_string($rawReg) ? explode(',', $rawReg) : []);
+            $regionalSelected = array_values(array_intersect(array_map('trim', $regArr), $listRegional));
+            if (empty($regionalSelected)) {
+                $regionalSelected = ['5'];
+            }
+        } elseif (!empty($savedFilters['regional'])) {
+            $regionalSelected = array_values(array_intersect($savedFilters['regional'], $listRegional));
+            if (empty($regionalSelected)) {
+                $regionalSelected = ['5'];
             }
         } else {
-            $regionalSelected = ['5']; // default initial page load
+            $regionalSelected = ['5']; // default
         }
-
-        // Kebun selected (support single string or array of multiples)
-        $rawKebun = $request->input('kebun');
-        if (is_array($rawKebun)) {
-            $kebunSelected = array_values(array_filter($rawKebun, fn($v) => !empty($v)));
-        } elseif (is_string($rawKebun) && strlen(trim($rawKebun)) > 0) {
-            $kebunSelected = array_values(array_filter(explode(',', $rawKebun), fn($v) => !empty($v)));
-        } else {
-            $kebunSelected = []; // empty means "Semua Kebun"
-        }
-
-        $komoditiSelected = strtoupper($request->input('komoditi', 'KARET'));
-        $activeTab = $request->input('tab', 'summary');
-
-        // List Komoditi
-        $listKomoditi = ['KARET', 'TEH', 'ARABICA', 'ROBUSTA'];
 
         // List Kebun per Regional terpilih (Semua kebun di regional terpilih, lintas komoditi)
         $isAllReg = empty($regionalSelected) || in_array('all', $regionalSelected);
@@ -100,20 +159,31 @@ class ArealProduksiReplController extends Controller
                 ->get();
         });
 
-        // List seluruh kebun unik di regional (untuk Tab 3 Trend Produksi dan Filter Dropdown)
+        // List seluruh kebun unik di regional
         $listKebun = $kebunRows->pluck('kebun')->unique()->values()->toArray();
 
-        // Pemetaan kebun -> array komoditi yang dihasilkan (contoh: ['KEBUN A' => ['KARET', 'TEH']])
+        // Pemetaan kebun -> array komoditi yang dihasilkan
         $kebunKomoditiMap = [];
         foreach ($kebunRows as $row) {
             $kebunKomoditiMap[$row->kebun][] = strtoupper($row->komoditi);
+        }
+
+        // Kebun Selected (Sanitasi ketat terhadap $listKebun yang sah)
+        if ($request->has('kebun')) {
+            $rawKebun = $request->input('kebun');
+            $kebunArr = is_array($rawKebun) ? $rawKebun : (is_string($rawKebun) ? explode(',', $rawKebun) : []);
+            $kebunSelected = array_values(array_intersect(array_map('trim', $kebunArr), $listKebun));
+        } elseif (isset($savedFilters['kebun'])) {
+            $kebunSelected = array_values(array_intersect($savedFilters['kebun'], $listKebun));
+        } else {
+            $kebunSelected = [];
         }
 
         // Filter kebun khusus untuk Tab 3 vs Tab 4 agar tidak saling mempengaruhi
         $kebunTrend = ($activeTab === 'trend_produksi') ? $kebunSelected : [];
         $kebunRincian = ($activeTab === 'rincian_kebun') ? $kebunSelected : [];
 
-        // 2. Fetch Data untuk Masing-Masing Tab
+        // 3. Fetch Data untuk Masing-Masing Tab
         $summaryData = $this->getSummaryData($tahunSelected, $bulanSelected, $listKomoditi, $listRegional, $modePeriode);
         $regionalData = $this->getRegionalData($tahunSelected, $bulanSelected, $regionalSelected, $komoditiSelected, $modePeriode);
         $trendData = $this->getTrendData($tahunSelected, $regionalSelected, $kebunTrend, $listKomoditi);
@@ -261,6 +331,8 @@ class ArealProduksiReplController extends Controller
                     'protas_thn_lalu' => 0,
                     'protas_rkap' => 0,
                     'protas_real' => 0,
+                    'protas_pct_tl' => 0,
+                    'protas_pct_rkap' => 0,
                 ]
             ];
 
@@ -297,6 +369,9 @@ class ArealProduksiReplController extends Controller
                 $protasRkap = $lRkap > 0 ? ($pRkapKg / $lRkap) : 0;
                 $protasReal = $lReal > 0 ? ($pRealKg / $lReal) : 0;
 
+                $protasPctTL = $protasTL > 0 ? round(($protasReal / $protasTL) * 100) : 0;
+                $protasPctRkap = $protasRkap > 0 ? round(($protasReal / $protasRkap) * 100) : 0;
+
                 $tabelRegional[$comm]['rows'][] = [
                     'reg' => $reg,
                     'luas_real' => $lReal,
@@ -308,6 +383,8 @@ class ArealProduksiReplController extends Controller
                     'protas_thn_lalu' => $protasTL,
                     'protas_rkap' => $protasRkap,
                     'protas_real' => $protasReal,
+                    'protas_pct_tl' => $protasPctTL,
+                    'protas_pct_rkap' => $protasPctRkap,
                 ];
 
                 $tabelRegional[$comm]['total']['luas_real'] += $lReal;
@@ -328,6 +405,8 @@ class ArealProduksiReplController extends Controller
             $tot['protas_thn_lalu'] = $totalLuasThnLalu > 0 ? ($totalProdThnLaluKg / $totalLuasThnLalu) : 0;
             $tot['protas_rkap'] = $totalLuasRkap > 0 ? ($totalProdRkapKg / $totalLuasRkap) : 0;
             $tot['protas_real'] = $tot['luas_real'] > 0 ? ($totalProdRealKg / $tot['luas_real']) : 0;
+            $tot['protas_pct_tl'] = $tot['protas_thn_lalu'] > 0 ? round(($tot['protas_real'] / $tot['protas_thn_lalu']) * 100) : 0;
+            $tot['protas_pct_rkap'] = $tot['protas_rkap'] > 0 ? round(($tot['protas_real'] / $tot['protas_rkap']) * 100) : 0;
         }
 
         return [

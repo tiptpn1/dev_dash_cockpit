@@ -10,6 +10,17 @@
 <!-- ApexCharts CDN -->
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
+<!-- Immediate Theme Initialization (Anti-Flicker) -->
+<script>
+    (function() {
+        try {
+            if (localStorage.getItem('areal_dashboard_theme') === 'light') {
+                document.body.classList.add('theme-light');
+            }
+        } catch (e) {}
+    })();
+</script>
+
 <style>
     /* ============================================================
        DARK COMMAND-CENTER THEME (LOOKER & COCKPIT PREMIUM EDITION)
@@ -55,30 +66,6 @@
         padding: 20px 28px 60px 28px;
     }
 
-    /* Top Page Header */
-    .lm-page-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 10px 32px;
-        background: #0b172e;
-        border-bottom: 1px solid var(--border-color);
-        min-height: 56px;
-    }
-
-    .lm-header-logo {
-        width: 130px;
-        height: 44px;
-        display: flex;
-        align-items: center;
-    }
-
-    .lm-header-logo img {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-    }
-
     /* Glowing Title Banner */
     .header-glow-title {
         background: linear-gradient(90deg, #1e40af 0%, #2563eb 50%, #1e40af 100%);
@@ -94,15 +81,16 @@
         color: #ffffff;
     }
 
-    /* Top Nav Tabs */
+    /* Top Nav Tabs & Theme Switcher */
     .tab-nav-container {
         display: flex;
         align-items: center;
-        justify-content: center;
-        gap: 8px;
+        justify-content: space-between;
+        gap: 12px;
         margin-bottom: 16px;
         border-bottom: 1px solid var(--border-color);
         padding-bottom: 12px;
+        flex-wrap: wrap;
     }
 
     .tab-btn {
@@ -545,12 +533,13 @@
         background: #1e3a8a;
         color: #ffffff;
         font-weight: 800;
-        padding: 10px 14px;
+        padding: 9px 12px;
         text-align: center;
         border: 1px solid rgba(255, 255, 255, 0.12);
-        font-size: 0.82rem;
+        font-size: 0.80rem;
         text-transform: uppercase;
         letter-spacing: 0.04em;
+        vertical-align: middle;
     }
 
     .looker-table tbody td {
@@ -569,6 +558,14 @@
         font-weight: 800;
         color: #38bdf8 !important;
         border-top: 1px solid rgba(56, 189, 248, 0.4) !important;
+    }
+
+    .komoditi-col-cell {
+        font-weight: 800;
+        background: rgba(13, 27, 52, 0.7);
+        vertical-align: top;
+        border-right: 1px solid var(--border-color);
+        color: var(--text-white);
     }
 
     .num-font {
@@ -600,20 +597,320 @@
         from { opacity: 0; transform: translateY(4px); }
         to { opacity: 1; transform: translateY(0); }
     }
-</style>
 
-<!-- Top Page Banner -->
-<header class="lm-page-header">
-    <div class="lm-header-logo">
-        <img src="{{ asset('danantara.png') }}" alt="Danantara Indonesia">
-    </div>
-    <div class="flex items-center gap-2">
-        <span class="text-xs uppercase tracking-widest text-slate-400 font-bold">PT PERKEBUNAN NUSANTARA I</span>
-    </div>
-    <div class="lm-header-logo" style="justify-content: flex-end;">
-        <img src="{{ asset('ptpn1.png') }}" alt="PTPN 1">
-    </div>
-</header>
+    /* ============================================================
+       THEME TOGGLE BUTTON STYLES
+       ============================================================ */
+    .theme-toggle-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 16px;
+        border-radius: 9999px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-card);
+        color: var(--text-white);
+        font-size: 0.82rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        user-select: none;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    }
+    .theme-toggle-btn:hover {
+        border-color: #38bdf8;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25);
+    }
+    .theme-toggle-icon-light {
+        display: none;
+        color: #f59e0b;
+    }
+    .theme-toggle-icon-dark {
+        display: inline-block;
+        color: #38bdf8;
+    }
+
+    /* ============================================================
+       LIGHT MODE OVERRIDES (SCOPED TO body.theme-light)
+       Tema gelap default tetap 100% utuh tanpa perubahan
+       ============================================================ */
+    body.theme-light {
+        --bg-main: #f1f5f9;
+        --bg-panel: #ffffff;
+        --bg-card: #ffffff;
+        --bg-card-hover: #f8fafc;
+        --border-color: #cbd5e1;
+        --border-glow: rgba(37, 99, 235, 0.2);
+        --text-white: #0f172a;
+        --text-muted: #475569;
+        --text-subtle: #64748b;
+        background-color: #f1f5f9 !important;
+        color: #0f172a !important;
+    }
+
+    body.theme-light .main-content {
+        background-color: #f1f5f9 !important;
+    }
+
+    body.theme-light .dashboard-wrapper {
+        background-color: #f1f5f9 !important;
+    }
+
+    /* Cards */
+    body.theme-light .dark-card {
+        background-color: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+    }
+    body.theme-light .dark-card:hover {
+        border-color: #3b82f6 !important;
+        box-shadow: 0 10px 25px rgba(59, 130, 246, 0.12) !important;
+    }
+
+    body.theme-light .kpi-column-box {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04) !important;
+    }
+    body.theme-light .kpi-column-title {
+        color: #64748b !important;
+    }
+
+    /* Tab 1 KPI Pills */
+    body.theme-light .pill-blue {
+        background: #f0f9ff !important;
+        border: 1px solid #bae6fd !important;
+        color: #0369a1 !important;
+    }
+    body.theme-light .pill-orange {
+        background: #fff7ed !important;
+        border: 1px solid #fed7aa !important;
+        color: #c2410c !important;
+    }
+    body.theme-light .pill-green {
+        background: #f0fdf4 !important;
+        border: 1px solid #bbf7d0 !important;
+        color: #15803d !important;
+    }
+
+    /* Tab 2 Matrix Cards */
+    body.theme-light .matrix-grid-header {
+        border-bottom: 1px solid #e2e8f0 !important;
+        color: #64748b !important;
+    }
+    body.theme-light .matrix-card-orange {
+        background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%) !important;
+        border: 1.5px solid #fdba74 !important;
+        box-shadow: 0 4px 12px rgba(234, 88, 12, 0.08) !important;
+    }
+    body.theme-light .matrix-card-green {
+        background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%) !important;
+        border: 1.5px solid #86efac !important;
+        box-shadow: 0 4px 12px rgba(22, 163, 74, 0.08) !important;
+    }
+    body.theme-light .matrix-card-blue {
+        background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 100%) !important;
+        border: 1.5px solid #7dd3fc !important;
+        box-shadow: 0 4px 12px rgba(2, 132, 199, 0.08) !important;
+    }
+    body.theme-light .matrix-val {
+        color: #0f172a !important;
+        text-shadow: none !important;
+    }
+    body.theme-light .matrix-metric-label {
+        color: #0f172a !important;
+    }
+    body.theme-light .matrix-ind-pct {
+        color: #0f172a !important;
+    }
+
+    /* Tab 4 Top KPI Cards */
+    body.theme-light .tab4-kpi-luas {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%) !important;
+        border: 1px solid #bae6fd !important;
+        box-shadow: 0 4px 16px rgba(2, 132, 199, 0.08) !important;
+    }
+    body.theme-light .tab4-kpi-prod {
+        background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%) !important;
+        border: 1px solid #fde68a !important;
+        box-shadow: 0 4px 16px rgba(217, 119, 6, 0.08) !important;
+    }
+    body.theme-light .tab4-kpi-protas {
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%) !important;
+        border: 1px solid #bbf7d0 !important;
+        box-shadow: 0 4px 16px rgba(22, 163, 74, 0.08) !important;
+    }
+    body.theme-light .tab4-kpi-divider {
+        border-top-color: #e2e8f0 !important;
+    }
+    body.theme-light .tab4-hero-val {
+        color: #0f172a !important;
+    }
+
+    /* Tables */
+    body.theme-light .looker-table thead th {
+        background: #1e40af !important;
+        color: #ffffff !important;
+        border: 1px solid #3b82f6 !important;
+    }
+    body.theme-light .looker-table tbody td {
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0 !important;
+        color: #1e293b;
+    }
+    body.theme-light .looker-table tbody tr:nth-child(even) td {
+        background-color: #f8fafc;
+    }
+    body.theme-light .looker-table tbody tr:hover td {
+        background-color: #eff6ff !important;
+    }
+    body.theme-light .table-total-row td {
+        background: #e0f2fe !important;
+        color: #0369a1 !important;
+        border-top: 2px solid #0284c7 !important;
+    }
+
+    /* Kolom Komoditi di Light Mode (Putih Bersih) */
+    body.theme-light .komoditi-col-cell,
+    body.theme-light .looker-table tbody td.komoditi-col-cell,
+    body.theme-light .looker-table tbody tr:hover td.komoditi-col-cell,
+    body.theme-light .looker-table tbody tr:nth-child(even) td.komoditi-col-cell {
+        background: #ffffff !important;
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        border-right: 1px solid #cbd5e1 !important;
+    }
+
+    /* Conditional Formatting (% TL dan % RKAP) di Light Mode - Warna Teks Tetap Aktif & Jelas */
+    body.theme-light .pct-green,
+    body.theme-light .looker-table tbody td.pct-green,
+    body.theme-light .looker-table tbody tr.table-total-row td.pct-green {
+        color: #16a34a !important; /* Hijau tajam */
+        font-weight: 800 !important;
+    }
+    body.theme-light .pct-yellow,
+    body.theme-light .looker-table tbody td.pct-yellow,
+    body.theme-light .looker-table tbody tr.table-total-row td.pct-yellow {
+        color: #d97706 !important; /* Kuning / Amber kontras tinggi */
+        font-weight: 800 !important;
+    }
+    body.theme-light .pct-red,
+    body.theme-light .looker-table tbody td.pct-red,
+    body.theme-light .looker-table tbody tr.table-total-row td.pct-red {
+        color: #dc2626 !important; /* Merah tajam */
+        font-weight: 800 !important;
+    }
+
+    /* Realisasi Protas text color */
+    body.theme-light .text-emerald-400,
+    body.theme-light .text-emerald-300 {
+        color: #16a34a !important;
+    }
+
+    /* Filters & Inputs */
+    body.theme-light .filter-select,
+    body.theme-light .multiselect-trigger {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+    }
+    body.theme-light .filter-select:hover,
+    body.theme-light .multiselect-trigger:hover {
+        border-color: #0284c7 !important;
+        background-color: #f8fafc !important;
+    }
+    body.theme-light .multiselect-dropdown {
+        background: #ffffff !important;
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15) !important;
+    }
+    body.theme-light .multiselect-search {
+        background: #f8fafc !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #0f172a !important;
+    }
+    body.theme-light .multiselect-item {
+        color: #334155 !important;
+    }
+    body.theme-light .multiselect-item:hover {
+        background: #f1f5f9 !important;
+        color: #0f172a !important;
+    }
+    body.theme-light .multiselect-actions {
+        border-bottom-color: #e2e8f0 !important;
+    }
+    body.theme-light .multiselect-footer {
+        border-top-color: #e2e8f0 !important;
+    }
+    body.theme-light #tableSearchInput {
+        background-color: #ffffff !important;
+        border-color: #cbd5e1 !important;
+        color: #0f172a !important;
+    }
+    body.theme-light #tableSearchInput:focus {
+        border-color: #0284c7 !important;
+    }
+
+    /* Tab Buttons */
+    body.theme-light .tab-nav-container {
+        border-bottom-color: #e2e8f0 !important;
+    }
+    body.theme-light .tab-btn {
+        color: #64748b !important;
+    }
+    body.theme-light .tab-btn:hover {
+        color: #0f172a !important;
+        background: #e2e8f0 !important;
+    }
+    body.theme-light .tab-btn.active {
+        color: #ffffff !important;
+        background: #2563eb !important;
+        box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35) !important;
+    }
+
+    /* Headings, text colors & custom legends */
+    body.theme-light .text-slate-200,
+    body.theme-light .text-slate-300 {
+        color: #1e293b !important;
+    }
+    body.theme-light .text-slate-400 {
+        color: #64748b !important;
+    }
+    body.theme-light .kebun-name-cell {
+        color: #0f172a !important;
+    }
+    body.theme-light .legend-lbl-white {
+        color: #0f172a !important;
+    }
+
+    /* Chart Combo Kebun Data Labels in Light Mode (Hitam Pekat & Tanpa Drop Shadow) */
+    body.theme-light #chartComboKebun .apexcharts-datalabel,
+    body.theme-light #chartComboKebun .apexcharts-data-labels text {
+        fill: #0f172a !important;
+        color: #0f172a !important;
+        filter: none !important;
+    }
+
+    /* Light Mode Toggle Button active appearance */
+    body.theme-light .theme-toggle-btn {
+        background: #ffffff !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #0f172a !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+    }
+    body.theme-light .theme-toggle-btn:hover {
+        border-color: #f59e0b !important;
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2) !important;
+    }
+    body.theme-light .theme-toggle-icon-light {
+        display: inline-block !important;
+    }
+    body.theme-light .theme-toggle-icon-dark {
+        display: none !important;
+    }
+</style>
 
 <div class="dashboard-wrapper">
     @php
@@ -646,29 +943,39 @@
 
             return '<div class="flex flex-col items-center justify-center min-w-[42px]">' .
                 $svg .
-                '<span class="text-sm font-extrabold text-white mt-1 num-font">' . $val . '%</span>' .
+                '<span class="text-sm font-extrabold text-white mt-1 num-font matrix-ind-pct">' . $val . '%</span>' .
             '</div>';
         };
     @endphp
     
-    <!-- Tab Navigation -->
+    <!-- Tab Navigation & Theme Toggle -->
     <div class="tab-nav-container">
-        <button type="button" class="tab-btn {{ $activeTab == 'summary' ? 'active' : '' }}" onclick="switchTab('summary')">
-            <i class="fa-solid fa-chart-pie"></i> Summary
-        </button>
-        <button type="button" class="tab-btn {{ $activeTab == 'produktivitas_regional' ? 'active' : '' }}" onclick="switchTab('produktivitas_regional')">
-            <i class="fa-solid fa-chart-column"></i> Produktivitas Regional
-        </button>
-        <button type="button" class="tab-btn {{ $activeTab == 'trend_produksi' ? 'active' : '' }}" onclick="switchTab('trend_produksi')">
-            <i class="fa-solid fa-arrow-trend-up"></i> Trend Produksi
-        </button>
-        <button type="button" class="tab-btn {{ $activeTab == 'rincian_kebun' ? 'active' : '' }}" onclick="switchTab('rincian_kebun')">
-            <i class="fa-solid fa-table-list"></i> Rincian Per Kebun
+        <div class="flex items-center gap-2 flex-wrap">
+            <button type="button" class="tab-btn {{ $activeTab == 'summary' ? 'active' : '' }}" onclick="switchTab('summary')">
+                <i class="fa-solid fa-chart-pie"></i> Summary
+            </button>
+            <button type="button" class="tab-btn {{ $activeTab == 'produktivitas_regional' ? 'active' : '' }}" onclick="switchTab('produktivitas_regional')">
+                <i class="fa-solid fa-chart-column"></i> Produktivitas Regional
+            </button>
+            <button type="button" class="tab-btn {{ $activeTab == 'trend_produksi' ? 'active' : '' }}" onclick="switchTab('trend_produksi')">
+                <i class="fa-solid fa-arrow-trend-up"></i> Trend Produksi
+            </button>
+            <button type="button" class="tab-btn {{ $activeTab == 'rincian_kebun' ? 'active' : '' }}" onclick="switchTab('rincian_kebun')">
+                <i class="fa-solid fa-table-list"></i> Rincian Per Kebun
+            </button>
+        </div>
+
+        <!-- Mode Terang / Gelap Toggle Button -->
+        <button type="button" id="themeToggleBtn" class="theme-toggle-btn" onclick="toggleTheme()" title="Klik untuk beralih antara Mode Terang dan Mode Gelap">
+            <span class="theme-toggle-icon-dark"><i class="fa-solid fa-moon"></i></span>
+            <span class="theme-toggle-icon-light"><i class="fa-solid fa-sun"></i></span>
+            <span id="themeToggleText">Dark Mode</span>
         </button>
     </div>
 
-    <!-- Hidden form to preserve filters when submitting -->
-    <form id="filterForm" method="GET" action="{{ route('arealproduksi_repl') }}" class="filter-bar">
+    <!-- Filter form: submitted via POST to protect against parameter exposure and Reflected XSS -->
+    <form id="filterForm" method="POST" action="{{ route('arealproduksi_repl') }}" class="filter-bar">
+        @csrf
         <input type="hidden" name="tab" id="activeTabInput" value="{{ $activeTab }}">
         
         <!-- Regional Filter (Multi-select) -->
@@ -913,17 +1220,23 @@
                 <table class="looker-table">
                     <thead>
                         <tr>
-                            <th style="width: 140px; text-align: left;">Komoditi</th>
-                            <th style="width: 50px;">Reg</th>
-                            <th>Luas Areal (Ha)</th>
-                            <th>Prod Thn Lalu (Ton)</th>
-                            <th>Prod RKAP (Ton)</th>
-                            <th>Prod Realisasi (Ton)</th>
-                            <th>%_TL</th>
-                            <th>%_rkap</th>
-                            <th>Protas Thn Lalu (Kg/Ha)</th>
-                            <th>Protas RKAP (Kg/Ha)</th>
-                            <th>Protas Realisasi (Kg/Ha)</th>
+                            <th rowspan="2" style="width: 140px; text-align: left;">Komoditi</th>
+                            <th rowspan="2" style="width: 50px;">Reg</th>
+                            <th rowspan="2">Luas Areal (Ha)</th>
+                            <th colspan="5">Produksi (Ton)</th>
+                            <th colspan="5">Produktivitas (Kg/Ha)</th>
+                        </tr>
+                        <tr>
+                            <th>Tahun Lalu</th>
+                            <th>RKAP</th>
+                            <th>Realisasi</th>
+                            <th title="% Capaian Produksi terhadap Tahun Lalu">%_TL</th>
+                            <th title="% Capaian Produksi terhadap RKAP">%_RKAP</th>
+                            <th>Tahun Lalu</th>
+                            <th>RKAP</th>
+                            <th>Realisasi</th>
+                            <th title="% Capaian Produktivitas terhadap Tahun Lalu">%_TL</th>
+                            <th title="% Capaian Produktivitas terhadap RKAP">%_RKAP</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -935,7 +1248,7 @@
                             @foreach($group['rows'] as $rIdx => $row)
                                 <tr>
                                     @if($rIdx === 0)
-                                        <td rowspan="{{ $rowCount + 1 }}" style="font-weight: 800; background: rgba(13, 27, 52, 0.7); vertical-align: top; border-right: 1px solid var(--border-color);">
+                                        <td rowspan="{{ $rowCount + 1 }}" class="komoditi-col-cell">
                                             {{ $idx + 1 }}. {{ $comm }}
                                         </td>
                                     @endif
@@ -949,6 +1262,8 @@
                                     <td class="text-right num-font">{{ number_format($row['protas_thn_lalu'], 2, ',', '.') }}</td>
                                     <td class="text-right num-font">{{ number_format($row['protas_rkap'], 2, ',', '.') }}</td>
                                     <td class="text-right num-font font-bold text-emerald-400">{{ number_format($row['protas_real'], 2, ',', '.') }}</td>
+                                    <td class="text-center num-font {{ $getPctClass($row['protas_pct_tl']) }}">{{ $row['protas_pct_tl'] }}%</td>
+                                    <td class="text-center num-font {{ $getPctClass($row['protas_pct_rkap']) }}">{{ $row['protas_pct_rkap'] }}%</td>
                                 </tr>
                             @endforeach
                             <!-- Total Row -->
@@ -963,6 +1278,8 @@
                                 <td class="text-right num-font font-bold">{{ number_format($group['total']['protas_thn_lalu'], 2, ',', '.') }}</td>
                                 <td class="text-right num-font font-bold">{{ number_format($group['total']['protas_rkap'], 2, ',', '.') }}</td>
                                 <td class="text-right num-font font-bold text-emerald-300">{{ number_format($group['total']['protas_real'], 2, ',', '.') }}</td>
+                                <td class="text-center num-font font-bold {{ $getPctClass($group['total']['protas_pct_tl']) }}">{{ $group['total']['protas_pct_tl'] }}%</td>
+                                <td class="text-center num-font font-bold {{ $getPctClass($group['total']['protas_pct_rkap']) }}">{{ $group['total']['protas_pct_rkap'] }}%</td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -1071,7 +1388,7 @@
                 <div class="flex items-center gap-6 text-xs font-bold whitespace-nowrap">
                     <span class="flex items-center gap-2 cursor-pointer select-none transition-opacity hover:opacity-80" onclick="toggleComboSeries('Realisasi (Kg/Ha)', this)">
                         <span style="width: 12px; height: 12px; border-radius: 50%; background: #22c55e; border: 2px solid #86efac; display: inline-block; box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);"></span>
-                        <span style="color: #f1f5f9;">Realisasi (Kg/Ha)</span>
+                        <span class="legend-lbl-white" style="color: #f1f5f9;">Realisasi (Kg/Ha)</span>
                     </span>
                     <span class="flex items-center gap-2 cursor-pointer select-none transition-opacity hover:opacity-80" onclick="toggleComboSeries('% Tahun Lalu', this)">
                         <span style="width: 12px; height: 12px; border-radius: 50%; background: #0284c7; border: 2px solid #7dd3fc; display: inline-block; box-shadow: 0 0 8px rgba(2, 132, 199, 0.5);"></span>
@@ -1162,7 +1479,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
             
             <!-- Card 1: Luas Areal (Ha) -->
-            <div class="relative overflow-hidden rounded-2xl p-5 group transition-all duration-300" 
+            <div class="relative overflow-hidden rounded-2xl p-5 group transition-all duration-300 tab4-kpi-luas" 
                  style="background: linear-gradient(135deg, rgba(14, 30, 60, 0.75) 0%, rgba(7, 14, 30, 0.95) 100%); border: 1px solid rgba(56, 189, 248, 0.22); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);">
                 <!-- Ambient Glow -->
                 <div class="absolute -right-10 -top-10 w-36 h-36 rounded-full pointer-events-none opacity-20 blur-2xl" style="background: #38bdf8;"></div>
@@ -1188,7 +1505,7 @@
                 <div class="mt-3 mb-2 flex items-baseline justify-between relative z-10">
                     <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Realisasi</span>
                     <div class="flex items-baseline gap-2 text-right">
-                        <span class="text-3xl font-black num-font text-white tracking-tight">
+                        <span class="text-3xl font-black num-font text-white tracking-tight tab4-hero-val">
                             {{ number_format($tc['luas']['real'], 2, ',', '.') }}
                         </span>
                         <span class="text-xs font-bold text-sky-400/90 tracking-wide uppercase">Ha</span>
@@ -1196,7 +1513,7 @@
                 </div>
 
                 <!-- Sub-stat strip (Satu baris masing-masing, label kiri, nilai kanan, tanpa persentase) -->
-                <div class="space-y-2 relative z-10" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+                <div class="space-y-2 relative z-10 tab4-kpi-divider" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
                     <div class="flex items-center justify-between text-xs">
                         <span class="text-[11px] uppercase font-bold text-slate-400">Target RKAP</span>
                         <span class="font-bold text-slate-200 num-font">
@@ -1213,7 +1530,7 @@
             </div>
 
             <!-- Card 2: Produksi (Ton) -->
-            <div class="relative overflow-hidden rounded-2xl p-5 group transition-all duration-300" 
+            <div class="relative overflow-hidden rounded-2xl p-5 group transition-all duration-300 tab4-kpi-prod" 
                  style="background: linear-gradient(135deg, rgba(30, 22, 14, 0.75) 0%, rgba(14, 10, 7, 0.95) 100%); border: 1px solid rgba(245, 158, 11, 0.22); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);">
                 <!-- Ambient Glow -->
                 <div class="absolute -right-10 -top-10 w-36 h-36 rounded-full pointer-events-none opacity-20 blur-2xl" style="background: #f59e0b;"></div>
@@ -1239,7 +1556,7 @@
                 <div class="mt-3 mb-2 flex items-baseline justify-between relative z-10">
                     <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Realisasi</span>
                     <div class="flex items-baseline gap-2 text-right">
-                        <span class="text-3xl font-black num-font text-white tracking-tight">
+                        <span class="text-3xl font-black num-font text-white tracking-tight tab4-hero-val">
                             {{ number_format($tc['produksi']['real'], 2, ',', '.') }}
                         </span>
                         <span class="text-xs font-bold text-amber-400/90 tracking-wide uppercase">Ton</span>
@@ -1247,7 +1564,7 @@
                 </div>
 
                 <!-- Sub-stat strip (Satu baris masing-masing, label kiri, nilai kanan, tanpa persentase) -->
-                <div class="space-y-2 relative z-10" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+                <div class="space-y-2 relative z-10 tab4-kpi-divider" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
                     <div class="flex items-center justify-between text-xs">
                         <span class="text-[11px] uppercase font-bold text-slate-400">Target RKAP</span>
                         <span class="font-bold text-slate-200 num-font">
@@ -1264,7 +1581,7 @@
             </div>
 
             <!-- Card 3: Produktivitas (Kg/Ha) -->
-            <div class="relative overflow-hidden rounded-2xl p-5 group transition-all duration-300" 
+            <div class="relative overflow-hidden rounded-2xl p-5 group transition-all duration-300 tab4-kpi-protas" 
                  style="background: linear-gradient(135deg, rgba(10, 32, 22, 0.75) 0%, rgba(6, 18, 12, 0.95) 100%); border: 1px solid rgba(34, 197, 94, 0.22); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);">
                 <!-- Ambient Glow -->
                 <div class="absolute -right-10 -top-10 w-36 h-36 rounded-full pointer-events-none opacity-20 blur-2xl" style="background: #22c55e;"></div>
@@ -1290,7 +1607,7 @@
                 <div class="mt-3 mb-2 flex items-baseline justify-between relative z-10">
                     <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Realisasi</span>
                     <div class="flex items-baseline gap-2 text-right">
-                        <span class="text-3xl font-black num-font text-white tracking-tight">
+                        <span class="text-3xl font-black num-font text-white tracking-tight tab4-hero-val">
                             {{ number_format($tc['protas']['real'], 2, ',', '.') }}
                         </span>
                         <span class="text-xs font-bold text-emerald-400/90 tracking-wide uppercase">Kg/Ha</span>
@@ -1298,7 +1615,7 @@
                 </div>
 
                 <!-- Sub-stat strip (Satu baris masing-masing, label kiri, nilai kanan, tanpa persentase) -->
-                <div class="space-y-2 relative z-10" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+                <div class="space-y-2 relative z-10 tab4-kpi-divider" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
                     <div class="flex items-center justify-between text-xs">
                         <span class="text-[11px] uppercase font-bold text-slate-400">Target RKAP</span>
                         <span class="font-bold text-slate-200 num-font">
@@ -1332,17 +1649,21 @@
                 <table class="looker-table" id="rincianKebunTable">
                     <thead>
                         <tr>
-                            <th style="width: 45px;">Reg</th>
-                            <th style="text-align: left; width: 180px;">Kebun</th>
-                            <th>Luas Real (Ha)</th>
-                            <th>Prod TL (Ton)</th>
-                            <th>Prod RKAP (Ton)</th>
-                            <th>Prod Real (Ton)</th>
-                            <th>% TL</th>
-                            <th>% RKAP</th>
-                            <th>Protas TL (Kg/Ha)</th>
-                            <th>Protas RKAP (Kg/Ha)</th>
-                            <th>Protas Real (Kg/Ha)</th>
+                            <th rowspan="2" style="width: 45px;">Reg</th>
+                            <th rowspan="2" style="text-align: left; width: 180px;">Kebun</th>
+                            <th rowspan="2">Luas Real (Ha)</th>
+                            <th colspan="5">Produksi (Ton)</th>
+                            <th colspan="5">Produktivitas (Kg/Ha)</th>
+                        </tr>
+                        <tr>
+                            <th>Tahun Lalu</th>
+                            <th>RKAP</th>
+                            <th>Realisasi</th>
+                            <th title="% Capaian Produksi terhadap Tahun Lalu">% TL</th>
+                            <th title="% Capaian Produksi terhadap RKAP">% RKAP</th>
+                            <th>Tahun Lalu</th>
+                            <th>RKAP</th>
+                            <th>Realisasi</th>
                             <th title="% Capaian Produktivitas terhadap Tahun Lalu">% TL</th>
                             <th title="% Capaian Produktivitas terhadap RKAP">% RKAP</th>
                         </tr>
@@ -1382,6 +1703,42 @@
      JAVASCRIPT: TAB SWITCHING, FILTERS & APEXCHARTS
      =================================================================== -->
 <script>
+    // =================================================================
+    // THEME MANAGEMENT (Dark / Light Mode Toggle & LocalStorage Persistence)
+    // =================================================================
+    function getStoredTheme() {
+        try {
+            return localStorage.getItem('areal_dashboard_theme') || 'dark';
+        } catch (e) {
+            return 'dark';
+        }
+    }
+
+    function updateThemeUI(mode) {
+        const isLight = (mode === 'light');
+        const textEl = document.getElementById('themeToggleText');
+        if (textEl) {
+            textEl.textContent = isLight ? 'Light Mode' : 'Dark Mode';
+        }
+        if (isLight) {
+            document.body.classList.add('theme-light');
+        } else {
+            document.body.classList.remove('theme-light');
+        }
+    }
+
+    function toggleTheme() {
+        const isCurrentLight = document.body.classList.contains('theme-light');
+        const nextMode = isCurrentLight ? 'dark' : 'light';
+        try {
+            localStorage.setItem('areal_dashboard_theme', nextMode);
+        } catch (e) {}
+        updateThemeUI(nextMode);
+        if (typeof window.applyThemeToCharts === 'function') {
+            window.applyThemeToCharts(nextMode);
+        }
+    }
+
     // Tab Switching Function
     function switchTab(tabId) {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -1576,21 +1933,26 @@
         const input = document.getElementById('tableSearchInput');
         const filter = input.value.toUpperCase();
         const table = document.getElementById('rincianKebunTable');
-        const tr = table.getElementsByTagName('tr');
+        const tr = table.querySelectorAll('tbody tr');
 
-        for (let i = 1; i < tr.length; i++) {
-            const td = tr[i].getElementsByClassName('kebun-name-cell')[0];
+        tr.forEach(row => {
+            const td = row.getElementsByClassName('kebun-name-cell')[0];
             if (td) {
                 const txtValue = td.textContent || td.innerText;
-                tr[i].style.display = txtValue.toUpperCase().indexOf(filter) > -1 ? '' : 'none';
+                row.style.display = txtValue.toUpperCase().indexOf(filter) > -1 ? '' : 'none';
             }
-        }
+        });
     }
 
     // =================================================================
     // APEXCHARTS INITIALIZATION (Dark High-Contrast Theme)
     // =================================================================
     document.addEventListener('DOMContentLoaded', function () {
+        // Bersihkan address bar dari query string parameter jika ada (URL hygiene & anti-parameter exposure)
+        if (window.history.replaceState && window.location.search) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
         const initialTab = document.getElementById('activeTabInput').value;
         updateKebunFilterByTab(initialTab);
         if (initialTab === 'trend_produksi' || initialTab === 'summary') {
@@ -1817,12 +2179,12 @@
                     fontSize: '11px',
                     fontFamily: "'JetBrains Mono', 'Plus Jakarta Sans', monospace",
                     fontWeight: 800,
-                    colors: ['#ffffff']
+                    colors: (typeof getStoredTheme === 'function' && getStoredTheme() === 'light') ? ['#0f172a'] : ['#ffffff']
                 },
                 background: {
                     enabled: false
                 },
-                dropShadow: {
+                dropShadow: (typeof getStoredTheme === 'function' && getStoredTheme() === 'light') ? { enabled: false } : {
                     enabled: true,
                     top: 1,
                     left: 1,
@@ -1855,11 +2217,16 @@
             },
             yaxis: [
                 {
+                    min: 0,
                     title: { text: 'Protas (Kg/Ha)', style: { color: '#cbd5e1', fontSize: '11px' } },
-                    labels: { style: { colors: '#cbd5e1', fontSize: '11px', fontFamily: "'JetBrains Mono', monospace" } },
+                    labels: {
+                        style: { colors: '#cbd5e1', fontSize: '11px', fontFamily: "'JetBrains Mono', monospace" },
+                        formatter: function(val) { return Math.round(val).toLocaleString('id-ID'); }
+                    },
                     max: function(max) { return Math.ceil((max * 1.18) / 100) * 100; }
                 },
                 {
+                    min: 0,
                     opposite: true,
                     title: { text: '% Capaian', style: { color: '#cbd5e1', fontSize: '11px' } },
                     labels: {
@@ -1934,7 +2301,7 @@
             data: bubbleRaw.map(b => ({
                 x: b.x,
                 y: b.y,
-                z: Math.max(12, Math.min(28, (b.x / 100) * 1.8)),
+                z: parseFloat(b.protas) || 0,
                 kebunName: b.name,
                 protas: b.protas,
                 pct_rkap: b.pct_rkap
@@ -2127,6 +2494,13 @@
                     }
                 }
             },
+            plotOptions: {
+                bubble: {
+                    zScaling: true,
+                    minBubbleRadius: 10,
+                    maxBubbleRadius: 32
+                }
+            },
             colors: ['#0284c7'],
             series: bubbleSeries,
             stroke: {
@@ -2189,34 +2563,43 @@
                     const badgeIcon = isAbove ? '▲' : '▼';
                     const badgeText = isAbove ? 'DI ATAS TARGET' : 'DI BAWAH TARGET';
 
+                    const isLight = document.body.classList.contains('theme-light');
+                    const tooltipBg = isLight ? '#ffffff' : '#0b1329';
+                    const tooltipTitleColor = isLight ? '#0f172a' : '#f8fafc';
+                    const tooltipTextColor = isLight ? '#475569' : '#cbd5e1';
+                    const tooltipBorderColor = isAbove ? (isLight ? '#0284c7' : '#38bdf8') : '#f87171';
+                    const numColor = isLight ? '#0f172a' : '#ffffff';
+                    const rowBg = isLight ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.04)';
+                    const dividerColor = isLight ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+
                     return `
-                    <div style="background: #0b1329; border: 1px solid ${isAbove ? '#38bdf8' : '#f87171'}; border-radius: 8px; padding: 12px 14px; box-shadow: 0 10px 25px rgba(0,0,0,0.7); min-width: 220px; font-family: 'Plus Jakarta Sans', sans-serif;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px;">
-                            <span style="font-weight: 800; font-size: 13px; color: #f8fafc; letter-spacing: 0.3px;">${data.kebunName}</span>
+                    <div style="background: ${tooltipBg}; border: 1px solid ${tooltipBorderColor}; border-radius: 8px; padding: 12px 14px; box-shadow: 0 10px 25px rgba(0,0,0,${isLight ? '0.12' : '0.7'}); min-width: 220px; font-family: 'Plus Jakarta Sans', sans-serif;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; border-bottom: 1px solid ${dividerColor}; padding-bottom: 6px;">
+                            <span style="font-weight: 800; font-size: 13px; color: ${tooltipTitleColor}; letter-spacing: 0.3px;">${data.kebunName}</span>
                             <span style="font-size: 10px; font-weight: 800; color: ${badgeColor}; background: ${badgeBg}; border: 1px solid ${badgeBorder}; padding: 2px 7px; border-radius: 9999px;">
                                 ${badgeIcon} ${badgeText}
                             </span>
                         </div>
-                        <div style="font-size: 11px; line-height: 1.6; color: #cbd5e1; font-family: 'JetBrains Mono', monospace;">
-                            <div style="display: flex; justify-content: space-between;">
-                                <span style="color: #94a3b8;">Luas Areal:</span>
-                                <strong style="color: #fff;">${Number(data.x).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Ha</strong>
+                        <div style="font-size: 11px; line-height: 1.6; color: ${tooltipTextColor}; font-family: 'JetBrains Mono', monospace;">
+                            <div style="display: flex; justify-content: space-between; background: ${rowBg}; padding: 2px 6px; border-radius: 4px; margin-bottom: 4px;">
+                                <span style="color: ${tooltipTextColor}; font-weight: 600;">Protas Real:</span>
+                                <strong style="color: ${badgeColor}; font-size: 12px;">${Number(data.protas).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Kg/Ha</strong>
                             </div>
                             <div style="display: flex; justify-content: space-between;">
-                                <span style="color: #94a3b8;">Produksi:</span>
-                                <strong style="color: #fff;">${Number(data.y).toLocaleString('id-ID')} Kg</strong>
+                                <span style="color: ${tooltipTextColor};">Luas Areal:</span>
+                                <strong style="color: ${numColor};">${Number(data.x).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Ha</strong>
                             </div>
                             <div style="display: flex; justify-content: space-between;">
-                                <span style="color: #94a3b8;">Protas Real:</span>
-                                <strong style="color: ${badgeColor};">${Number(data.protas).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Kg/Ha</strong>
+                                <span style="color: ${tooltipTextColor};">Produksi:</span>
+                                <strong style="color: ${numColor};">${Number(data.y).toLocaleString('id-ID')} Kg</strong>
                             </div>
                             ${targetProtasRkap > 0 ? `
-                            <div style="display: flex; justify-content: space-between; border-top: 1px dashed rgba(255,255,255,0.1); margin-top: 4px; padding-top: 4px;">
-                                <span style="color: #fbbf24;">Target RKAP:</span>
-                                <strong style="color: #fbbf24;">${Number(targetProtasRkap).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Kg/Ha</strong>
+                            <div style="display: flex; justify-content: space-between; border-top: 1px dashed ${dividerColor}; margin-top: 4px; padding-top: 4px;">
+                                <span style="color: #d97706;">Target RKAP:</span>
+                                <strong style="color: #d97706;">${Number(targetProtasRkap).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Kg/Ha</strong>
                             </div>
                             <div style="display: flex; justify-content: space-between;">
-                                <span style="color: #94a3b8;">Rasio vs Target:</span>
+                                <span style="color: ${tooltipTextColor};">Rasio vs Target:</span>
                                 <strong style="color: ${badgeColor};">${diffPct.toFixed(1)}% (${diffProtas >= 0 ? '+' : ''}${Number(diffProtas.toFixed(1)).toLocaleString('id-ID')} Kg/Ha)</strong>
                             </div>
                             ` : ''}
@@ -2334,6 +2717,162 @@
             const isHidden = el.style.opacity === '0.35';
             el.style.opacity = isHidden ? '1' : '0.35';
         };
+
+        // =============================================================
+        // DYNAMIC APEXCHARTS THEME SWITCHING (Dark <-> Light)
+        // =============================================================
+        window.applyThemeToCharts = function(mode) {
+            const isLight = (mode === 'light');
+            const labelColor = isLight ? '#475569' : '#cbd5e1';
+            const titleColor = isLight ? '#0f172a' : '#cbd5e1';
+            const gridBorder = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.08)';
+
+            const commonBarOpt = {
+                theme: { mode: mode },
+                grid: { borderColor: gridBorder },
+                xaxis: {
+                    labels: { style: { colors: labelColor, fontSize: '11px', fontWeight: 700 } }
+                },
+                yaxis: {
+                    labels: {
+                        style: { colors: labelColor, fontSize: '11px', fontFamily: "'JetBrains Mono', monospace", fontWeight: 600 },
+                        formatter: function(val) {
+                            if (val >= 1000) return (val / 1000).toLocaleString('id-ID') + ' rb';
+                            return val.toLocaleString('id-ID');
+                        }
+                    }
+                },
+                legend: { labels: { colors: labelColor } }
+            };
+
+            if (typeof chartLuas !== 'undefined' && chartLuas) chartLuas.updateOptions(commonBarOpt);
+            if (typeof chartProd !== 'undefined' && chartProd) chartProd.updateOptions(commonBarOpt);
+            if (typeof chartProtas !== 'undefined' && chartProtas) chartProtas.updateOptions(commonBarOpt);
+
+            if (typeof chartDonut !== 'undefined' && chartDonut) {
+                chartDonut.updateOptions({
+                    theme: { mode: mode },
+                    legend: { labels: { colors: labelColor } }
+                });
+            }
+
+            if (typeof chartCombo !== 'undefined' && chartCombo) {
+                chartCombo.updateOptions({
+                    theme: { mode: mode },
+                    grid: { borderColor: gridBorder },
+                    dataLabels: {
+                        style: {
+                            colors: isLight ? ['#0f172a'] : ['#ffffff']
+                        },
+                        dropShadow: isLight ? { enabled: false } : {
+                            enabled: true,
+                            top: 1,
+                            left: 1,
+                            blur: 3,
+                            color: '#000000',
+                            opacity: 0.95
+                        }
+                    },
+                    xaxis: {
+                        labels: {
+                            style: { colors: labelColor, fontSize: '11px', fontWeight: 600 }
+                        }
+                    },
+                    yaxis: [
+                        {
+                            min: 0,
+                            title: { text: 'Protas (Kg/Ha)', style: { color: titleColor, fontSize: '11px' } },
+                            labels: {
+                                style: { colors: labelColor, fontSize: '11px', fontFamily: "'JetBrains Mono', monospace" },
+                                formatter: function(val) { return Math.round(val).toLocaleString('id-ID'); }
+                            },
+                            max: function(max) { return Math.ceil((max * 1.18) / 100) * 100; }
+                        },
+                        {
+                            min: 0,
+                            opposite: true,
+                            title: { text: '% Capaian', style: { color: titleColor, fontSize: '11px' } },
+                            labels: {
+                                style: { colors: labelColor, fontSize: '11px', fontFamily: "'JetBrains Mono', monospace" },
+                                formatter: function(val) { return Math.round(val) + '%'; }
+                            }
+                        }
+                    ]
+                });
+            }
+
+            if (typeof chartBubble !== 'undefined' && chartBubble) {
+                chartBubble.updateOptions({
+                    theme: { mode: mode },
+                    grid: { borderColor: gridBorder },
+                    xaxis: {
+                        min: 0,
+                        max: xMaxRound,
+                        tickAmount: xTicks,
+                        title: { text: 'Luas Areal (Ha)', style: { color: titleColor, fontSize: '11px', fontWeight: 600 } },
+                        labels: {
+                            style: { colors: labelColor, fontSize: '11px', fontFamily: "'JetBrains Mono', monospace" },
+                            formatter: function(val) {
+                                const n = Math.round(Number(val));
+                                return n.toLocaleString('id-ID');
+                            }
+                        }
+                    },
+                    yaxis: {
+                        min: 0,
+                        max: yMaxRound,
+                        tickAmount: yTicks,
+                        title: { text: 'Produksi (Kg)', style: { color: titleColor, fontSize: '11px', fontWeight: 600 } },
+                        labels: {
+                            style: { colors: labelColor, fontSize: '11px', fontFamily: "'JetBrains Mono', monospace" },
+                            formatter: function(val) {
+                                const n = Math.round(Number(val));
+                                if (n >= 1000000) {
+                                    const jt = n / 1000000;
+                                    return (Number.isInteger(jt) ? jt : jt.toLocaleString('id-ID', { maximumFractionDigits: 1 })) + ' jt';
+                                }
+                                if (n >= 1000) return (n / 1000).toLocaleString('id-ID') + ' rb';
+                                return n.toLocaleString('id-ID');
+                            }
+                        }
+                    }
+                });
+                setTimeout(() => drawTargetRkapLine(chartBubble), 100);
+            }
+
+            if (window.trendCharts) {
+                Object.values(window.trendCharts).forEach(tc => {
+                    if (tc) {
+                        tc.updateOptions({
+                            theme: { mode: mode },
+                            grid: { borderColor: gridBorder },
+                            xaxis: { labels: { style: { colors: labelColor, fontSize: '11px', fontWeight: 600 } } },
+                            yaxis: {
+                                labels: {
+                                    style: { colors: labelColor, fontSize: '11px', fontFamily: "'JetBrains Mono', monospace", fontWeight: 600 },
+                                    formatter: function(val) {
+                                        if (val >= 1000000) return (val / 1000000).toFixed(1) + ' jt';
+                                        if (val >= 1000) return (val / 1000).toLocaleString('id-ID') + ' rb';
+                                        return val.toLocaleString('id-ID');
+                                    }
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+        };
+
+        // Sinkronkan tema saat halaman pertama kali dimuat
+        const initialTheme = getStoredTheme();
+        updateThemeUI(initialTheme);
+        if (initialTheme === 'light') {
+            setTimeout(() => {
+                if (typeof window.applyThemeToCharts === 'function') {
+                    window.applyThemeToCharts('light');
+                }
+            }, 100);
+        }
     });
 </script>
 @endsection
