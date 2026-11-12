@@ -93,6 +93,14 @@
         flex-wrap: wrap;
     }
 
+    .tab-buttons-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-left: 44px; /* Memberikan jarak menjorok ke kanan agar tidak bertindih dengan floating menu hamburger (#menuIcon) */
+    }
+
     .tab-btn {
         background: transparent;
         color: var(--text-muted);
@@ -434,6 +442,20 @@
     .multiselect-wrapper.active .multiselect-dropdown {
         display: block;
     }
+    .regional-locked-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border-radius: 8px;
+        background: rgba(16, 185, 129, 0.12);
+        border: 1px solid rgba(52, 211, 153, 0.35);
+        color: #34d399;
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        user-select: none;
+    }
     .multiselect-search {
         width: 100%;
         padding: 6px 10px;
@@ -616,6 +638,7 @@
         transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         user-select: none;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+        margin-right: 50px; /* Menjorok ke dalam agar tidak bertindih dengan floating action icon di kanan atas */
     }
     .theme-toggle-btn:hover {
         border-color: #38bdf8;
@@ -629,6 +652,23 @@
     .theme-toggle-icon-dark {
         display: inline-block;
         color: #38bdf8;
+    }
+
+    /* Bubble Chart Data Labels (Nama Kebun & Nilai Protas di Kanan Atas) */
+    #chartBubbleAreal .apexcharts-datalabel,
+    #chartBubbleAreal .apexcharts-data-labels text {
+        fill: #ffffff !important;
+        font-size: 9.5px !important;
+        font-weight: 700 !important;
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+        filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.95)) drop-shadow(0px 0px 4px rgba(0, 0, 0, 0.9));
+        pointer-events: none;
+        user-select: none;
+    }
+    #chartBubbleAreal .apexcharts-datalabel tspan:nth-child(2),
+    #chartBubbleAreal .apexcharts-data-labels text tspan:nth-child(2) {
+        fill: #7dd3fc !important;
+        font-weight: 600 !important;
     }
 
     /* ============================================================
@@ -725,7 +765,24 @@
         color: #0f172a !important;
     }
 
-    /* Tab 4 Top KPI Cards */
+    /* Tab 4 Top KPI Cards - Dark Theme (High Opacity & Solid Visibility) */
+    .tab4-kpi-luas {
+        background: linear-gradient(135deg, rgba(16, 38, 76, 0.98) 0%, rgba(9, 18, 38, 0.99) 100%) !important;
+        border: 1px solid rgba(56, 189, 248, 0.48) !important;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5), 0 0 18px rgba(56, 189, 248, 0.12) !important;
+    }
+    .tab4-kpi-prod {
+        background: linear-gradient(135deg, rgba(48, 28, 14, 0.98) 0%, rgba(20, 12, 6, 0.99) 100%) !important;
+        border: 1px solid rgba(245, 158, 11, 0.48) !important;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5), 0 0 18px rgba(245, 158, 11, 0.12) !important;
+    }
+    .tab4-kpi-protas {
+        background: linear-gradient(135deg, rgba(14, 46, 28, 0.98) 0%, rgba(7, 20, 12, 0.99) 100%) !important;
+        border: 1px solid rgba(74, 222, 128, 0.48) !important;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5), 0 0 18px rgba(74, 222, 128, 0.12) !important;
+    }
+
+    /* Tab 4 Top KPI Cards - Light Theme */
     body.theme-light .tab4-kpi-luas {
         background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%) !important;
         border: 1px solid #bae6fd !important;
@@ -893,6 +950,18 @@
         filter: none !important;
     }
 
+    /* Bubble Chart Data Labels in Light Mode (Teks Hitam Elegan dengan Halo Terang) */
+    body.theme-light #chartBubbleAreal .apexcharts-datalabel,
+    body.theme-light #chartBubbleAreal .apexcharts-data-labels text {
+        fill: #0f172a !important;
+        color: #0f172a !important;
+        filter: drop-shadow(0px 1px 2px rgba(255, 255, 255, 0.95)) drop-shadow(0px 0px 4px rgba(255, 255, 255, 0.9)) !important;
+    }
+    body.theme-light #chartBubbleAreal .apexcharts-datalabel tspan:nth-child(2),
+    body.theme-light #chartBubbleAreal .apexcharts-data-labels text tspan:nth-child(2) {
+        fill: #0284c7 !important;
+    }
+
     /* Light Mode Toggle Button active appearance */
     body.theme-light .theme-toggle-btn {
         background: #ffffff !important;
@@ -909,6 +978,14 @@
     }
     body.theme-light .theme-toggle-icon-dark {
         display: none !important;
+    }
+    body.theme-light .regional-locked-badge {
+        background: #ecfdf5 !important;
+        border-color: #a7f3d0 !important;
+        color: #047857 !important;
+    }
+    body.theme-light .regional-locked-badge i {
+        color: #059669 !important;
     }
 </style>
 
@@ -950,7 +1027,7 @@
     
     <!-- Tab Navigation & Theme Toggle -->
     <div class="tab-nav-container">
-        <div class="flex items-center gap-2 flex-wrap">
+        <div class="tab-buttons-group" style="margin-left: 44px;">
             <button type="button" class="tab-btn {{ $activeTab == 'summary' ? 'active' : '' }}" onclick="switchTab('summary')">
                 <i class="fa-solid fa-chart-pie"></i> Summary
             </button>
@@ -966,7 +1043,7 @@
         </div>
 
         <!-- Mode Terang / Gelap Toggle Button -->
-        <button type="button" id="themeToggleBtn" class="theme-toggle-btn" onclick="toggleTheme()" title="Klik untuk beralih antara Mode Terang dan Mode Gelap">
+        <button type="button" id="themeToggleBtn" class="theme-toggle-btn" style="margin-right: 50px;" onclick="toggleTheme()" title="Klik untuk beralih antara Mode Terang dan Mode Gelap">
             <span class="theme-toggle-icon-dark"><i class="fa-solid fa-moon"></i></span>
             <span class="theme-toggle-icon-light"><i class="fa-solid fa-sun"></i></span>
             <span id="themeToggleText">Dark Mode</span>
@@ -974,55 +1051,63 @@
     </div>
 
     <!-- Filter form: submitted via POST to protect against parameter exposure and Reflected XSS -->
-    <form id="filterForm" method="POST" action="{{ route('arealproduksi_repl') }}" class="filter-bar">
+    <form id="filterForm" method="POST" action="{{ request()->routeIs('arealproduksi') ? route('arealproduksi') : route('arealproduksi_repl') }}" class="filter-bar">
         @csrf
         <input type="hidden" name="tab" id="activeTabInput" value="{{ $activeTab }}">
         
-        <!-- Regional Filter (Multi-select) -->
+        <!-- Regional Filter -->
         <div id="filterRegionalWrapper" class="flex items-center" style="{{ in_array($activeTab, ['produktivitas_regional', 'trend_produksi', 'rincian_kebun']) ? '' : 'display:none;' }}">
             <span class="text-xs text-slate-400 font-bold mr-1">Regional:</span>
-            <div class="multiselect-wrapper" id="multiselectRegional">
-                <div class="multiselect-trigger" onclick="toggleMultiselect('multiselectRegional')">
-                    <span class="multiselect-label-text">
-                        @php
-                            $isAllRegSelected = empty($regionalSelected) || in_array('all', $regionalSelected);
-                            $regCount = is_array($regionalSelected) ? count($regionalSelected) : 1;
-                        @endphp
-                        @if($isAllRegSelected || $regCount == count($listRegional))
-                            Semua Regional
-                        @elseif($regCount == 1)
-                            Regional {{ is_array($regionalSelected) ? $regionalSelected[0] : $regionalSelected }}
-                        @else
-                            {{ $regCount }} Regional Dipilih
-                        @endif
-                    </span>
-                    <i class="fa-solid fa-chevron-down text-slate-400 text-[10px]"></i>
+            @if(!empty($isRegionalUser))
+                <input type="hidden" name="regional[]" value="{{ $userRegId }}">
+                <div class="regional-locked-badge" title="Akses Regional terkunci sesuai akun login Anda">
+                    <i class="fa-solid fa-lock text-[10px]"></i>
+                    <span>Regional {{ $userRegId }}</span>
                 </div>
-                <div class="multiselect-dropdown">
-                    <div class="multiselect-actions">
-                        <button type="button" class="multiselect-action-btn" onclick="multiselectSelectAll('multiselectRegional', true)">Pilih Semua</button>
-                        <button type="button" class="multiselect-action-btn text-slate-400" onclick="multiselectSelectAll('multiselectRegional', false)">Reset</button>
-                    </div>
-                    <div class="multiselect-list custom-scroll">
-                        @foreach($listRegional as $reg)
+            @else
+                <div class="multiselect-wrapper" id="multiselectRegional">
+                    <div class="multiselect-trigger" onclick="toggleMultiselect('multiselectRegional')">
+                        <span class="multiselect-label-text">
                             @php
-                                $isRegChecked = (is_array($regionalSelected) && in_array($reg, $regionalSelected)) || ($isAllRegSelected && count($regionalSelected) == count($listRegional));
+                                $isAllRegSelected = empty($regionalSelected) || in_array('all', $regionalSelected);
+                                $regCount = is_array($regionalSelected) ? count($regionalSelected) : 1;
                             @endphp
-                            <label class="multiselect-item">
-                                <input type="checkbox" name="regional[]" value="{{ $reg }}" class="multiselect-checkbox" 
-                                    {{ $isRegChecked ? 'checked' : '' }}
-                                    onchange="updateMultiselectDisplay('multiselectRegional', 'Regional', {{ count($listRegional) }})">
-                                <span>Regional {{ $reg }}</span>
-                            </label>
-                        @endforeach
+                            @if($isAllRegSelected || $regCount == count($listRegional))
+                                Semua Regional
+                            @elseif($regCount == 1)
+                                Regional {{ is_array($regionalSelected) ? $regionalSelected[0] : $regionalSelected }}
+                            @else
+                                {{ $regCount }} Regional Dipilih
+                            @endif
+                        </span>
+                        <i class="fa-solid fa-chevron-down text-slate-400 text-[10px]"></i>
                     </div>
-                    <div class="multiselect-footer">
-                        <button type="button" class="multiselect-apply-btn" onclick="submitFilter()">
-                            <i class="fa-solid fa-check"></i> Terapkan
-                        </button>
+                    <div class="multiselect-dropdown">
+                        <div class="multiselect-actions">
+                            <button type="button" class="multiselect-action-btn" onclick="multiselectSelectAll('multiselectRegional', true)">Pilih Semua</button>
+                            <button type="button" class="multiselect-action-btn text-slate-400" onclick="multiselectSelectAll('multiselectRegional', false)">Reset</button>
+                        </div>
+                        <div class="multiselect-list custom-scroll">
+                            @foreach($listRegional as $reg)
+                                @php
+                                    $isRegChecked = (is_array($regionalSelected) && in_array($reg, $regionalSelected)) || ($isAllRegSelected && count($regionalSelected) == count($listRegional));
+                                @endphp
+                                <label class="multiselect-item">
+                                    <input type="checkbox" name="regional[]" value="{{ $reg }}" class="multiselect-checkbox" 
+                                        {{ $isRegChecked ? 'checked' : '' }}
+                                        onchange="updateMultiselectDisplay('multiselectRegional', 'Regional', {{ count($listRegional) }})">
+                                    <span>Regional {{ $reg }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                        <div class="multiselect-footer">
+                            <button type="button" class="multiselect-apply-btn" onclick="submitFilter()">
+                                <i class="fa-solid fa-check"></i> Terapkan
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
+            @endif
         </div>
 
         <!-- Kebun Filter (Multi-select) -->
@@ -1120,10 +1205,11 @@
             </select>
         </div>
 
-        <!-- Print Button -->
+        {{-- Tombol Cetak (sementara dihilangkan)
         <button type="button" onclick="window.print()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-600/30 hover:bg-sky-600/50 text-sky-200 border border-sky-500/40 text-xs font-bold transition-all cursor-pointer">
             <i class="fa-solid fa-print"></i> Cetak
         </button>
+        --}}
     </form>
 
 
@@ -1479,22 +1565,21 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
             
             <!-- Card 1: Luas Areal (Ha) -->
-            <div class="relative overflow-hidden rounded-2xl p-5 group transition-all duration-300 tab4-kpi-luas" 
-                 style="background: linear-gradient(135deg, rgba(14, 30, 60, 0.75) 0%, rgba(7, 14, 30, 0.95) 100%); border: 1px solid rgba(56, 189, 248, 0.22); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);">
-                <!-- Ambient Glow -->
-                <div class="absolute -right-10 -top-10 w-36 h-36 rounded-full pointer-events-none opacity-20 blur-2xl" style="background: #38bdf8;"></div>
+            <div class="relative overflow-hidden rounded-2xl p-5 group transition-all duration-300 tab4-kpi-luas">
+                <!-- Ambient Glow (Higher Opacity) -->
+                <div class="absolute -right-10 -top-10 w-40 h-40 rounded-full pointer-events-none opacity-40 blur-2xl" style="background: #38bdf8;"></div>
 
                 <!-- Header: Icon, Label & Badge -->
                 <div class="flex items-center justify-between mb-4 relative z-10">
                     <div class="flex items-center gap-3">
-                        <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(2, 132, 199, 0.18); border: 1px solid rgba(56, 189, 248, 0.3); display: flex; align-items: center; justify-content: center;">
+                        <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(2, 132, 199, 0.35); border: 1px solid rgba(56, 189, 248, 0.5); display: flex; align-items: center; justify-content: center;">
                             <i class="fa-solid fa-map-location-dot text-sky-400 text-sm"></i>
                         </div>
                         <div class="text-xs font-black uppercase tracking-wider text-sky-300">Luas Areal</div>
                     </div>
                     <!-- Percentage Badge -->
                     <div class="px-2.5 py-1 rounded-full text-xs font-black num-font flex items-center gap-1.5"
-                         style="{{ $tc['luas']['pct'] >= 100 ? 'background: rgba(34, 197, 94, 0.16); border: 1px solid rgba(74, 222, 128, 0.4); color: #4ade80;' : ($tc['luas']['pct'] >= 90 ? 'background: rgba(234, 179, 8, 0.16); border: 1px solid rgba(250, 204, 21, 0.4); color: #facc15;' : 'background: rgba(239, 68, 68, 0.16); border: 1px solid rgba(248, 113, 113, 0.4); color: #f87171;') }}">
+                         style="{{ $tc['luas']['pct'] >= 100 ? 'background: rgba(34, 197, 94, 0.28); border: 1px solid rgba(74, 222, 128, 0.6); color: #4ade80;' : ($tc['luas']['pct'] >= 90 ? 'background: rgba(234, 179, 8, 0.28); border: 1px solid rgba(250, 204, 21, 0.6); color: #facc15;' : 'background: rgba(239, 68, 68, 0.28); border: 1px solid rgba(248, 113, 113, 0.6); color: #f87171;') }}">
                         <i class="fa-solid {{ $tc['luas']['pct'] >= 100 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down' }} text-[10px]"></i>
                         <span>{{ $tc['luas']['pct'] }}%</span>
                         <span class="text-[9px] font-bold text-slate-400 opacity-80">RKAP</span>
@@ -1513,7 +1598,7 @@
                 </div>
 
                 <!-- Sub-stat strip (Satu baris masing-masing, label kiri, nilai kanan, tanpa persentase) -->
-                <div class="space-y-2 relative z-10 tab4-kpi-divider" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+                <div class="space-y-2 relative z-10 tab4-kpi-divider" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.14);">
                     <div class="flex items-center justify-between text-xs">
                         <span class="text-[11px] uppercase font-bold text-slate-400">Target RKAP</span>
                         <span class="font-bold text-slate-200 num-font">
@@ -1530,22 +1615,21 @@
             </div>
 
             <!-- Card 2: Produksi (Ton) -->
-            <div class="relative overflow-hidden rounded-2xl p-5 group transition-all duration-300 tab4-kpi-prod" 
-                 style="background: linear-gradient(135deg, rgba(30, 22, 14, 0.75) 0%, rgba(14, 10, 7, 0.95) 100%); border: 1px solid rgba(245, 158, 11, 0.22); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);">
-                <!-- Ambient Glow -->
-                <div class="absolute -right-10 -top-10 w-36 h-36 rounded-full pointer-events-none opacity-20 blur-2xl" style="background: #f59e0b;"></div>
+            <div class="relative overflow-hidden rounded-2xl p-5 group transition-all duration-300 tab4-kpi-prod">
+                <!-- Ambient Glow (Higher Opacity) -->
+                <div class="absolute -right-10 -top-10 w-40 h-40 rounded-full pointer-events-none opacity-40 blur-2xl" style="background: #f59e0b;"></div>
 
                 <!-- Header: Icon, Label & Badge -->
                 <div class="flex items-center justify-between mb-4 relative z-10">
                     <div class="flex items-center gap-3">
-                        <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(245, 158, 11, 0.18); border: 1px solid rgba(245, 158, 11, 0.3); display: flex; align-items: center; justify-content: center;">
+                        <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(245, 158, 11, 0.35); border: 1px solid rgba(245, 158, 11, 0.5); display: flex; align-items: center; justify-content: center;">
                             <i class="fa-solid fa-boxes-stacked text-amber-400 text-sm"></i>
                         </div>
                         <div class="text-xs font-black uppercase tracking-wider text-amber-300">Produksi</div>
                     </div>
                     <!-- Percentage Badge -->
                     <div class="px-2.5 py-1 rounded-full text-xs font-black num-font flex items-center gap-1.5"
-                         style="{{ $tc['produksi']['pct'] >= 100 ? 'background: rgba(34, 197, 94, 0.16); border: 1px solid rgba(74, 222, 128, 0.4); color: #4ade80;' : ($tc['produksi']['pct'] >= 90 ? 'background: rgba(234, 179, 8, 0.16); border: 1px solid rgba(250, 204, 21, 0.4); color: #facc15;' : 'background: rgba(239, 68, 68, 0.16); border: 1px solid rgba(248, 113, 113, 0.4); color: #f87171;') }}">
+                         style="{{ $tc['produksi']['pct'] >= 100 ? 'background: rgba(34, 197, 94, 0.28); border: 1px solid rgba(74, 222, 128, 0.6); color: #4ade80;' : ($tc['produksi']['pct'] >= 90 ? 'background: rgba(234, 179, 8, 0.28); border: 1px solid rgba(250, 204, 21, 0.6); color: #facc15;' : 'background: rgba(239, 68, 68, 0.28); border: 1px solid rgba(248, 113, 113, 0.6); color: #f87171;') }}">
                         <i class="fa-solid {{ $tc['produksi']['pct'] >= 100 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down' }} text-[10px]"></i>
                         <span>{{ $tc['produksi']['pct'] }}%</span>
                         <span class="text-[9px] font-bold text-slate-400 opacity-80">RKAP</span>
@@ -1564,7 +1648,7 @@
                 </div>
 
                 <!-- Sub-stat strip (Satu baris masing-masing, label kiri, nilai kanan, tanpa persentase) -->
-                <div class="space-y-2 relative z-10 tab4-kpi-divider" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+                <div class="space-y-2 relative z-10 tab4-kpi-divider" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.14);">
                     <div class="flex items-center justify-between text-xs">
                         <span class="text-[11px] uppercase font-bold text-slate-400">Target RKAP</span>
                         <span class="font-bold text-slate-200 num-font">
@@ -1581,22 +1665,21 @@
             </div>
 
             <!-- Card 3: Produktivitas (Kg/Ha) -->
-            <div class="relative overflow-hidden rounded-2xl p-5 group transition-all duration-300 tab4-kpi-protas" 
-                 style="background: linear-gradient(135deg, rgba(10, 32, 22, 0.75) 0%, rgba(6, 18, 12, 0.95) 100%); border: 1px solid rgba(34, 197, 94, 0.22); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);">
-                <!-- Ambient Glow -->
-                <div class="absolute -right-10 -top-10 w-36 h-36 rounded-full pointer-events-none opacity-20 blur-2xl" style="background: #22c55e;"></div>
+            <div class="relative overflow-hidden rounded-2xl p-5 group transition-all duration-300 tab4-kpi-protas">
+                <!-- Ambient Glow (Higher Opacity) -->
+                <div class="absolute -right-10 -top-10 w-40 h-40 rounded-full pointer-events-none opacity-40 blur-2xl" style="background: #22c55e;"></div>
 
                 <!-- Header: Icon, Label & Badge -->
                 <div class="flex items-center justify-between mb-4 relative z-10">
                     <div class="flex items-center gap-3">
-                        <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(34, 197, 94, 0.18); border: 1px solid rgba(74, 222, 128, 0.3); display: flex; align-items: center; justify-content: center;">
+                        <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(34, 197, 94, 0.35); border: 1px solid rgba(74, 222, 128, 0.5); display: flex; align-items: center; justify-content: center;">
                             <i class="fa-solid fa-gauge-high text-emerald-400 text-sm"></i>
                         </div>
                         <div class="text-xs font-black uppercase tracking-wider text-emerald-300">Produktivitas</div>
                     </div>
                     <!-- Percentage Badge -->
                     <div class="px-2.5 py-1 rounded-full text-xs font-black num-font flex items-center gap-1.5"
-                         style="{{ $tc['protas']['pct'] >= 100 ? 'background: rgba(34, 197, 94, 0.16); border: 1px solid rgba(74, 222, 128, 0.4); color: #4ade80;' : ($tc['protas']['pct'] >= 90 ? 'background: rgba(234, 179, 8, 0.16); border: 1px solid rgba(250, 204, 21, 0.4); color: #facc15;' : 'background: rgba(239, 68, 68, 0.16); border: 1px solid rgba(248, 113, 113, 0.4); color: #f87171;') }}">
+                         style="{{ $tc['protas']['pct'] >= 100 ? 'background: rgba(34, 197, 94, 0.28); border: 1px solid rgba(74, 222, 128, 0.6); color: #4ade80;' : ($tc['protas']['pct'] >= 90 ? 'background: rgba(234, 179, 8, 0.28); border: 1px solid rgba(250, 204, 21, 0.6); color: #facc15;' : 'background: rgba(239, 68, 68, 0.28); border: 1px solid rgba(248, 113, 113, 0.6); color: #f87171;') }}">
                         <i class="fa-solid {{ $tc['protas']['pct'] >= 100 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down' }} text-[10px]"></i>
                         <span>{{ $tc['protas']['pct'] }}%</span>
                         <span class="text-[9px] font-bold text-slate-400 opacity-80">RKAP</span>
@@ -1615,7 +1698,7 @@
                 </div>
 
                 <!-- Sub-stat strip (Satu baris masing-masing, label kiri, nilai kanan, tanpa persentase) -->
-                <div class="space-y-2 relative z-10 tab4-kpi-divider" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+                <div class="space-y-2 relative z-10 tab4-kpi-divider" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.14);">
                     <div class="flex items-center justify-between text-xs">
                         <span class="text-[11px] uppercase font-bold text-slate-400">Target RKAP</span>
                         <span class="font-bold text-slate-200 num-font">
@@ -1991,21 +2074,12 @@
                 },
                 dataLabels: { enabled: false },
                 stroke: {
-                    show: true,
-                    width: 1.5,
-                    colors: ['#38bdf8', '#fbbf24', '#34d399']
+                    show: false,
+                    width: 0
                 },
                 fill: {
-                    type: 'gradient',
-                    gradient: {
-                        shade: 'dark',
-                        type: 'vertical',
-                        shadeIntensity: 0.35,
-                        inverseColors: false,
-                        opacityFrom: 0.72,
-                        opacityTo: 0.22,
-                        stops: [0, 100]
-                    }
+                    type: 'solid',
+                    opacity: 1
                 },
                 colors: ['#0284c7', '#f59e0b', '#10b981'],
                 xaxis: {
@@ -2076,12 +2150,13 @@
                 fontFamily: fontFam
             },
             stroke: {
-                show: false,
-                width: 0,
-                colors: ['transparent']
+                show: true,
+                width: 2,
+                colors: (typeof getStoredTheme === 'function' && getStoredTheme() === 'light') ? ['#ffffff'] : ['#0b132b']
             },
             fill: {
-                opacity: 0.72
+                type: 'solid',
+                opacity: 1
             },
             plotOptions: {
                 pie: {
@@ -2147,22 +2222,13 @@
                 toolbar: { show: false }
             },
             stroke: {
-                width: [1.5, 2.5, 2.5],
+                width: [0, 2.5, 2.5],
                 curve: 'smooth',
-                colors: ['#4ade80', '#0284c7', '#ea580c']
+                colors: ['#22c55e', '#0284c7', '#ea580c']
             },
             fill: {
-                type: ['gradient', 'solid', 'solid'],
-                gradient: {
-                    shade: 'dark',
-                    type: 'vertical',
-                    shadeIntensity: 0.35,
-                    gradientToColors: ['#22c55e', undefined, undefined],
-                    inverseColors: false,
-                    opacityFrom: 0.70, // soft translucent bar top
-                    opacityTo: 0.20,   // elegant glass bar bottom
-                    stops: [0, 100]
-                }
+                type: 'solid',
+                opacity: 1
             },
             dataLabels: {
                 enabled: true,
@@ -2497,8 +2563,8 @@
             plotOptions: {
                 bubble: {
                     zScaling: true,
-                    minBubbleRadius: 10,
-                    maxBubbleRadius: 32
+                    minBubbleRadius: 12,
+                    maxBubbleRadius: 34
                 }
             },
             colors: ['#0284c7'],
@@ -2507,17 +2573,40 @@
                 width: 2,
                 colors: ['#38bdf8']
             },
-            dataLabels: { enabled: false },
-            fill: {
-                type: 'gradient',
-                gradient: {
-                    shade: 'dark',
-                    type: "horizontal",
-                    shadeIntensity: 0.5,
-                    gradientToColors: ['#38bdf8'],
-                    opacityFrom: 0.7,
-                    opacityTo: 0.9,
+            dataLabels: {
+                enabled: true,
+                textAnchor: 'start',
+                offsetX: 16,
+                offsetY: -14,
+                formatter: function(val, opt) {
+                    const sIdx = (opt && opt.seriesIndex !== undefined) ? opt.seriesIndex : 0;
+                    const dpIdx = (opt && opt.dataPointIndex !== undefined) ? opt.dataPointIndex : 0;
+                    const w = opt ? opt.w : null;
+                    let name = '';
+                    let protasVal = 0;
+                    if (w && w.config && w.config.series && w.config.series[sIdx] && w.config.series[sIdx].data && w.config.series[sIdx].data[dpIdx]) {
+                        const item = w.config.series[sIdx].data[dpIdx];
+                        name = item.kebunName || '';
+                        protasVal = item.protas !== undefined ? item.protas : (item.z || 0);
+                    } else if (Array.isArray(val) && val.length >= 3) {
+                        protasVal = val[2];
+                    }
+                    const formattedProtas = Number(protasVal).toLocaleString('id-ID', { maximumFractionDigits: 1 }) + ' Kg/Ha';
+                    if (name) {
+                        return [name, formattedProtas];
+                    }
+                    return formattedProtas;
+                },
+                style: {
+                    fontSize: '9.5px',
+                    fontFamily: fontFam,
+                    fontWeight: 700,
+                    colors: ['#ffffff']
                 }
+            },
+            fill: {
+                type: 'solid',
+                opacity: 1
             },
             xaxis: {
                 min: 0,
@@ -2644,7 +2733,7 @@
                 },
                 stroke: {
                     curve: 'smooth',
-                    width: 2.5
+                    width: 3
                 },
                 dataLabels: {
                     enabled: true,
@@ -2670,8 +2759,8 @@
                     type: 'gradient',
                     gradient: {
                         shadeIntensity: 1,
-                        opacityFrom: 0.35,
-                        opacityTo: 0.05,
+                        opacityFrom: 0.55,
+                        opacityTo: 0.15,
                         stops: [0, 95, 100]
                     }
                 },
@@ -2752,6 +2841,9 @@
             if (typeof chartDonut !== 'undefined' && chartDonut) {
                 chartDonut.updateOptions({
                     theme: { mode: mode },
+                    stroke: {
+                        colors: isLight ? ['#ffffff'] : ['#0b132b']
+                    },
                     legend: { labels: { colors: labelColor } }
                 });
             }
@@ -2804,6 +2896,14 @@
             if (typeof chartBubble !== 'undefined' && chartBubble) {
                 chartBubble.updateOptions({
                     theme: { mode: mode },
+                    dataLabels: {
+                        textAnchor: 'start',
+                        offsetX: 16,
+                        offsetY: -14,
+                        style: {
+                            colors: [isLight ? '#0f172a' : '#ffffff']
+                        }
+                    },
                     grid: { borderColor: gridBorder },
                     xaxis: {
                         min: 0,

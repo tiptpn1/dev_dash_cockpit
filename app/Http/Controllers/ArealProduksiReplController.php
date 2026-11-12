@@ -5,12 +5,27 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
 class ArealProduksiReplController extends Controller
 {
     public function index(Request $request)
     {
+        // 0. Cek hak akses jika user login adalah akun regional (regional 2, 3, 5, 7, 8 atau memiliki field regional)
+        $user = Auth::guard('custom')->user();
+        $username = strtolower($user->username ?? '');
+        $userRegId = null;
+
+        if (preg_match('/^regional(\d+)$/i', $username, $matches)) {
+            $userRegId = (string) $matches[1];
+        } elseif (!empty($user->regional) && is_numeric($user->regional)) {
+            $userRegId = (string) $user->regional;
+        }
+
+        // Flag apakah user login dibatasi hanya untuk regional tertentu
+        $isRegionalUser = !empty($userRegId) && in_array((string)$userRegId, ['1', '2', '3', '4', '5', '6', '7', '8']);
+
         // 1. Master Reference Data
         $listTahun = Cache::remember('areal_list_tahun', 86400, function () {
             return DB::connection('looker')->table('vw_trend_dengan_pembanding')
@@ -31,7 +46,7 @@ class ArealProduksiReplController extends Controller
             9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
         ];
 
-        $listRegional = Cache::remember('areal_list_regional', 86400, function () {
+        $listRegionalMaster = Cache::remember('areal_list_regional', 86400, function () {
             return DB::connection('looker')->table('vw_trend_dengan_pembanding')
                 ->select('reg')
                 ->distinct()
@@ -39,6 +54,9 @@ class ArealProduksiReplController extends Controller
                 ->pluck('reg')
                 ->toArray();
         });
+
+        // Untuk user regional, pilihan regional dibatasi hanya regional akunnya
+        $listRegional = $isRegionalUser ? [(string)$userRegId] : $listRegionalMaster;
 
         $listKomoditi = ['KARET', 'TEH', 'ARABICA', 'ROBUSTA'];
         $allowedTabs = ['summary', 'produktivitas_regional', 'trend_produksi', 'rincian_kebun'];
@@ -61,17 +79,21 @@ class ArealProduksiReplController extends Controller
             $inputKomoditi = strtoupper(trim((string)$request->input('komoditi', 'KARET')));
             $komoditiClean = in_array($inputKomoditi, $listKomoditi, true) ? $inputKomoditi : 'KARET';
 
-            // Regional sanitasi dengan whitelist
-            $rawReg = $request->input('regional');
-            $regClean = [];
-            if (is_array($rawReg)) {
-                $regClean = array_values(array_intersect($rawReg, $listRegional));
-            } elseif (is_string($rawReg) && strlen(trim($rawReg)) > 0) {
-                $exploded = array_map('trim', explode(',', $rawReg));
-                $regClean = array_values(array_intersect($exploded, $listRegional));
-            }
-            if (empty($regClean)) {
-                $regClean = ['5'];
+            // Regional sanitasi dengan whitelist (Akun regional dipaksa hanya regional miliknya)
+            if ($isRegionalUser) {
+                $regClean = [(string)$userRegId];
+            } else {
+                $rawReg = $request->input('regional');
+                $regClean = [];
+                if (is_array($rawReg)) {
+                    $regClean = array_values(array_intersect($rawReg, $listRegionalMaster));
+                } elseif (is_string($rawReg) && strlen(trim($rawReg)) > 0) {
+                    $exploded = array_map('trim', explode(',', $rawReg));
+                    $regClean = array_values(array_intersect($exploded, $listRegionalMaster));
+                }
+                if (empty($regClean)) {
+                    $regClean = ['5'];
+                }
             }
 
             // Kebun sanitasi (hanya izinkan string alfanumerik / nama kebun bersih)
@@ -93,7 +115,8 @@ class ArealProduksiReplController extends Controller
                 'kebun' => $kebunClean,
             ]]);
 
-            return redirect()->route('arealproduksi_repl');
+            $targetRoute = $request->routeIs('arealproduksi') ? 'arealproduksi' : 'arealproduksi_repl';
+            return redirect()->route($targetRoute);
         }
 
         // 2. Ambil Parameter Filter dari Session atau Request GET (Strict Whitelisting Anti-XSS)
@@ -128,16 +151,18 @@ class ArealProduksiReplController extends Controller
         $reqKomoditi = strtoupper(trim((string)$request->input('komoditi', $savedFilters['komoditi'] ?? 'KARET')));
         $komoditiSelected = in_array($reqKomoditi, $listKomoditi, true) ? $reqKomoditi : 'KARET';
 
-        // Regional (Strict Whitelist terhadap $listRegional)
-        if ($request->has('regional')) {
+        // Regional (Strict Whitelist terhadap $listRegionalMaster / locked jika user regional)
+        if ($isRegionalUser) {
+            $regionalSelected = [(string)$userRegId];
+        } elseif ($request->has('regional')) {
             $rawReg = $request->input('regional');
             $regArr = is_array($rawReg) ? $rawReg : (is_string($rawReg) ? explode(',', $rawReg) : []);
-            $regionalSelected = array_values(array_intersect(array_map('trim', $regArr), $listRegional));
+            $regionalSelected = array_values(array_intersect(array_map('trim', $regArr), $listRegionalMaster));
             if (empty($regionalSelected)) {
                 $regionalSelected = ['5'];
             }
         } elseif (!empty($savedFilters['regional'])) {
-            $regionalSelected = array_values(array_intersect($savedFilters['regional'], $listRegional));
+            $regionalSelected = array_values(array_intersect($savedFilters['regional'], $listRegionalMaster));
             if (empty($regionalSelected)) {
                 $regionalSelected = ['5'];
             }
@@ -184,12 +209,13 @@ class ArealProduksiReplController extends Controller
         $kebunRincian = ($activeTab === 'rincian_kebun') ? $kebunSelected : [];
 
         // 3. Fetch Data untuk Masing-Masing Tab
-        $summaryData = $this->getSummaryData($tahunSelected, $bulanSelected, $listKomoditi, $listRegional, $modePeriode);
+        // Tab Summary selalu menggunakan $listRegionalMaster karena tidak memiliki filter regional (agregat nasional seluruh regional)
+        $summaryData = $this->getSummaryData($tahunSelected, $bulanSelected, $listKomoditi, $listRegionalMaster, $modePeriode);
         $regionalData = $this->getRegionalData($tahunSelected, $bulanSelected, $regionalSelected, $komoditiSelected, $modePeriode);
         $trendData = $this->getTrendData($tahunSelected, $regionalSelected, $kebunTrend, $listKomoditi);
         $rincianData = $this->getRincianData($tahunSelected, $bulanSelected, $regionalSelected, $kebunRincian, $komoditiSelected, $modePeriode);
 
-        return view('pages.areal_produksi.replikasi', compact(
+        return view('pages.areal_produksi.index', compact(
             'listTahun',
             'listBulan',
             'listRegional',
@@ -203,6 +229,8 @@ class ArealProduksiReplController extends Controller
             'komoditiSelected',
             'kebunSelected',
             'activeTab',
+            'isRegionalUser',
+            'userRegId',
             'summaryData',
             'regionalData',
             'trendData',
