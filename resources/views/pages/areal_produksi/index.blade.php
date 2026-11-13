@@ -1051,7 +1051,7 @@
     </div>
 
     <!-- Filter form: submitted via POST to protect against parameter exposure and Reflected XSS -->
-    <form id="filterForm" method="POST" action="{{ request()->routeIs('arealproduksi') ? route('arealproduksi') : route('arealproduksi_repl') }}" class="filter-bar">
+    <form id="filterForm" method="POST" action="{{ request()->routeIs('arealproduksi') ? route('arealproduksi', [], false) : route('arealproduksi_repl', [], false) }}" class="filter-bar">
         @csrf
         <input type="hidden" name="tab" id="activeTabInput" value="{{ $activeTab }}">
         

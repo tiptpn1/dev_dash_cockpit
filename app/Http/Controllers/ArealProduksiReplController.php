@@ -115,7 +115,11 @@ class ArealProduksiReplController extends Controller
             ]]);
 
             $targetRoute = $request->routeIs('arealproduksi') ? 'arealproduksi' : 'arealproduksi_repl';
-            return redirect()->route($targetRoute);
+            $relativeUrl = route($targetRoute, [], false);
+            if ($request->isSecure() || $request->header('X-Forwarded-Proto') === 'https' || config('app.env') === 'production') {
+                return redirect()->secure($relativeUrl);
+            }
+            return redirect()->to($relativeUrl);
         }
 
         // 2. Ambil Parameter Filter dari Session atau Request GET (Strict Whitelisting Anti-XSS)
