@@ -91,9 +91,7 @@ class ArealProduksiReplController extends Controller
                     $exploded = array_map('trim', explode(',', $rawReg));
                     $regClean = array_values(array_intersect($exploded, $listRegionalMaster));
                 }
-                if (empty($regClean)) {
-                    $regClean = ['5'];
-                }
+                // Jika kosong, jangan dipaksa ke default ['5'] agar user bisa memilih Semua Regional (tanpa regional tertentu)
             }
 
             // Kebun sanitasi (hanya izinkan string alfanumerik / nama kebun bersih)
@@ -112,6 +110,7 @@ class ArealProduksiReplController extends Controller
                 'tab' => $tabClean,
                 'komoditi' => $komoditiClean,
                 'regional' => $regClean,
+                'is_explicit_reg' => !empty($regClean),
                 'kebun' => $kebunClean,
             ]]);
 
@@ -152,22 +151,22 @@ class ArealProduksiReplController extends Controller
         $komoditiSelected = in_array($reqKomoditi, $listKomoditi, true) ? $reqKomoditi : 'KARET';
 
         // Regional (Strict Whitelist terhadap $listRegionalMaster / locked jika user regional)
+        // Reset sisa default lama ['5'] di session jika ada
+        if (!$request->has('regional') && isset($savedFilters['regional']) && $savedFilters['regional'] === ['5'] && empty($savedFilters['is_explicit_reg'])) {
+            $savedFilters['regional'] = [];
+            session(['areal_filters.regional' => []]);
+        }
+
         if ($isRegionalUser) {
             $regionalSelected = [(string)$userRegId];
         } elseif ($request->has('regional')) {
             $rawReg = $request->input('regional');
             $regArr = is_array($rawReg) ? $rawReg : (is_string($rawReg) ? explode(',', $rawReg) : []);
             $regionalSelected = array_values(array_intersect(array_map('trim', $regArr), $listRegionalMaster));
-            if (empty($regionalSelected)) {
-                $regionalSelected = ['5'];
-            }
-        } elseif (!empty($savedFilters['regional'])) {
+        } elseif (isset($savedFilters['regional'])) {
             $regionalSelected = array_values(array_intersect($savedFilters['regional'], $listRegionalMaster));
-            if (empty($regionalSelected)) {
-                $regionalSelected = ['5'];
-            }
         } else {
-            $regionalSelected = ['5']; // default
+            $regionalSelected = []; // Default awal: tidak ada regional tertentu yang dipilih (Semua Regional)
         }
 
         // List Kebun per Regional terpilih (Semua kebun di regional terpilih, lintas komoditi)

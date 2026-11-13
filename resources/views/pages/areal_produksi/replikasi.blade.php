@@ -1577,12 +1577,12 @@
                         </div>
                         <div class="text-xs font-black uppercase tracking-wider text-sky-300">Luas Areal</div>
                     </div>
-                    <!-- Percentage Badge -->
-                    <div class="px-2.5 py-1 rounded-full text-xs font-black num-font flex items-center gap-1.5"
-                         style="{{ $tc['luas']['pct'] >= 100 ? 'background: rgba(34, 197, 94, 0.28); border: 1px solid rgba(74, 222, 128, 0.6); color: #4ade80;' : ($tc['luas']['pct'] >= 90 ? 'background: rgba(234, 179, 8, 0.28); border: 1px solid rgba(250, 204, 21, 0.6); color: #facc15;' : 'background: rgba(239, 68, 68, 0.28); border: 1px solid rgba(248, 113, 113, 0.6); color: #f87171;') }}">
-                        <i class="fa-solid {{ $tc['luas']['pct'] >= 100 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down' }} text-[10px]"></i>
-                        <span>{{ $tc['luas']['pct'] }}%</span>
-                        <span class="text-[9px] font-bold text-slate-400 opacity-80">RKAP</span>
+                    <!-- Percentage Badge (Ukuran Font Lebih Besar & Bolder) -->
+                    <div class="px-3.5 py-1.5 rounded-full font-black num-font flex items-center gap-1.5 shadow-sm"
+                         style="{{ $tc['luas']['pct'] >= 100 ? 'background: rgba(34, 197, 94, 0.28); border: 1.5px solid rgba(74, 222, 128, 0.7); color: #4ade80;' : ($tc['luas']['pct'] >= 90 ? 'background: rgba(234, 179, 8, 0.28); border: 1.5px solid rgba(250, 204, 21, 0.7); color: #facc15;' : 'background: rgba(239, 68, 68, 0.28); border: 1.5px solid rgba(248, 113, 113, 0.7); color: #f87171;') }}">
+                        <i class="fa-solid {{ $tc['luas']['pct'] >= 100 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down' }} text-xs"></i>
+                        <span class="text-sm font-black">{{ $tc['luas']['pct'] }}%</span>
+                        <span class="text-[11px] font-extrabold opacity-95" style="color: currentColor;">RKAP</span>
                     </div>
                 </div>
 
@@ -1627,12 +1627,12 @@
                         </div>
                         <div class="text-xs font-black uppercase tracking-wider text-amber-300">Produksi</div>
                     </div>
-                    <!-- Percentage Badge -->
-                    <div class="px-2.5 py-1 rounded-full text-xs font-black num-font flex items-center gap-1.5"
-                         style="{{ $tc['produksi']['pct'] >= 100 ? 'background: rgba(34, 197, 94, 0.28); border: 1px solid rgba(74, 222, 128, 0.6); color: #4ade80;' : ($tc['produksi']['pct'] >= 90 ? 'background: rgba(234, 179, 8, 0.28); border: 1px solid rgba(250, 204, 21, 0.6); color: #facc15;' : 'background: rgba(239, 68, 68, 0.28); border: 1px solid rgba(248, 113, 113, 0.6); color: #f87171;') }}">
-                        <i class="fa-solid {{ $tc['produksi']['pct'] >= 100 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down' }} text-[10px]"></i>
-                        <span>{{ $tc['produksi']['pct'] }}%</span>
-                        <span class="text-[9px] font-bold text-slate-400 opacity-80">RKAP</span>
+                    <!-- Percentage Badge (Ukuran Font Lebih Besar & Bolder) -->
+                    <div class="px-3.5 py-1.5 rounded-full font-black num-font flex items-center gap-1.5 shadow-sm"
+                         style="{{ $tc['produksi']['pct'] >= 100 ? 'background: rgba(34, 197, 94, 0.28); border: 1.5px solid rgba(74, 222, 128, 0.7); color: #4ade80;' : ($tc['produksi']['pct'] >= 90 ? 'background: rgba(234, 179, 8, 0.28); border: 1.5px solid rgba(250, 204, 21, 0.7); color: #facc15;' : 'background: rgba(239, 68, 68, 0.28); border: 1.5px solid rgba(248, 113, 113, 0.7); color: #f87171;') }}">
+                        <i class="fa-solid {{ $tc['produksi']['pct'] >= 100 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down' }} text-xs"></i>
+                        <span class="text-sm font-black">{{ $tc['produksi']['pct'] }}%</span>
+                        <span class="text-[11px] font-extrabold opacity-95" style="color: currentColor;">RKAP</span>
                     </div>
                 </div>
 
@@ -1677,12 +1677,12 @@
                         </div>
                         <div class="text-xs font-black uppercase tracking-wider text-emerald-300">Produktivitas</div>
                     </div>
-                    <!-- Percentage Badge -->
-                    <div class="px-2.5 py-1 rounded-full text-xs font-black num-font flex items-center gap-1.5"
-                         style="{{ $tc['protas']['pct'] >= 100 ? 'background: rgba(34, 197, 94, 0.28); border: 1px solid rgba(74, 222, 128, 0.6); color: #4ade80;' : ($tc['protas']['pct'] >= 90 ? 'background: rgba(234, 179, 8, 0.28); border: 1px solid rgba(250, 204, 21, 0.6); color: #facc15;' : 'background: rgba(239, 68, 68, 0.28); border: 1px solid rgba(248, 113, 113, 0.6); color: #f87171;') }}">
-                        <i class="fa-solid {{ $tc['protas']['pct'] >= 100 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down' }} text-[10px]"></i>
-                        <span>{{ $tc['protas']['pct'] }}%</span>
-                        <span class="text-[9px] font-bold text-slate-400 opacity-80">RKAP</span>
+                    <!-- Percentage Badge (Ukuran Font Lebih Besar & Bolder) -->
+                    <div class="px-3.5 py-1.5 rounded-full font-black num-font flex items-center gap-1.5 shadow-sm"
+                         style="{{ $tc['protas']['pct'] >= 100 ? 'background: rgba(34, 197, 94, 0.28); border: 1.5px solid rgba(74, 222, 128, 0.7); color: #4ade80;' : ($tc['protas']['pct'] >= 90 ? 'background: rgba(234, 179, 8, 0.28); border: 1.5px solid rgba(250, 204, 21, 0.7); color: #facc15;' : 'background: rgba(239, 68, 68, 0.28); border: 1.5px solid rgba(248, 113, 113, 0.7); color: #f87171;') }}">
+                        <i class="fa-solid {{ $tc['protas']['pct'] >= 100 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down' }} text-xs"></i>
+                        <span class="text-sm font-black">{{ $tc['protas']['pct'] }}%</span>
+                        <span class="text-[11px] font-extrabold opacity-95" style="color: currentColor;">RKAP</span>
                     </div>
                 </div>
 
