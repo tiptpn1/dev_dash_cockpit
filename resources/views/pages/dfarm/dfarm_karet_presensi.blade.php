@@ -965,6 +965,19 @@
                         </div>
                       </div>
                     @endif
+
+                    <!-- Disclaimer / Catatan Tab Detail -->
+                    <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm mb-6">
+                      <div class="flex items-start gap-3">
+                        <div class="text-blue-400 text-base mt-0.5 flex-shrink-0">
+                          <i class="fas fa-info-circle"></i>
+                        </div>
+                        <div class="text-xs md:text-sm text-slate-200 leading-relaxed">
+                          <span class="font-bold text-white block mb-1">Catatan / Disclaimer:</span>
+                          Data yang muncul pada tabel di atas merupakan <strong>akumulasi data berdasarkan hari yang dipilih</strong>, yang artinya adalah jika rentang tanggal dikalikan dengan jumlah karyawan dan status kehadiran karyawan.
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -1095,7 +1108,7 @@
                             <span style="font-size: 11px; font-weight: 700; color: #2563eb; text-transform: uppercase; letter-spacing: 0.5px;">Tenaga PKWT (Kontrak)</span>
                             <h3 id="cardPkwtHadir" style="font-size: 24px; font-weight: 800; color: #111827; margin: 4px 0 2px;">0</h3>
                             <div style="font-size: 12px; color: #4b5563;">
-                              Total: <strong id="cardPkwtSdm" style="color: #111827;">0</strong>
+                              Total Tenaga: <strong id="cardPkwtSdm" style="color: #111827;">0</strong>
                             </div>
                           </div>
                           <div style="width: 42px; height: 42px; border-radius: 8px; background: #eff6ff; display: flex; align-items: center; justify-content: center; color: #2563eb; font-size: 18px;">
@@ -1115,7 +1128,7 @@
                             <span style="font-size: 11px; font-weight: 700; color: #d97706; text-transform: uppercase; letter-spacing: 0.5px;">Tenaga Borong (Lepas)</span>
                             <h3 id="cardBorongHadir" style="font-size: 24px; font-weight: 800; color: #111827; margin: 4px 0 2px;">0</h3>
                             <div style="font-size: 12px; color: #4b5563;">
-                              Total: <strong id="cardBorongSdm" style="color: #111827;">0</strong>
+                              Total Tenaga: <strong id="cardBorongSdm" style="color: #111827;">0</strong>
                             </div>
                           </div>
                           <div style="width: 42px; height: 42px; border-radius: 8px; background: #fffbeb; display: flex; align-items: center; justify-content: center; color: #d97706; font-size: 18px;">
@@ -1135,7 +1148,7 @@
                             <span style="font-size: 11px; font-weight: 700; color: #166534; text-transform: uppercase; letter-spacing: 0.5px;">Total Presensi Hadir</span>
                             <h3 id="cardTotalHadir" style="font-size: 24px; font-weight: 800; color: #111827; margin: 4px 0 2px;">0</h3>
                             <div style="font-size: 12px; color: #4b5563;">
-                              Total: <strong id="cardTotalSdm" style="color: #111827;">0</strong>
+                              Total Tenaga: <strong id="cardTotalSdm" style="color: #111827;">0</strong>
                             </div>
                           </div>
                           <div style="width: 42px; height: 42px; border-radius: 8px; background: #f0fdf4; display: flex; align-items: center; justify-content: center; color: #166534; font-size: 18px;">
@@ -1146,6 +1159,28 @@
                           <span style="color: #6b7280;">Rata-rata Kehadiran: <strong id="cardTotalPct" style="color: #166534; font-size: 12px;">0%</strong></span>
                           <span style="background: #e2e8f0; color: #334155; font-weight: 700; padding: 2px 8px; border-radius: 9999px;">100% Total</span>
                         </div>
+                      </div>
+                    </div>
+
+                    <!-- Full-Width Line Chart: Tren Presensi Harian by Jenis Tenaga -->
+                    <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); margin-bottom: 24px;">
+                      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #f3f4f6; flex-wrap: wrap; gap: 8px;">
+                        <div>
+                          <h4 style="font-size: 14px; font-weight: 700; color: #166534; margin: 0; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-chart-line"></i> Tren Presensi Harian by Jenis Tenaga Kerja
+                          </h4>
+                          <span id="tenagaDailySubTitle" style="font-size: 12px; color: #6b7280; display: block; margin-top: 2px;">
+                            Fluktuasi jumlah kehadiran harian Tenaga Baku, PKWT, dan Borong
+                          </span>
+                        </div>
+                        <div id="tenagaDailyMetaBadge" style="display: flex; align-items: center; gap: 8px;">
+                          <span style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px;">
+                            <i class="fas fa-calendar-alt"></i> <span id="tenagaDailyRangeLabel">-</span>
+                          </span>
+                        </div>
+                      </div>
+                      <div style="position: relative; height: 340px; width: 100%;">
+                        <canvas id="chartPresensiByTenagaDaily"></canvas>
                       </div>
                     </div>
 
@@ -2860,6 +2895,155 @@
           if (subTitleEl) subTitleEl.textContent = `Breakdown komparasi jumlah kehadiran per ${data.level_label}`;
           const thDimEl = document.getElementById('thDimensionName');
           if (thDimEl) thDimEl.textContent = data.level_label;
+
+          // 0. Daily Trend Line Chart (Full-Width)
+          const dailyCanvas = document.getElementById('chartPresensiByTenagaDaily');
+          const dailyData = (data.charts && data.charts.daily) ? data.charts.daily : null;
+
+          const rangeLabelEl = document.getElementById('tenagaDailyRangeLabel');
+          if (rangeLabelEl) {
+            const countDays = (dailyData && dailyData.dates) ? dailyData.dates.length : (data.days || 1);
+            rangeLabelEl.textContent = `${countDays} Hari Periode`;
+          }
+
+          const dailySubEl = document.getElementById('tenagaDailySubTitle');
+          if (dailySubEl && dailyData && dailyData.dates && dailyData.dates.length > 0) {
+            const startD = dailyData.dates[0];
+            const endD = dailyData.dates[dailyData.dates.length - 1];
+            dailySubEl.textContent = `Fluktuasi kehadiran harian Tenaga Baku, PKWT, dan Borong (${startD} - ${endD})`;
+          }
+
+          if (dailyCanvas && dailyData) {
+            if (window.tenagaDailyChart) {
+              window.tenagaDailyChart.destroy();
+            }
+            const ctxDaily = dailyCanvas.getContext('2d');
+            const totalPoints = dailyData.dates ? dailyData.dates.length : 0;
+            const pRadius = totalPoints > 25 ? 2.5 : 4;
+            const pHoverRadius = totalPoints > 25 ? 5 : 6;
+
+            window.tenagaDailyChart = new Chart(ctxDaily, {
+              type: 'line',
+              data: {
+                labels: dailyData.dates || [],
+                datasets: [
+                  {
+                    label: 'Tenaga Baku',
+                    data: dailyData.baku || [],
+                    borderColor: '#059669',
+                    backgroundColor: 'rgba(5, 150, 105, 0.08)',
+                    borderWidth: 2.5,
+                    tension: 0.3,
+                    pointRadius: pRadius,
+                    pointHoverRadius: pHoverRadius,
+                    pointBackgroundColor: '#059669',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 1.5,
+                    fill: false
+                  },
+                  {
+                    label: 'Tenaga PKWT',
+                    data: dailyData.pkwt || [],
+                    borderColor: '#2563EB',
+                    backgroundColor: 'rgba(37, 99, 235, 0.08)',
+                    borderWidth: 2.5,
+                    tension: 0.3,
+                    pointRadius: pRadius,
+                    pointHoverRadius: pHoverRadius,
+                    pointBackgroundColor: '#2563EB',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 1.5,
+                    fill: false
+                  },
+                  {
+                    label: 'Tenaga Borong',
+                    data: dailyData.borong || [],
+                    borderColor: '#D97706',
+                    backgroundColor: 'rgba(217, 119, 6, 0.08)',
+                    borderWidth: 2.5,
+                    tension: 0.3,
+                    pointRadius: pRadius,
+                    pointHoverRadius: pHoverRadius,
+                    pointBackgroundColor: '#D97706',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 1.5,
+                    fill: false
+                  },
+                  {
+                    label: 'Total Gabungan',
+                    data: dailyData.total || [],
+                    borderColor: '#166534',
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    tension: 0.3,
+                    pointRadius: pRadius,
+                    pointHoverRadius: pHoverRadius,
+                    pointBackgroundColor: '#166534',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 1.5,
+                    fill: false
+                  }
+                ]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                  mode: 'index',
+                  intersect: false
+                },
+                plugins: {
+                  legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                      usePointStyle: true,
+                      boxWidth: 8,
+                      font: { size: 12, weight: '600', family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" },
+                      padding: 18
+                    }
+                  },
+                  tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                    titleFont: { size: 12, weight: '700' },
+                    bodyFont: { size: 12 },
+                    padding: 12,
+                    cornerRadius: 8,
+                    callbacks: {
+                      label: function(context) {
+                        const label = context.dataset.label || '';
+                        const val = context.parsed.y !== undefined ? context.parsed.y : (context.raw || 0);
+                        return ` ${label}: ${new Intl.NumberFormat('id-ID').format(val)} Hadir`;
+                      }
+                    }
+                  }
+                },
+                scales: {
+                  x: {
+                    grid: { color: 'rgba(22, 101, 52, 0.05)', drawBorder: false },
+                    ticks: {
+                      font: { size: 11 },
+                      maxRotation: 45,
+                      minRotation: 0,
+                      autoSkip: true,
+                      maxTicksLimit: 20
+                    }
+                  },
+                  y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(22, 101, 52, 0.06)', drawBorder: false },
+                    ticks: {
+                      font: { size: 11 },
+                      callback: function(value) {
+                        return new Intl.NumberFormat('id-ID').format(value);
+                      }
+                    }
+                  }
+                }
+              }
+            });
+          }
 
           // 1. Grouped Bar Chart
           const barCanvas = document.getElementById('chartPresensiByTenagaBar');

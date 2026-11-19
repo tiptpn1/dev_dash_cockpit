@@ -3793,16 +3793,33 @@ class PageController extends Controller
                     COUNT(*) FILTER (WHERE kode IN ('K','KL'))::bigint AS hadir_count
                 FROM absen_deduplicated
                 GROUP BY entity_id, entity_name, jenis_tenaga
+            ),
+            entity_result AS (
+                SELECT 
+                    'entity'::text AS row_type,
+                    pc.entity_id::text AS ref_id,
+                    pc.entity_name::text AS ref_name,
+                    pc.jenis_tenaga::text AS jenis_tenaga,
+                    pc.sdm_count::bigint AS sdm_count,
+                    COALESCE(asu.hadir_count, 0)::bigint AS hadir_count
+                FROM person_counts pc
+                LEFT JOIN absen_summary asu ON asu.entity_id = pc.entity_id AND asu.jenis_tenaga = pc.jenis_tenaga
+            ),
+            daily_result AS (
+                SELECT 
+                    'daily'::text AS row_type,
+                    tgl_absen::text AS ref_id,
+                    tgl_absen::text AS ref_name,
+                    jenis_tenaga::text AS jenis_tenaga,
+                    0::bigint AS sdm_count,
+                    COUNT(*) FILTER (WHERE kode IN ('K','KL'))::bigint AS hadir_count
+                FROM absen_deduplicated
+                GROUP BY tgl_absen, jenis_tenaga
             )
-            SELECT 
-                pc.entity_id,
-                pc.entity_name,
-                pc.jenis_tenaga,
-                pc.sdm_count,
-                COALESCE(asu.hadir_count, 0)::bigint AS hadir_count
-            FROM person_counts pc
-            LEFT JOIN absen_summary asu ON asu.entity_id = pc.entity_id AND asu.jenis_tenaga = pc.jenis_tenaga
-            ORDER BY pc.entity_name, pc.jenis_tenaga;
+            SELECT * FROM entity_result
+            UNION ALL
+            SELECT * FROM daily_result
+            ORDER BY row_type, ref_name, jenis_tenaga;
             ";
 
             $rows = DB::connection('pgsql_secondary')->select($sql);
@@ -3814,13 +3831,32 @@ class PageController extends Controller
                 'borong' => ['sdm' => 0, 'hadir' => 0, 'pct' => 0],
                 'total' => ['sdm' => 0, 'hadir' => 0, 'pct' => 0],
             ];
+            $dailyMap = [];
 
             foreach ($rows as $row) {
-                $id = $row->entity_id;
+                $rowType = $row->row_type ?? 'entity';
+
+                if ($rowType === 'daily') {
+                    $dateKey = trim($row->ref_id);
+                    $jenis = strtolower(trim($row->jenis_tenaga ?? 'baku'));
+                    if (!isset($dailyMap[$dateKey])) {
+                        $dailyMap[$dateKey] = [
+                            'baku' => 0,
+                            'pkwt' => 0,
+                            'borong' => 0,
+                        ];
+                    }
+                    if (isset($dailyMap[$dateKey][$jenis])) {
+                        $dailyMap[$dateKey][$jenis] += (int) $row->hadir_count;
+                    }
+                    continue;
+                }
+
+                $id = $row->ref_id;
                 if (!isset($entities[$id])) {
                     $entities[$id] = [
                         'id' => $id,
-                        'name' => $row->entity_name ?? ('ID ' . $id),
+                        'name' => $row->ref_name ?? ('ID ' . $id),
                         'baku_sdm' => 0,
                         'baku_hadir' => 0,
                         'baku_pct' => 0,
@@ -3882,6 +3918,46 @@ class PageController extends Controller
             $summary['pkwt']['share'] = round(($summary['pkwt']['hadir'] / $totalHadir) * 100, 1);
             $summary['borong']['share'] = round(($summary['borong']['hadir'] / $totalHadir) * 100, 1);
 
+            $bulanIndo = [
+                1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr', 5 => 'Mei', 6 => 'Jun',
+                7 => 'Jul', 8 => 'Agu', 9 => 'Sep', 10 => 'Okt', 11 => 'Nov', 12 => 'Des'
+            ];
+
+            $dailyDates = [];
+            $dailyRawDates = [];
+            $dailyBaku = [];
+            $dailyPkwt = [];
+            $dailyBorong = [];
+            $dailyTotal = [];
+
+            try {
+                $period = new \DatePeriod(
+                    new \DateTime($tglAwalDate),
+                    new \DateInterval('P1D'),
+                    (new \DateTime($tglAkhirDate))->modify('+1 day')
+                );
+
+                foreach ($period as $dt) {
+                    $rawDate = $dt->format('Y-m-d');
+                    $mNum = (int)$dt->format('n');
+                    $label = $dt->format('d') . ' ' . ($bulanIndo[$mNum] ?? $dt->format('M'));
+
+                    $b = $dailyMap[$rawDate]['baku'] ?? 0;
+                    $p = $dailyMap[$rawDate]['pkwt'] ?? 0;
+                    $bo = $dailyMap[$rawDate]['borong'] ?? 0;
+                    $tot = $b + $p + $bo;
+
+                    $dailyDates[] = $label;
+                    $dailyRawDates[] = $rawDate;
+                    $dailyBaku[] = $b;
+                    $dailyPkwt[] = $p;
+                    $dailyBorong[] = $bo;
+                    $dailyTotal[] = $tot;
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('Error generating daily presensi period: ' . $e->getMessage());
+            }
+
             return [
                 'level' => $level,
                 'level_label' => $levelLabel,
@@ -3897,6 +3973,14 @@ class PageController extends Controller
                         $summary['baku']['hadir'],
                         $summary['pkwt']['hadir'],
                         $summary['borong']['hadir'],
+                    ],
+                    'daily' => [
+                        'dates' => $dailyDates,
+                        'raw_dates' => $dailyRawDates,
+                        'baku' => $dailyBaku,
+                        'pkwt' => $dailyPkwt,
+                        'borong' => $dailyBorong,
+                        'total' => $dailyTotal,
                     ]
                 ]
             ];
