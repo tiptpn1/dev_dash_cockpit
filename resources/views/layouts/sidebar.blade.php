@@ -1,9 +1,9 @@
 <div class="sidebar" id="sidebar">
     <?php
-$user = Auth::guard('custom')->user();
+$user = Auth::guard('custom')->user() ?? Auth::user();
 $username = "";
 if (isset($user)) {
-    $username = $user->username;
+    $username = $user->username ?? $user->nik ?? "";
 }
         ?>
     <div class="sidebar-header">
@@ -44,7 +44,8 @@ if (isset($user)) {
                                 @php
                                     $rawUrl = $child->url;
                                     if ($child->slug === 'sales_sonia') {
-                                        $rawUrl = rtrim(config('services.sonia.url'), '/') . '/auth/agrinav?token=' . urlencode(config('services.sonia.sso_token'));
+                                        $userLogin = !empty($user->username) ? $user->username : (!empty($user->nik) ? $user->nik : $username);
+                                        $rawUrl = rtrim(config('services.sonia.url'), '/') . '/auth/agrinav?token=' . urlencode(config('services.sonia.sso_token')) . '&username=' . urlencode($userLogin);
                                     } elseif ($child->slug === 'sales_forecast') {
                                         $rawUrl = '/sales_forecast';
                                     } elseif ($child->slug === 'operasional_cctv') {
@@ -84,6 +85,10 @@ if (isset($user)) {
                 @else
                     @php
                         $rawUrl = $menu->url;
+                        if ($menu->slug === 'sales_sonia' || $menu->slug === 'sonia') {
+                            $userLogin = !empty($user->username) ? $user->username : (!empty($user->nik) ? $user->nik : $username);
+                            $rawUrl = rtrim(config('services.sonia.url'), '/') . '/auth/agrinav?token=' . urlencode(config('services.sonia.sso_token')) . '&username=' . urlencode($userLogin);
+                        }
                         $isExternalHttp = false;
                         if (empty($rawUrl)) {
                             $url = '#';
