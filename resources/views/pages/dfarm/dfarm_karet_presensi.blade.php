@@ -266,6 +266,18 @@
     .hris-tab-panel.active {
     display: block;
     }
+
+    .tenaga-charts-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 1024px) {
+      .tenaga-charts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 
   <div class="gradient-container">
@@ -366,6 +378,9 @@
                 </button>
                 <button type="button" class="hris-tab-btn" data-tab="detail">
                   <i class="fas fa-calendar-day"></i> Detail Presensi
+                </button>
+                <button type="button" class="hris-tab-btn" data-tab="tenaga">
+                  <i class="fas fa-users-cog"></i> Presensi by Tenaga
                 </button>
               </div>
 
@@ -950,6 +965,305 @@
                         </div>
                       </div>
                     @endif
+
+                    <!-- Disclaimer / Catatan Tab Detail -->
+                    <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600 shadow-lg backdrop-blur-sm mb-6">
+                      <div class="flex items-start gap-3">
+                        <div class="text-blue-400 text-base mt-0.5 flex-shrink-0">
+                          <i class="fas fa-info-circle"></i>
+                        </div>
+                        <div class="text-xs md:text-sm text-slate-200 leading-relaxed">
+                          <span class="font-bold text-white block mb-1">Catatan / Disclaimer:</span>
+                          Data yang muncul pada tabel di atas merupakan <strong>akumulasi data berdasarkan hari yang dipilih</strong>, yang artinya adalah jika rentang tanggal dikalikan dengan jumlah karyawan dan status kehadiran karyawan.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tab 4: Presensi by Tenaga (Baku, PKWT, Borong) -->
+                <div id="tab-tenaga" class="hris-tab-panel">
+                  <!-- Filter Card in Tab Tenaga -->
+                  <div class="filter-card" style="margin: 16px;">
+                    <div class="filter-title">
+                      <i class="fas fa-sliders-h"></i> Filter Parameter Presensi by Tenaga
+                    </div>
+                    <div class="filter-grid">
+                      <div class="form-group">
+                        <label class="form-label">Job Desc</label>
+                        <select id="selectJobDescTenaga" class="form-select">
+                          <option value="PENYADAP" <?php if ($jobdesc == 'PENYADAP') echo 'selected'; ?>>PENYADAP</option>
+                          <option value="PEMETIK" <?php if ($jobdesc == 'PEMETIK') echo 'selected'; ?>>PEMETIK</option>
+                          <option value="PANEN KOPI" <?php if ($jobdesc == 'PANEN KOPI') echo 'selected'; ?>>PANEN KOPI</option>
+                          <option value="PEMELIHARAAN" <?php if ($jobdesc == 'PEMELIHARAAN') echo 'selected'; ?>>PEMELIHARAAN</option>
+                        </select>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="form-label">Periode</label>
+                        <div style="position: relative;">
+                          <input type="text" id="dateRangeTenaga" placeholder="Pilih Rentang Tanggal..." readonly class="form-input" style="cursor: pointer; width: 100%;">
+                          <div id="datePickerPopupTenaga" class="hidden" style="position: absolute; top: 100%; left: 0; margin-top: 8px; background: white; border: 1px solid #d1d5db; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); padding: 16px; z-index: 50; min-width: 320px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                              <div>
+                                <label class="form-label" style="color: #374151;">Dari Tanggal</label>
+                                <input type="date" id="datePickerStartTenaga" class="form-input">
+                              </div>
+                              <div>
+                                <label class="form-label" style="color: #374151;">Sampai Tanggal</label>
+                                <input type="date" id="datePickerEndTenaga" class="form-input">
+                              </div>
+                            </div>
+                            <div style="display: flex; gap: 8px; margin-top: 12px;">
+                              <button id="datePickerApplyTenaga" class="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-xs rounded transition-colors font-medium" style="background-color: #166534; border: none; cursor: pointer; flex: 1; padding: 8px 12px;">Terapkan</button>
+                              <button id="datePickerCancelTenaga" class="flex-1 px-3 py-2 bg-gray-400 hover:bg-gray-500 text-white text-xs rounded transition-colors font-medium" style="background-color: #9ca3af; border: none; cursor: pointer; flex: 1; padding: 8px 12px;">Batal</button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="form-label">Regional</label>
+                        <select id="selectRegionalTenaga" class="form-select">
+                          <option value="">{{ $userRegionalId ? 'Semua Regional (Posisi Komparasi)' : 'Pilih' }}</option>
+                          @if($userRegionalId)
+                            <option value="{{ $userRegionalId }}" {{ $selectedRegional == $userRegionalId ? 'selected' : '' }}>REGIONAL {{ $userRegionalId }}</option>
+                          @else
+                            <option value="2" {{ $selectedRegional == '2' ? 'selected' : '' }}>REGIONAL 2</option>
+                            <option value="3" {{ $selectedRegional == '3' ? 'selected' : '' }}>REGIONAL 3</option>
+                            <option value="5" {{ $selectedRegional == '5' ? 'selected' : '' }}>REGIONAL 5</option>
+                            <option value="7" {{ $selectedRegional == '7' ? 'selected' : '' }}>REGIONAL 7</option>
+                            <option value="8" {{ $selectedRegional == '8' ? 'selected' : '' }}>REGIONAL 8</option>
+                          @endif
+                        </select>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="form-label">Nama Kebun</label>
+                        <select id="selectKebunTenaga" class="form-select">
+                          <option value="">Pilih</option>
+                          <?php
+                          foreach ($allDatakebun as $key) {
+                            echo '<option value="' . $key->kebun_id . '"';
+                            if ($selectedKebun == $key->kebun_id) echo ' selected';
+                            echo '>' . $key->nama_kebun . '</option>';
+                          }
+                          ?>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Action Buttons in Tab Tenaga -->
+                  <div style="margin: 0 16px 16px; display: flex; gap: 10px;">
+                    <button id="btnFilterTenaga" class="inline-flex align-items-center justify-content-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-all box-shadow" style="background-color: #16a34a; border: 1px solid #15803d; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); height: 36px; cursor: pointer;">
+                      <i class="fas fa-filter"></i> Filter
+                    </button>
+                    <button id="btnResetTenaga" class="inline-flex align-items-center justify-content-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-all box-shadow" style="background-color: #16a34a; border: 1px solid #15803d; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); height: 36px; cursor: pointer;">
+                      <i class="fas fa-rotate-right"></i> Reset
+                    </button>
+                  </div>
+
+                  <!-- Loading Spinner -->
+                  <div id="tenagaLoadingSpinner" style="display: none; padding: 60px 20px; text-align: center; background: #fff; border-radius: 12px; margin: 0 16px 24px; border: 1px solid #e5e7eb; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                    <div style="width: 44px; height: 44px; border: 4px solid #d1fae5; border-top-color: #166534; border-radius: 50%; display: inline-block; animation: spinSummary 0.8s linear infinite;"></div>
+                    <h4 style="margin-top: 18px; font-size: 16px; font-weight: 700; color: #166534;">Memuat Data Presensi by Tenaga...</h4>
+                    <p style="margin-top: 4px; font-size: 13px; color: #6b7280;">Mengagregasikan status Tenaga Baku, PKWT, dan Borong dari server.</p>
+                  </div>
+
+                  <!-- Error State -->
+                  <div id="tenagaErrorState" style="display: none; margin: 0 16px 20px; padding: 16px; background-color: #fee2e2; border: 1px solid #f87171; border-radius: 8px; color: #b91c1c; font-size: 14px;">
+                    <i class="fas fa-exclamation-circle mr-2"></i> <span id="tenagaErrorMessage">Terjadi kesalahan memuat data.</span>
+                  </div>
+
+                  <!-- Main Content Wrapper -->
+                  <div id="tenagaContentWrapper" style="padding: 0 16px 24px;">
+                    <!-- KPI Summary Cards -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                      
+                      <!-- Card 1: Tenaga Baku -->
+                      <div style="background: #ffffff; border-radius: 10px; border: 1px solid #d1fae5; border-left: 5px solid #059669; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; overflow: hidden;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                          <div>
+                            <span style="font-size: 11px; font-weight: 700; color: #059669; text-transform: uppercase; letter-spacing: 0.5px;">Tenaga Baku (Organik)</span>
+                            <h3 id="cardBakuHadir" style="font-size: 24px; font-weight: 800; color: #111827; margin: 4px 0 2px;">0</h3>
+                            <div style="font-size: 12px; color: #4b5563;">
+                              Total: <strong id="cardBakuSdm" style="color: #111827;">0</strong>
+                            </div>
+                          </div>
+                          <div style="width: 42px; height: 42px; border-radius: 8px; background: #ecfdf5; display: flex; align-items: center; justify-content: center; color: #059669; font-size: 18px;">
+                            <i class="fas fa-user-check"></i>
+                          </div>
+                        </div>
+                        <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+                          <span style="color: #6b7280;">Tingkat Kehadiran: <strong id="cardBakuPct" style="color: #059669; font-size: 12px;">0%</strong></span>
+                          <span id="cardBakuShareBadge" style="background: #d1fae5; color: #047857; font-weight: 700; padding: 2px 8px; border-radius: 9999px;">0% Share</span>
+                        </div>
+                      </div>
+
+                      <!-- Card 2: Tenaga PKWT -->
+                      <div style="background: #ffffff; border-radius: 10px; border: 1px solid #dbeafe; border-left: 5px solid #2563eb; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; overflow: hidden;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                          <div>
+                            <span style="font-size: 11px; font-weight: 700; color: #2563eb; text-transform: uppercase; letter-spacing: 0.5px;">Tenaga PKWT (Kontrak)</span>
+                            <h3 id="cardPkwtHadir" style="font-size: 24px; font-weight: 800; color: #111827; margin: 4px 0 2px;">0</h3>
+                            <div style="font-size: 12px; color: #4b5563;">
+                              Total Tenaga: <strong id="cardPkwtSdm" style="color: #111827;">0</strong>
+                            </div>
+                          </div>
+                          <div style="width: 42px; height: 42px; border-radius: 8px; background: #eff6ff; display: flex; align-items: center; justify-content: center; color: #2563eb; font-size: 18px;">
+                            <i class="fas fa-file-signature"></i>
+                          </div>
+                        </div>
+                        <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+                          <span style="color: #6b7280;">Tingkat Kehadiran: <strong id="cardPkwtPct" style="color: #2563eb; font-size: 12px;">0%</strong></span>
+                          <span id="cardPkwtShareBadge" style="background: #dbeafe; color: #1d4ed8; font-weight: 700; padding: 2px 8px; border-radius: 9999px;">0% Share</span>
+                        </div>
+                      </div>
+
+                      <!-- Card 3: Tenaga Borong -->
+                      <div style="background: #ffffff; border-radius: 10px; border: 1px solid #fef3c7; border-left: 5px solid #d97706; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; overflow: hidden;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                          <div>
+                            <span style="font-size: 11px; font-weight: 700; color: #d97706; text-transform: uppercase; letter-spacing: 0.5px;">Tenaga Borong (Lepas)</span>
+                            <h3 id="cardBorongHadir" style="font-size: 24px; font-weight: 800; color: #111827; margin: 4px 0 2px;">0</h3>
+                            <div style="font-size: 12px; color: #4b5563;">
+                              Total Tenaga: <strong id="cardBorongSdm" style="color: #111827;">0</strong>
+                            </div>
+                          </div>
+                          <div style="width: 42px; height: 42px; border-radius: 8px; background: #fffbeb; display: flex; align-items: center; justify-content: center; color: #d97706; font-size: 18px;">
+                            <i class="fas fa-user-clock"></i>
+                          </div>
+                        </div>
+                        <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+                          <span style="color: #6b7280;">Tingkat Kehadiran: <strong id="cardBorongPct" style="color: #d97706; font-size: 12px;">0%</strong></span>
+                          <span id="cardBorongShareBadge" style="background: #fef3c7; color: #b45309; font-weight: 700; padding: 2px 8px; border-radius: 9999px;">0% Share</span>
+                        </div>
+                      </div>
+
+                      <!-- Card 4: Total Gabungan -->
+                      <div style="background: #ffffff; border-radius: 10px; border: 1px solid #e5e7eb; border-left: 5px solid #166534; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; overflow: hidden;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                          <div>
+                            <span style="font-size: 11px; font-weight: 700; color: #166534; text-transform: uppercase; letter-spacing: 0.5px;">Total Presensi Hadir</span>
+                            <h3 id="cardTotalHadir" style="font-size: 24px; font-weight: 800; color: #111827; margin: 4px 0 2px;">0</h3>
+                            <div style="font-size: 12px; color: #4b5563;">
+                              Total Tenaga: <strong id="cardTotalSdm" style="color: #111827;">0</strong>
+                            </div>
+                          </div>
+                          <div style="width: 42px; height: 42px; border-radius: 8px; background: #f0fdf4; display: flex; align-items: center; justify-content: center; color: #166534; font-size: 18px;">
+                            <i class="fas fa-users"></i>
+                          </div>
+                        </div>
+                        <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+                          <span style="color: #6b7280;">Rata-rata Kehadiran: <strong id="cardTotalPct" style="color: #166534; font-size: 12px;">0%</strong></span>
+                          <span style="background: #e2e8f0; color: #334155; font-weight: 700; padding: 2px 8px; border-radius: 9999px;">100% Total</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Full-Width Line Chart: Tren Presensi Harian by Jenis Tenaga -->
+                    <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); margin-bottom: 24px;">
+                      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #f3f4f6; flex-wrap: wrap; gap: 8px;">
+                        <div>
+                          <h4 style="font-size: 14px; font-weight: 700; color: #166534; margin: 0; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-chart-line"></i> Tren Presensi Harian by Jenis Tenaga Kerja
+                          </h4>
+                          <span id="tenagaDailySubTitle" style="font-size: 12px; color: #6b7280; display: block; margin-top: 2px;">
+                            Fluktuasi jumlah kehadiran harian Tenaga Baku, PKWT, dan Borong
+                          </span>
+                        </div>
+                        <div id="tenagaDailyMetaBadge" style="display: flex; align-items: center; gap: 8px;">
+                          <span style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px;">
+                            <i class="fas fa-calendar-alt"></i> <span id="tenagaDailyRangeLabel">-</span>
+                          </span>
+                        </div>
+                      </div>
+                      <div style="position: relative; height: 340px; width: 100%;">
+                        <canvas id="chartPresensiByTenagaDaily"></canvas>
+                      </div>
+                    </div>
+
+                    <!-- Charts Grid -->
+                    <div class="tenaga-charts-grid">
+                      <!-- Chart 1: Grouped Bar Chart -->
+                      <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.04);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #f3f4f6;">
+                          <div>
+                            <h4 style="font-size: 14px; font-weight: 700; color: #166534; margin: 0; display: flex; align-items: center; gap: 8px;">
+                              <i class="fas fa-chart-bar"></i> Perbandingan Presensi Tenaga Baku vs PKWT vs Borong
+                            </h4>
+                            <span id="tenagaBarSubTitle" style="font-size: 12px; color: #6b7280; display: block; margin-top: 2px;">
+                              Breakdown jumlah kehadiran berdasarkan wilayah
+                            </span>
+                          </div>
+                        </div>
+                        <div style="position: relative; height: 320px; width: 100%;">
+                          <canvas id="chartPresensiByTenagaBar"></canvas>
+                        </div>
+                      </div>
+
+                      <!-- Chart 2: Donut Chart -->
+                      <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.04);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #f3f4f6;">
+                          <div>
+                            <h4 style="font-size: 14px; font-weight: 700; color: #166534; margin: 0; display: flex; align-items: center; gap: 8px;">
+                              <i class="fas fa-chart-pie"></i> Proporsi Status Tenaga
+                            </h4>
+                            <span style="font-size: 12px; color: #6b7280; display: block; margin-top: 2px;">
+                              Distribusi kontribusi kehadiran
+                            </span>
+                          </div>
+                        </div>
+                        <div style="position: relative; height: 320px; width: 100%;">
+                          <canvas id="chartPresensiByTenagaDonut"></canvas>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Comparison Table -->
+                    <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.04);">
+                      <div style="padding: 14px 20px; background: #f8fafc; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+                        <h4 style="font-size: 14px; font-weight: 700; color: #166534; margin: 0; display: flex; align-items: center; gap: 8px;">
+                          <i class="fas fa-table"></i> Matriks Komparasi Presensi by Status Tenaga Kerja
+                        </h4>
+                        <span id="tenagaTableCountBadge" style="background: #dcfce7; color: #166534; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 6px;">
+                          Dfarm PTPN I
+                        </span>
+                      </div>
+                      <div style="overflow-x: auto;">
+                        <table class="report-table" style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                          <thead>
+                            <tr style="background: #166534; color: #ffffff;">
+                              <th rowspan="2" style="padding: 10px 14px; text-align: left; vertical-align: middle; border: 1px solid #14532d; font-weight: 700;" id="thDimensionName">Regional</th>
+                              <th colspan="3" style="padding: 8px 12px; text-align: center; border: 1px solid #14532d; background: #059669; font-weight: 700;">Tenaga Baku</th>
+                              <th colspan="3" style="padding: 8px 12px; text-align: center; border: 1px solid #14532d; background: #2563eb; font-weight: 700;">Tenaga PKWT</th>
+                              <th colspan="3" style="padding: 8px 12px; text-align: center; border: 1px solid #14532d; background: #d97706; font-weight: 700;">Tenaga Borong</th>
+                              <th colspan="2" style="padding: 8px 12px; text-align: center; border: 1px solid #14532d; background: #14532d; font-weight: 700;">Total Presensi</th>
+                            </tr>
+                            <tr style="background: #15803d; color: #ffffff; font-size: 11px;">
+                              <th style="padding: 6px 10px; text-align: right; border: 1px solid #14532d;">SDM</th>
+                              <th style="padding: 6px 10px; text-align: right; border: 1px solid #14532d;">Hadir</th>
+                              <th style="padding: 6px 10px; text-align: center; border: 1px solid #14532d;">%</th>
+                              <th style="padding: 6px 10px; text-align: right; border: 1px solid #14532d;">SDM</th>
+                              <th style="padding: 6px 10px; text-align: right; border: 1px solid #14532d;">Hadir</th>
+                              <th style="padding: 6px 10px; text-align: center; border: 1px solid #14532d;">%</th>
+                              <th style="padding: 6px 10px; text-align: right; border: 1px solid #14532d;">SDM</th>
+                              <th style="padding: 6px 10px; text-align: right; border: 1px solid #14532d;">Hadir</th>
+                              <th style="padding: 6px 10px; text-align: center; border: 1px solid #14532d;">%</th>
+                              <th style="padding: 6px 10px; text-align: right; border: 1px solid #14532d;">Total Hadir</th>
+                              <th style="padding: 6px 10px; text-align: center; border: 1px solid #14532d;">% Hadir</th>
+                            </tr>
+                          </thead>
+                          <tbody id="tenagaTableBody">
+                            <!-- Populated dynamically via JS -->
+                          </tbody>
+                          <tfoot id="tenagaTableFoot" style="background: #f8fafc; font-weight: 700; border-top: 2px solid #cbd5e1;">
+                            <!-- Populated dynamically via JS -->
+                          </tfoot>
+                        </table>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1041,7 +1355,88 @@
         // INITIALIZE SUMMARY LINE CHART & ASYNC LOADER
         // ============================================
         let chartRetryCount = 0;
+        let currentSummaryMetric = 'prosentase_kehadiran';
+        let latestMonthlySummaryData = null;
+
+        function updateSummaryMatrixTable(metric) {
+          if (!latestMonthlySummaryData) return;
+
+          const titleEl = document.getElementById('summaryMatrixTitleText');
+          if (titleEl) {
+            const metricLabel = metric === 'prosentase_input' ? '% Input Presensi' : '% Kehadiran';
+            titleEl.textContent = `Matriks Akumulasi Bulanan ${metricLabel} per Regional`;
+          }
+
+          const tbody = document.getElementById('summaryMatrixTableBody');
+          if (!tbody) return;
+
+          const monthKeys = Object.keys(latestMonthlySummaryData.months || {});
+          const dataByReg = latestMonthlySummaryData.dataByRegional || {};
+
+          let totalTenagaKerja = 0;
+          let rowsHtml = '';
+
+          Object.values(dataByReg).forEach(reg => {
+            const totalKaryawan = reg.total_karyawan || 0;
+            totalTenagaKerja += totalKaryawan;
+
+            let cellsHtml = '';
+            monthKeys.forEach(m => {
+              const rawVal = (reg.months && reg.months[m] && reg.months[m][metric] !== undefined)
+                ? reg.months[m][metric]
+                : 0;
+              const val = Number(rawVal || 0);
+              const colorBg = val >= 75 ? '#dcfce7' : (val >= 50 ? '#fef9c3' : '#fee2e2');
+              const colorText = val >= 75 ? '#15803d' : (val >= 50 ? '#854d0e' : '#b91c1c');
+
+              cellsHtml += `
+                <td style="padding: 9px 12px; text-align: center;">
+                  <span style="background: ${colorBg}; color: ${colorText}; font-weight: 700; padding: 2px 8px; border-radius: 4px; font-size: 11px;">
+                    ${val}%
+                  </span>
+                </td>
+              `;
+            });
+
+            const formattedKaryawan = new Intl.NumberFormat('id-ID').format(totalKaryawan);
+            rowsHtml += `
+              <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 9px 14px; font-weight: 600; color: #111827;">${reg.name}</td>
+                <td style="padding: 9px 14px; text-align: right; color: #4b5563;">${formattedKaryawan}</td>
+                ${cellsHtml}
+              </tr>
+            `;
+          });
+
+          // Gabungan (Rata-rata) Row
+          let corpCellsHtml = '';
+          monthKeys.forEach(m => {
+            const rawCorp = (latestMonthlySummaryData.corporateByMonth && latestMonthlySummaryData.corporateByMonth[m] && latestMonthlySummaryData.corporateByMonth[m][metric] !== undefined)
+              ? latestMonthlySummaryData.corporateByMonth[m][metric]
+              : 0;
+            const valCorp = Number(rawCorp || 0);
+
+            corpCellsHtml += `
+              <td style="padding: 10px 12px; text-align: center; color: #166534;">
+                ${valCorp}%
+              </td>
+            `;
+          });
+
+          const formattedTotalSDM = new Intl.NumberFormat('id-ID').format(totalTenagaKerja);
+          rowsHtml += `
+            <tr style="background: #f8fafc; font-weight: 700; border-top: 2px solid #cbd5e1;">
+              <td style="padding: 10px 14px; color: #166534;">Gabungan (Rata-rata)</td>
+              <td style="padding: 10px 14px; text-align: right; color: #166534;">${formattedTotalSDM}</td>
+              ${corpCellsHtml}
+            </tr>
+          `;
+
+          tbody.innerHTML = rowsHtml;
+        }
+
         function initSummaryLineChart(monthlySummaryData) {
+          latestMonthlySummaryData = monthlySummaryData;
           const summaryChartCanvas = document.getElementById('summaryLineChart');
           if (!summaryChartCanvas) {
             console.warn('[initSummaryLineChart] Canvas #summaryLineChart belum tersedia di DOM.');
@@ -1091,7 +1486,7 @@
               const regId = reg.id;
               const colors = regColorMap[regId] || regColorMap.default;
               const points = monthKeys.map(m => {
-                return (reg.months && reg.months[m]) ? reg.months[m][metric] : 0;
+                return (reg.months && reg.months[m] && reg.months[m][metric] !== undefined) ? reg.months[m][metric] : 0;
               });
 
               datasets.push({
@@ -1112,7 +1507,7 @@
 
             // Gabungan (Rata-rata)
             const corpPoints = monthKeys.map(m => {
-              return (monthlySummaryData.corporateByMonth && monthlySummaryData.corporateByMonth[m]) 
+              return (monthlySummaryData.corporateByMonth && monthlySummaryData.corporateByMonth[m] && monthlySummaryData.corporateByMonth[m][metric] !== undefined) 
                 ? monthlySummaryData.corporateByMonth[m][metric] 
                 : 0;
             });
@@ -1136,14 +1531,12 @@
             return datasets;
           }
 
-          let currentMetric = 'prosentase_kehadiran';
-
           try {
             window.summaryLineChart = new Chart(summaryChartCanvas, {
               type: 'line',
               data: {
                 labels: monthLabels,
-                datasets: buildSummaryDatasets(currentMetric)
+                datasets: buildSummaryDatasets(currentSummaryMetric)
               },
               options: {
                 responsive: true,
@@ -1225,34 +1618,58 @@
           const btnMetricKehadiran = document.getElementById('btnMetricKehadiran');
           const btnMetricInput = document.getElementById('btnMetricInput');
 
+          function applyMetricUI(metric) {
+            currentSummaryMetric = metric;
+            if (metric === 'prosentase_input') {
+              if (btnMetricInput) {
+                btnMetricInput.style.background = '#166534';
+                btnMetricInput.style.color = '#fff';
+              }
+              if (btnMetricKehadiran) {
+                btnMetricKehadiran.style.background = 'transparent';
+                btnMetricKehadiran.style.color = '#4b5563';
+              }
+            } else {
+              if (btnMetricKehadiran) {
+                btnMetricKehadiran.style.background = '#166534';
+                btnMetricKehadiran.style.color = '#fff';
+              }
+              if (btnMetricInput) {
+                btnMetricInput.style.background = 'transparent';
+                btnMetricInput.style.color = '#4b5563';
+              }
+            }
+          }
+
           if (btnMetricKehadiran && btnMetricInput) {
+            applyMetricUI(currentSummaryMetric);
+
             btnMetricKehadiran.onclick = () => {
-              if (currentMetric === 'prosentase_kehadiran') return;
-              currentMetric = 'prosentase_kehadiran';
-              btnMetricKehadiran.style.background = '#166534';
-              btnMetricKehadiran.style.color = '#fff';
-              btnMetricInput.style.background = 'transparent';
-              btnMetricInput.style.color = '#4b5563';
+              if (currentSummaryMetric === 'prosentase_kehadiran') return;
+              applyMetricUI('prosentase_kehadiran');
 
               if (window.summaryLineChart) {
                 window.summaryLineChart.data.datasets = buildSummaryDatasets('prosentase_kehadiran');
                 window.summaryLineChart.update();
               }
+              updateSummaryMatrixTable('prosentase_kehadiran');
             };
 
             btnMetricInput.onclick = () => {
-              if (currentMetric === 'prosentase_input') return;
-              currentMetric = 'prosentase_input';
-              btnMetricInput.style.background = '#166534';
-              btnMetricInput.style.color = '#fff';
-              btnMetricKehadiran.style.background = 'transparent';
-              btnMetricKehadiran.style.color = '#4b5563';
+              if (currentSummaryMetric === 'prosentase_input') return;
+              applyMetricUI('prosentase_input');
 
               if (window.summaryLineChart) {
                 window.summaryLineChart.data.datasets = buildSummaryDatasets('prosentase_input');
                 window.summaryLineChart.update();
               }
+              updateSummaryMatrixTable('prosentase_input');
             };
+          }
+
+          // Pastikan table sinkron dengan currentSummaryMetric saat init (jika metric saat ini prosentase_input)
+          if (currentSummaryMetric !== 'prosentase_kehadiran') {
+            updateSummaryMatrixTable(currentSummaryMetric);
           }
         }
 
@@ -1859,6 +2276,14 @@
         const datePickerApplyDetail = document.getElementById('datePickerApplyDetail');
         const datePickerCancelDetail = document.getElementById('datePickerCancelDetail');
 
+        // Elements for Tab Tenaga
+        const dateRangeInputTenaga = document.getElementById('dateRangeTenaga');
+        const datePickerPopupTenaga = document.getElementById('datePickerPopupTenaga');
+        const datePickerStartTenaga = document.getElementById('datePickerStartTenaga');
+        const datePickerEndTenaga = document.getElementById('datePickerEndTenaga');
+        const datePickerApplyTenaga = document.getElementById('datePickerApplyTenaga');
+        const datePickerCancelTenaga = document.getElementById('datePickerCancelTenaga');
+
         // Get default dates dari controller
         const tglAwalDefault = '{{ $tglAwal ?? '' }}';
         const tglAkhirDefault = '{{ $tglAkhir ?? '' }}';
@@ -1883,24 +2308,34 @@
         if (datePickerStartDetail) datePickerStartDetail.value = activeTglAwal;
         if (datePickerEndDetail) datePickerEndDetail.value = activeTglAkhir;
 
+        // Set date values Tenaga
+        if (datePickerStartTenaga) datePickerStartTenaga.value = activeTglAwal;
+        if (datePickerEndTenaga) datePickerEndTenaga.value = activeTglAkhir;
+
         // Set select values dari parameter
         if (jobDescParam) {
           const sJob = document.getElementById('selectJobDesc');
           const sJobDetail = document.getElementById('selectJobDescDetail');
+          const sJobTenaga = document.getElementById('selectJobDescTenaga');
           if (sJob) sJob.value = jobDescParam;
           if (sJobDetail) sJobDetail.value = jobDescParam;
+          if (sJobTenaga) sJobTenaga.value = jobDescParam;
         }
         if (idRegParam) {
           const sReg = document.getElementById('selectRegional');
           const sRegDetail = document.getElementById('selectRegionalDetail');
+          const sRegTenaga = document.getElementById('selectRegionalTenaga');
           if (sReg) sReg.value = idRegParam;
           if (sRegDetail) sRegDetail.value = idRegParam;
+          if (sRegTenaga) sRegTenaga.value = idRegParam;
         }
         if (kodeKebunParam) {
           const sKebun = document.getElementById('selectKebun');
           const sKebunDetail = document.getElementById('selectKebunDetail');
+          const sKebunTenaga = document.getElementById('selectKebunTenaga');
           if (sKebun) sKebun.value = kodeKebunParam;
           if (sKebunDetail) sKebunDetail.value = kodeKebunParam;
+          if (sKebunTenaga) sKebunTenaga.value = kodeKebunParam;
         }
 
         // Update display functions
@@ -1914,8 +2349,14 @@
             dateRangeInputDetail.value = `${formatDate(datePickerStartDetail.value)} - ${formatDate(datePickerEndDetail.value)}`;
           }
         }
+        function updateDateDisplayTenaga() {
+          if (dateRangeInputTenaga && datePickerStartTenaga && datePickerEndTenaga && datePickerStartTenaga.value && datePickerEndTenaga.value) {
+            dateRangeInputTenaga.value = `${formatDate(datePickerStartTenaga.value)} - ${formatDate(datePickerEndTenaga.value)}`;
+          }
+        }
         updateDateDisplay();
         updateDateDisplayDetail();
+        updateDateDisplayTenaga();
 
         // Toggle popup Rekap
         if (dateRangeInput && datePickerPopup) {
@@ -1923,6 +2364,7 @@
             e.stopPropagation();
             datePickerPopup.classList.toggle('hidden');
             if (datePickerPopupDetail) datePickerPopupDetail.classList.add('hidden');
+            if (datePickerPopupTenaga) datePickerPopupTenaga.classList.add('hidden');
           });
           datePickerPopup.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -1935,8 +2377,22 @@
             e.stopPropagation();
             datePickerPopupDetail.classList.toggle('hidden');
             if (datePickerPopup) datePickerPopup.classList.add('hidden');
+            if (datePickerPopupTenaga) datePickerPopupTenaga.classList.add('hidden');
           });
           datePickerPopupDetail.addEventListener('click', (e) => {
+            e.stopPropagation();
+          });
+        }
+
+        // Toggle popup Tenaga
+        if (dateRangeInputTenaga && datePickerPopupTenaga) {
+          dateRangeInputTenaga.addEventListener('click', (e) => {
+            e.stopPropagation();
+            datePickerPopupTenaga.classList.toggle('hidden');
+            if (datePickerPopup) datePickerPopup.classList.add('hidden');
+            if (datePickerPopupDetail) datePickerPopupDetail.classList.add('hidden');
+          });
+          datePickerPopupTenaga.addEventListener('click', (e) => {
             e.stopPropagation();
           });
         }
@@ -1948,10 +2404,13 @@
               if (new Date(datePickerStart.value) <= new Date(datePickerEnd.value)) {
                 updateDateDisplay();
                 if (datePickerPopup) datePickerPopup.classList.add('hidden');
-                // Sync to Detail picker
+                // Sync to Detail & Tenaga pickers
                 if (datePickerStartDetail) datePickerStartDetail.value = datePickerStart.value;
                 if (datePickerEndDetail) datePickerEndDetail.value = datePickerEnd.value;
                 updateDateDisplayDetail();
+                if (datePickerStartTenaga) datePickerStartTenaga.value = datePickerStart.value;
+                if (datePickerEndTenaga) datePickerEndTenaga.value = datePickerEnd.value;
+                updateDateDisplayTenaga();
               } else {
                 alert('Tanggal awal harus lebih kecil dari tanggal akhir');
               }
@@ -1966,10 +2425,34 @@
               if (new Date(datePickerStartDetail.value) <= new Date(datePickerEndDetail.value)) {
                 updateDateDisplayDetail();
                 if (datePickerPopupDetail) datePickerPopupDetail.classList.add('hidden');
-                // Sync to Rekap picker
+                // Sync to Rekap & Tenaga pickers
                 if (datePickerStart) datePickerStart.value = datePickerStartDetail.value;
                 if (datePickerEnd) datePickerEnd.value = datePickerEndDetail.value;
                 updateDateDisplay();
+                if (datePickerStartTenaga) datePickerStartTenaga.value = datePickerStartDetail.value;
+                if (datePickerEndTenaga) datePickerEndTenaga.value = datePickerEndDetail.value;
+                updateDateDisplayTenaga();
+              } else {
+                alert('Tanggal awal harus lebih kecil dari tanggal akhir');
+              }
+            }
+          });
+        }
+
+        // Apply button Tenaga
+        if (datePickerApplyTenaga) {
+          datePickerApplyTenaga.addEventListener('click', () => {
+            if (datePickerStartTenaga && datePickerEndTenaga && datePickerStartTenaga.value && datePickerEndTenaga.value) {
+              if (new Date(datePickerStartTenaga.value) <= new Date(datePickerEndTenaga.value)) {
+                updateDateDisplayTenaga();
+                if (datePickerPopupTenaga) datePickerPopupTenaga.classList.add('hidden');
+                // Sync to Rekap & Detail pickers
+                if (datePickerStart) datePickerStart.value = datePickerStartTenaga.value;
+                if (datePickerEnd) datePickerEnd.value = datePickerEndTenaga.value;
+                updateDateDisplay();
+                if (datePickerStartDetail) datePickerStartDetail.value = datePickerStartTenaga.value;
+                if (datePickerEndDetail) datePickerEndDetail.value = datePickerEndTenaga.value;
+                updateDateDisplayDetail();
               } else {
                 alert('Tanggal awal harus lebih kecil dari tanggal akhir');
               }
@@ -1991,6 +2474,13 @@
           });
         }
 
+        // Cancel button Tenaga
+        if (datePickerCancelTenaga && datePickerPopupTenaga) {
+          datePickerCancelTenaga.addEventListener('click', () => {
+            datePickerPopupTenaga.classList.add('hidden');
+          });
+        }
+
         // Close popup when clicking outside
         document.addEventListener('click', (e) => {
           if (datePickerPopup && !datePickerPopup.classList.contains('hidden')) {
@@ -1998,6 +2488,9 @@
           }
           if (datePickerPopupDetail && !datePickerPopupDetail.classList.contains('hidden')) {
             datePickerPopupDetail.classList.add('hidden');
+          }
+          if (datePickerPopupTenaga && !datePickerPopupTenaga.classList.contains('hidden')) {
+            datePickerPopupTenaga.classList.add('hidden');
           }
         });
 
@@ -2009,6 +2502,9 @@
             }
             if (datePickerPopupDetail && !datePickerPopupDetail.classList.contains('hidden')) {
               datePickerApplyDetail.click();
+            }
+            if (datePickerPopupTenaga && !datePickerPopupTenaga.classList.contains('hidden')) {
+              datePickerApplyTenaga.click();
             }
           }
         });
@@ -2036,6 +2532,16 @@
             if (tab === 'summary' && window.summaryLineChart) {
               window.summaryLineChart.resize();
             }
+
+            // Trigger load / resize if tenaga tab is opened
+            if (tab === 'tenaga') {
+              if (!tenagaDataLoaded) {
+                loadPresensiByTenaga();
+              } else {
+                if (window.tenagaBarChart) window.tenagaBarChart.resize();
+                if (window.tenagaDonutChart) window.tenagaDonutChart.resize();
+              }
+            }
           });
         });
 
@@ -2044,6 +2550,9 @@
         const targetTabBtn = document.querySelector(`.hris-tab-btn[data-tab="${currentTab}"]`);
         if (targetTabBtn) {
           targetTabBtn.click();
+        }
+        if (currentTab === 'tenaga') {
+          loadPresensiByTenaga();
         }
 
         // Initialize table with presensi data
@@ -2203,6 +2712,7 @@
         const btnResetSummary = document.getElementById('btnResetSummary');
         if (btnResetSummary) {
           btnResetSummary.addEventListener('click', () => {
+            currentSummaryMetric = 'prosentase_kehadiran';
             if (document.getElementById('selectJobDescSummary')) document.getElementById('selectJobDescSummary').value = 'PENYADAP';
             if (document.getElementById('selectTahunSummary')) document.getElementById('selectTahunSummary').value = '{{ date('Y') }}';
             
@@ -2262,6 +2772,456 @@
             if (document.getElementById('selectKebunDetail')) document.getElementById('selectKebunDetail').value = '';
             window.location.href = window.location.pathname + '?tab=detail';
           });
+        }
+
+        setupRegionalHandler('selectRegionalTenaga', 'selectKebunTenaga');
+
+        // Filter Button Handler Tenaga
+        const btnFilterTenaga = document.getElementById('btnFilterTenaga');
+        if (btnFilterTenaga) {
+          btnFilterTenaga.addEventListener('click', () => {
+            const tglAwal = datePickerStartTenaga ? datePickerStartTenaga.value : '';
+            const tglAkhir = datePickerEndTenaga ? datePickerEndTenaga.value : '';
+            const jobDesc = document.getElementById('selectJobDescTenaga') ? document.getElementById('selectJobDescTenaga').value : '';
+            const idReg = document.getElementById('selectRegionalTenaga') ? document.getElementById('selectRegionalTenaga').value : '';
+            const kodeKebun = document.getElementById('selectKebunTenaga') ? document.getElementById('selectKebunTenaga').value : '';
+            executeFilter(tglAwal, tglAkhir, jobDesc, idReg, kodeKebun, 'tenaga');
+          });
+        }
+
+        // Reset Button Handler Tenaga
+        const btnResetTenaga = document.getElementById('btnResetTenaga');
+        if (btnResetTenaga) {
+          btnResetTenaga.addEventListener('click', () => {
+            if (document.getElementById('selectJobDescTenaga')) document.getElementById('selectJobDescTenaga').value = '';
+            if (document.getElementById('selectRegionalTenaga')) document.getElementById('selectRegionalTenaga').value = '';
+            if (document.getElementById('selectKebunTenaga')) document.getElementById('selectKebunTenaga').value = '';
+            window.location.href = window.location.pathname + '?tab=tenaga';
+          });
+        }
+
+        // ============================================
+        // PRESENSI BY TENAGA DATA LOADER & RENDERER
+        // ============================================
+        let tenagaDataLoaded = false;
+        function loadPresensiByTenaga() {
+          const tglAwal = datePickerStartTenaga ? datePickerStartTenaga.value : (activeTglAwal || '');
+          const tglAkhir = datePickerEndTenaga ? datePickerEndTenaga.value : (activeTglAkhir || '');
+          const jobDesc = document.getElementById('selectJobDescTenaga') ? document.getElementById('selectJobDescTenaga').value : (jobDescParam || 'PENYADAP');
+          const idReg = document.getElementById('selectRegionalTenaga') ? document.getElementById('selectRegionalTenaga').value : (idRegParam || '');
+          const kodeKebun = document.getElementById('selectKebunTenaga') ? document.getElementById('selectKebunTenaga').value : (kodeKebunParam || '');
+
+          const spinner = document.getElementById('tenagaLoadingSpinner');
+          const contentWrapper = document.getElementById('tenagaContentWrapper');
+          const errorState = document.getElementById('tenagaErrorState');
+          const errorMsg = document.getElementById('tenagaErrorMessage');
+
+          if (spinner) spinner.style.display = 'block';
+          if (contentWrapper) contentWrapper.style.opacity = '0.35';
+          if (errorState) errorState.style.display = 'none';
+
+          const params = new URLSearchParams({
+            jobdesc: jobDesc,
+            tgl_awal: tglAwal,
+            tgl_akhir: tglAkhir,
+            id_reg: idReg,
+            kode_kebun: kodeKebun
+          });
+
+          fetch(`{{ route('dfarmkaret.ajax_presensi_tenaga') }}?${params.toString()}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+          })
+          .then(res => {
+            if (!res.ok) throw new Error('HTTP error ' + res.status);
+            return res.json();
+          })
+          .then(json => {
+            if (spinner) spinner.style.display = 'none';
+            if (contentWrapper) contentWrapper.style.opacity = '1';
+
+            if (!json.success || !json.data) {
+              if (errorState) {
+                errorState.style.display = 'block';
+                if (errorMsg) errorMsg.textContent = json.error || 'Data presensi by tenaga tidak ditemukan';
+              }
+              return;
+            }
+
+            renderPresensiTenaga(json.data);
+            tenagaDataLoaded = true;
+          })
+          .catch(err => {
+            console.error('Error loadPresensiByTenaga:', err);
+            if (spinner) spinner.style.display = 'none';
+            if (contentWrapper) contentWrapper.style.opacity = '1';
+            if (errorState) {
+              errorState.style.display = 'block';
+              if (errorMsg) errorMsg.textContent = 'Gagal memuat data presensi tenaga: ' + err.message;
+            }
+          });
+        }
+
+        function renderPresensiTenaga(data) {
+          const fmt = n => new Intl.NumberFormat('id-ID').format(n || 0);
+
+          // Update KPI Cards
+          const s = data.summary || {};
+          const baku = s.baku || {};
+          const pkwt = s.pkwt || {};
+          const borong = s.borong || {};
+          const total = s.total || {};
+
+          if (document.getElementById('cardBakuHadir')) document.getElementById('cardBakuHadir').textContent = fmt(baku.hadir);
+          if (document.getElementById('cardBakuSdm')) document.getElementById('cardBakuSdm').textContent = fmt(baku.sdm);
+          if (document.getElementById('cardBakuPct')) document.getElementById('cardBakuPct').textContent = (baku.pct || 0) + '%';
+          if (document.getElementById('cardBakuShareBadge')) document.getElementById('cardBakuShareBadge').textContent = (baku.share || 0) + '% Share';
+
+          if (document.getElementById('cardPkwtHadir')) document.getElementById('cardPkwtHadir').textContent = fmt(pkwt.hadir);
+          if (document.getElementById('cardPkwtSdm')) document.getElementById('cardPkwtSdm').textContent = fmt(pkwt.sdm);
+          if (document.getElementById('cardPkwtPct')) document.getElementById('cardPkwtPct').textContent = (pkwt.pct || 0) + '%';
+          if (document.getElementById('cardPkwtShareBadge')) document.getElementById('cardPkwtShareBadge').textContent = (pkwt.share || 0) + '% Share';
+
+          if (document.getElementById('cardBorongHadir')) document.getElementById('cardBorongHadir').textContent = fmt(borong.hadir);
+          if (document.getElementById('cardBorongSdm')) document.getElementById('cardBorongSdm').textContent = fmt(borong.sdm);
+          if (document.getElementById('cardBorongPct')) document.getElementById('cardBorongPct').textContent = (borong.pct || 0) + '%';
+          if (document.getElementById('cardBorongShareBadge')) document.getElementById('cardBorongShareBadge').textContent = (borong.share || 0) + '% Share';
+
+          if (document.getElementById('cardTotalHadir')) document.getElementById('cardTotalHadir').textContent = fmt(total.hadir);
+          if (document.getElementById('cardTotalSdm')) document.getElementById('cardTotalSdm').textContent = fmt(total.sdm);
+          if (document.getElementById('cardTotalPct')) document.getElementById('cardTotalPct').textContent = (total.pct || 0) + '%';
+
+          // Update Titles
+          const subTitleEl = document.getElementById('tenagaBarSubTitle');
+          if (subTitleEl) subTitleEl.textContent = `Breakdown komparasi jumlah kehadiran per ${data.level_label}`;
+          const thDimEl = document.getElementById('thDimensionName');
+          if (thDimEl) thDimEl.textContent = data.level_label;
+
+          // 0. Daily Trend Line Chart (Full-Width)
+          const dailyCanvas = document.getElementById('chartPresensiByTenagaDaily');
+          const dailyData = (data.charts && data.charts.daily) ? data.charts.daily : null;
+
+          const rangeLabelEl = document.getElementById('tenagaDailyRangeLabel');
+          if (rangeLabelEl) {
+            const countDays = (dailyData && dailyData.dates) ? dailyData.dates.length : (data.days || 1);
+            rangeLabelEl.textContent = `${countDays} Hari Periode`;
+          }
+
+          const dailySubEl = document.getElementById('tenagaDailySubTitle');
+          if (dailySubEl && dailyData && dailyData.dates && dailyData.dates.length > 0) {
+            const startD = dailyData.dates[0];
+            const endD = dailyData.dates[dailyData.dates.length - 1];
+            dailySubEl.textContent = `Fluktuasi kehadiran harian Tenaga Baku, PKWT, dan Borong (${startD} - ${endD})`;
+          }
+
+          if (dailyCanvas && dailyData) {
+            if (window.tenagaDailyChart) {
+              window.tenagaDailyChart.destroy();
+            }
+            const ctxDaily = dailyCanvas.getContext('2d');
+            const totalPoints = dailyData.dates ? dailyData.dates.length : 0;
+            const pRadius = totalPoints > 25 ? 2.5 : 4;
+            const pHoverRadius = totalPoints > 25 ? 5 : 6;
+
+            window.tenagaDailyChart = new Chart(ctxDaily, {
+              type: 'line',
+              data: {
+                labels: dailyData.dates || [],
+                datasets: [
+                  {
+                    label: 'Tenaga Baku',
+                    data: dailyData.baku || [],
+                    borderColor: '#059669',
+                    backgroundColor: 'rgba(5, 150, 105, 0.08)',
+                    borderWidth: 2.5,
+                    tension: 0.3,
+                    pointRadius: pRadius,
+                    pointHoverRadius: pHoverRadius,
+                    pointBackgroundColor: '#059669',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 1.5,
+                    fill: false
+                  },
+                  {
+                    label: 'Tenaga PKWT',
+                    data: dailyData.pkwt || [],
+                    borderColor: '#2563EB',
+                    backgroundColor: 'rgba(37, 99, 235, 0.08)',
+                    borderWidth: 2.5,
+                    tension: 0.3,
+                    pointRadius: pRadius,
+                    pointHoverRadius: pHoverRadius,
+                    pointBackgroundColor: '#2563EB',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 1.5,
+                    fill: false
+                  },
+                  {
+                    label: 'Tenaga Borong',
+                    data: dailyData.borong || [],
+                    borderColor: '#D97706',
+                    backgroundColor: 'rgba(217, 119, 6, 0.08)',
+                    borderWidth: 2.5,
+                    tension: 0.3,
+                    pointRadius: pRadius,
+                    pointHoverRadius: pHoverRadius,
+                    pointBackgroundColor: '#D97706',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 1.5,
+                    fill: false
+                  },
+                  {
+                    label: 'Total Gabungan',
+                    data: dailyData.total || [],
+                    borderColor: '#166534',
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    tension: 0.3,
+                    pointRadius: pRadius,
+                    pointHoverRadius: pHoverRadius,
+                    pointBackgroundColor: '#166534',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 1.5,
+                    fill: false
+                  }
+                ]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                  mode: 'index',
+                  intersect: false
+                },
+                plugins: {
+                  legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                      usePointStyle: true,
+                      boxWidth: 8,
+                      font: { size: 12, weight: '600', family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" },
+                      padding: 18
+                    }
+                  },
+                  tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                    titleFont: { size: 12, weight: '700' },
+                    bodyFont: { size: 12 },
+                    padding: 12,
+                    cornerRadius: 8,
+                    callbacks: {
+                      label: function(context) {
+                        const label = context.dataset.label || '';
+                        const val = context.parsed.y !== undefined ? context.parsed.y : (context.raw || 0);
+                        return ` ${label}: ${new Intl.NumberFormat('id-ID').format(val)} Hadir`;
+                      }
+                    }
+                  }
+                },
+                scales: {
+                  x: {
+                    grid: { color: 'rgba(22, 101, 52, 0.05)', drawBorder: false },
+                    ticks: {
+                      font: { size: 11 },
+                      maxRotation: 45,
+                      minRotation: 0,
+                      autoSkip: true,
+                      maxTicksLimit: 20
+                    }
+                  },
+                  y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(22, 101, 52, 0.06)', drawBorder: false },
+                    ticks: {
+                      font: { size: 11 },
+                      callback: function(value) {
+                        return new Intl.NumberFormat('id-ID').format(value);
+                      }
+                    }
+                  }
+                }
+              }
+            });
+          }
+
+          // 1. Grouped Bar Chart
+          const barCanvas = document.getElementById('chartPresensiByTenagaBar');
+          if (barCanvas && data.charts) {
+            if (window.tenagaBarChart) {
+              window.tenagaBarChart.destroy();
+            }
+            const ctx = barCanvas.getContext('2d');
+            window.tenagaBarChart = new Chart(ctx, {
+              type: 'bar',
+              data: {
+                labels: data.charts.labels || [],
+                datasets: [
+                  {
+                    label: 'Tenaga Baku',
+                    data: data.charts.baku || [],
+                    backgroundColor: '#059669',
+                    borderColor: '#047857',
+                    borderWidth: 1,
+                    borderRadius: 6,
+                    borderSkipped: false
+                  },
+                  {
+                    label: 'Tenaga PKWT',
+                    data: data.charts.pkwt || [],
+                    backgroundColor: '#2563EB',
+                    borderColor: '#1D4ED8',
+                    borderWidth: 1,
+                    borderRadius: 6,
+                    borderSkipped: false
+                  },
+                  {
+                    label: 'Tenaga Borong',
+                    data: data.charts.borong || [],
+                    backgroundColor: '#D97706',
+                    borderColor: '#B45309',
+                    borderWidth: 1,
+                    borderRadius: 6,
+                    borderSkipped: false
+                  }
+                ]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                      usePointStyle: true,
+                      font: { size: 11, family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" },
+                      padding: 16
+                    }
+                  },
+                  tooltip: {
+                    callbacks: {
+                      label: function(context) {
+                        return ` ${context.dataset.label}: ${new Intl.NumberFormat('id-ID').format(context.parsed.y)} Hadir`;
+                      }
+                    }
+                  }
+                },
+                scales: {
+                  x: {
+                    grid: { color: 'rgba(22, 101, 52, 0.06)', drawBorder: false },
+                    ticks: { font: { size: 10 } }
+                  },
+                  y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(22, 101, 52, 0.06)', drawBorder: false },
+                    ticks: {
+                      font: { size: 10 },
+                      callback: function(value) {
+                        return new Intl.NumberFormat('id-ID').format(value);
+                      }
+                    }
+                  }
+                }
+              }
+            });
+          }
+
+          // 2. Donut Chart
+          const donutCanvas = document.getElementById('chartPresensiByTenagaDonut');
+          if (donutCanvas && data.charts && data.charts.donut) {
+            if (window.tenagaDonutChart) {
+              window.tenagaDonutChart.destroy();
+            }
+            const ctxDonut = donutCanvas.getContext('2d');
+            window.tenagaDonutChart = new Chart(ctxDonut, {
+              type: 'doughnut',
+              data: {
+                labels: ['Tenaga Baku', 'Tenaga PKWT', 'Tenaga Borong'],
+                datasets: [{
+                  data: data.charts.donut,
+                  backgroundColor: ['#059669', '#2563EB', '#D97706'],
+                  hoverBackgroundColor: ['#10B981', '#3B82F6', '#F59E0B'],
+                  borderWidth: 2,
+                  borderColor: '#ffffff',
+                  hoverOffset: 6
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '62%',
+                plugins: {
+                  legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                      usePointStyle: true,
+                      font: { size: 11 },
+                      padding: 12
+                    }
+                  },
+                  tooltip: {
+                    callbacks: {
+                      label: function(context) {
+                        const arr = context.dataset.data || [];
+                        const totalSum = arr.reduce((a, b) => a + b, 0);
+                        const val = context.parsed;
+                        const pct = totalSum > 0 ? ((val / totalSum) * 100).toFixed(1) : 0;
+                        return ` ${context.label}: ${new Intl.NumberFormat('id-ID').format(val)} (${pct}%)`;
+                      }
+                    }
+                  }
+                }
+              }
+            });
+          }
+
+          // 3. Matriks Table Breakdown
+          const tbody = document.getElementById('tenagaTableBody');
+          const tfoot = document.getElementById('tenagaTableFoot');
+
+          if (tbody) {
+            let rowsHtml = '';
+            (data.breakdown || []).forEach(row => {
+              rowsHtml += `
+                <tr style="border-bottom: 1px solid #e5e7eb; transition: background-color 0.15s;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='transparent'">
+                  <td style="padding: 9px 14px; font-weight: 600; color: #111827;">${row.name}</td>
+                  <td style="padding: 9px 10px; text-align: right; color: #4b5563;">${fmt(row.baku_sdm)}</td>
+                  <td style="padding: 9px 10px; text-align: right; font-weight: 600; color: #059669;">${fmt(row.baku_hadir)}</td>
+                  <td style="padding: 9px 10px; text-align: center;"><span style="background: #d1fae5; color: #047857; font-weight: 700; padding: 2px 7px; border-radius: 4px; font-size: 11px;">${row.baku_pct}%</span></td>
+                  <td style="padding: 9px 10px; text-align: right; color: #4b5563;">${fmt(row.pkwt_sdm)}</td>
+                  <td style="padding: 9px 10px; text-align: right; font-weight: 600; color: #2563eb;">${fmt(row.pkwt_hadir)}</td>
+                  <td style="padding: 9px 10px; text-align: center;"><span style="background: #dbeafe; color: #1d4ed8; font-weight: 700; padding: 2px 7px; border-radius: 4px; font-size: 11px;">${row.pkwt_pct}%</span></td>
+                  <td style="padding: 9px 10px; text-align: right; color: #4b5563;">${fmt(row.borong_sdm)}</td>
+                  <td style="padding: 9px 10px; text-align: right; font-weight: 600; color: #d97706;">${fmt(row.borong_hadir)}</td>
+                  <td style="padding: 9px 10px; text-align: center;"><span style="background: #fef3c7; color: #b45309; font-weight: 700; padding: 2px 7px; border-radius: 4px; font-size: 11px;">${row.borong_pct}%</span></td>
+                  <td style="padding: 9px 10px; text-align: right; font-weight: 700; color: #166534;">${fmt(row.total_hadir)}</td>
+                  <td style="padding: 9px 10px; text-align: center;"><span style="background: #e2e8f0; color: #0f172a; font-weight: 700; padding: 2px 7px; border-radius: 4px; font-size: 11px;">${row.total_pct}%</span></td>
+                </tr>
+              `;
+            });
+            tbody.innerHTML = rowsHtml || '<tr><td colspan="12" style="text-align: center; padding: 24px; color: #9ca3af;">Tidak ada data untuk filter yang dipilih</td></tr>';
+          }
+
+          if (tfoot && data.summary) {
+            tfoot.innerHTML = `
+              <tr style="background: #f1f5f9; font-weight: 700; border-top: 2px solid #cbd5e1;">
+                <td style="padding: 11px 14px; color: #166534;">TOTAL GABUNGAN</td>
+                <td style="padding: 11px 10px; text-align: right; color: #334155;">${fmt(s.baku.sdm)}</td>
+                <td style="padding: 11px 10px; text-align: right; color: #059669;">${fmt(s.baku.hadir)}</td>
+                <td style="padding: 11px 10px; text-align: center;"><span style="background: #059669; color: #ffffff; font-weight: 700; padding: 2px 8px; border-radius: 4px; font-size: 11px;">${s.baku.pct}%</span></td>
+                <td style="padding: 11px 10px; text-align: right; color: #334155;">${fmt(s.pkwt.sdm)}</td>
+                <td style="padding: 11px 10px; text-align: right; color: #2563eb;">${fmt(s.pkwt.hadir)}</td>
+                <td style="padding: 11px 10px; text-align: center;"><span style="background: #2563eb; color: #ffffff; font-weight: 700; padding: 2px 8px; border-radius: 4px; font-size: 11px;">${s.pkwt.pct}%</span></td>
+                <td style="padding: 11px 10px; text-align: right; color: #334155;">${fmt(s.borong.sdm)}</td>
+                <td style="padding: 11px 10px; text-align: right; color: #d97706;">${fmt(s.borong.hadir)}</td>
+                <td style="padding: 11px 10px; text-align: center;"><span style="background: #d97706; color: #ffffff; font-weight: 700; padding: 2px 8px; border-radius: 4px; font-size: 11px;">${s.borong.pct}%</span></td>
+                <td style="padding: 11px 10px; text-align: right; color: #166534; font-size: 13px;">${fmt(s.total.hadir)}</td>
+                <td style="padding: 11px 10px; text-align: center;"><span style="background: #166534; color: #ffffff; font-weight: 700; padding: 2px 8px; border-radius: 4px; font-size: 11px;">${s.total.pct}%</span></td>
+              </tr>
+            `;
+          }
         }
       </script>
       <script src="{{ asset('js/components/application-select-handler.js') }}"></script>

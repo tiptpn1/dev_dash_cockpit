@@ -2743,6 +2743,55 @@ class PageController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Endpoint AJAX untuk memuat data komparasi Presensi by Tenaga (Baku, PKWT, Borong)
+     */
+    public function ajaxPresensiByTenaga(Request $request)
+    {
+        set_time_limit(180);
+        ini_set('max_execution_time', 180);
+
+        $user = Auth::guard('custom')->user() ?? Auth::user();
+        $username = strtolower($user->username ?? '');
+        $userRegionalId = null;
+        if (preg_match('/^regional(\d+)$/', $username, $matches)) {
+            $userRegionalId = $matches[1];
+        } elseif (!empty($user->regional) && is_numeric($user->regional)) {
+            $userRegionalId = $user->regional;
+        }
+
+        $regional = $request->get('id_reg', '');
+        if ($userRegionalId && ($regional == '' || $regional != $userRegionalId)) {
+            $regional = $userRegionalId;
+        }
+
+        $kebun = $request->get('kode_kebun', '');
+        $jobdesc = $request->get('jobdesc', 'PENYADAP');
+        $tglAwal = $request->get('tgl_awal', date('Y-m-d'));
+        $tglAkhir = $request->get('tgl_akhir', date('Y-m-d'));
+
+        if ($tglAwal > $tglAkhir) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Tanggal awal tidak boleh lebih besar dari tanggal akhir'
+            ], 422);
+        }
+
+        try {
+            $data = $this->getPresensiByTenagaData($jobdesc, $tglAwal, $tglAkhir, $regional, $kebun);
+            return response()->json([
+                'success' => true,
+                'data' => $data
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('Error ajaxPresensiByTenaga: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
     public function sapaEvaluasi()
     {
         return view('pages/dfarm/sapa_evaluasi');
@@ -3604,6 +3653,336 @@ class PageController extends Controller
                 'regionals' => $regionals,
                 'dataByRegional' => $dataByRegional,
                 'corporateByMonth' => $corporateByMonth
+            ];
+        });
+    }
+
+    /**
+     * Mengambil dan mengagregasi data presensi berdasarkan jenis tenaga (Baku, PKWT, Borong)
+     */
+    private function getPresensiByTenagaData($jobdesc = 'PENYADAP', $tglAwal = null, $tglAkhir = null, $regional = '', $kebun = '')
+    {
+        set_time_limit(180);
+        ini_set('max_execution_time', 180);
+
+        if (!$tglAwal) $tglAwal = date('Y-m-d');
+        if (!$tglAkhir) $tglAkhir = date('Y-m-d');
+
+        $tglAwalDate = date('Y-m-d', strtotime($tglAwal));
+        $tglAkhirDate = date('Y-m-d', strtotime($tglAkhir));
+        $days = max(1, (int)((strtotime($tglAkhirDate) - strtotime($tglAwalDate)) / 86400) + 1);
+
+        $jobdescClean = preg_replace('/[^a-zA-Z0-9_\s]/', '', $jobdesc);
+        $jobdescUpper = strtoupper(trim($jobdesc));
+
+        $cacheKey = "dfarm_presensi_tenaga_{$jobdescClean}_{$regional}_{$kebun}_{$tglAwalDate}_{$tglAkhirDate}";
+
+        return Cache::remember($cacheKey, 300, function () use ($jobdescClean, $jobdescUpper, $tglAwalDate, $tglAkhirDate, $regional, $kebun, $days) {
+            $level = 'regional';
+            $levelLabel = 'Regional';
+            $dimensionId = 'p.regional_id';
+            $dimensionName = 'r.nama';
+
+            if ($regional !== '' && $regional !== null && ($kebun === '' || $kebun === null)) {
+                $level = 'kebun';
+                $levelLabel = 'Kebun';
+                $dimensionId = 'p.kebun_id';
+                $dimensionName = "COALESCE(k.nama, 'Kebun ID ' || p.kebun_id)";
+            } elseif ($regional !== '' && $regional !== null && $kebun !== '' && $kebun !== null) {
+                $level = 'afdeling';
+                $levelLabel = 'Afdeling';
+                $dimensionId = 'p.afdeling_id';
+                $dimensionName = "COALESCE(f.nama, 'Afdeling ID ' || p.afdeling_id)";
+            }
+
+            $jobdescClause = "";
+            if ($jobdescUpper == 'PEMETIK') {
+                $jobdescClause = "AND (p.positionsdesc ILIKE '%Pemetik%')";
+            } elseif ($jobdescUpper == 'PANEN KOPI') {
+                $jobdescClause = "AND (p.positionsdesc ILIKE '%Panen Kopi%')";
+            } elseif ($jobdescUpper == 'PEMELIHARAAN') {
+                $jobdescClause = "AND (p.positionsdesc ILIKE '%Pemeliharaan%')";
+            } elseif ($jobdescUpper == 'PENYADAP') {
+                $jobdescClause = "AND (p.positionsdesc ILIKE '%Penyadap%' OR p.positionsdesc ILIKE '%Penderes%')";
+            } elseif (!empty($jobdescClean)) {
+                $jobdescClause = "AND (p.positionsdesc ILIKE '%{$jobdescClean}%')";
+            }
+
+            $whereRegional = ($regional !== '' && $regional !== null) ? "AND p.regional_id = " . intval($regional) : "";
+            $whereKebun = ($kebun !== '' && $kebun !== null) ? "AND p.kebun_id = " . intval($kebun) : "";
+
+            $sql = "
+            WITH filtered_person AS (
+                SELECT 
+                    p.id AS karyawan_id, 
+                    p.regional_id, 
+                    r.nama AS regional,
+                    p.kebun_id,
+                    k.nama AS kebun,
+                    p.afdeling_id,
+                    f.nama AS afdeling,
+                    {$dimensionId} AS entity_id,
+                    {$dimensionName} AS entity_name,
+                    CASE 
+                        WHEN COALESCE(p.is_borong, 0) = 1 THEN 'borong'
+                        WHEN COALESCE(p.is_pkwt, 0) = 1 THEN 'pkwt'
+                        ELSE 'baku'
+                    END AS jenis_tenaga,
+                    (p.positionsdesc ILIKE '%Penyadap%' OR p.positionsdesc ILIKE '%Penderes%') AS is_shift_malam
+                FROM person_data p
+                JOIN m_regional r ON r.id = p.regional_id
+                LEFT JOIN m_kebun k ON k.id = p.kebun_id
+                LEFT JOIN m_afdeling f ON f.id = p.afdeling_id AND f.is_deleted IS NOT TRUE
+                WHERE p.person_type IS NULL 
+                  AND p.is_deleted IS NOT TRUE
+                  {$jobdescClause}
+                  {$whereRegional}
+                  {$whereKebun}
+            ),
+            person_counts AS (
+                SELECT 
+                    entity_id,
+                    entity_name,
+                    jenis_tenaga,
+                    COUNT(DISTINCT karyawan_id)::bigint AS sdm_count
+                FROM filtered_person
+                GROUP BY entity_id, entity_name, jenis_tenaga
+            ),
+            absen_deduplicated AS (
+                SELECT DISTINCT ON (
+                    r.karyawan_id, 
+                    CASE 
+                        WHEN p.is_shift_malam AND EXTRACT(HOUR FROM r.tgl_mulai) >= 18
+                        THEN (r.tgl_mulai + INTERVAL '1 day')::date
+                        ELSE r.tgl_mulai::date 
+                    END
+                )
+                    p.entity_id,
+                    p.entity_name,
+                    p.jenis_tenaga,
+                    s.kode,
+                    CASE 
+                        WHEN p.is_shift_malam AND EXTRACT(HOUR FROM r.tgl_mulai) >= 18
+                        THEN (r.tgl_mulai + INTERVAL '1 day')::date
+                        ELSE r.tgl_mulai::date 
+                    END AS tgl_absen
+                FROM p_rekap_absen r
+                JOIN filtered_person p ON p.karyawan_id = r.karyawan_id
+                JOIN p_status_absen s ON s.id = r.status_absen_id
+                WHERE r.tgl_mulai >= ('{$tglAwalDate}'::date - INTERVAL '1 day')
+                  AND r.tgl_mulai <  ('{$tglAkhirDate}'::date + INTERVAL '2 day')
+                  AND CASE 
+                        WHEN p.is_shift_malam AND EXTRACT(HOUR FROM r.tgl_mulai) >= 18
+                        THEN (r.tgl_mulai + INTERVAL '1 day')::date
+                        ELSE r.tgl_mulai::date 
+                      END BETWEEN '{$tglAwalDate}'::date AND '{$tglAkhirDate}'::date
+                ORDER BY 
+                    r.karyawan_id, 
+                    CASE 
+                        WHEN p.is_shift_malam AND EXTRACT(HOUR FROM r.tgl_mulai) >= 18
+                        THEN (r.tgl_mulai + INTERVAL '1 day')::date
+                        ELSE r.tgl_mulai::date 
+                    END,
+                    r.tgl_mulai DESC
+            ),
+            absen_summary AS (
+                SELECT 
+                    entity_id,
+                    entity_name,
+                    jenis_tenaga,
+                    COUNT(*) FILTER (WHERE kode IN ('K','KL'))::bigint AS hadir_count
+                FROM absen_deduplicated
+                GROUP BY entity_id, entity_name, jenis_tenaga
+            ),
+            entity_result AS (
+                SELECT 
+                    'entity'::text AS row_type,
+                    pc.entity_id::text AS ref_id,
+                    pc.entity_name::text AS ref_name,
+                    pc.jenis_tenaga::text AS jenis_tenaga,
+                    pc.sdm_count::bigint AS sdm_count,
+                    COALESCE(asu.hadir_count, 0)::bigint AS hadir_count
+                FROM person_counts pc
+                LEFT JOIN absen_summary asu ON asu.entity_id = pc.entity_id AND asu.jenis_tenaga = pc.jenis_tenaga
+            ),
+            daily_result AS (
+                SELECT 
+                    'daily'::text AS row_type,
+                    tgl_absen::text AS ref_id,
+                    tgl_absen::text AS ref_name,
+                    jenis_tenaga::text AS jenis_tenaga,
+                    0::bigint AS sdm_count,
+                    COUNT(*) FILTER (WHERE kode IN ('K','KL'))::bigint AS hadir_count
+                FROM absen_deduplicated
+                GROUP BY tgl_absen, jenis_tenaga
+            )
+            SELECT * FROM entity_result
+            UNION ALL
+            SELECT * FROM daily_result
+            ORDER BY row_type, ref_name, jenis_tenaga;
+            ";
+
+            $rows = DB::connection('pgsql_secondary')->select($sql);
+
+            $entities = [];
+            $summary = [
+                'baku' => ['sdm' => 0, 'hadir' => 0, 'pct' => 0],
+                'pkwt' => ['sdm' => 0, 'hadir' => 0, 'pct' => 0],
+                'borong' => ['sdm' => 0, 'hadir' => 0, 'pct' => 0],
+                'total' => ['sdm' => 0, 'hadir' => 0, 'pct' => 0],
+            ];
+            $dailyMap = [];
+
+            foreach ($rows as $row) {
+                $rowType = $row->row_type ?? 'entity';
+
+                if ($rowType === 'daily') {
+                    $dateKey = trim($row->ref_id);
+                    $jenis = strtolower(trim($row->jenis_tenaga ?? 'baku'));
+                    if (!isset($dailyMap[$dateKey])) {
+                        $dailyMap[$dateKey] = [
+                            'baku' => 0,
+                            'pkwt' => 0,
+                            'borong' => 0,
+                        ];
+                    }
+                    if (isset($dailyMap[$dateKey][$jenis])) {
+                        $dailyMap[$dateKey][$jenis] += (int) $row->hadir_count;
+                    }
+                    continue;
+                }
+
+                $id = $row->ref_id;
+                if (!isset($entities[$id])) {
+                    $entities[$id] = [
+                        'id' => $id,
+                        'name' => $row->ref_name ?? ('ID ' . $id),
+                        'baku_sdm' => 0,
+                        'baku_hadir' => 0,
+                        'baku_pct' => 0,
+                        'pkwt_sdm' => 0,
+                        'pkwt_hadir' => 0,
+                        'pkwt_pct' => 0,
+                        'borong_sdm' => 0,
+                        'borong_hadir' => 0,
+                        'borong_pct' => 0,
+                        'total_sdm' => 0,
+                        'total_hadir' => 0,
+                        'total_pct' => 0,
+                    ];
+                }
+
+                $jenis = strtolower(trim($row->jenis_tenaga ?? 'baku'));
+                $sdm = (int) $row->sdm_count;
+                $hadir = (int) $row->hadir_count;
+
+                if (in_array($jenis, ['baku', 'pkwt', 'borong'])) {
+                    $entities[$id][$jenis . '_sdm'] += $sdm;
+                    $entities[$id][$jenis . '_hadir'] += $hadir;
+                    $summary[$jenis]['sdm'] += $sdm;
+                    $summary[$jenis]['hadir'] += $hadir;
+                }
+
+                $entities[$id]['total_sdm'] += $sdm;
+                $entities[$id]['total_hadir'] += $hadir;
+                $summary['total']['sdm'] += $sdm;
+                $summary['total']['hadir'] += $hadir;
+            }
+
+            $breakdown = [];
+            $labels = [];
+            $chartBaku = [];
+            $chartPkwt = [];
+            $chartBorong = [];
+
+            foreach ($entities as $e) {
+                $e['baku_pct'] = $e['baku_sdm'] > 0 ? round(($e['baku_hadir'] / ($e['baku_sdm'] * $days)) * 100, 1) : 0;
+                $e['pkwt_pct'] = $e['pkwt_sdm'] > 0 ? round(($e['pkwt_hadir'] / ($e['pkwt_sdm'] * $days)) * 100, 1) : 0;
+                $e['borong_pct'] = $e['borong_sdm'] > 0 ? round(($e['borong_hadir'] / ($e['borong_sdm'] * $days)) * 100, 1) : 0;
+                $e['total_pct'] = $e['total_sdm'] > 0 ? round(($e['total_hadir'] / ($e['total_sdm'] * $days)) * 100, 1) : 0;
+
+                $breakdown[] = $e;
+                $labels[] = $e['name'];
+                $chartBaku[] = $e['baku_hadir'];
+                $chartPkwt[] = $e['pkwt_hadir'];
+                $chartBorong[] = $e['borong_hadir'];
+            }
+
+            $summary['baku']['pct'] = $summary['baku']['sdm'] > 0 ? round(($summary['baku']['hadir'] / ($summary['baku']['sdm'] * $days)) * 100, 1) : 0;
+            $summary['pkwt']['pct'] = $summary['pkwt']['sdm'] > 0 ? round(($summary['pkwt']['hadir'] / ($summary['pkwt']['sdm'] * $days)) * 100, 1) : 0;
+            $summary['borong']['pct'] = $summary['borong']['sdm'] > 0 ? round(($summary['borong']['hadir'] / ($summary['borong']['sdm'] * $days)) * 100, 1) : 0;
+            $summary['total']['pct'] = $summary['total']['sdm'] > 0 ? round(($summary['total']['hadir'] / ($summary['total']['sdm'] * $days)) * 100, 1) : 0;
+
+            $totalHadir = max(1, $summary['total']['hadir']);
+            $summary['baku']['share'] = round(($summary['baku']['hadir'] / $totalHadir) * 100, 1);
+            $summary['pkwt']['share'] = round(($summary['pkwt']['hadir'] / $totalHadir) * 100, 1);
+            $summary['borong']['share'] = round(($summary['borong']['hadir'] / $totalHadir) * 100, 1);
+
+            $bulanIndo = [
+                1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr', 5 => 'Mei', 6 => 'Jun',
+                7 => 'Jul', 8 => 'Agu', 9 => 'Sep', 10 => 'Okt', 11 => 'Nov', 12 => 'Des'
+            ];
+
+            $dailyDates = [];
+            $dailyRawDates = [];
+            $dailyBaku = [];
+            $dailyPkwt = [];
+            $dailyBorong = [];
+            $dailyTotal = [];
+
+            try {
+                $period = new \DatePeriod(
+                    new \DateTime($tglAwalDate),
+                    new \DateInterval('P1D'),
+                    (new \DateTime($tglAkhirDate))->modify('+1 day')
+                );
+
+                foreach ($period as $dt) {
+                    $rawDate = $dt->format('Y-m-d');
+                    $mNum = (int)$dt->format('n');
+                    $label = $dt->format('d') . ' ' . ($bulanIndo[$mNum] ?? $dt->format('M'));
+
+                    $b = $dailyMap[$rawDate]['baku'] ?? 0;
+                    $p = $dailyMap[$rawDate]['pkwt'] ?? 0;
+                    $bo = $dailyMap[$rawDate]['borong'] ?? 0;
+                    $tot = $b + $p + $bo;
+
+                    $dailyDates[] = $label;
+                    $dailyRawDates[] = $rawDate;
+                    $dailyBaku[] = $b;
+                    $dailyPkwt[] = $p;
+                    $dailyBorong[] = $bo;
+                    $dailyTotal[] = $tot;
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('Error generating daily presensi period: ' . $e->getMessage());
+            }
+
+            return [
+                'level' => $level,
+                'level_label' => $levelLabel,
+                'days' => $days,
+                'summary' => $summary,
+                'breakdown' => $breakdown,
+                'charts' => [
+                    'labels' => $labels,
+                    'baku' => $chartBaku,
+                    'pkwt' => $chartPkwt,
+                    'borong' => $chartBorong,
+                    'donut' => [
+                        $summary['baku']['hadir'],
+                        $summary['pkwt']['hadir'],
+                        $summary['borong']['hadir'],
+                    ],
+                    'daily' => [
+                        'dates' => $dailyDates,
+                        'raw_dates' => $dailyRawDates,
+                        'baku' => $dailyBaku,
+                        'pkwt' => $dailyPkwt,
+                        'borong' => $dailyBorong,
+                        'total' => $dailyTotal,
+                    ]
+                ]
             ];
         });
     }

@@ -94,10 +94,10 @@
 <!-- Table Card: Matriks Bulanan Per Regional -->
 <div style="margin: 0 16px 24px; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
   <h3 style="font-size: 14px; font-weight: 700; color: #1f2937; margin: 0 0 14px 0; display: flex; align-items: center; gap: 6px;">
-    <i class="fas fa-table" style="color: #166534;"></i> Matriks Akumulasi Bulanan % Kehadiran per Regional
+    <i class="fas fa-table" style="color: #166534;"></i> <span id="summaryMatrixTitleText">Matriks Akumulasi Bulanan % Kehadiran per Regional</span>
   </h3>
   <div style="overflow-x: auto;">
-    <table class="report-table" style="width: 100%; border-collapse: collapse; font-size: 12px;">
+    <table id="summaryMatrixTable" class="report-table" style="width: 100%; border-collapse: collapse; font-size: 12px;">
       <thead>
         <tr>
           <th style="padding: 10px 14px; text-align: left; background: #166534; color: #fff;">Regional</th>
@@ -109,7 +109,7 @@
           @endif
         </tr>
       </thead>
-      <tbody>
+      <tbody id="summaryMatrixTableBody">
         @if(!empty($monthlySummary['dataByRegional']))
           @foreach($monthlySummary['dataByRegional'] as $regId => $regData)
             <tr style="border-bottom: 1px solid #e5e7eb;">
