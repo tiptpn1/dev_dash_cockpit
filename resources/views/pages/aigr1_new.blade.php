@@ -1232,7 +1232,7 @@
                         <!-- Placeholder when no call -->
                         <div id="avatarPlaceholder" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; z-index: 1;">
                             <div style="width: 160px; height: 160px; margin: 0 auto 20px;">
-                                <img src="{{ asset('eva-ico.png') }}" alt="EVA Avatar" style="width: 140px; height: 140px; border-radius: 50%; box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);">
+                                <img src="{{ asset('eva-ico.png') }}" alt="EVA Avatar" style="width: 140px; height: 140px; border-radius: 50%; object-fit: cover; box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);">
                             </div>
                             <h3 style="font-family: 'Inter', sans-serif; color: var(--primary-color); margin-bottom: 8px; font-size: 20px; font-weight: 700;">EVA</h3>
                             <p style="color: var(--text-secondary); font-size: 13px; line-height: 1.6; max-width: 280px;">Tekan tombol untuk memulai video call</p>
